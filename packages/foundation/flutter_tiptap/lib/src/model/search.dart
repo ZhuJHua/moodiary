@@ -1,5 +1,7 @@
 part of '../model.dart';
 
+final _replacementToken = RegExp(r'\$([$&\d+])');
+
 class SearchMatch {
   const SearchMatch(this.from, this.to);
   final int from, to;
@@ -24,36 +26,22 @@ class SearchIndex {
   SearchIndex({this.query = '', this.caseSensitive = false});
   final String query;
   final bool caseSensitive;
-  static final Expando<String> _text = Expando<String>();
   final Expando<List<SearchMatch>> _matches = Expando<List<SearchMatch>>();
   int scannedBlocks = 0;
+  @visibleForTesting
+  int documentScans = 0;
   List<SearchMatch> matches(Node node) => _matches[node] ??= _scan(node);
   List<SearchMatch> _scan(Node node) {
     if (query.isEmpty) return const [];
     if (node.isTextblock) {
       scannedBlocks++;
-      final text = _text[node] ??= node.content
-          .map((n) => n.text ?? '\ufffc')
-          .join();
+      final text = node.content.inlineText();
       final haystack = caseSensitive ? text : text.toLowerCase(),
           needle = caseSensitive ? query : query.toLowerCase();
-      final result = <SearchMatch>[];
-      for (var at = 0; ;) {
-        final found = haystack.indexOf(needle, at);
-        if (found < 0) break;
-        result.add(SearchMatch(found + 1, found + needle.length + 1));
-        at = found + 1;
-      }
-      return List.unmodifiable(result);
+      return List.unmodifiable(_textMatches(haystack, needle));
     }
     if (node.isLeaf) return const [];
-    var position = 1;
-    final result = <SearchMatch>[];
-    for (final child in node.content) {
-      result.addAll(matches(child).map((m) => m.shift(position)));
-      position += child.nodeSize;
-    }
-    return List.unmodifiable(result);
+    return List.unmodifiable(_aggregate(node, matches));
   }
 
   final Expando<List<SearchMatch>> _partial = Expando<List<SearchMatch>>();
@@ -64,31 +52,34 @@ class SearchIndex {
       return;
     }
     if (node.isTextblock || node.isLeaf) return;
-    var position = 1;
-    for (final child in node.content) {
-      yield* knownMatches(child).map((m) => m.shift(position));
-      position += child.nodeSize;
-    }
+    yield* _aggregate(node, knownMatches);
   }
 
   /// Bounded scanning also handles a single multi-million-character paragraph.
   /// Hosts share the stopwatch across rows to yield to the event loop regularly.
-  Future<void> prepare(
+  Future<void>? prepare(
+    Node node,
+    Stopwatch budget, {
+    bool Function()? cancelled,
+    void Function()? onYield,
+  }) {
+    if (_matches[node] != null || cancelled?.call() == true) return null;
+    if (query.isEmpty || node.isLeaf && !node.isTextblock) {
+      _matches[node] = const [];
+      return null;
+    }
+    return _prepare(node, budget, cancelled: cancelled, onYield: onYield);
+  }
+
+  Future<void> _prepare(
     Node node,
     Stopwatch budget, {
     bool Function()? cancelled,
     void Function()? onYield,
   }) async {
-    if (_matches[node] != null || cancelled?.call() == true) return;
-    if (query.isEmpty || node.isLeaf && !node.isTextblock) {
-      _matches[node] = const [];
-      return;
-    }
     if (node.isTextblock) {
       scannedBlocks++;
-      final text = _text[node] ??= node.content
-          .map((n) => n.text ?? '\ufffc')
-          .join();
+      final text = node.content.inlineText();
       final haystack = caseSensitive ? text : text.toLowerCase(),
           needle = caseSensitive ? query : query.toLowerCase();
       final result = _partial[node] = <SearchMatch>[];
@@ -99,14 +90,9 @@ class SearchIndex {
               chunk,
               math.min(haystack.length, end + needle.length - 1),
             );
-        for (var at = 0; ;) {
-          final hit = part.indexOf(needle, at);
-          if (hit < 0 || chunk + hit >= end) break;
-          result.add(
-            SearchMatch(chunk + hit + 1, chunk + hit + needle.length + 1),
-          );
-          at = hit + 1;
-        }
+        result.addAll(
+          _textMatches(part, needle, base: chunk, end: end - chunk),
+        );
         if (budget.elapsedMicroseconds >= 1500) {
           onYield?.call();
           await Future<void>.delayed(Duration.zero);
@@ -117,20 +103,43 @@ class SearchIndex {
       _partial[node] = null;
     } else {
       for (final child in node.content) {
-        await prepare(child, budget, cancelled: cancelled, onYield: onYield);
+        final pending = prepare(
+          child,
+          budget,
+          cancelled: cancelled,
+          onYield: onYield,
+        );
+        if (pending is Future<void>) await pending;
         if (cancelled?.call() == true) return;
       }
-      var position = 1;
-      final result = <SearchMatch>[];
-      for (final child in node.content) {
-        result.addAll(
-          (_matches[child] ?? const <SearchMatch>[]).map(
-            (m) => m.shift(position),
-          ),
-        );
-        position += child.nodeSize;
-      }
-      _matches[node] = List.unmodifiable(result);
+      _matches[node] = List.unmodifiable(
+        _aggregate(node, (child) => _matches[child] ?? const <SearchMatch>[]),
+      );
+    }
+  }
+
+  Iterable<SearchMatch> _textMatches(
+    String text,
+    String needle, {
+    int base = 0,
+    int? end,
+  }) sync* {
+    for (var at = 0; ;) {
+      final found = text.indexOf(needle, at);
+      if (found < 0 || end != null && found >= end) break;
+      yield SearchMatch(base + found + 1, base + found + needle.length + 1);
+      at = found + 1;
+    }
+  }
+
+  Iterable<SearchMatch> _aggregate(
+    Node node,
+    Iterable<SearchMatch> Function(Node) matches,
+  ) sync* {
+    var position = 1;
+    for (final child in node.content) {
+      yield* matches(child).map((match) => match.shift(position));
+      position += child.nodeSize;
     }
   }
 
@@ -139,6 +148,7 @@ class SearchIndex {
           .map((m) => m.shift(row.position))
           .toList();
   List<SearchMatch> findAll(Node doc) {
+    documentScans++;
     final result = <SearchMatch>[];
     var end = 0;
     for (final row in doc.rows()) {
@@ -231,10 +241,11 @@ class SearchIndex {
 
   Future<Transaction> replaceAllAsync(
     EditorState state,
-    String replacement,
-  ) async {
+    String replacement, {
+    List<SearchMatch>? matches,
+  }) async {
     final tr = state.tr, watch = Stopwatch()..start();
-    for (final match in findAll(state.doc).reversed) {
+    for (final match in (matches ?? findAll(state.doc)).reversed) {
       _replaceMatch(tr, match, replacement);
       if (watch.elapsedMicroseconds >= 1500) {
         await Future<void>.delayed(Duration.zero);
@@ -261,7 +272,7 @@ class SearchIndex {
     }
 
     while (text.isNotEmpty) {
-      final part = RegExp(r'\$([$&\d+])').firstMatch(text);
+      final part = _replacementToken.firstMatch(text);
       if (part == null) {
         add(text);
         break;

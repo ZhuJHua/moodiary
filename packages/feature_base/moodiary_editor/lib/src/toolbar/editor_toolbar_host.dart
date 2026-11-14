@@ -45,7 +45,6 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
   MoodiaryEditorController get _c => widget.controller;
   ImePanelController<EditorPanel> get _panel => _c.panel;
   EditorState get _state => _c.state.value;
-  bool _contentError = false;
   bool get _editable => widget.editable && !_state.contentError;
 
   @override
@@ -84,12 +83,6 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
 
   void _onState() {
     final s = _state;
-    if (_contentError != s.contentError) {
-      _contentError = s.contentError;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() {});
-      });
-    }
     final focused = _c.focusTarget.value == .editor;
     // A block selected while typing (e.g. Backspace onto an image) keeps the
     // keyboard, so the next key deletes it or types after it. Only with the
@@ -369,89 +362,91 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
+    final changes = Listenable.merge([_c.state, _c.focusTarget, _panel]);
     return Column(
       children: [
         ValueListenableBuilder(
           valueListenable: _c.searchOpen,
           builder: (_, open, _) => open
-              ? EditorFindBar(controller: _c, editable: _editable)
+              ? ValueListenableBuilder(
+                  valueListenable: _c.state,
+                  builder: (_, _, _) =>
+                      EditorFindBar(controller: _c, editable: _editable),
+                )
               : const SizedBox.shrink(),
         ),
         Expanded(
           child: Stack(
             children: [
               Positioned.fill(child: widget.child),
-              if (_editable)
-                Positioned(
-                  left: 10,
-                  right: 10,
-                  bottom: 8,
-                  child: ListenableBuilder(
-                    listenable: Listenable.merge([
-                      _c.state,
-                      _c.focusTarget,
-                      _panel,
-                    ]),
-                    builder: (_, _) => _floating() ?? const SizedBox.shrink(),
-                  ),
+              Positioned(
+                left: 10,
+                right: 10,
+                bottom: 8,
+                child: ListenableBuilder(
+                  listenable: changes,
+                  builder: (_, _) => _editable
+                      ? _floating() ?? const SizedBox.shrink()
+                      : const SizedBox.shrink(),
                 ),
+              ),
             ],
           ),
         ),
-        if (_editable) ...[
-          if (widget.statusBar case final status?)
-            Container(
-              height: 28,
-              padding: const .symmetric(horizontal: 16),
-              color: colors.surface,
-              child: status,
-            ),
-          ListenableBuilder(
-            listenable: Listenable.merge([_c.state, _c.focusTarget, _panel]),
-            builder: (context, _) {
-              final visible = _editing;
-              if (!visible) return const SizedBox.shrink();
-              final inCode = _state.inCodeBlock;
-              final toolbarContext = buildToolbarContext(
-                context,
-                state: _state,
-                exec: _exec,
-                popover: _popover,
-                onTogglePopover: _togglePopover,
-                onRenameMedia: () => unawaited(_renameMedia()),
-              );
-              return EditorToolbar(
-                contextKind: toolbarContext.kind,
-                contextItems: toolbarContext.items,
-                tools: switch (toolbarContext.kind) {
-                  .text => ToolbarTool.selection,
-                  .block => const [],
-                  _ => [
-                    for (final tool in _tools)
-                      if (!(inCode && _markTools.contains(tool))) tool,
-                  ],
-                },
-                toneOf: _toneOf,
-                enabledOf: _enabledOf,
-                onTool: _onTool,
-                keyboardShown: _panel.type == .keyboard,
-                onKeyboardToggle: () => unawaited(_onKeyboardToggle()),
-              );
-            },
-          ),
-          ListenableBuilder(
-            listenable: Listenable.merge([_c.focusTarget, _panel]),
-            builder: (context, _) => ImePanelContainer<EditorPanel>(
-              controller: _panel,
-              target: _c.imeTarget,
-              compact: (panel) => panel == .block,
-              panelBuilder: _buildPanel,
-              backgroundColor: _c.panelOpen
-                  ? colors.surfaceContainerLow
-                  : colors.surface,
-            ),
-          ),
-        ],
+        ListenableBuilder(
+          listenable: changes,
+          builder: (context, _) {
+            if (!_editable) return const SizedBox.shrink();
+            final inCode = _state.inCodeBlock;
+            final toolbarContext = buildToolbarContext(
+              context,
+              state: _state,
+              exec: _exec,
+              popover: _popover,
+              onTogglePopover: _togglePopover,
+              onRenameMedia: () => unawaited(_renameMedia()),
+            );
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.statusBar case final status?)
+                  Container(
+                    height: 28,
+                    padding: const .symmetric(horizontal: 16),
+                    color: colors.surface,
+                    child: status,
+                  ),
+                if (_editing)
+                  EditorToolbar(
+                    contextKind: toolbarContext.kind,
+                    contextItems: toolbarContext.items,
+                    tools: switch (toolbarContext.kind) {
+                      .text => ToolbarTool.selection,
+                      .block => const [],
+                      _ => [
+                        for (final tool in _tools)
+                          if (!(inCode && _markTools.contains(tool))) tool,
+                      ],
+                    },
+                    toneOf: _toneOf,
+                    enabledOf: _enabledOf,
+                    onTool: _onTool,
+                    keyboardShown: _panel.type == .keyboard,
+                    onKeyboardToggle: () => unawaited(_onKeyboardToggle()),
+                  ),
+                ImePanelContainer<EditorPanel>(
+                  controller: _panel,
+                  target: _c.imeTarget,
+                  compact: (panel) => panel == .block,
+                  panelBuilder: _buildPanel,
+                  backgroundColor: _c.panelOpen
+                      ? colors.surfaceContainerLow
+                      : colors.surface,
+                ),
+              ],
+            );
+          },
+        ),
       ],
     );
   }

@@ -49,12 +49,12 @@ class _EditorViewport extends RenderObjectWidget {
       readOnly,
       onTaskToggle,
       onCaretLayout,
+      header,
+      footer,
+      codeBlockHeader,
+      nodeViews,
+      nodeHeightEstimator,
     );
-    render._header = header;
-    render._footer = footer;
-    render._codeBlockHeader = codeBlockHeader;
-    render._nodeViews = nodeViews;
-    render._nodeHeightEstimator = nodeHeightEstimator;
     onReady(render);
     return render;
   }
@@ -64,16 +64,6 @@ class _EditorViewport extends RenderObjectWidget {
     BuildContext context,
     _RenderEditorViewport renderObject,
   ) {
-    if (renderObject._header != header ||
-        renderObject._footer != footer ||
-        renderObject._codeBlockHeader != codeBlockHeader) {
-      renderObject.markNeedsLayout();
-    }
-    renderObject._header = header;
-    renderObject._footer = footer;
-    renderObject._codeBlockHeader = codeBlockHeader;
-    renderObject._nodeViews = nodeViews;
-    renderObject._nodeHeightEstimator = nodeHeightEstimator;
     renderObject.update(
       controller,
       offset,
@@ -83,6 +73,11 @@ class _EditorViewport extends RenderObjectWidget {
       codeHighlighter,
       readOnly,
       onTaskToggle,
+      header,
+      footer,
+      codeBlockHeader,
+      nodeViews,
+      nodeHeightEstimator,
     );
     onReady(renderObject);
   }
@@ -92,10 +87,10 @@ class _RenderEditorViewport extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _NodeViewParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _NodeViewParentData>
-    implements TiptapGeometry {
-  void _buildNodeViews(Set<int> visible) =>
+    implements TiptapGeometry, _LayoutHost {
+  void _buildNodeViews(Map<int, _ViewTarget> entries) =>
       invokeLayoutCallback<BoxConstraints>(
-        (_) => _childManager?._buildVisible(visible),
+        (_) => _childManager?._buildVisible(entries),
       );
   Widget? _header, _footer;
   TiptapNodeViewBuilder? _codeBlockHeader;
@@ -109,23 +104,8 @@ class _RenderEditorViewport extends RenderBox
   _ViewportElement? _childManager;
   Map<String, TiptapNodeViewBuilder> _nodeViews = const {};
   TiptapNodeHeightEstimator? _nodeHeightEstimator;
-  final _nodeSizes = <_NodeSizeKey, Size>{};
-
-  Size? _measuredSize(m.Node node, double width) {
-    final key = _NodeSizeKey(node, width), size = _nodeSizes.remove(key);
-    if (size != null) {
-      _nodeSizes[key] = size;
-      return size;
-    }
-    if (!node.isLeaf) return null;
-    Size? equivalent;
-    for (final entry in _nodeSizes.entries) {
-      if (entry.key.width != width || !entry.key.node.eq(node)) continue;
-      if (equivalent != null && equivalent != entry.value) return null;
-      equivalent = entry.value;
-    }
-    return equivalent;
-  }
+  late final _nodeSizes = _MeasuredSizes(() => _controller.diagnostics);
+  final _invalidatedNodeHeights = <m.Node>{};
 
   @override
   void setupParentData(RenderBox child) {
@@ -153,34 +133,6 @@ class _RenderEditorViewport extends RenderBox
     return false;
   }
 
-  Rect? _childTableClip(_NodeViewParentData data) {
-    if (data.row < 0 || _doc.rowCount == 0) return null;
-    final index = _indexForPosition(data.position), row = _row(index);
-    if (row.table == null) return null;
-    final cell = cellRect(data.position);
-    if (cell == null) return null;
-    final layout = _layoutBlock(index) as _TableRowLayout;
-    final clip = layout.contentAt(data.position - row.position)?.clip;
-    final visible = clip == null
-        ? cell
-        : cell.intersect(
-            Rect.fromLTWH(
-              _origin(index).dx + clip.left,
-              0,
-              clip.width,
-              size.height,
-            ),
-          );
-    return visible.intersect(
-      Rect.fromLTWH(
-        _rowOrigin(index).dx,
-        0,
-        _contentWidth - row.indent,
-        size.height,
-      ),
-    );
-  }
-
   _RenderEditorViewport(
     this._controller,
     this._offset,
@@ -192,6 +144,11 @@ class _RenderEditorViewport extends RenderBox
     this._readOnly,
     this._onTaskToggle,
     this._onCaretLayout,
+    this._header,
+    this._footer,
+    this._codeBlockHeader,
+    this._nodeViews,
+    this._nodeHeightEstimator,
   ) : _doc = _controller.state.doc;
   TiptapController _controller;
   ViewportOffset _offset;
@@ -205,74 +162,14 @@ class _RenderEditorViewport extends RenderBox
   bool _readOnly;
   ValueChanged<int> _onTaskToggle;
   Expando<TextSpan> _highlights = Expando<TextSpan>();
-  Expando<Map<String, ui.Paragraph>> _chrome =
-      Expando<Map<String, ui.Paragraph>>();
+  Expando<_LruMap<String, ui.Paragraph>> _chrome =
+      Expando<_LruMap<String, ui.Paragraph>>();
   final Map<int, _Row> _rows = {};
-  final Expando<double> _codeOffsets = Expando<double>();
-  ScrollPositionWithSingleContext? _horizontalPosition;
-  m.Node? _horizontalBlock;
-  int? _horizontalBlockPosition;
-
-  void _unbindHorizontal() {
-    final position = _horizontalPosition, block = _horizontalBlock;
-    position?.goIdle();
-    if (position != null && block != null && position.hasContentDimensions) {
-      _codeOffsets[block] = position.pixels.clamp(
-        0.0,
-        position.maxScrollExtent,
-      );
-      markNeedsLayout();
-      markNeedsPaint();
-    }
-    _horizontalPosition = null;
-    _horizontalBlock = null;
-    _horizontalBlockPosition = null;
-  }
-
-  void _applyHorizontalDimensions() {
-    final position = _horizontalPosition,
-        blockPosition = _horizontalBlockPosition;
-    if (position == null || blockPosition == null) return;
-    final metrics = horizontalScrollMetrics(blockPosition);
-    if (metrics == null) {
-      _unbindHorizontal();
-      return;
-    }
-    position.applyViewportDimension(metrics.viewport.width);
-    while (!position.applyContentDimensions(0, metrics.maxScrollExtent)) {}
-    _codeOffsets[_horizontalBlock!] = position.pixels;
-  }
-
-  void _setHorizontalOffset(m.Node block, double pixels) {
-    if (_codeOffsets[block] == pixels) return;
-    _codeOffsets[block] = pixels;
-    _showOverflowIndicator(block);
-    markNeedsLayout();
-    markNeedsPaint();
-    _scheduleGeometry();
-  }
+  final Map<int, _BlockLayout> _visibleLayouts = {};
+  int _headIndex = 0;
+  late final _horizontal = _HorizontalScroll(this);
 
   final Map<int, SemanticsNode> _taskSemantics = {};
-  Ticker? _overflowTicker;
-  m.Node? _scrollingBlock;
-  double _indicatorOpacity = 0;
-
-  void _showOverflowIndicator(m.Node block) {
-    _scrollingBlock = block;
-    _indicatorOpacity = 1;
-    _overflowTicker ??= Ticker((elapsed) {
-      final fade = elapsed - _style.overflowIndicatorHold;
-      if (fade.isNegative) return;
-      final duration = _style.overflowIndicatorFade.inMicroseconds;
-      _indicatorOpacity = duration <= 0
-          ? 0
-          : (1 - fade.inMicroseconds / duration).clamp(0.0, 1.0);
-      markNeedsPaint();
-      if (_indicatorOpacity == 0) _overflowTicker!.stop();
-    });
-    _overflowTicker!.stop();
-    _overflowTicker!.start();
-  }
 
   _Row _row(int index) => _rows[index] ??= _Row.at(_doc, index, _style);
   TiptapHeightIndex? _heights;
@@ -287,130 +184,6 @@ class _RenderEditorViewport extends RenderBox
   int _cachedTextLength = 0;
   bool _trimScheduled = false;
 
-  void _cacheDiagnostics() {
-    _controller.diagnostics.cachedLayouts = _layouts.length;
-    _controller.diagnostics.cachedTextLength = _cachedTextLength;
-  }
-
-  _BlockLayout _useLayout(m.Node node, _BlockLayout Function() create) {
-    var layout = _layouts[node];
-    if (layout == null) {
-      layout = create();
-      _layouts[node] = layout;
-      _cachedTextLength += layout.text.length;
-      _cacheDiagnostics();
-    }
-    _touchLayout(layout);
-    if (layout is _TableRowLayout) {
-      for (final cell in layout.cells) {
-        for (final block in cell.blocks) {
-          _touchLayout(block.layout);
-        }
-      }
-    }
-    if (!_trimScheduled) {
-      _trimScheduled = true;
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        _trimScheduled = false;
-        if (attached) _trimLayouts();
-      });
-    }
-    return layout;
-  }
-
-  void _touchLayout(_BlockLayout layout) {
-    if (_layoutOrder.isEmpty || !identical(_layoutOrder.last, layout)) {
-      if (layout.list != null) layout.unlink();
-      _layoutOrder.add(layout);
-    }
-    _usedLayouts.add(layout);
-  }
-
-  void _retireLayout(m.Node node) {
-    final layout = _layouts.remove(node);
-    if (layout == null) return;
-    layout.unlink();
-    _cachedTextLength -= layout.text.length;
-    _retiredLayouts.add(layout);
-    _cacheDiagnostics();
-  }
-
-  void _trimLayouts() {
-    for (final layout in _retiredLayouts) {
-      layout.dispose();
-    }
-    _retiredLayouts.clear();
-    if (_layouts.length <= _layoutLimit &&
-        _cachedTextLength <= _layoutTextLimit) {
-      _usedLayouts.clear();
-      return;
-    }
-    final protected = Set<_BlockLayout>.of(_usedLayouts);
-    _usedLayouts.clear();
-    void protect(int index) {
-      final layout = _layouts[_row(index).node];
-      if (layout == null) return;
-      protected.add(layout);
-      if (layout is _TableRowLayout) {
-        for (final cell in layout.cells) {
-          protected.addAll(cell.blocks.map((block) => block.layout));
-        }
-      }
-    }
-
-    if (_doc.rowCount > 0) {
-      for (
-        var index = _firstVisible;
-        index < math.min(_lastVisible, _doc.rowCount);
-        index++
-      ) {
-        protect(index);
-      }
-      protect(_indexForPosition(_controller.state.selection.head));
-      protect(_indexForPosition(_controller.state.selection.anchor));
-      if (_horizontalBlockPosition case final position?) {
-        protect(_indexForPosition(position));
-      }
-    }
-    var removed = true;
-    while (removed &&
-        (_layouts.length > _layoutLimit ||
-            _cachedTextLength > _layoutTextLimit)) {
-      removed = false;
-      for (final layout in _layoutOrder.toList()) {
-        if (_layouts.length <= _layoutLimit &&
-            _cachedTextLength <= _layoutTextLimit) {
-          break;
-        }
-        if (protected.contains(layout) || layout.tableUsers.isNotEmpty) {
-          continue;
-        }
-        _layouts.remove(layout.node);
-        layout.unlink();
-        _cachedTextLength -= layout.text.length;
-        layout.dispose();
-        removed = true;
-      }
-    }
-    _cacheDiagnostics();
-  }
-
-  void _clearLayouts() {
-    final layouts = {..._layouts.values, ..._retiredLayouts};
-    for (final layout in layouts.whereType<_TableRowLayout>()) {
-      layout.dispose();
-    }
-    for (final layout in layouts) {
-      if (layout is! _TableRowLayout) layout.dispose();
-    }
-    _layoutOrder.clear();
-    _layouts.clear();
-    _usedLayouts.clear();
-    _retiredLayouts.clear();
-    _cachedTextLength = 0;
-    _cacheDiagnostics();
-  }
-
   double _contentWidth = 1;
   int _firstVisible = 0, _lastVisible = 0;
   bool _geometryScheduled = false;
@@ -421,6 +194,7 @@ class _RenderEditorViewport extends RenderBox
   // the frame actually painted. Row lookup may clamp an index, never this
   // transform. Geometry, node children and text must share this translation.
   double _layoutOffset = 0, _paintOffset = 0;
+  @override
   int layoutGeneration = 0;
   bool _ensureCaretLayout = true;
   ui.Paragraph? _placeholderParagraph;
@@ -433,7 +207,22 @@ class _RenderEditorViewport extends RenderBox
     TiptapCodeHighlighter? highlighter,
     bool readOnly,
     ValueChanged<int> onTaskToggle,
+    Widget? header,
+    Widget? footer,
+    TiptapNodeViewBuilder? codeBlockHeader,
+    Map<String, TiptapNodeViewBuilder> nodeViews,
+    TiptapNodeHeightEstimator? nodeHeightEstimator,
   ) {
+    if (_header != header ||
+        _footer != footer ||
+        _codeBlockHeader != codeBlockHeader) {
+      markNeedsLayout();
+    }
+    _header = header;
+    _footer = footer;
+    _codeBlockHeader = codeBlockHeader;
+    _nodeViews = nodeViews;
+    _nodeHeightEstimator = nodeHeightEstimator;
     if (!identical(_highlighter, highlighter)) {
       _highlighter = highlighter;
       _highlights = Expando<TextSpan>();
@@ -447,15 +236,20 @@ class _RenderEditorViewport extends RenderBox
       markNeedsLayout();
     }
     if (!identical(controller, _controller)) {
-      if (attached) _controller.removeListener(_changed);
-      _clearLayouts();
-      _nodeSizes.clear();
+      if (attached) {
+        _controller.removeListener(_changed);
+        _controller._searchRepaint.removeListener(markNeedsPaint);
+        _controller._nodeHeights.removeListener(_nodeHeightsChanged);
+      }
+      _invalidateLayout(heights: true);
       _controller = controller;
       _moveAnchorPosition = null;
       _doc = controller.state.doc;
-      _heights = null;
-      _rows.clear();
-      if (attached) _controller.addListener(_changed);
+      if (attached) {
+        _controller.addListener(_changed);
+        _controller._searchRepaint.addListener(markNeedsPaint);
+        _controller._nodeHeights.addListener(_nodeHeightsChanged);
+      }
       markNeedsLayout();
     }
     if (!identical(offset, _offset)) {
@@ -466,14 +260,8 @@ class _RenderEditorViewport extends RenderBox
       markNeedsLayout();
     }
     if (style != _style) {
-      _clearLayouts();
-      _nodeSizes.clear();
+      _invalidateLayout(heights: true, styles: true);
       _style = style;
-      _rows.clear();
-      _highlights = Expando<TextSpan>();
-      _chrome = Expando<Map<String, ui.Paragraph>>();
-      _heights = null;
-      _placeholderParagraph = null;
       markNeedsLayout();
     }
     if (placeholder != _placeholder) {
@@ -487,6 +275,8 @@ class _RenderEditorViewport extends RenderBox
   void attach(PipelineOwner owner) {
     super.attach(owner);
     _controller.addListener(_changed);
+    _controller._searchRepaint.addListener(markNeedsPaint);
+    _controller._nodeHeights.addListener(_nodeHeightsChanged);
     PaintingBinding.instance.systemFonts.addListener(_fontsChanged);
     _offset.addListener(_scrolled);
     _changed();
@@ -494,11 +284,10 @@ class _RenderEditorViewport extends RenderBox
 
   @override
   void detach() {
-    _unbindHorizontal();
-    _overflowTicker?.dispose();
-    _overflowTicker = null;
-    _indicatorOpacity = 0;
+    _horizontal.dispose();
     _controller.removeListener(_changed);
+    _controller._searchRepaint.removeListener(markNeedsPaint);
+    _controller._nodeHeights.removeListener(_nodeHeightsChanged);
     PaintingBinding.instance.systemFonts.removeListener(_fontsChanged);
     _offset.removeListener(_scrolled);
     _clearLayouts();
@@ -507,21 +296,20 @@ class _RenderEditorViewport extends RenderBox
 
   @override
   void dispose() {
-    _clearLayouts();
-    _nodeSizes.clear();
+    _invalidateLayout();
     _placeholderParagraph?.dispose();
     _placeholderParagraph = null;
     super.dispose();
   }
 
+  bool get _scrollAnchored => _moveAnchorPosition != null;
+
+  void _correctScroll(double delta) {
+    if (!_scrollAnchored) _offset.correctBy(delta);
+  }
+
   void _fontsChanged() {
-    _orderedGutters = Expando();
-    _columnSizes = Expando();
-    _tableGeometries = Expando();
-    _clearLayouts();
-    _nodeSizes.clear();
-    _chrome = Expando<Map<String, ui.Paragraph>>();
-    _placeholderParagraph = null;
+    _invalidateLayout(fonts: true);
     markNeedsLayout();
     markNeedsPaint();
   }
@@ -534,165 +322,10 @@ class _RenderEditorViewport extends RenderBox
     markNeedsLayout();
   }
 
-  void _changed() {
-    final next = _controller.state.doc;
-    final transaction = _controller.lastTransaction;
-    final move = transaction?.blockMove;
-    if (move != null &&
-        identical(transaction!.before, _doc) &&
-        _heights != null &&
-        hasSize) {
-      _moveAnchorTop = rowRect(move.before).top;
-      _moveAnchorPosition = move.after;
-      _moveAnchorOffset = _offset.pixels;
-    } else {
-      _moveAnchorPosition = null;
-    }
-    _ensureCaretLayout =
-        !identical(next, _doc) ||
-        _controller.state.selection is! m.NodeSelection;
-    if (!identical(next, _doc)) {
-      final contentTop = _contentTop;
-      final mapsDocument =
-          transaction != null && identical(transaction.before, _doc);
-      if (mapsDocument) {
-        for (final row in _rows.values) {
-          final layout = _layouts[row.node];
-          if (layout is! _TableRowLayout) continue;
-          for (final (block, _) in layout.contentRows(includeTables: true)) {
-            final before = block.row.table ?? block.row.node,
-                pixels = _codeOffsets[block.row.table ?? block.row.node];
-            if (!const {'codeBlock', 'table'}.contains(before.type) ||
-                pixels == null) {
-              continue;
-            }
-            final position = transaction.mapping.map(
-              row.position +
-                  block.position -
-                  (block.row.table == null
-                      ? 0
-                      : block.row.tableRowPosition + 1),
-            );
-            if (position < 0 || position >= next.content.size) continue;
-            final after = next.nodeAt(position);
-            if (after?.type != before.type) continue;
-            _codeOffsets[after!] = pixels;
-            if (identical(_horizontalBlock, before)) _horizontalBlock = after;
-            if (identical(_scrollingBlock, before)) _scrollingBlock = after;
-          }
-        }
-      }
-      if (transaction == null) {
-        _cacheReady = false;
-        _nodeSizes.clear();
-      }
-      if (transaction != null && identical(transaction.before, _doc)) {
-        final documents = transaction.documents;
-        for (var i = 1; i < documents.length; i++) {
-          _updateRowHeights(documents[i - 1], documents[i]);
-        }
-      } else {
-        _updateRowHeights(_doc, next);
-      }
-      final seen = <m.Node>{};
-      for (final row in _rows.values) {
-        final oldTable = row.table;
-        if (oldTable == null || !seen.add(oldTable)) continue;
-        final position = row.position - row.tableRowPosition - 1;
-        final mapped =
-            transaction != null && identical(transaction.before, _doc)
-            ? transaction.mapping.map(position)
-            : position;
-        final table = next.nodeAt(mapped.clamp(0, next.content.size));
-        if (table?.type == 'table' && _codeOffsets[oldTable] != null) {
-          _codeOffsets[table!] = _codeOffsets[oldTable]!;
-          if (identical(_horizontalBlock, oldTable)) _horizontalBlock = table;
-          if (identical(_scrollingBlock, oldTable)) _scrollingBlock = table;
-        }
-      }
-      if (_horizontalBlockPosition case final position?) {
-        final mapped = mapsDocument
-            ? transaction.mapping.map(position)
-            : position;
-        _horizontalBlockPosition = mapped;
-        if (mapped < 0 ||
-            mapped >= next.content.size ||
-            !identical(next.nodeAt(mapped), _horizontalBlock)) {
-          _unbindHorizontal();
-        }
-      }
-      _rows.clear();
-      _doc = next;
-      if (_moveAnchorPosition == null && _offset.pixels > 0) {
-        _offset.correctBy(_contentTop - contentTop);
-      }
-      markNeedsLayout();
-      markNeedsSemanticsUpdate();
-    }
+  void _changed() => _documentChanged();
+  void _nodeHeightsChanged() {
+    _invalidatedNodeHeights.addAll(_controller._invalidatedNodeHeights);
     markNeedsLayout();
-    markNeedsPaint();
-    _scheduleGeometry();
-  }
-
-  void _updateRowHeights(m.Node beforeDoc, m.Node nextDoc) {
-    final heights = _heights;
-    if (heights != null) {
-      final range = beforeDoc.changedRows(nextDoc);
-      var anchor = heights.indexAt(math.max(0, _offset.pixels - _contentTop));
-      final oldY = heights.offsetOf(anchor);
-      if (range.oldTo - range.from == range.newTo - range.from) {
-        for (var i = range.from; i < range.newTo; i++) {
-          final before = beforeDoc.rowAt(i).node, after = nextDoc.rowAt(i).node;
-          if (!identical(before, after) && before.isLeaf && before.eq(after)) {
-            final measurements = _nodeSizes.entries
-                .where((entry) => identical(entry.key.node, before))
-                .toList();
-            for (final entry in measurements) {
-              _nodeSizes[_NodeSizeKey(after, entry.key.width)] = entry.value;
-            }
-            while (_nodeSizes.length > 512) {
-              _nodeSizes.remove(_nodeSizes.keys.first);
-            }
-          }
-          final cached = _layouts[before];
-          if (_codeOffsets[before] case final offset?) {
-            _codeOffsets[after] = offset;
-            if (identical(_horizontalBlock, before) &&
-                before.type == after.type) {
-              _horizontalBlock = after;
-            }
-          }
-          if (cached != null &&
-              cached.tableUsers.isEmpty &&
-              after.type != 'tableRow' &&
-              !identical(before, after)) {
-            final revised = _layouts.containsKey(after)
-                ? null
-                : cached.revise(after);
-            _retireLayout(before);
-            if (revised != null) _useLayout(after, () => revised);
-          } else if (cached?.tableUsers.isEmpty == true &&
-              !identical(before, after)) {
-            _retireLayout(before);
-          }
-        }
-      }
-      heights.replace(
-        range.from,
-        range.oldTo,
-        nextDoc.rows(from: range.from, to: range.newTo).map((r) => r.node),
-      );
-      if (anchor >= range.oldTo) {
-        anchor += range.newTo - range.oldTo;
-      } else if (anchor >= range.from) {
-        anchor = math.min(anchor, math.max(range.from, range.newTo - 1));
-      }
-      anchor = anchor.clamp(0, heights.length);
-      final delta = heights.offsetOf(anchor) - oldY;
-      if (_moveAnchorPosition == null && delta.abs() > .01) {
-        _offset.correctBy(delta);
-      }
-    }
   }
 
   void _scheduleGeometry() {
@@ -704,13 +337,31 @@ class _RenderEditorViewport extends RenderBox
     });
   }
 
-  bool _inChrome(Offset point) {
-    final y = point.dy + _paintOffset - _style.padding.top;
-    return y >= 0 && y < _headerHeight ||
-        _heights != null &&
-            y >= _headerHeight + _heights!.totalHeight &&
-            y < _headerHeight + _heights!.totalHeight + _footerHeight;
-  }
+  @override
+  _BlockLayout blockLayout(_Row row) => _layoutForRow(row);
+
+  @override
+  void layoutRow(
+    _Row row,
+    _BlockLayout layout,
+    double available, {
+    bool header = false,
+    TextAlign? textAlign,
+  }) => _layoutContentRow(
+    row,
+    layout,
+    available,
+    header: header,
+    textAlign: textAlign,
+  );
+
+  @override
+  void releaseMeasurement(_BlockLayout layout) => _usedLayouts.remove(layout);
+
+  @override
+  double codeOffset(_CellRow row) => _horizontal.codeOffset(row);
+  @override
+  int get codeOffsetGeneration => _horizontal.generation;
 
   _BlockLayout _layoutForRow(_Row row) {
     final node = row.node;
@@ -737,6 +388,7 @@ class _RenderEditorViewport extends RenderBox
               row.table!,
               row.tableRow,
               row.tableRowPosition,
+              this,
             )
           : _BlockLayout(node),
     );
@@ -744,22 +396,20 @@ class _RenderEditorViewport extends RenderBox
       if (m.TableMap.get(row.table!).hasRowspan) {
         layout.geometry = _tableGeometries[row.table!] ??= _TableGeometry();
       }
-      layout.blockLayout = _layoutForRow;
-      layout.layoutRow = _layoutContentRow;
-      layout.releaseMeasurement = _usedLayouts.remove;
-      layout.codeOffset = (row) {
-        final extent = _cellOverflowExtent(row);
-        final node = row.row.table ?? row.row.node;
-        final pixels = _codeOffsets[node] ?? 0;
-        return identical(node, _horizontalBlock)
-            ? pixels
-            : pixels.clamp(0.0, extent);
-      };
     }
     return layout;
   }
 
   _BlockLayout _layoutBlock(int index) {
+    if (!_inLayout) {
+      final cached = _visibleLayouts[index];
+      if (cached != null &&
+          identical(cached.node, _row(index).node) &&
+          cached.width != null) {
+        return cached;
+      }
+    }
+    _controller.diagnostics.layoutQueries++;
     final row = _row(index), node = row.node, layout = _layoutForRow(row);
     if (_layoutContentRow(row, layout, _contentWidth)) {
       _controller.diagnostics._record(node, index);
@@ -767,6 +417,7 @@ class _RenderEditorViewport extends RenderBox
     // Geometry and paint may need an offscreen paragraph, but only layout may
     // update row measurements or correct the scroll position.
     if (!_inLayout) return layout;
+    _visibleLayouts[index] = layout;
     if (layout is _TableRowLayout && layout.geometry.spans) {
       final offsets = layout.geometry.offsets, first = index - row.tableRow;
       for (var tableRow = 0; tableRow + 1 < offsets.length; tableRow++) {
@@ -785,24 +436,6 @@ class _RenderEditorViewport extends RenderBox
     return layout;
   }
 
-  void _measureRow(int index, double height) {
-    final heights = _heights!;
-    final delta = height - heights.heightAt(index);
-    if (delta.abs() <= .01) return;
-    final top = _offset.pixels - _contentTop;
-    final anchor = heights.indexAt(math.max(0, top));
-    final correct =
-        _moveAnchorPosition == null &&
-        heights.offsetOf(index) < top - .01 &&
-        (index < anchor ||
-            !_resizing &&
-                (_readOnly ||
-                    index !=
-                        _indexForPosition(_controller.state.selection.head)));
-    heights.measure(index, height);
-    if (correct) _offset.correctBy(delta);
-  }
-
   double get _maxScrollExtent => math.max(
     0,
     _style.padding.vertical +
@@ -813,19 +446,11 @@ class _RenderEditorViewport extends RenderBox
         size.height,
   );
 
-  void _restoreMoveAnchor() {
-    final position = _moveAnchorPosition;
-    if (position == null) return;
-    final top = rowRect(position).top + _offset.pixels;
-    final target = (top - _moveAnchorTop).clamp(0.0, _maxScrollExtent);
-    final delta = target - _offset.pixels;
-    if (delta.abs() > .01) _offset.correctBy(delta);
-    _moveAnchorOffset = _offset.pixels;
-  }
-
   @override
   void performLayout() {
     _inLayout = true;
+    _visibleLayouts.clear();
+    _headIndex = _indexForPosition(_controller.state.selection.head);
     layoutGeneration++;
     size = constraints.constrain(
       Size(
@@ -843,10 +468,13 @@ class _RenderEditorViewport extends RenderBox
         style: _style,
         width: _contentWidth,
         estimateHeight: (node, width) {
-          final percent = node.attrs['widthPercent'];
-          final available =
-              width * (percent is num ? percent.clamp(25, 100) / 100 : 1);
-          return _measuredSize(node, available)?.height ??
+          final available = _widthFor(
+            node,
+            width,
+            clampWidth: false,
+            usePreview: false,
+          );
+          return _nodeSizes.get(node, available)?.height ??
               _nodeHeightEstimator?.call(node, available);
         },
       );
@@ -857,14 +485,13 @@ class _RenderEditorViewport extends RenderBox
       final anchor = heights.indexAt(math.max(0, _offset.pixels - _contentTop));
       final oldY = heights.offsetOf(anchor);
       heights.setWidth(_contentWidth);
-      if (_moveAnchorPosition == null) {
-        _offset.correctBy(heights.offsetOf(anchor) - oldY);
-      }
+      _correctScroll(heights.offsetOf(anchor) - oldY);
       _placeholderParagraph = null;
     }
     _offset.applyViewportDimension(size.height);
+    _reestimateNodeHeights();
     _restoreMoveAnchor();
-    _buildNodeViews(_visibleNodeRows());
+    _buildNodeViews(_visibleViews(_visibleNodeRows()));
     _measureChrome();
     if (_ensureCaretLayout && _doc.rowCount > 0) {
       _layoutBlock(_indexForPosition(_controller.state.selection.head));
@@ -909,24 +536,30 @@ class _RenderEditorViewport extends RenderBox
         break;
       }
     }
-    _applyHorizontalDimensions();
+    _horizontal._applyHorizontalDimensions();
     _positionNodeViews();
     _layoutOffset = _offset.pixels;
     _inLayout = false;
     _paintOffset = _layoutOffset;
     _onCaretLayout(this);
     _resizing = false;
+    final headIndex = _indexForPosition(_controller.state.selection.head);
     _rows.removeWhere(
       (index, _) =>
           (index < _firstVisible || index >= _lastVisible) &&
-          index != _indexForPosition(_controller.state.selection.head),
+          index != headIndex,
     );
     _controller.diagnostics.visibleBlocks = _lastVisible - _firstVisible;
     _controller._searchVisible = (_firstVisible, _lastVisible);
     _scheduleGeometry();
   }
 
-  double _spacing(int index) => _row(index).spacing(_doc, index, _style);
+  double _spacing(int index) => _row(index).spacing(
+    _doc,
+    index,
+    _style,
+    next: index + 1 < _doc.rowCount ? _row(index + 1) : null,
+  );
 
   bool _layoutContentRow(
     _Row row,
@@ -957,7 +590,7 @@ class _RenderEditorViewport extends RenderBox
         available -
             row.indent -
             row.codePadding.horizontal * (node.type == 'codeBlock' ? 1 : 0) -
-            (node.isTextblock || node.type == 'tableRow' ? 0 : 24),
+            (row.value.isAtomRow ? 24 : 0),
       ),
       _style,
       _controller.diagnostics,
@@ -973,7 +606,7 @@ class _RenderEditorViewport extends RenderBox
     if (_nodeViews.containsKey(node.type)) {
       final width = _widthFor(node, math.max(1, available - row.indent));
       layout.height =
-          _measuredSize(node, width)?.height ??
+          _nodeSizes.get(node, width)?.height ??
           _nodeHeightEstimator?.call(node, width) ??
           _style.opaqueBlockHeight;
     }
@@ -987,375 +620,20 @@ class _RenderEditorViewport extends RenderBox
         _heights!.offsetOf(index) -
         (_inLayout ? _offset.pixels : _paintOffset),
   );
-  double _horizontalExtent(int index) {
-    final row = _row(index);
-    if (row.table == null &&
-        (row.node.type != 'codeBlock' || _style.wrapCodeBlocks)) {
-      return 0;
-    }
-    final available = math.max(
-      1.0,
-      _contentWidth -
-          row.indent -
-          row.codePadding.horizontal * (row.table == null ? 1 : 0),
-    );
-    return math.max(
-      0.0,
-      _layoutBlock(index).intrinsicWidth -
-          available +
-          (row.table == null ? _style.caretWidth : 0),
-    );
-  }
-
-  double _horizontalOffset(int index) {
-    final block = _row(index).table ?? _row(index).node;
-    final pixels = _codeOffsets[block] ?? 0;
-    return identical(block, _horizontalBlock)
-        ? pixels
-        : pixels.clamp(0.0, _horizontalExtent(index));
-  }
 
   Offset _origin(int index) =>
       _rowOrigin(index) +
       Offset(
-        _row(index).codeInset - _horizontalOffset(index),
+        _row(index).codeInset - _horizontal._horizontalOffset(index),
         _row(index).codeTop,
       );
 
   int _indexForPosition(int position) =>
       _doc.rowIndexAt(position.clamp(0, _doc.content.size));
 
-  double _cellOverflowExtent(_CellRow row) {
-    if (row.layout is _TableRowLayout) {
-      return math.max(0, row.layout.intrinsicWidth - row.width);
-    }
-    return row.row.node.type != 'codeBlock' || _style.wrapCodeBlocks
-        ? 0
-        : math.max(
-            0,
-            row.layout.intrinsicWidth -
-                math.max(1, row.width - row.row.codePadding.horizontal) +
-                _style.caretWidth,
-          );
-  }
-
-  (_CellRow, _TableCellLayout)? _cellOverflowAt(Offset point, int index) {
-    final layout = _layoutBlock(index);
-    if (layout is! _TableRowLayout) return null;
-    final origin = _origin(index);
-    (_CellRow, _TableCellLayout)? found;
-    for (final (block, cell) in layout.contentRows(includeTables: true)) {
-      if ((block.clip ?? cell.rect).shift(origin).contains(point) &&
-          block.rect.shift(origin).contains(point) &&
-          _cellOverflowExtent(block) > .01) {
-        found = (block, cell);
-      }
-    }
-    return found;
-  }
-
-  (m.Node, int, double) _horizontalTarget(Offset point, int index) {
-    final row = _row(index), code = _cellOverflowAt(point, index);
-    if (code != null) {
-      final block = code.$1;
-      return (
-        block.row.table ?? block.row.node,
-        row.position +
-            block.position -
-            (block.row.table == null ? 0 : block.row.tableRowPosition + 1),
-        (_layoutBlock(index) as _TableRowLayout).codeOffset(block),
-      );
-    }
-    return (
-      row.table ?? row.node,
-      row.table == null
-          ? row.position
-          : row.position - row.tableRowPosition - 1,
-      _horizontalOffset(index),
-    );
-  }
-
-  int? _horizontalRowAt(Offset point) {
-    if (_heights == null || _doc.rowCount == 0 || _inChrome(point)) return null;
-    final index = _heights!.indexAt(point.dy + _paintOffset - _contentTop),
-        row = _row(index),
-        layout = _layoutBlock(index),
-        origin = _rowOrigin(index);
-    if (_cellOverflowAt(point, index) != null) return index;
-    final rect = Rect.fromLTWH(
-      origin.dx,
-      origin.dy + row.codeTop,
-      _contentWidth - row.indent,
-      layout.height,
-    );
-    return rect.contains(point) && _horizontalExtent(index) > .01
-        ? index
-        : null;
-  }
-
-  bool _scrollCode(Offset point, double delta) {
-    final index = _horizontalRowAt(point);
-    if (index == null) return false;
-    final (block, position, previous) = _horizontalTarget(point, index);
-    final metrics = horizontalScrollMetrics(position)!;
-    final next = (previous + delta).clamp(0.0, metrics.maxScrollExtent);
-    if (identical(block, _horizontalBlock)) {
-      _horizontalPosition!.jumpTo(next);
-    } else {
-      _setHorizontalOffset(block, next);
-    }
-    return true;
-  }
-
   @override
-  ({
-    Rect viewport,
-    double offset,
-    double maxScrollExtent,
-    double indicatorOpacity,
-  })?
-  horizontalScrollMetrics(int position) {
-    if (_heights == null || _doc.rowCount == 0) return null;
-    final index = _indexForPosition(position), row = _row(index);
-    if (row.table == null && row.node.type != 'codeBlock') return null;
-    final origin = _rowOrigin(index), layout = _layoutBlock(index);
-    if (layout is _TableRowLayout && position > row.position) {
-      for (final (block, _) in layout.contentRows(includeTables: true)) {
-        final tableStart =
-            row.position + block.position - block.row.tableRowPosition - 1;
-        final matches = block.row.node.type == 'codeBlock'
-            ? position >= row.position + block.position &&
-                  position <
-                      row.position + block.position + block.layout.node.nodeSize
-            : block.row.table != null && position == tableStart;
-        if (!matches) continue;
-        return _cellScrollMetrics(index, block);
-      }
-    }
-    return (
-      viewport: Rect.fromLTWH(
-        origin.dx + row.codeInset,
-        origin.dy + row.codeTop,
-        _contentWidth - row.indent - row.codeInset * 2,
-        layout.height + row.codeBottom,
-      ),
-      offset: _horizontalOffset(index),
-      maxScrollExtent: _horizontalExtent(index),
-      indicatorOpacity: identical(_scrollingBlock, row.table ?? row.node)
-          ? _indicatorOpacity
-          : 0,
-    );
-  }
-
-  ({
-    Rect viewport,
-    double offset,
-    double maxScrollExtent,
-    double indicatorOpacity,
-  })
-  _cellScrollMetrics(int index, _CellRow block) {
-    final layout = _layoutBlock(index) as _TableRowLayout;
-    final point = _origin(index) + block.origin;
-    final node = block.row.table ?? block.row.node;
-    return (
-      viewport: Rect.fromLTWH(
-        point.dx + block.row.codeInset,
-        point.dy + block.row.codeTop,
-        math.max(
-          1,
-          block.width -
-              (block.row.node.type == 'codeBlock'
-                  ? block.row.codePadding.horizontal
-                  : 0),
-        ),
-        block.layout.height + block.row.codeBottom,
-      ),
-      offset: layout.codeOffset(block),
-      maxScrollExtent: _cellOverflowExtent(block),
-      indicatorOpacity: identical(_scrollingBlock, node)
-          ? _indicatorOpacity
-          : 0,
-    );
-  }
-
-  void _paintOverflow(Canvas canvas, int index) {
-    final row = _row(index), metrics = horizontalScrollMetrics(row.position);
-    final layout = _layoutBlock(index);
-    if (layout is _TableRowLayout) {
-      canvas.save();
-      canvas.clipRect(
-        _rowOrigin(index) & Size(_contentWidth - row.indent, layout.height),
-      );
-      for (final (block, cell) in layout.contentRows(includeTables: true)) {
-        if (block.row.node.type != 'codeBlock' &&
-            block.layout is! _TableRowLayout) {
-          continue;
-        }
-        canvas.save();
-        canvas.clipRect((block.clip ?? cell.rect).shift(_origin(index)));
-        _paintOverflowMetrics(
-          canvas,
-          _cellScrollMetrics(index, block),
-          block.row.table == null ||
-                  block.row.tableRow == 0 &&
-                      block.row.table!.child(0).child(0).type == 'tableHeader'
-              ? _style.codeBackground
-              : _style.overflowBackground,
-          indicator:
-              block.row.table == null ||
-              block.row.tableRow == block.row.table!.childCount - 1,
-        );
-        canvas.restore();
-      }
-      canvas.restore();
-    }
-    if (metrics == null || metrics.maxScrollExtent <= .01) return;
-    _paintOverflowMetrics(
-      canvas,
-      metrics,
-      row.table == null ||
-              row.tableRow == 0 && row.node.content.first.type == 'tableHeader'
-          ? _style.codeBackground
-          : _style.overflowBackground,
-      indicator: row.table == null || row.tableRow == row.table!.childCount - 1,
-    );
-  }
-
-  void _paintOverflowMetrics(
-    Canvas canvas,
-    ({
-      Rect viewport,
-      double offset,
-      double maxScrollExtent,
-      double indicatorOpacity,
-    })
-    metrics,
-    Color background, {
-    bool indicator = true,
-  }) {
-    if (metrics.maxScrollExtent <= .01) return;
-    final rect = metrics.viewport;
-    final width = math.min(_style.overflowFadeWidth, rect.width / 2);
-    void fade(bool left) {
-      if (width <= 0) return;
-      final edge = Rect.fromLTWH(
-        left ? rect.left : rect.right - width,
-        rect.top,
-        width,
-        rect.height,
-      );
-      canvas.drawRect(
-        edge,
-        Paint()
-          ..shader = ui.Gradient.linear(
-            edge.topLeft,
-            edge.topRight,
-            left
-                ? [background, background.withValues(alpha: 0)]
-                : [background.withValues(alpha: 0), background],
-          ),
-      );
-    }
-
-    if (metrics.offset > .01) fade(true);
-    if (metrics.offset < metrics.maxScrollExtent - .01) fade(false);
-    if (metrics.indicatorOpacity <= 0 ||
-        _style.overflowIndicatorHeight <= 0 ||
-        !indicator) {
-      return;
-    }
-    final contentWidth = rect.width + metrics.maxScrollExtent,
-        thumb = math
-            .max(24.0, rect.width * rect.width / contentWidth)
-            .clamp(0.0, rect.width),
-        x =
-            rect.left +
-            (rect.width - thumb) * metrics.offset / metrics.maxScrollExtent;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          x,
-          rect.bottom - _style.overflowIndicatorHeight,
-          thumb,
-          _style.overflowIndicatorHeight,
-        ),
-        const Radius.circular(2),
-      ),
-      Paint()
-        ..color = _style.overflowIndicatorColor.withValues(
-          alpha: _style.overflowIndicatorColor.a * metrics.indicatorOpacity,
-        ),
-    );
-  }
-
-  void _revealHorizontal(int position) {
-    if (_heights == null || _doc.rowCount == 0) return;
-    final index = _indexForPosition(position), row = _row(index);
-    if (row.node.type != 'codeBlock' && row.table == null) return;
-    if (row.table != null) {
-      final layout = _layoutBlock(index) as _TableRowLayout;
-      final found = layout.contentAt(position - row.position);
-      if (found != null && found.row.node.type == 'codeBlock') {
-        final metrics = horizontalScrollMetrics(position)!;
-        final caret = caretRect(position);
-        final delta = caret.right > metrics.viewport.right
-            ? caret.right - metrics.viewport.right
-            : caret.left < metrics.viewport.left
-            ? caret.left - metrics.viewport.left
-            : 0.0;
-        if (delta != 0) {
-          final pixels = (metrics.offset + delta).clamp(
-            0.0,
-            metrics.maxScrollExtent,
-          );
-          if (identical(found.row.node, _horizontalBlock)) {
-            _horizontalPosition!.jumpTo(pixels);
-          } else {
-            _setHorizontalOffset(found.row.node, pixels);
-          }
-        }
-      }
-      for (final (block, _)
-          in layout.contentRows(includeTables: true).toList().reversed) {
-        if (block.layout is! _TableRowLayout ||
-            position < row.position + block.position ||
-            position >=
-                row.position + block.position + block.layout.node.nodeSize) {
-          continue;
-        }
-        final caret = caretRect(position),
-            point = _origin(index) + block.origin;
-        final left = point.dx + 12, right = point.dx + block.width - 12;
-        final delta = caret.right > right
-            ? caret.right - right
-            : caret.left < left
-            ? caret.left - left
-            : 0.0;
-        if (delta == 0) continue;
-        final table = block.row.table!;
-        final pixels = (layout.codeOffset(block) + delta).clamp(
-          0.0,
-          _cellOverflowExtent(block),
-        );
-        if (identical(table, _horizontalBlock)) {
-          _horizontalPosition!.jumpTo(pixels);
-        } else {
-          _setHorizontalOffset(table, pixels);
-        }
-      }
-    }
-    final rect = caretRect(position),
-        left = _rowOrigin(index).dx + 12,
-        right = _rowOrigin(index).dx + _contentWidth - row.indent - 12;
-    final delta = rect.right > right
-        ? rect.right - right
-        : rect.left < left
-        ? rect.left - left
-        : 0.0;
-    if (delta != 0) {
-      _scrollCode(_rowOrigin(index) + Offset(12, row.codeTop + 1), delta);
-    }
-  }
+  _HorizontalMetrics? horizontalScrollMetrics(int position) =>
+      _horizontal.metrics(position);
 
   List<Rect> _searchRects() => [
     for (var i = _firstVisible; i < _lastVisible; i++)
@@ -1372,35 +650,26 @@ class _RenderEditorViewport extends RenderBox
   int get rowCount => _doc.rowCount;
   @override
   Rect rowRect(int position) {
-    final i = _indexForPosition(position),
-        row = _row(i),
-        layout = _layoutBlock(i);
-    if (layout is _TableRowLayout) {
-      final block = layout.contentAt(position - row.position);
-      if (block != null) {
-        final node = block.layout.node, available = block.width;
-        final availableWidth = _widthFor(node, available);
-        final width =
-            _measuredSize(node, availableWidth)?.width ?? availableWidth;
-        return _origin(i) +
-                block.origin +
-                Offset(
-                  _style.centerMedia &&
-                          const {'image', 'video'}.contains(node.type)
-                      ? (available - width) / 2
-                      : 0,
-                  0,
-                ) &
-            Size(width, block.height);
+    final index = _indexForPosition(position);
+    for (final block in _contentBlocks(index)) {
+      if (block.cellRow != null && !block.containsPosition(position)) continue;
+      if (block.cellRow != null ||
+          _nodeViews.containsKey(block.row.node.type)) {
+        final (origin, width) = _mediaBox(
+          block.layout.node,
+          block.origin,
+          block.width,
+          measured: true,
+          clampCenter: block.cellRow == null,
+        );
+        return origin & Size(width, block.height);
       }
+      return block.origin & Size(math.max(1, block.width), block.height);
     }
-    return (_nodeViews.containsKey(row.node.type)
-            ? _nodeOrigin(i)
-            : _rowOrigin(i)) &
+    final row = _row(index), layout = _layoutBlock(index);
+    return _rowOrigin(index) &
         Size(
-          _nodeViews.containsKey(row.node.type)
-              ? (_measuredSize(row.node, _nodeWidth(i))?.width ?? _nodeWidth(i))
-              : math.max(1, _contentWidth - row.indent),
+          math.max(1, _contentWidth - row.indent),
           layout.height + row.codeTop + row.codeBottom,
         );
   }
@@ -1430,39 +699,12 @@ class _RenderEditorViewport extends RenderBox
   @override
   Rect? taskCheckboxRect(int position) {
     if (_doc.rowCount == 0 || _heights == null) return null;
-    final i = _indexForPosition(position), row = _row(i);
-    final layout = _layoutBlock(i);
-    if (layout is _TableRowLayout) {
-      final block = layout.contentAt(position - row.position);
-      return block == null
-          ? null
-          : _checkboxFor(block.row, _origin(i) + block.origin);
-    }
-    return _checkboxFor(row, _rowOrigin(i));
-  }
-
-  int? _taskAt(Offset point) {
-    if (_heights == null || _doc.rowCount == 0) return null;
-    final index = _heights!.indexAt(point.dy + _paintOffset - _contentTop);
-    final row = _row(index), layout = _layoutBlock(index);
-    if (layout is _TableRowLayout) {
-      for (final (block, cell) in layout.contentRows()) {
-        if (!(block.clip ?? cell.rect).shift(_origin(index)).contains(point)) {
-          continue;
-        }
-        final rect = _checkboxFor(block.row, _origin(index) + block.origin);
-        if (rect?.inflate(3).contains(point) == true) {
-          return row.position +
-              block.position +
-              block.row.taskPosition! -
-              block.row.position;
-        }
+    for (final block in _contentBlocks(_indexForPosition(position))) {
+      if (block.cellRow == null || block.containsPosition(position)) {
+        return _checkboxFor(block.row, block.origin);
       }
-      return null;
     }
-    return taskCheckboxRect(row.position)?.inflate(3).contains(point) == true
-        ? row.taskPosition
-        : null;
+    return null;
   }
 
   @override
@@ -1472,85 +714,13 @@ class _RenderEditorViewport extends RenderBox
   @override
   int positionForOffset(Offset offset) {
     if (_doc.rowCount == 0 || _heights == null) return 0;
-    final i = _heights!.indexAt(offset.dy + _paintOffset - _contentTop);
+    final i = _rowIndexAt(offset);
     final layout = _layoutBlock(i), start = _row(i).position;
-    if (!layout.node.isTextblock && layout is! _TableRowLayout) return start;
+    if (_row(i).value.isAtomRow) return start;
     return start + 1 + layout.position(offset - _origin(i));
   }
 
-  m.Node? _referenceAt(Offset point) {
-    if (_heights == null || _doc.rowCount == 0) return null;
-    final index = _heights!.indexAt(point.dy + _paintOffset - _contentTop);
-    final layout = _layoutBlock(index), origin = _origin(index);
-    if (layout is _TableRowLayout) {
-      for (final (block, cell) in layout.contentRows()) {
-        if (!(block.clip ?? cell.rect).shift(origin).contains(point)) continue;
-        final found = _referenceIn(
-          block.layout,
-          origin + block.textOrigin,
-          point,
-        );
-        if (found != null) return found;
-      }
-      return null;
-    }
-    return _referenceIn(layout, origin, point);
-  }
-
-  m.Node? _referenceIn(_BlockLayout layout, Offset origin, Offset point) {
-    var y = origin.dy;
-    for (final chunk in layout.chunks) {
-      final boxes = chunk.paragraph!.getBoxesForPlaceholders();
-      for (var c = 0; c < chunk.chips.length; c++) {
-        if (boxes[chunk.chips[c].$3]
-            .toRect()
-            .shift(Offset(origin.dx, y))
-            .contains(point)) {
-          return chunk.chips[c].$1;
-        }
-      }
-      y += chunk.height;
-    }
-    return null;
-  }
-
-  Rect _caretForInput(int position) {
-    if (_heights == null || _doc.rowCount == 0) return caretRect(position);
-    final i = _indexForPosition(position);
-    if (i >= _firstVisible && i < _lastVisible) return caretRect(position);
-    final cached = _layouts[_row(i).node];
-    if (cached?.width == _contentWidth && identical(cached?.style, _style)) {
-      return caretRect(position);
-    }
-    final text = _style.forBlock(_row(i).node);
-    return _origin(i) &
-        Size(_style.caretWidth, (text.fontSize ?? 17) * (text.height ?? 1.5));
-  }
-
   _CaretGeometry? _lastCaretGeometry;
-  Rect _visualCaretRect(int position) {
-    if (_controller.state.selection is m.GapSelection ||
-        _doc.rowCount == 0 ||
-        _heights == null) {
-      _lastCaretGeometry = null;
-      return caretRect(position);
-    }
-    final i = _indexForPosition(position), row = _row(i);
-    final layout = _layoutBlock(i), origin = _origin(i);
-    if (!layout.node.isTextblock && layout is! _TableRowLayout) {
-      _lastCaretGeometry = null;
-      return caretRect(position);
-    }
-    final value = layout
-        .caretGeometry(
-          (position - row.position - 1).clamp(0, layout.node.content.size),
-          _style.caretWidth,
-          _style.caretHeightFactor,
-        )
-        .shift(origin);
-    _lastCaretGeometry = value;
-    return value.rect;
-  }
 
   @override
   Rect caretRect(int position) {
@@ -1578,7 +748,7 @@ class _RenderEditorViewport extends RenderBox
         2,
       );
     }
-    if (!layout.node.isTextblock && layout is! _TableRowLayout) {
+    if (!layout.hasText && layout is! _TableRowLayout) {
       return Rect.fromLTWH(
         origin.dx,
         origin.dy,
@@ -1599,30 +769,31 @@ class _RenderEditorViewport extends RenderBox
     if (_doc.rowCount == 0 || from >= to || _heights == null) return [];
     var a = _indexForPosition(from), b = _indexForPosition(to - 1);
     final originalA = a, originalB = b;
+    final first = _row(a), last = _row(b);
+    if (first.table != null && m.TableMap.get(first.table!).hasRowspan) {
+      a -= first.tableRow;
+    }
+    if (last.table case final table? when m.TableMap.get(table).hasRowspan) {
+      b += table.childCount - last.tableRow - 1;
+    }
     if (visibleOnly) {
-      a = _firstVisible;
-      b = _lastVisible - 1;
+      a = math.max(a, _firstVisible);
+      b = math.min(b, _lastVisible - 1);
     }
     final result = <Rect>[];
     for (var i = a; i <= b; i++) {
+      _controller.diagnostics.selectionRows++;
       if ((i < originalA || i > originalB) && _row(i).table == null) continue;
       final layout = _layoutBlock(i),
           origin = _origin(i),
           start = _row(i).position;
-      if (!layout.node.isTextblock && layout is! _TableRowLayout) {
+      if (!layout.hasText && layout is! _TableRowLayout) {
         result.add(rowRect(start));
         continue;
       }
       result.addAll(
         layout
-            .boxes(
-              layout is _TableRowLayout
-                  ? from - start - 1
-                  : (from - start - 1).clamp(0, layout.node.content.size),
-              layout is _TableRowLayout
-                  ? to - start - 1
-                  : (to - start - 1).clamp(0, layout.node.content.size),
-            )
+            .boxes(from - start - 1, to - start - 1)
             .map((rect) => rect.shift(origin))
             .map(
               (rect) => layout is _TableRowLayout
@@ -1638,23 +809,6 @@ class _RenderEditorViewport extends RenderBox
       );
     }
     return result;
-  }
-
-  TextRange _boundary(int position, bool word) {
-    if (_doc.rowCount == 0) return const TextRange.collapsed(0);
-    final i = _indexForPosition(position), start = _row(i).position;
-    final layout = _layoutBlock(i);
-    if (!layout.node.isTextblock && layout is! _TableRowLayout) {
-      return TextRange(start: start, end: start + layout.node.nodeSize);
-    }
-    final range = layout.boundary(
-      (position - start - 1).clamp(0, layout.node.content.size),
-      word: word,
-    );
-    return TextRange(
-      start: start + 1 + math.max(0, range.start),
-      end: start + 1 + math.max(0, range.end),
-    );
   }
 
   @override
@@ -1740,12 +894,14 @@ class _RenderEditorViewport extends RenderBox
     }
     // Visible rows are indexed before the background count reaches them.
     if (_controller._searchIndex.query.isNotEmpty) {
+      final paint = Paint()..color = const Color(0x66ffcc00);
       for (var i = _firstVisible; i < _lastVisible; i++) {
         for (final match in _controller._searchIndex.rowMatches(
           _row(i).value,
+          preparedOnly: true,
         )) {
           for (final rect in selectionRects(match.from, match.to)) {
-            canvas.drawRect(rect, Paint()..color = const Color(0x66ffcc00));
+            canvas.drawRect(rect, paint);
           }
         }
       }
@@ -1813,7 +969,7 @@ class _RenderEditorViewport extends RenderBox
     canvas.translate(offset.dx, offset.dy);
     canvas.clipRect(Offset.zero & size);
     for (var i = _firstVisible; i < _lastVisible; i++) {
-      _paintOverflow(canvas, i);
+      _horizontal._paintOverflow(canvas, i);
     }
     if (!_readOnly &&
         selection is m.NodeSelection &&
@@ -1852,30 +1008,15 @@ class _RenderEditorViewport extends RenderBox
   }
 
   Iterable<(int, _Row, Rect)> _visibleTasks() sync* {
+    final viewport = Offset.zero & size;
     for (var index = _firstVisible; index < _lastVisible; index++) {
-      final row = _row(index), layout = _layoutBlock(index);
-      if (layout is _TableRowLayout) {
-        for (final (block, cell) in layout.contentRows()) {
-          final rect = _checkboxFor(block.row, _origin(index) + block.origin);
-          if (rect == null) continue;
-          final clip = rect
-              .intersect((block.clip ?? cell.rect).shift(_origin(index)))
-              .intersect(Offset.zero & size);
-          if (!clip.isEmpty) {
-            yield (
-              row.position +
-                  block.position +
-                  block.row.taskPosition! -
-                  block.row.position,
-              block.row,
-              clip,
-            );
-          }
-        }
-      } else {
-        final rect = _checkboxFor(row, _rowOrigin(index));
-        if (rect != null && rect.overlaps(Offset.zero & size)) {
-          yield (row.taskPosition!, row, rect.intersect(Offset.zero & size));
+      for (final block in _contentBlocks(index)) {
+        final rect = _checkboxFor(block.row, block.origin);
+        if (rect == null) continue;
+        final clip = (block.clip == null ? rect : rect.intersect(block.clip!))
+            .intersect(viewport);
+        if (block.clip == null ? rect.overlaps(viewport) : !clip.isEmpty) {
+          yield (block.taskPosition!, block.row, clip);
         }
       }
     }

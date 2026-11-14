@@ -10,12 +10,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 import 'package:moodiary_editor/moodiary_editor.dart';
-import 'package:moodiary_editor/src/editor/media_cache.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
+import 'support/nodes.dart';
+
 final _schema = ft.Schema.standard();
-ft.Node _image(String name) => _schema.node('image', attrs: {'src': name});
+final _image = TestNodes(_schema).image;
 String _document(ft.Node node) =>
     jsonEncode(_schema.node('doc', attrs: {'v': 2}, content: [node]).toJson());
 
@@ -247,6 +249,134 @@ void main() {
     },
   );
 
+  for (final (together, depth) in [
+    (false, 0),
+    (true, 0),
+    (false, 2),
+    (true, 2),
+  ]) {
+    testWidgets(
+      'offscreen image headers preserve measured paragraphs and scroll anchor ${together ? 'in one frame' : 'across frames'} at table depth $depth',
+      (tester) async {
+        final probes = <String, Completer<FastImageProbe>>{};
+        ft.Node imageRow(String name) {
+          var node = _image(name);
+          for (var level = 0; level < depth; level++) {
+            node = _schema.node(
+              'table',
+              content: [
+                _schema.node(
+                  'tableRow',
+                  content: [
+                    _schema.node('tableCell', content: [node]),
+                  ],
+                ),
+              ],
+            );
+          }
+          return node;
+        }
+
+        final host = MoodiaryEditorHost(
+          MoodiaryEditor(
+            initialContent: _schema
+                .node(
+                  'doc',
+                  attrs: {'v': 2},
+                  content: [
+                    imageRow('image-above.jpg'),
+                    for (var index = 0; index < 240; index++)
+                      _schema.node(
+                        'paragraph',
+                        content: [_schema.node('text', text: 'Short $index')],
+                      ),
+                    imageRow('image-below.jpg'),
+                    for (var index = 0; index < 30; index++)
+                      _schema.node(
+                        'paragraph',
+                        content: [_schema.node('text', text: 'Tail $index')],
+                      ),
+                  ],
+                )
+                .toJsonString(),
+            readOnly: true,
+            mediaResolver: (name, {poster = false}) async =>
+                (path: name, mime: 'image/jpeg'),
+          ),
+          imageProbe: ({required filePath}) =>
+              (probes[filePath] = Completer<FastImageProbe>()).future,
+        );
+        addTearDown(() async {
+          await tester.pumpWidget(const SizedBox.shrink());
+          host.dispose();
+          PaintingBinding.instance.imageCache.clear();
+          PaintingBinding.instance.imageCache.clearLiveImages();
+        });
+        await tester.pumpWidget(
+          _view(
+            host,
+            null,
+            child: SizedBox(
+              width: 150,
+              height: 360,
+              child: ft.TiptapEditor(
+                key: host.editorKey,
+                controller: host.editor,
+                scrollController: host.scroll,
+                readOnly: true,
+                nodeViews: host.nodeViews,
+                nodeHeightEstimator: host.estimateNodeHeight,
+                style: const ft.TiptapEditorStyle(
+                  cacheExtent: 0,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        for (var step = 0; step < 24; step++) {
+          host.scroll.jumpTo(host.scroll.offset + 150);
+          await tester.pumpAndSettle();
+        }
+        expect(
+          probes.keys,
+          containsAll(['image-above.jpg', 'image-below.jpg']),
+        );
+        final geometry = host.editorKey.currentState!.geometry!;
+        final position = geometry.positionForOffset(const Offset(10, 1));
+        final before = geometry.rowRect(position).top;
+        final scrollBefore = host.scroll.offset;
+        final scans = host.editor.diagnostics.fullDocumentScans;
+        expect(before, lessThanOrEqualTo(1));
+        expect(
+          geometry.rowRect(host.editor.state.doc.content.size - 1).top,
+          greaterThan(360),
+        );
+        probes['image-above.jpg']!.complete(_header());
+        double? afterAbove;
+        if (!together) {
+          await tester.pumpAndSettle();
+          expect(geometry.rowRect(position).top, closeTo(before, .01));
+          expect(host.scroll.offset, greaterThan(scrollBefore));
+          afterAbove = host.scroll.offset;
+        }
+        probes['image-below.jpg']!.complete(_header());
+        await tester.pumpAndSettle();
+        expect(geometry.rowRect(position).top, closeTo(before, .01));
+        expect(host.scroll.offset, greaterThan(scrollBefore));
+        if (depth == 0) {
+          expect(host.scroll.offset, closeTo(scrollBefore + 350, .01));
+        }
+        if (afterAbove != null) {
+          expect(host.scroll.offset, closeTo(afterAbove, .01));
+        }
+        expect(host.editor.diagnostics.fullDocumentScans, scans);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets(
     'header results from a swapped or disposed document are ignored',
     (tester) async {
@@ -442,21 +572,21 @@ void main() {
   });
 
   test('media cache bounds and refreshes its least recently used entries', () {
-    final cache = MediaCache<int, int>();
+    final cache = LRUCache<int, int>(maxSize: 512);
     for (var index = 0; index < 512; index++) {
-      cache[index] = index;
+      cache.put(index, index);
     }
-    expect(cache[0], 0);
-    cache[512] = 512;
-    expect(cache[1], isNull);
-    expect(cache[0], 0);
-    cache[0] = 1000;
-    cache[513] = 513;
-    expect(cache[2], isNull);
-    expect(cache[0], 1000);
+    expect(cache.get(0), 0);
+    cache.put(512, 512);
+    expect(cache.get(1), isNull);
+    expect(cache.get(0), 0);
+    cache.put(0, 1000);
+    cache.put(513, 513);
+    expect(cache.get(2), isNull);
+    expect(cache.get(0), 1000);
     cache.clear();
-    expect(cache[0], isNull);
-    expect(cache[513], isNull);
+    expect(cache.get(0), isNull);
+    expect(cache.get(513), isNull);
   });
 
   for (final kind in ['file', 'network', 'data']) {

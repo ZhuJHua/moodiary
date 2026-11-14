@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter_tiptap/model.dart';
 
+import 'nodes.dart';
+
 /// Reproducible UTF-16 text budget, including one deliberately long paragraph.
 Node generateLargeDocument(int characters, {Schema? schema, int seed = 17}) {
   if (characters < 50000) {
@@ -44,7 +46,7 @@ Node generateLargeDocument(int characters, {Schema? schema, int seed = 17}) {
     }
     index++;
   }
-  return s.node('doc', content: blocks);
+  return TestNodes(s).doc(blocks);
 }
 
 /// One top-level list, including a deterministic nested branch in each item.
@@ -56,8 +58,7 @@ Node generateLargeListDocument({
 }) {
   if (items < 1) throw ArgumentError.value(items, 'items');
   final s = schema ?? Schema.standard();
-  Node paragraph(String text) =>
-      s.node('paragraph', content: [s.node('text', text: text)]);
+  final paragraph = TestNodes(s).p;
   return s.node(
     'doc',
     content: [
@@ -122,10 +123,7 @@ Node generateLargeTableDocument({
 Node generateLargeMixedDocument({int groups = 1000, Schema? schema}) {
   if (groups < 1) throw ArgumentError.value(groups, 'groups');
   final documentSchema = schema ?? Schema.standard();
-  Node paragraph(String value) => documentSchema.node(
-    'paragraph',
-    content: [documentSchema.node('text', text: value)],
-  );
+  final paragraph = TestNodes(documentSchema).p;
   return documentSchema.node(
     'doc',
     content: [

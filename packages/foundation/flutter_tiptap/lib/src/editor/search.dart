@@ -60,23 +60,24 @@ extension _SearchController on TiptapController {
         row < math.min(doc.rowCount, _searchVisible.$2);
         row++
       ) {
-        await index.prepare(
+        final pending = index.prepare(
           doc.rowAt(row).node,
           watch,
           cancelled: cancelled,
           onYield: progress,
         );
+        if (pending is Future<void>) await pending;
         if (cancelled()) break;
       }
-      for (var row = 0; row < doc.rowCount; row++) {
+      for (final value in doc.rows()) {
         if (_disposed || generation != _searchGeneration) break;
-        final value = doc.rowAt(row);
-        await index.prepare(
+        final pending = index.prepare(
           value.node,
           watch,
           cancelled: cancelled,
           onYield: progress,
         );
+        if (pending is Future<void>) await pending;
         if (cancelled()) break;
         for (final hit in index.rowMatches(value, preparedOnly: true)) {
           if (hit.from >= end) {

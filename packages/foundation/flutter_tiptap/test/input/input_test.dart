@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
@@ -7,124 +7,17 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
+import 'package:moodiary_lint/testing.dart';
 
+import '../support/ime.dart';
 import '../support/large_doc.dart';
-
-// The engine owns this state. Outbound framework updates can stay in flight
-// while subsequent native deltas are computed, just as on the iOS input queue.
-class _Ime {
-  _Ime(this.tester) {
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.textInput,
-      (call) async {
-        if (call.method == 'TextInput.setClient') {
-          client = (call.arguments as List).first as int;
-        } else if (call.method == 'TextInput.setEditingState') {
-          final next = TextEditingValue.fromJSON(
-            Map<String, dynamic>.from(call.arguments as Map),
-          );
-          sent.add(next);
-          if (holdUpdates) {
-            pending.add(next);
-            final reply = Completer<void>();
-            _replies.add(reply);
-            return reply.future;
-          } else {
-            value = next;
-          }
-        } else if (call.method == 'TextInput.show') {
-          visible = true;
-        }
-        return;
-      },
-    );
-    addTearDown(() {
-      for (final reply in _replies) {
-        reply.complete();
-      }
-      tester.testTextInput.register();
-    });
-  }
-  final WidgetTester tester;
-  int? client;
-  bool holdUpdates = false, visible = false;
-  TextEditingValue value = TextEditingValue.empty;
-  final sent = <TextEditingValue>[], pending = <TextEditingValue>[];
-  final _replies = <Completer<void>>[];
-  final _queued = <Map<String, Object?>>[];
-  bool get hasQueued => _queued.isNotEmpty;
-
-  Future<void> message(String name, dynamic arguments) async {
-    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
-      SystemChannels.textInput.name,
-      SystemChannels.textInput.codec.encodeMethodCall(
-        MethodCall(name, [client!, arguments]),
-      ),
-      (_) {},
-    );
-  }
-
-  Future<void> edit({
-    String text = '',
-    int? from,
-    int? to,
-    TextRange composing = TextRange.empty,
-    bool selectionOnly = false,
-    bool queue = false,
-    int? caret,
-  }) async {
-    final before = value;
-    from ??= before.selection.start;
-    to ??= before.selection.end;
-    final nextText = selectionOnly
-        ? before.text
-        : before.text.replaceRange(from, to, text);
-    caret ??= selectionOnly
-        ? before.selection.extentOffset
-        : from + text.length;
-    value = TextEditingValue(
-      text: nextText,
-      selection: TextSelection.collapsed(offset: caret),
-      composing: composing,
-    );
-    final packet = <String, Object?>{
-      'deltas': [
-        {
-          'oldText': before.text,
-          'deltaStart': selectionOnly ? -1 : from,
-          'deltaEnd': selectionOnly ? -1 : to,
-          'deltaText': text,
-          'selectionBase': caret,
-          'selectionExtent': caret,
-          'composingBase': composing.start,
-          'composingExtent': composing.end,
-        },
-      ],
-    };
-    if (queue) {
-      _queued.add(packet);
-    } else {
-      await message('TextInputClient.updateEditingStateWithDeltas', packet);
-    }
-  }
-
-  Future<void> flush() async {
-    for (final packet in _queued) {
-      await message('TextInputClient.updateEditingStateWithDeltas', packet);
-    }
-    _queued.clear();
-  }
-
-  Future<void> returnAction() =>
-      message('TextInputClient.performAction', 'TextInputAction.newline');
-}
 
 // Flutter 3.47.8 InputConnectionAdaptor.handleKeyEvent, ACTION_DOWN:
 // arrows adjust selection, multiline Enter inserts its Unicode character,
 // DEL/FORWARD_DEL have Unicode 0 and produce no fallback edit.
 class _AndroidKeyboard {
   _AndroidKeyboard(this.ime);
-  final _Ime ime;
+  final FakeIme ime;
   int fallbackEdits = 0, redispatched = 0;
   Future<bool> key(
     LogicalKeyboardKey key, {
@@ -205,11 +98,373 @@ void main() {
   }
 
   const androidPlatform = TargetPlatformVariant({TargetPlatform.android});
+  for (final blockType in [
+    'reference paragraph',
+    'heading',
+    'long paragraph',
+  ]) {
+    for (final batched in [false, true]) {
+      for (final correction in ['hellodu', 'during', 'yellow']) {
+        testWidgets(
+          'iOS replaces a word before space in $blockType with batched deltas $batched to $correction',
+          (tester) async {
+            final ime = FakeIme(tester);
+            final fixture = schema.parse(
+              File(
+                '$repoRoot/packages/foundation/flutter_tiptap/test/fixtures/nested_layout/document.json',
+              ).readAsStringSync(),
+            );
+            final block = blockType == 'reference paragraph'
+                ? fixture.blocks.first
+                : schema.node(
+                    blockType == 'heading' ? 'heading' : 'paragraph',
+                    attrs: blockType == 'heading' ? {'level': 2} : null,
+                    content: [
+                      schema.node(
+                        'text',
+                        text: blockType == 'heading'
+                            ? 'A heading'
+                            : List.filled(900, 'word').join(),
+                      ),
+                    ],
+                  );
+            final controller = ft.TiptapController(
+              doc: schema.node('doc', content: [block]),
+            );
+            final original = block.textContent;
+            final end = block.content.size + 1;
+            controller.setSelection(ft.TextSelection(end));
+            final key = await mount(tester, controller);
+            for (final text in [' hello', 'd', 'u']) {
+              await ime.edit(text: text);
+              await tester.pump(const Duration(milliseconds: 350));
+            }
+            final before = ime.value;
+            final wordStart = before.selection.extentOffset - 7;
+            final replaced = before.text.replaceRange(
+              wordStart,
+              wordStart + 7,
+              correction,
+            );
+            final caret = wordStart + correction.length;
+            final deltas = <TextEditingDelta>[
+              TextEditingDeltaNonTextUpdate(
+                oldText: before.text,
+                selection: before.selection,
+                composing: TextRange(start: wordStart, end: wordStart + 7),
+              ),
+              TextEditingDeltaReplacement(
+                oldText: before.text,
+                replacedRange: TextRange(start: wordStart, end: wordStart + 7),
+                replacementText: correction,
+                selection: TextSelection.collapsed(offset: caret),
+                composing: TextRange.empty,
+              ),
+              TextEditingDeltaNonTextUpdate(
+                oldText: replaced,
+                selection: TextSelection.collapsed(offset: caret),
+                composing: TextRange.empty,
+              ),
+              TextEditingDeltaInsertion(
+                oldText: replaced,
+                textInserted: ' ',
+                insertionOffset: caret,
+                selection: TextSelection.collapsed(offset: caret + 1),
+                composing: TextRange.empty,
+              ),
+            ];
+            if (batched) {
+              key.currentState!.debugApplyDeltas(deltas);
+            } else {
+              for (final delta in deltas) {
+                key.currentState!.debugApplyDeltas([delta]);
+                await tester.pump();
+              }
+            }
+            expect(
+              controller.state.doc.blocks.first.textContent,
+              '$original $correction ',
+            );
+            expect(
+              controller.state.selection,
+              ft.TextSelection(end + correction.length + 2),
+            );
+            final expectedText = blockType == 'long paragraph'
+                ? '\u200b${('$original $correction ').substring(original.length + correction.length + 2 - 2048)}'
+                : '\u200b${block.content.map((node) => node.isText
+                      ? node.text!
+                      : node.type == 'hardBreak'
+                      ? '\n'
+                      : '\ufffc').join()} $correction ';
+            expect(key.currentState!.debugInputValue.text, expectedText);
+            expect(
+              key.currentState!.debugInputValue.selection,
+              TextSelection.collapsed(offset: expectedText.length),
+            );
+            await tester.pump();
+          },
+          variant: const TargetPlatformVariant({TargetPlatform.iOS}),
+        );
+      }
+    }
+  }
+  for (final correction in ['hellodu', 'during']) {
+    for (final extraWords in [0, 600]) {
+      for (final holdUpdates in [false, true]) {
+        testWidgets(
+          'iOS autocorrection to $correction after a reference with $extraWords extra words and held updates $holdUpdates preserves text and selection',
+          (tester) async {
+            final ime = FakeIme(tester);
+            final controller = ft.TiptapController(
+              doc: schema.parse(
+                File(
+                  '$repoRoot/packages/foundation/flutter_tiptap/test/fixtures/nested_layout/document.json',
+                ).readAsStringSync(),
+              ),
+            );
+            if (extraWords > 0) {
+              controller.setSelection(
+                ft.TextSelection(
+                  controller.state.doc.blocks.first.content.size + 1,
+                ),
+              );
+              controller.exec('insertText', {
+                'text': List.filled(extraWords, 'word').join(),
+              });
+            }
+            final original = controller.state.doc.blocks.first.textContent;
+            final end = controller.state.doc.blocks.first.content.size + 1;
+            controller.setSelection(ft.TextSelection(end));
+            final key = await mount(tester, controller);
+            ime.holdUpdates = holdUpdates;
+            for (final text in [' hello', 'd', 'u']) {
+              await ime.edit(text: text);
+              await tester.pump();
+              if (!holdUpdates || extraWords == 0) {
+                expect(key.currentState!.debugInputValue, ime.value);
+              }
+            }
+            await ime.edit(text: ' ');
+            final before = ime.value;
+            final wordStart = before.text.length - 'hellodu '.length;
+            final correctedText = before.text.replaceRange(
+              wordStart,
+              before.text.length,
+              '$correction ',
+            );
+            key.currentState!.debugApplyDeltas([
+              TextEditingDeltaNonTextUpdate(
+                oldText: before.text,
+                selection: before.selection,
+                composing: TextRange(start: wordStart, end: before.text.length),
+              ),
+              TextEditingDeltaReplacement(
+                oldText: before.text,
+                replacedRange: TextRange(
+                  start: wordStart,
+                  end: before.text.length,
+                ),
+                replacementText: '$correction ',
+                selection: TextSelection.collapsed(
+                  offset: correctedText.length,
+                ),
+                composing: TextRange.empty,
+              ),
+              TextEditingDeltaNonTextUpdate(
+                oldText: correctedText,
+                selection: TextSelection.collapsed(
+                  offset: correctedText.length,
+                ),
+                composing: TextRange.empty,
+              ),
+            ]);
+            expect(
+              controller.state.doc.blocks.first.textContent,
+              '$original $correction ',
+            );
+            expect(
+              controller.state.selection,
+              ft.TextSelection(end + correction.length + 2),
+            );
+            final tail =
+                '${List.filled(extraWords, 'word').join()} $correction ';
+            final canonicalText = extraWords > 0
+                ? '\u200b${tail.substring(tail.length - 2048)}'
+                : correctedText;
+            expect(
+              key.currentState!.debugInputValue,
+              TextEditingValue(
+                text: canonicalText,
+                selection: TextSelection.collapsed(
+                  offset: canonicalText.length,
+                ),
+              ),
+            );
+            await tester.pump();
+          },
+          variant: const TargetPlatformVariant({TargetPlatform.iOS}),
+        );
+      }
+    }
+  }
+  for (final change in [
+    'selection',
+    'text',
+    'multiline',
+    'marks',
+    'block type',
+    'undo',
+    'redo',
+    'document replacement',
+    'hard break',
+    'composition commit',
+    'search selection',
+  ]) {
+    testWidgets(
+      'native editing value follows $change',
+      (tester) async {
+        final ime = FakeIme(tester);
+        final controller = ft.TiptapController(
+          doc: schema.node(
+            'doc',
+            content: [
+              schema.node(
+                'paragraph',
+                content: [
+                  schema.node('text', text: 'before '),
+                  schema.node('diaryLink', attrs: {'id': '42', 'label': '日记'}),
+                  schema.node('text', text: ' tail'),
+                ],
+              ),
+            ],
+          ),
+        );
+        controller.setSelection(const ft.TextSelection(14));
+        final key = await mount(tester, controller);
+        var expected = const TextEditingValue(
+          text: '\u200bbefore \ufffc tail',
+          selection: TextSelection.collapsed(offset: 14),
+        );
+        expect(ime.value, expected);
+        ime.sent.clear();
+        switch (change) {
+          case 'selection':
+            controller.setSelection(const ft.TextSelection(10, 14));
+            expected = expected.copyWith(
+              selection: const TextSelection(baseOffset: 10, extentOffset: 14),
+            );
+          case 'text':
+            controller.exec('insertText', {'text': ' hello'});
+            expected = expected.copyWith(
+              text: '${expected.text} hello',
+              selection: const TextSelection.collapsed(offset: 20),
+            );
+          case 'multiline':
+            controller.insertPlainText('line1\nline2');
+            expected = const TextEditingValue(
+              text: '\u200bline2',
+              selection: TextSelection.collapsed(offset: 6),
+            );
+          case 'marks':
+            controller.setSelection(const ft.TextSelection(10, 14));
+            controller.exec('toggleMark', {'type': 'bold'});
+            expected = expected.copyWith(
+              selection: const TextSelection(baseOffset: 10, extentOffset: 14),
+            );
+          case 'block type':
+            controller.exec('setHeading', {'level': 2});
+          case 'undo':
+            controller.insertPlainText('word');
+            controller.exec('undo');
+          case 'redo':
+            controller.insertPlainText('word');
+            controller.exec('undo');
+            controller.exec('redo');
+            expected = expected.copyWith(
+              text: '${expected.text}word',
+              selection: const TextSelection.collapsed(offset: 18),
+            );
+          case 'document replacement':
+            controller.replaceDocument(
+              schema.node(
+                'doc',
+                content: [
+                  schema.node(
+                    'paragraph',
+                    content: [schema.node('text', text: 'new')],
+                  ),
+                ],
+              ),
+            );
+            expected = const TextEditingValue(
+              text: '\u200bnew',
+              selection: TextSelection.collapsed(offset: 1),
+            );
+          case 'hard break':
+            controller.exec('hardBreak');
+            expected = expected.copyWith(
+              text: '${expected.text}\n',
+              selection: const TextSelection.collapsed(offset: 15),
+            );
+          case 'composition commit':
+            await ime.edit(
+              text: 'hello',
+              composing: const TextRange(start: 14, end: 19),
+            );
+            await tester.pump();
+            expect(ime.value.composing, const TextRange(start: 14, end: 19));
+            expect(key.currentState!.debugInputValue, ime.value);
+            key.currentState!.finishComposition();
+            expected = expected.copyWith(
+              text: '${expected.text}hello',
+              selection: const TextSelection.collapsed(offset: 19),
+            );
+          case 'search selection':
+            controller.startSearch('tail');
+            for (
+              var frame = 0;
+              frame < 20 && !controller.searchStatus.value.complete;
+              frame++
+            ) {
+              await tester.pump(const Duration(milliseconds: 10));
+            }
+            expect(controller.searchStatus.value.complete, isTrue);
+            expected = expected.copyWith(
+              selection: const TextSelection(baseOffset: 10, extentOffset: 14),
+            );
+        }
+        await tester.pump();
+        await tester.pump();
+        expect(key.currentState!.debugInputValue, expected);
+        expect(ime.value, expected);
+        if (defaultTargetPlatform == TargetPlatform.iOS) {
+          final rects =
+              ime.calls
+                      .lastWhere(
+                        (call) => call.method == 'TextInput.setSelectionRects',
+                      )
+                      .arguments
+                  as List;
+          expect((rects.last as List)[4], expected.selection.extentOffset);
+        }
+        if (change != 'block type') expect(ime.sent, contains(expected));
+        final sent = ime.sent.length;
+        controller.clearSearch();
+        await tester.pump();
+        expect(ime.value, expected);
+        expect(ime.sent, hasLength(sent));
+      },
+      variant: const TargetPlatformVariant({
+        TargetPlatform.iOS,
+        TargetPlatform.android,
+      }),
+    );
+  }
   for (final key in [LogicalKeyboardKey.backspace, LogicalKeyboardKey.delete]) {
     testWidgets(
       'Android $key is handled once; engine has no deletion fallback',
       (tester) async {
-        final ime = _Ime(tester), c = document('');
+        final ime = FakeIme(tester), c = document('');
         final keyboard = _AndroidKeyboard(ime);
         await mount(tester, c);
         await keyboard.commitText('abcd');
@@ -237,7 +492,7 @@ void main() {
   testWidgets(
     'Android KEYCODE_DEL preserves live composition and deletes graphemes',
     (tester) async {
-      final ime = _Ime(tester), c = document('');
+      final ime = FakeIme(tester), c = document('');
       final keyboard = _AndroidKeyboard(ime);
       await mount(tester, c);
       await ime.edit(
@@ -264,7 +519,7 @@ void main() {
     testWidgets(
       'Android ${keyEvent ? 'KEYCODE_DEL' : 'deleteSurroundingText'} deletes the empty-paragraph sentinel and joins',
       (tester) async {
-        final ime = _Ime(tester);
+        final ime = FakeIme(tester);
         final c = ft.TiptapController(
           state: ft.EditorState(
             doc: schema.node(
@@ -302,7 +557,7 @@ void main() {
   testWidgets(
     'Android direct commitText and deleteSurroundingText edits are not echoed or duplicated',
     (tester) async {
-      final ime = _Ime(tester), c = document('');
+      final ime = FakeIme(tester), c = document('');
       final keyboard = _AndroidKeyboard(ime);
       await mount(tester, c);
       final sent = ime.sent.length;
@@ -322,7 +577,7 @@ void main() {
   testWidgets(
     'Android KEYCODE_DEL can undo an input rule and keeps native Enter and document-owned arrows',
     (tester) async {
-      final ime = _Ime(tester), c = document('');
+      final ime = FakeIme(tester), c = document('');
       final keyboard = _AndroidKeyboard(ime);
       await mount(tester, c);
       await keyboard.commitText('## ');
@@ -346,7 +601,7 @@ void main() {
   testWidgets(
     'Android deletion repeats and first-empty-block sentinel stay synchronized',
     (tester) async {
-      final ime = _Ime(tester), c = document('');
+      final ime = FakeIme(tester), c = document('');
       await mount(tester, c);
       await ime.edit(text: 'ab');
       expect(
@@ -376,7 +631,7 @@ void main() {
   testWidgets(
     'Android forward Delete joins at the end of the native block window',
     (tester) async {
-      final ime = _Ime(tester);
+      final ime = FakeIme(tester);
       final c = ft.TiptapController(
         state: ft.EditorState(
           doc: schema.node(
@@ -412,7 +667,7 @@ void main() {
   testWidgets('Android deletion keys map a windowed caret back to the document', (
     tester,
   ) async {
-    final ime = _Ime(tester),
+    final ime = FakeIme(tester),
         c = document(
           '${List.filled(2499, 'a').join()}XYZ${List.filled(2498, 'b').join()}',
         );
@@ -435,7 +690,7 @@ void main() {
   testWidgets(
     'Android soft Enter with Unicode zero is handled once after earlier text deltas',
     (tester) async {
-      final ime = _Ime(tester);
+      final ime = FakeIme(tester);
       final c = ft.TiptapController(commands: const ft.EditorCommands());
       await mount(tester, c);
       final keyboard = _AndroidKeyboard(ime);
@@ -465,7 +720,7 @@ void main() {
   testWidgets('Android IME_ACTION_NONE requests a newline without a delta', (
     tester,
   ) async {
-    final ime = _Ime(tester), c = document('');
+    final ime = FakeIme(tester), c = document('');
     final keyboard = _AndroidKeyboard(ime);
     await mount(tester, c);
     await keyboard.commitText('ab');
@@ -512,7 +767,7 @@ void main() {
   testWidgets('a delta applies synchronously before a same-frame Return key', (
     tester,
   ) async {
-    final ime = _Ime(tester), c = headingController();
+    final ime = FakeIme(tester), c = headingController();
     await mount(tester, c);
     await ime.edit(text: '## ');
     await ime.edit(text: 'Hea');
@@ -540,7 +795,7 @@ void main() {
   testWidgets(
     'mobile Return cannot overtake text still queued by the native IME',
     (tester) async {
-      final ime = _Ime(tester), c = headingController();
+      final ime = FakeIme(tester), c = headingController();
       await mount(tester, c);
       await ime.edit(text: '## ');
       await ime.edit(text: 'Hea');
@@ -572,7 +827,7 @@ void main() {
     testWidgets(
       'same-frame text precedes $operation through the platform owner',
       (tester) async {
-        final ime = _Ime(tester),
+        final ime = FakeIme(tester),
             c = document(operation == 'delete' ? ' tail' : '');
         await mount(tester, c);
         await ime.edit(text: 'abc');
@@ -626,7 +881,7 @@ void main() {
     'mobile document navigation owns keys outside composition',
     (tester) async {
       final c = document('abc');
-      final ime = _Ime(tester);
+      final ime = FakeIme(tester);
       await mount(tester, c);
       c.setSelection(const ft.TextSelection(2));
       expect(await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight), true);
@@ -645,7 +900,7 @@ void main() {
   testWidgets('Tab focus traversal stays behind earlier text input', (
     tester,
   ) async {
-    final ime = _Ime(tester), c = document('');
+    final ime = FakeIme(tester), c = document('');
     final target = FocusNode();
     addTearDown(c.dispose);
     addTearDown(target.dispose);
@@ -686,7 +941,7 @@ void main() {
   testWidgets(
     'rapid native deltas are not echoed and survive a pending input rule update',
     (tester) async {
-      final ime = _Ime(tester), c = document('');
+      final ime = FakeIme(tester), c = document('');
       await mount(tester, c);
       ime.sent.clear();
       ime.holdUpdates = true;
@@ -715,7 +970,7 @@ void main() {
   testWidgets(
     'stale oldText is rebased without dropping subsequent native input',
     (tester) async {
-      final ime = _Ime(tester), c = document('');
+      final ime = FakeIme(tester), c = document('');
       await mount(tester, c);
       ime.holdUpdates = true;
       c.exec('insertText', {'text': 'A'});
@@ -732,7 +987,7 @@ void main() {
   testWidgets(
     'native input in a previous long-block window keeps its document position',
     (tester) async {
-      final ime = _Ime(tester), c = document(List.filled(6000, 'a').join());
+      final ime = FakeIme(tester), c = document(List.filled(6000, 'a').join());
       c.setSelection(const ft.TextSelection(3001));
       await mount(tester, c);
       ime.holdUpdates = true;
@@ -751,7 +1006,7 @@ void main() {
   testWidgets('iOS newline delta replacing marked text commits it as-is', (
     tester,
   ) async {
-    final ime = _Ime(tester), c = document('');
+    final ime = FakeIme(tester), c = document('');
     await mount(tester, c);
     ime.holdUpdates = true;
     await ime.edit(text: 'Title', composing: const TextRange(start: 1, end: 6));
@@ -772,7 +1027,7 @@ void main() {
     testWidgets(
       '${hardware ? 'hardware' : 'IME action'} Return commits Pinyin marked text without splitting',
       (tester) async {
-        final ime = _Ime(tester), c = document('');
+        final ime = FakeIme(tester), c = document('');
         await mount(tester, c);
         ime.holdUpdates = true;
         await ime.edit(
@@ -842,7 +1097,7 @@ void main() {
   testWidgets(
     'IME character insertions keep identical marks in one text node',
     (tester) async {
-      final ime = _Ime(tester), c = document('');
+      final ime = FakeIme(tester), c = document('');
       await mount(tester, c);
       for (final word in ['Heading bold mark', ' **']) {
         for (final char in word.split('')) {
@@ -864,7 +1119,7 @@ void main() {
     testWidgets(
       'Pinyin rules through $commit commits keep queued native edits and plain suffixes',
       (tester) async {
-        final ime = _Ime(tester), c = document(' tail');
+        final ime = FakeIme(tester), c = document(' tail');
         await mount(tester, c);
         ime.holdUpdates = true;
         await ime.edit(text: 'a **');
@@ -943,7 +1198,7 @@ void main() {
   testWidgets(
     'the first touch immediately positions the caret and opens an input client',
     (tester) async {
-      final ime = _Ime(tester), c = document('hello world');
+      final ime = FakeIme(tester), c = document('hello world');
       final key = await mount(tester, c, autofocus: false);
       expect(ime.client, isNull);
       final origin = tester.getTopLeft(find.byType(ft.TiptapEditor));
@@ -1002,7 +1257,7 @@ void main() {
   testWidgets(
     'caret ring sits under the caret and hides on typing or after 2 s',
     (tester) async {
-      final ime = _Ime(tester), c = document('hello');
+      final ime = FakeIme(tester), c = document('hello');
       final key = await mount(tester, c);
       final origin = tester.getTopLeft(find.byType(ft.TiptapEditor));
       final handle = find.byKey(const ValueKey('tiptap-handle-caret'));
@@ -1105,7 +1360,7 @@ void main() {
     'ZWJ emoji paragraph matches a plain Text with the same system font',
     (tester) async {
       const family = '👨‍👩‍👧‍👦';
-      final ime = _Ime(tester), c = document('');
+      final ime = FakeIme(tester), c = document('');
       final key = await mount(tester, c);
       await ime.edit(text: family);
       await tester.pump();
@@ -1189,7 +1444,7 @@ void main() {
   testWidgets(
     '1M document engine-owned typing never echoes or scans other blocks',
     (tester) async {
-      final ime = _Ime(tester);
+      final ime = FakeIme(tester);
       final c = ft.TiptapController(doc: generateLargeDocument(1000000));
       await mount(tester, c);
       ime.sent.clear();

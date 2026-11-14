@@ -1,26 +1,38 @@
 part of '../model.dart';
 
 final _linkDetector = linkify.Linkify();
+final _linkSchemeWithSlashes = RegExp(
+  r'^[a-z][a-z0-9+.-]*://',
+  caseSensitive: false,
+);
+final _linkScheme = RegExp(r'^[a-z][a-z0-9+.-]*:', caseSensitive: false);
+final _linkHostEnd = RegExp(r'[/?#:]');
+final _linkIpv4 = RegExp(r'^\d{1,3}(\.\d{1,3}){3}$');
+final _contactScheme = RegExp(r'^(mailto|tel|sms):', caseSensitive: false);
+final _hrefScheme = RegExp(
+  r'^([a-z][a-z0-9+.-]*):(?!\d)',
+  caseSensitive: false,
+);
+final _leadingSlashes = RegExp(r'^/+');
 final _linkWhitespace = RegExp(
   r'[\u0000-\u0020\u00a0\u1680\u180e\u2000-\u2029\u205f\u3000]',
 );
 final _linkWord = RegExp(
   r'[^\u0000-\u0020\u00a0\u1680\u180e\u2000-\u2029\u205f\u3000]+',
 );
+final _trailingLinkWhitespace = RegExp('${_linkWhitespace.pattern}+\$');
 final _allowedLinkUri = RegExp(
   r'^(?:(?:http|https|ftp|ftps|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z0-9+.\-]+(?:[^a-z+.\-:]|$))',
   caseSensitive: false,
 );
 
 bool _shouldAutoLink(String value) {
-  if (RegExp(r'^[a-z][a-z0-9+.-]*://', caseSensitive: false).hasMatch(value) ||
-      (RegExp(r'^[a-z][a-z0-9+.-]*:', caseSensitive: false).hasMatch(value) &&
-          !value.contains('@'))) {
+  if (_linkSchemeWithSlashes.hasMatch(value) ||
+      (_linkScheme.hasMatch(value) && !value.contains('@'))) {
     return true;
   }
-  final hostname = value.split('@').last.split(RegExp(r'[/?#:]')).first;
-  return hostname.contains('.') &&
-      !RegExp(r'^\d{1,3}(\.\d{1,3}){3}$').hasMatch(hostname);
+  final hostname = value.split('@').last.split(_linkHostEnd).first;
+  return hostname.contains('.') && !_linkIpv4.hasMatch(hostname);
 }
 
 bool _isAllowedLink(String value) =>
@@ -29,13 +41,10 @@ bool _isAllowedLink(String value) =>
 String normalizeHref(String raw) {
   final href = raw.trim();
   if (href.isEmpty) return '';
-  if (RegExp(r'^(mailto|tel|sms):', caseSensitive: false).hasMatch(href)) {
+  if (_contactScheme.hasMatch(href)) {
     return href;
   }
-  final scheme = RegExp(
-    r'^([a-z][a-z0-9+.-]*):(?!\d)',
-    caseSensitive: false,
-  ).firstMatch(href);
+  final scheme = _hrefScheme.firstMatch(href);
   if (scheme != null) {
     return {
           'http',
@@ -47,7 +56,7 @@ String normalizeHref(String raw) {
         ? href
         : '';
   }
-  return 'https://${href.replaceFirst(RegExp(r'^/+'), '')}';
+  return 'https://${href.replaceFirst(_leadingSlashes, '')}';
 }
 
 class LinkRange {
@@ -229,10 +238,7 @@ extension _LinkCommands on EditorCommands {
         .text;
     if (tail == null || !_linkWhitespace.hasMatch(tail)) return;
     final offset = math.max(0, pos.parentOffset - 2048);
-    final text = pos.parent.content
-        .cut(offset, pos.parentOffset)
-        .map((n) => n.text ?? '\ufffc')
-        .join();
+    final text = pos.parent.content.cut(offset, pos.parentOffset).inlineText();
     if (insertedRange != null) _unlinkTrailingWhitespace(tr, insertedRange);
     final match = _linkWord
         .allMatches(text.replaceAll('\ufffc', ' '))
@@ -254,9 +260,8 @@ extension _LinkCommands on EditorCommands {
     if (start >= range.to) return;
     final text = end.parent.content
         .cut(start - end.start(), end.parentOffset)
-        .map((node) => node.text ?? '\ufffc')
-        .join();
-    final whitespace = RegExp('${_linkWhitespace.pattern}+\$').firstMatch(text);
+        .inlineText();
+    final whitespace = _trailingLinkWhitespace.firstMatch(text);
     if (whitespace == null) return;
     final from = start + whitespace.start;
     final links = tr.doc
@@ -288,8 +293,7 @@ extension _LinkCommands on EditorCommands {
     final offset = math.max(0, row.node.content.size - 2048);
     final text = row.node.content
         .cut(offset)
-        .map((node) => node.text ?? '\ufffc')
-        .join()
+        .inlineText()
         .replaceAll('\ufffc', ' ');
     final match = _linkWord.allMatches(text).lastOrNull;
     if (match != null && (offset == 0 || match.start > 0)) {

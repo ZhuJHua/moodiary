@@ -2,12 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+
 final _schema = ft.Schema.standard();
 
-ft.Node _paragraph(String text) => _schema.node(
-  'paragraph',
-  content: [if (text.isNotEmpty) _schema.node('text', text: text)],
-);
+final _paragraph = TestNodes(_schema).p;
 
 Iterable<(ft.Node, int)> _nodes(ft.Node node, [int position = -1]) sync* {
   yield (node, position);

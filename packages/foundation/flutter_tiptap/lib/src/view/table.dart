@@ -1,7 +1,7 @@
 part of '../editor.dart';
 
-Expando<LinkedHashMap<(TiptapEditorStyle, double), List<double>>> _columnSizes =
-    Expando<LinkedHashMap<(TiptapEditorStyle, double), List<double>>>();
+var _columnSizes =
+    Expando<_LruMap<(TiptapEditorStyle, double), List<double>>>();
 
 double _tableContentMinWidth(
   m.Node node,
@@ -32,14 +32,11 @@ double _tableContentMinWidth(
     case 'horizontalRule':
       return text + 24;
     case 'blockquote':
-      return children() + math.max(style.quoteIndent, style.quoteBorderWidth);
     case 'bulletList':
     case 'orderedList':
-      return children() + _listGutter(node, style);
     case 'taskList':
       return children() +
-          (style.taskIndent ?? style.listIndent) +
-          (taskDepth > 0 ? style.nestedTaskIndent : 0);
+          _containerIndent(node, style, taskDepth, quoteBorder: true);
     case 'table':
       return text;
     default:
@@ -56,12 +53,9 @@ List<double> _tableColumns(
   TiptapEditorStyle style,
   double width,
 ) {
-  final cache = _columnSizes[table] ??= LinkedHashMap();
-  final key = (style, width), cached = cache.remove(key);
-  if (cached != null) {
-    cache[key] = cached;
-    return cached;
-  }
+  final cache = _columnSizes[table] ??= _LruMap(8);
+  final key = (style, width), cached = cache[key];
+  if (cached != null) return cached;
   final map = m.TableMap.get(table),
       minimums = List<double>.filled(map.width, style.tableMinColumnWidth),
       preferred = List<double?>.filled(map.width, null),
@@ -111,7 +105,6 @@ List<double> _tableColumns(
   }
   final result = List<double>.unmodifiable(columns);
   cache[key] = result;
-  if (cache.length > 8) cache.remove(cache.keys.first);
   return result;
 }
 
@@ -216,8 +209,8 @@ class _TableGeometry {
           );
       for (var index = 0; index < cell.rowCount; index++) {
         final row = _Row.at(cell, index, style),
-            layout = owner.blockLayout?.call(row) ?? _BlockLayout(row.node);
-        owner.layoutRow(
+            layout = owner.host.blockLayout(row);
+        owner.host.layoutRow(
           row,
           layout,
           available,
@@ -229,7 +222,7 @@ class _TableGeometry {
           },
           header: cell.type == 'tableHeader',
         );
-        owner.releaseMeasurement(layout);
+        owner.host.releaseMeasurement(layout);
         entry.blocks.add(
           _CellRow(
             row,
@@ -300,25 +293,39 @@ class _TableGeometry {
   }
 }
 
+abstract interface class _LayoutHost {
+  int get layoutGeneration;
+  int get codeOffsetGeneration;
+  _BlockLayout blockLayout(_Row row);
+  void layoutRow(
+    _Row row,
+    _BlockLayout layout,
+    double available, {
+    bool header = false,
+    TextAlign? textAlign,
+  });
+  void releaseMeasurement(_BlockLayout layout);
+  double codeOffset(_CellRow row);
+}
+
 final class _TableRowLayout extends _BlockLayout {
-  _TableRowLayout(super.node, this.table, this.rowIndex, this.rowPosition);
+  _TableRowLayout(
+    super.node,
+    this.table,
+    this.rowIndex,
+    this.rowPosition,
+    this.host,
+  );
+  final _LayoutHost host;
   m.Node table;
   int rowIndex, rowPosition;
   final List<_TableCellLayout> cells = [];
   double tableWidth = 0;
-  _BlockLayout Function(_Row)? blockLayout;
-  late void Function(
-    _Row row,
-    _BlockLayout layout,
-    double available, {
-    bool header,
-    TextAlign? textAlign,
-  })
-  layoutRow;
-  late void Function(_BlockLayout) releaseMeasurement;
-  late double Function(_CellRow row) codeOffset;
   _TableGeometry geometry = _TableGeometry();
   int _generation = -1;
+  (int, int)? _contentGeneration;
+  final _contentRows = <bool, List<(_CellRow, _TableCellLayout)>>{};
+  TiptapDiagnostics? _diagnostics;
 
   void invalidate() {
     width = null;
@@ -326,6 +333,7 @@ final class _TableRowLayout extends _BlockLayout {
   }
 
   void _releaseCells() {
+    _contentRows.clear();
     for (final cell in cells) {
       for (final block in cell.blocks) {
         block.layout.tableUsers.remove(this);
@@ -352,6 +360,7 @@ final class _TableRowLayout extends _BlockLayout {
     TextAlign? textAlign,
     double firstLineIndent = 0,
   }) {
+    _diagnostics = diagnostics;
     geometry.layout(this, width, style);
     if (this.width == width &&
         identical(this.style, style) &&
@@ -375,9 +384,8 @@ final class _TableRowLayout extends _BlockLayout {
           );
       entry.grid = rect;
       for (final block in source.blocks) {
-        final layout =
-            blockLayout?.call(block.row) ?? _BlockLayout(block.row.node);
-        layoutRow(
+        final layout = host.blockLayout(block.row);
+        host.layoutRow(
           block.row,
           layout,
           block.width + block.row.indent,
@@ -421,16 +429,31 @@ final class _TableRowLayout extends _BlockLayout {
   Offset _blockOrigin(_TableCellLayout cell, Offset point) =>
       point - Offset(0, cell.continuation);
   Offset _textOrigin(_TableCellLayout cell, _CellRow block) {
-    block.scrollOffset = codeOffset(block);
+    block.scrollOffset = host.codeOffset(block);
     return _blockOrigin(cell, block.textOrigin);
   }
 
   Iterable<(_CellRow, _TableCellLayout)> contentRows({
     bool includeTables = false,
+  }) {
+    final generation = (host.layoutGeneration, host.codeOffsetGeneration);
+    if (_contentGeneration != generation) {
+      _contentGeneration = generation;
+      _contentRows.clear();
+    }
+    return _contentRows.putIfAbsent(includeTables, () {
+      _diagnostics?.cellRowMaterializations++;
+      return _collectContentRows(includeTables: includeTables)
+          .toList(growable: false);
+    });
+  }
+
+  Iterable<(_CellRow, _TableCellLayout)> _collectContentRows({
+    required bool includeTables,
   }) sync* {
     for (final cell in cells) {
       for (final block in cell.blocks) {
-        block.scrollOffset = codeOffset(block);
+        block.scrollOffset = host.codeOffset(block);
         if (block.layout case final _TableRowLayout nested) {
           if (includeTables) {
             yield (
@@ -501,34 +524,37 @@ final class _TableRowLayout extends _BlockLayout {
     return best;
   }
 
-  @override
-  _CaretGeometry caretGeometry(int offset, double width, double factor) {
+  T? _inBlock<T>(
+    int offset,
+    T Function(_CellRow block, int local, Offset origin) build,
+  ) {
     final found = _block(offset + 1);
-    if (found == null) {
-      return _CaretGeometry(Rect.fromLTWH(0, 0, width, 24), 18, 18, 6);
-    }
+    if (found == null) return null;
     final (block, cell) = found;
-    return block.layout
-        .caretGeometry(
-          (offset - block.position).clamp(0, block.layout.node.content.size),
-          width,
-          factor,
-        )
-        .shift(_textOrigin(cell, block));
+    return build(
+      block,
+      (offset - block.position).clamp(0, block.layout.node.content.size),
+      _textOrigin(cell, block),
+    );
   }
 
   @override
-  Rect caret(int offset, double caretWidth) {
-    final found = _block(offset + 1);
-    if (found == null) return Rect.fromLTWH(0, 0, caretWidth, 24);
-    final (block, cell) = found;
-    return block.layout
-        .caret(
-          (offset - block.position).clamp(0, block.layout.node.content.size),
-          caretWidth,
-        )
-        .shift(_textOrigin(cell, block));
-  }
+  _CaretGeometry caretGeometry(int offset, double width, double factor) =>
+      _inBlock(
+        offset,
+        (block, local, origin) =>
+            block.layout.caretGeometry(local, width, factor).shift(origin),
+      ) ??
+      _CaretGeometry(Rect.fromLTWH(0, 0, width, 24), 18, 18, 6);
+
+  @override
+  Rect caret(int offset, double caretWidth) =>
+      _inBlock(
+        offset,
+        (block, local, origin) =>
+            block.layout.caret(local, caretWidth).shift(origin),
+      ) ??
+      Rect.fromLTWH(0, 0, caretWidth, 24);
 
   @override
   int position(Offset offset) {
@@ -575,14 +601,7 @@ final class _TableRowLayout extends _BlockLayout {
         } else {
           result.addAll(
             block.layout
-                .boxes(
-                  block.layout is _TableRowLayout
-                      ? from - block.position
-                      : (from - block.position).clamp(0, node.content.size),
-                  block.layout is _TableRowLayout
-                      ? to - block.position
-                      : (to - block.position).clamp(0, node.content.size),
-                )
+                .boxes(from - block.position, to - block.position)
                 .map(
                   (rect) =>
                       rect.shift(_textOrigin(cell, block)).intersect(clip),

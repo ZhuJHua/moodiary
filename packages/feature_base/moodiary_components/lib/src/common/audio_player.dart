@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 class AudioProgress {
   final Duration position;
@@ -119,9 +120,7 @@ class AudioPlaybackController {
     await _player.setReleaseMode(ReleaseMode.stop);
     if (_disposed || activePath.value != path) return;
     await _player.setSource(
-      path.startsWith('http://') || path.startsWith('https://')
-          ? UrlSource(path)
-          : DeviceFileSource(path),
+      isNetworkMedia(path) ? UrlSource(path) : DeviceFileSource(path),
     );
     final duration = await _player.getDuration();
     if (!_disposed &&
@@ -144,9 +143,7 @@ class AudioPlaybackController {
           _completed = false;
           _emit(playing: true);
           await _player.play(
-            path.startsWith('http://') || path.startsWith('https://')
-                ? UrlSource(path)
-                : DeviceFileSource(path),
+            isNetworkMedia(path) ? UrlSource(path) : DeviceFileSource(path),
           );
         } else {
           _emit(playing: true);

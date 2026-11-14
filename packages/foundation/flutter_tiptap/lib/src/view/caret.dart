@@ -2,45 +2,50 @@ part of '../editor.dart';
 
 // A separate repaint listenable keeps cursor frames out of document painting.
 class _CaretMotion extends ChangeNotifier {
-  Timer? _timer;
+  _CaretMotion(TickerProvider vsync) {
+    _ticker = vsync.createTicker(_tick);
+  }
+  late final Ticker _ticker;
+  int _lastElapsed = 0;
   bool enabled = false, reduced = false;
   Rect? rect, _from, _target;
   double opacity = 0;
   int _idle = 0, _movement = 100;
-  bool get running => _timer != null;
+  bool get running => _ticker.isActive;
+
+  void _tick(Duration elapsed) {
+    final oldOpacity = opacity, oldRect = rect;
+    final delta = elapsed.inMilliseconds - _lastElapsed;
+    _lastElapsed = elapsed.inMilliseconds;
+    _idle += delta;
+    if (_idle > 500) {
+      final phase = ((_idle - 500) % 1000) / 500;
+      opacity = reduced
+          ? (phase < 1 ? 1 : 0)
+          : (phase < 1
+                ? 1 - Curves.easeInOut.transform(phase)
+                : Curves.easeInOut.transform(phase - 1));
+    }
+    if (_movement < 100) {
+      _movement = math.min(100, _movement + delta);
+      rect = Rect.lerp(
+        _from,
+        _target,
+        Curves.easeOut.transform(_movement / 100),
+      );
+    }
+    if (opacity != oldOpacity || rect != oldRect) notifyListeners();
+  }
 
   void enable(bool value, {required bool reduced}) {
     this.reduced = reduced;
     if (enabled == value) return;
     enabled = value;
-    _timer?.cancel();
-    _timer = null;
+    _ticker.stop();
     opacity = value ? 1 : 0;
     if (value) {
-      var previous = 0;
-      _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-        final oldOpacity = opacity, oldRect = rect;
-        final elapsed = (timer.tick - previous) * 16;
-        previous = timer.tick;
-        _idle += elapsed;
-        if (_idle > 500) {
-          final phase = ((_idle - 500) % 1000) / 500;
-          opacity = reduced
-              ? (phase < 1 ? 1 : 0)
-              : (phase < 1
-                    ? 1 - Curves.easeInOut.transform(phase)
-                    : Curves.easeInOut.transform(phase - 1));
-        }
-        if (_movement < 100) {
-          _movement = math.min(100, _movement + elapsed);
-          rect = Rect.lerp(
-            _from,
-            _target,
-            Curves.easeOut.transform(_movement / 100),
-          );
-        }
-        if (opacity != oldOpacity || rect != oldRect) notifyListeners();
-      });
+      _lastElapsed = 0;
+      _ticker.start();
     }
     notifyListeners();
   }
@@ -80,8 +85,7 @@ class _CaretMotion extends ChangeNotifier {
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _timer = null;
+    _ticker.dispose();
     super.dispose();
   }
 }

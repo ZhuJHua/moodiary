@@ -1,6 +1,6 @@
 [
   {
-    "name": "linkify 3.32 plain space example.com",
+    "name": "plain space example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -63,7 +63,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter example.com",
+    "name": "plain enter example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -125,7 +125,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste example.com",
+    "name": "plain paste example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -183,7 +183,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection example.com",
+    "name": "plain selection example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -247,7 +247,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space example.xyz",
+    "name": "plain space example.xyz",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -310,7 +310,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter example.xyz",
+    "name": "plain enter example.xyz",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -372,7 +372,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste example.xyz",
+    "name": "plain paste example.xyz",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -430,7 +430,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection example.xyz",
+    "name": "plain selection example.xyz",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -494,7 +494,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space example.co.uk",
+    "name": "plain space example.co.uk",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -557,7 +557,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter example.co.uk",
+    "name": "plain enter example.co.uk",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -619,7 +619,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste example.co.uk",
+    "name": "plain paste example.co.uk",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -677,7 +677,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection example.co.uk",
+    "name": "plain selection example.co.uk",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -741,7 +741,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space README.md",
+    "name": "plain space README.md",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -804,7 +804,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter README.md",
+    "name": "plain enter README.md",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -866,7 +866,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste README.md",
+    "name": "plain paste README.md",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -924,7 +924,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection README.md",
+    "name": "plain selection README.md",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -988,7 +988,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space main.py",
+    "name": "plain space main.py",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1051,7 +1051,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter main.py",
+    "name": "plain enter main.py",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1113,7 +1113,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste main.py",
+    "name": "plain paste main.py",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1171,7 +1171,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection main.py",
+    "name": "plain selection main.py",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1235,7 +1235,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space v1.2.3",
+    "name": "plain space v1.2.3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1286,7 +1286,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter v1.2.3",
+    "name": "plain enter v1.2.3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1340,7 +1340,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste v1.2.3",
+    "name": "plain paste v1.2.3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1390,7 +1390,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection v1.2.3",
+    "name": "plain selection v1.2.3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1446,7 +1446,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space www.example.com",
+    "name": "plain space www.example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1509,7 +1509,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter www.example.com",
+    "name": "plain enter www.example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1571,7 +1571,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste www.example.com",
+    "name": "plain paste www.example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1629,7 +1629,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection www.example.com",
+    "name": "plain selection www.example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1693,7 +1693,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space http://192.168.0.1",
+    "name": "plain space http://192.168.0.1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1756,7 +1756,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter http://192.168.0.1",
+    "name": "plain enter http://192.168.0.1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1818,7 +1818,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste http://192.168.0.1",
+    "name": "plain paste http://192.168.0.1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1876,7 +1876,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection http://192.168.0.1",
+    "name": "plain selection http://192.168.0.1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1940,7 +1940,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space 192.168.0.1",
+    "name": "plain space 192.168.0.1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -1991,7 +1991,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter 192.168.0.1",
+    "name": "plain enter 192.168.0.1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2045,7 +2045,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste 192.168.0.1",
+    "name": "plain paste 192.168.0.1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2095,7 +2095,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection 192.168.0.1",
+    "name": "plain selection 192.168.0.1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2151,7 +2151,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space localhost:3000",
+    "name": "plain space localhost:3000",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2202,7 +2202,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter localhost:3000",
+    "name": "plain enter localhost:3000",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2256,7 +2256,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste localhost:3000",
+    "name": "plain paste localhost:3000",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2306,7 +2306,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection localhost:3000",
+    "name": "plain selection localhost:3000",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2370,7 +2370,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space 例子.中国",
+    "name": "plain space 例子.中国",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2433,7 +2433,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter 例子.中国",
+    "name": "plain enter 例子.中国",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2495,7 +2495,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste 例子.中国",
+    "name": "plain paste 例子.中国",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2553,7 +2553,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection 例子.中国",
+    "name": "plain selection 例子.中国",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2617,7 +2617,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space xn--fsqu00a.xn--fiqs8s",
+    "name": "plain space xn--fsqu00a.xn--fiqs8s",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2668,7 +2668,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter xn--fsqu00a.xn--fiqs8s",
+    "name": "plain enter xn--fsqu00a.xn--fiqs8s",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2722,7 +2722,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste xn--fsqu00a.xn--fiqs8s",
+    "name": "plain paste xn--fsqu00a.xn--fiqs8s",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2772,7 +2772,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection xn--fsqu00a.xn--fiqs8s",
+    "name": "plain selection xn--fsqu00a.xn--fiqs8s",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2828,7 +2828,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space (example.com)",
+    "name": "plain space (example.com)",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2895,7 +2895,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter (example.com)",
+    "name": "plain enter (example.com)",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -2965,7 +2965,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste (example.com)",
+    "name": "plain paste (example.com)",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3031,7 +3031,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection (example.com)",
+    "name": "plain selection (example.com)",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3103,7 +3103,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space [example.com]",
+    "name": "plain space [example.com]",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3170,7 +3170,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter [example.com]",
+    "name": "plain enter [example.com]",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3240,7 +3240,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste [example.com]",
+    "name": "plain paste [example.com]",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3306,7 +3306,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection [example.com]",
+    "name": "plain selection [example.com]",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3378,7 +3378,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space example.com.",
+    "name": "plain space example.com.",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3429,7 +3429,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter example.com.",
+    "name": "plain enter example.com.",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3483,7 +3483,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste example.com.",
+    "name": "plain paste example.com.",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3545,7 +3545,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection example.com.",
+    "name": "plain selection example.com.",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3613,7 +3613,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space example.com，",
+    "name": "plain space example.com，",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3664,7 +3664,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter example.com，",
+    "name": "plain enter example.com，",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3718,7 +3718,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste example.com，",
+    "name": "plain paste example.com，",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3780,7 +3780,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection example.com，",
+    "name": "plain selection example.com，",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3848,7 +3848,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space example.com。",
+    "name": "plain space example.com。",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3899,7 +3899,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter example.com。",
+    "name": "plain enter example.com。",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -3953,7 +3953,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste example.com。",
+    "name": "plain paste example.com。",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4015,7 +4015,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection example.com。",
+    "name": "plain selection example.com。",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4083,7 +4083,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space 测试example.com",
+    "name": "plain space 测试example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4146,7 +4146,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter 测试example.com",
+    "name": "plain enter 测试example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4208,7 +4208,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste 测试example.com",
+    "name": "plain paste 测试example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4266,7 +4266,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection 测试example.com",
+    "name": "plain selection 测试example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4330,7 +4330,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space example.com1",
+    "name": "plain space example.com1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4381,7 +4381,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter example.com1",
+    "name": "plain enter example.com1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4435,7 +4435,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste example.com1",
+    "name": "plain paste example.com1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4485,7 +4485,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection example.com1",
+    "name": "plain selection example.com1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4541,7 +4541,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space a@b.co",
+    "name": "plain space a@b.co",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4604,7 +4604,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter a@b.co",
+    "name": "plain enter a@b.co",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4666,7 +4666,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste a@b.co",
+    "name": "plain paste a@b.co",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4724,7 +4724,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection a@b.co",
+    "name": "plain selection a@b.co",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4788,7 +4788,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space mailto:a@b.co",
+    "name": "plain space mailto:a@b.co",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4851,7 +4851,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter mailto:a@b.co",
+    "name": "plain enter mailto:a@b.co",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4913,7 +4913,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste mailto:a@b.co",
+    "name": "plain paste mailto:a@b.co",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -4971,7 +4971,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection mailto:a@b.co",
+    "name": "plain selection mailto:a@b.co",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5035,7 +5035,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space ftp://x.org",
+    "name": "plain space ftp://x.org",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5098,7 +5098,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter ftp://x.org",
+    "name": "plain enter ftp://x.org",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5160,7 +5160,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste ftp://x.org",
+    "name": "plain paste ftp://x.org",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5218,7 +5218,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection ftp://x.org",
+    "name": "plain selection ftp://x.org",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5282,7 +5282,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space https://x.org/a?b=1#c",
+    "name": "plain space https://x.org/a?b=1#c",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5345,7 +5345,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter https://x.org/a?b=1#c",
+    "name": "plain enter https://x.org/a?b=1#c",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5407,7 +5407,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste https://x.org/a?b=1#c",
+    "name": "plain paste https://x.org/a?b=1#c",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5465,7 +5465,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection https://x.org/a?b=1#c",
+    "name": "plain selection https://x.org/a?b=1#c",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5529,7 +5529,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space javascript:alert(1)",
+    "name": "plain space javascript:alert(1)",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5580,7 +5580,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter javascript:alert(1)",
+    "name": "plain enter javascript:alert(1)",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5634,7 +5634,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste javascript:alert(1)",
+    "name": "plain paste javascript:alert(1)",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5684,7 +5684,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection javascript:alert(1)",
+    "name": "plain selection javascript:alert(1)",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5740,7 +5740,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain space example.com example.xyz",
+    "name": "plain space example.com example.xyz",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5807,7 +5807,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain enter example.com example.xyz",
+    "name": "plain enter example.com example.xyz",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5873,7 +5873,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain paste example.com example.xyz",
+    "name": "plain paste example.com example.xyz",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5947,7 +5947,7 @@
     }
   },
   {
-    "name": "linkify 3.32 plain selection example.com example.xyz",
+    "name": "plain selection example.com example.xyz",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6027,7 +6027,7 @@
     }
   },
   {
-    "name": "linkify 3.32 code space example.com",
+    "name": "code space example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6094,7 +6094,7 @@
     }
   },
   {
-    "name": "linkify 3.32 code enter example.com",
+    "name": "code enter example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6175,7 +6175,7 @@
     }
   },
   {
-    "name": "linkify 3.32 code paste example.com",
+    "name": "code paste example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6241,7 +6241,7 @@
     }
   },
   {
-    "name": "linkify 3.32 code selection example.com",
+    "name": "code selection example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6307,7 +6307,7 @@
     }
   },
   {
-    "name": "linkify 3.32 codeBlock space example.com",
+    "name": "codeBlock space example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6370,7 +6370,7 @@
     }
   },
   {
-    "name": "linkify 3.32 codeBlock enter example.com",
+    "name": "codeBlock enter example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6433,7 +6433,7 @@
     }
   },
   {
-    "name": "linkify 3.32 codeBlock paste example.com",
+    "name": "codeBlock paste example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6495,7 +6495,7 @@
     }
   },
   {
-    "name": "linkify 3.32 codeBlock selection example.com",
+    "name": "codeBlock selection example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6563,7 +6563,7 @@
     }
   },
   {
-    "name": "linkify 3.32 link space example.com",
+    "name": "link space example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6636,7 +6636,7 @@
     }
   },
   {
-    "name": "linkify 3.32 link enter example.com",
+    "name": "link enter example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6726,7 +6726,7 @@
     }
   },
   {
-    "name": "linkify 3.32 link paste example.com",
+    "name": "link paste example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6822,7 +6822,7 @@
     }
   },
   {
-    "name": "linkify 3.32 link selection example.com",
+    "name": "link selection example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6894,7 +6894,7 @@
     }
   },
   {
-    "name": "linkify 3.32 bold space example.com",
+    "name": "bold space example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6985,7 +6985,7 @@
     }
   },
   {
-    "name": "linkify 3.32 bold enter example.com",
+    "name": "bold enter example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -7081,7 +7081,7 @@
     }
   },
   {
-    "name": "linkify 3.32 bold paste example.com",
+    "name": "bold paste example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -7171,7 +7171,7 @@
     }
   },
   {
-    "name": "linkify 3.32 bold selection example.com",
+    "name": "bold selection example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -7243,7 +7243,7 @@
     }
   },
   {
-    "name": "linkify 3.32 image space example.com",
+    "name": "image space example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -7322,7 +7322,7 @@
     }
   },
   {
-    "name": "linkify 3.32 image enter example.com",
+    "name": "image enter example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -7400,7 +7400,7 @@
     }
   },
   {
-    "name": "linkify 3.32 image paste example.com",
+    "name": "image paste example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -7474,7 +7474,7 @@
     }
   },
   {
-    "name": "linkify 3.32 image selection example.com",
+    "name": "image selection example.com",
     "doc": {
       "type": "doc",
       "attrs": {

@@ -10,9 +10,11 @@ import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
+import 'support/nodes.dart';
+import 'support/settle.dart';
+
 final _schema = ft.Schema.standard();
-ft.Node _paragraph(String text) =>
-    _schema.node('paragraph', content: [_schema.node('text', text: text)]);
+final _paragraph = TestNodes(_schema).p;
 ft.Node _media(String type, [String name = 'same']) => _schema.node(
   type,
   attrs: {'src': 'https://example.com/$name', 'name': name},
@@ -199,17 +201,17 @@ class _Harness {
       expect(videos.every((video) => video.disposals == 1), true);
     });
     await tester.pumpWidget(build());
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
   }
 
   Future<void> away(WidgetTester tester) async {
     host.scroll.jumpTo(host.scroll.position.maxScrollExtent);
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
   }
 
   Future<void> back(WidgetTester tester) async {
     host.scroll.jumpTo(0);
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
   }
 
   Future<void> play(String type) async {
@@ -235,7 +237,7 @@ void main() {
       await harness.play(type);
       await tester.pump();
       await harness.away(tester);
-      expect(find.byTooltip(l10n.editor.content.pause), findsNothing);
+      expect(find.byTooltip(l10n.ui.pause), findsNothing);
       if (type == 'audio') {
         final audio = harness.audios.single;
         expect(audio.disposals, 0);
@@ -258,7 +260,7 @@ void main() {
         expect(video.seeks, hasLength(seeks));
         expect(video.snapshot.position, const Duration(seconds: 9));
       }
-      expect(find.byTooltip(l10n.editor.content.pause), findsOneWidget);
+      expect(find.byTooltip(l10n.ui.pause), findsOneWidget);
     });
 
     testWidgets('pauseMedia pauses offscreen $type and keeps it', (
@@ -283,7 +285,7 @@ void main() {
         expect(video.disposals, 0);
       }
       await harness.back(tester);
-      expect(find.byTooltip(l10n.editor.content.play), findsOneWidget);
+      expect(find.byTooltip(l10n.ui.play), findsOneWidget);
     });
 
     testWidgets('paused $type with progress survives unmount', (tester) async {
@@ -308,7 +310,7 @@ void main() {
           const Duration(seconds: 5),
         );
       }
-      expect(find.byTooltip(l10n.editor.content.play), findsOneWidget);
+      expect(find.byTooltip(l10n.ui.play), findsOneWidget);
     });
 
     testWidgets('idle $type has no offscreen cache', (tester) async {
@@ -326,14 +328,11 @@ void main() {
         offset += 300
       ) {
         scroll.jumpTo(offset);
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         final live = type == 'audio'
             ? harness.audios.where((entry) => entry.disposals == 0).length
             : harness.videos.where((entry) => entry.disposals == 0).length;
-        expect(
-          live,
-          find.byTooltip(l10n.editor.content.play).evaluate().length,
-        );
+        expect(live, find.byTooltip(l10n.ui.play).evaluate().length);
       }
       await harness.away(tester);
       if (type == 'audio') {
@@ -373,7 +372,7 @@ void main() {
         );
       }
       harness.host.editor.exec('redo');
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await tester.pump(const Duration(seconds: 1));
       expect(
         type == 'audio'
@@ -426,7 +425,7 @@ void main() {
         for (final readOnly in [false, true]) {
           harness.host.update(MoodiaryEditor(readOnly: readOnly));
           await tester.pumpWidget(harness.build());
-          await tester.pumpAndSettle();
+          await settleEditor(tester);
         }
         if (type == 'audio') {
           expect(harness.audios, hasLength(3));
@@ -490,7 +489,7 @@ void main() {
       await harness.mount(tester);
       harness.host.editor.apply(harness.host.editor.state.tr.replace(0, 1));
       source.complete((path: '/resolved', mime: ''));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await tester.pump(const Duration(seconds: 1));
       expect(harness.audios, isEmpty);
       expect(harness.videos, isEmpty);
@@ -525,7 +524,7 @@ void main() {
         final editor = harness.host.editor;
         editor.setSelection(const ft.TextSelection(1));
         editor.exec('insertText', {'text': 'inserted above '});
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         expect(
           type == 'audio' ? harness.audios.length : harness.videos.length,
           2,
@@ -547,7 +546,7 @@ void main() {
     for (final action in [
       'swapDocument',
       'replaceDocument',
-      'loadJson',
+      'parsed document replacement',
       'mode switch',
     ]) {
       testWidgets('$action releases offscreen $type', (tester) async {
@@ -565,9 +564,9 @@ void main() {
             harness.host.editor.replaceDocument(
               _schema.node('doc', content: [_media(type)]),
             );
-          case 'loadJson':
-            await tester.runAsync(
-              () => harness.host.editor.loadJson(_document([_media(type)])),
+          case 'parsed document replacement':
+            harness.host.editor.replaceDocument(
+              _schema.parse(_document([_media(type)])),
             );
           case 'mode switch':
             harness.host.update(
@@ -576,7 +575,7 @@ void main() {
               ),
             );
         }
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         expect(
           type == 'audio'
               ? harness.audios.first.disposals
@@ -620,7 +619,7 @@ void main() {
     );
     await harness.mount(tester);
     final first = harness.videos.first, second = harness.videos.last;
-    await tester.tap(find.byTooltip(l10n.editor.content.play).first);
+    await tester.tap(find.byTooltip(l10n.ui.play).first);
     first.tick(const Duration(seconds: 5));
     await tester.pump();
     await tester.tap(find.byTooltip(l10n.editor.content.fullscreen).first);
@@ -668,7 +667,7 @@ void main() {
       );
       final seeks = video.seeks.length;
       returned.complete(const Duration(seconds: 12));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(video.disposals, 1);
       expect(video.seeks, hasLength(seeks));
     },
@@ -693,7 +692,7 @@ void main() {
     await harness.away(tester);
     expect(video.disposals, 0);
     returned.complete(null);
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     expect(video.disposals, 1);
   });
 }

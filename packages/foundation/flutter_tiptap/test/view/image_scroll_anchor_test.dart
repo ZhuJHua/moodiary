@@ -2,10 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+import '../support/settle.dart';
+
 final _schema = ft.Schema.standard();
-ft.Node _paragraph(String text) =>
-    _schema.node('paragraph', content: [_schema.node('text', text: text)]);
-ft.Node _image(String name) => _schema.node('image', attrs: {'src': name});
+final _paragraph = TestNodes(_schema).p;
+final _image = TestNodes(_schema).image;
 
 Future<GlobalKey<ft.TiptapEditorState>> _mount(
   WidgetTester tester,
@@ -37,7 +39,7 @@ Future<GlobalKey<ft.TiptapEditorState>> _mount(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  await settleEditor(tester);
   return key;
 }
 
@@ -87,9 +89,9 @@ void main() {
         );
         final scroll = key.currentState!.scrollController;
         scroll.jumpTo(scroll.position.maxScrollExtent);
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         scroll.jumpTo(100);
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         final before = tester.getTopLeft(find.byKey(const ValueKey('marker')));
         final offset = scroll.offset;
         height.value = 400;
@@ -118,7 +120,7 @@ void main() {
     final key = await _mount(tester, controller, views: {}, readOnly: false);
     final scroll = key.currentState!.scrollController;
     scroll.jumpTo(40);
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     final geometry = key.currentState!.geometry!;
     final before = geometry.rowRect(1).height;
     controller.exec('insertText', {'text': 'more text ' * 2});
@@ -157,7 +159,7 @@ void main() {
     );
     final scroll = key.currentState!.scrollController;
     scroll.jumpTo(400);
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     for (final command in ['moveBlockDown', 'moveBlockUp']) {
       final position = command == 'moveBlockDown' ? 0 : 1;
       controller.setSelection(ft.NodeSelection(controller.state.doc, position));

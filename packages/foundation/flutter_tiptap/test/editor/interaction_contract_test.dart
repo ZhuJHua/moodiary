@@ -8,11 +8,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+import '../support/settle.dart';
+
 final _schema = ft.Schema.standard();
-ft.Node _p(String text) => _schema.node(
-  'paragraph',
-  content: [if (text.isNotEmpty) _schema.node('text', text: text)],
-);
+final _p = TestNodes(_schema).p;
 ft.TiptapController _doc(List<ft.Node> blocks) =>
     ft.TiptapController(doc: _schema.node('doc', content: blocks));
 const _mobile = TargetPlatformVariant({
@@ -404,7 +404,7 @@ void main() {
       expect(c.state.selection.to, c.state.doc.content.size - 1);
       await mouse.up();
       c.setSelection(const ft.TextSelection(1));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       final offset = g.horizontalScrollMetrics(0)!.offset;
       await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
       await tester.sendEventToBinding(

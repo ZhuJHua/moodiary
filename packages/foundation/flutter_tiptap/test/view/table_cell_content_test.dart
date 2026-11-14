@@ -8,12 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 import 'package:moodiary_lint/testing.dart';
 
+import '../support/nodes.dart';
+import '../support/settle.dart';
+
 final _schema = ft.Schema.standard();
 
-ft.Node _paragraph(String text) => _schema.node(
-  'paragraph',
-  content: [if (text.isNotEmpty) _schema.node('text', text: text)],
-);
+final _paragraph = TestNodes(_schema).p;
 
 ft.Node _list(String type, List<ft.Node> blocks) => _schema.node(
   type,
@@ -30,19 +30,16 @@ ft.Node _table(
   List<ft.Node> blocks, {
   bool header = false,
   bool second = false,
-}) => _schema.node(
-  'table',
-  content: [
-    _schema.node(
-      'tableRow',
-      content: [
-        _schema.node(header ? 'tableHeader' : 'tableCell', content: blocks),
-        if (second)
-          _schema.node('tableCell', content: [_paragraph('other cell')]),
-      ],
-    ),
-  ],
-);
+}) => TestNodes(_schema).table([
+  _schema.node(
+    'tableRow',
+    content: [
+      TestNodes(_schema).cell(blocks, header: header),
+      if (second)
+        _schema.node('tableCell', content: [_paragraph('other cell')]),
+    ],
+  ),
+]);
 
 Iterable<(ft.Node, int)> _nodes(ft.Node node, [int start = -1]) sync* {
   yield (node, start);
@@ -62,7 +59,6 @@ int _position(ft.TiptapController controller, String text) =>
 
 const _style = ft.TiptapEditorStyle(
   padding: EdgeInsets.zero,
-  tableFixedLayout: true,
   tableMinColumnWidth: 120,
   tableMinRowHeight: 0,
   blockSpacing: 4,
@@ -120,7 +116,7 @@ Future<GlobalKey<ft.TiptapEditorState>> _mount(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  await settleEditor(tester);
   return key;
 }
 
@@ -237,9 +233,9 @@ void main() {
     final originalGeometry = geometry();
     final selection = _position(controller, 'spanning right') + 2;
     controller.setSelection(ft.TextSelection(selection, selection));
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     controller.exec('deleteRow');
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     expect(tester.takeException(), isNull);
     final editedTable = controller.state.doc.child(0);
     expect(editedTable.childCount, 2);
@@ -250,12 +246,12 @@ void main() {
 
     for (var iteration = 0; iteration < 2; iteration++) {
       controller.exec('undo');
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(tester.takeException(), isNull);
       expect(controller.state.doc.toJson(), originalDoc);
       expect(geometry(), originalGeometry);
       controller.exec('redo');
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(tester.takeException(), isNull);
       expect(controller.state.doc.toJson(), editedDoc);
       expect(geometry(), editedGeometry);
@@ -285,7 +281,6 @@ void main() {
     const family = 'TiptapRowspanLateFont';
     const style = ft.TiptapEditorStyle(
       padding: EdgeInsets.zero,
-      tableFixedLayout: true,
       tableMinColumnWidth: 120,
       tableMinRowHeight: 0,
       blockSpacing: 4,
@@ -354,7 +349,7 @@ void main() {
       await loader.load();
     });
     await tester.binding.handleSystemMessage({'type': 'fontsChange'});
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     final loaded = geometry();
     expect(loaded.first.width, fallback.first.width);
     expect(loaded[1].height, lessThan(fallback[1].height));
@@ -482,12 +477,12 @@ void main() {
     final before = geometry.horizontalScrollMetrics(position)!;
     expect(before.maxScrollExtent, greaterThan(0));
     await tester.dragFrom(before.viewport.center, const Offset(-60, 0));
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     expect(geometry.horizontalScrollMetrics(position)!.offset, greaterThan(20));
     controller.setSelection(
       ft.TextSelection(_position(controller, 'column 3') + 9),
     );
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     final caret = geometry.caretRect(controller.state.selection.head);
     expect(caret.right, lessThanOrEqualTo(410));
     expect(geometry.horizontalScrollMetrics(1)!.offset, 0);
@@ -549,7 +544,7 @@ void main() {
       final code = _position(controller, source);
       final metrics = geometry.horizontalScrollMetrics(code)!;
       await tester.dragFrom(metrics.viewport.center, const Offset(-100, 0));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(geometry.horizontalScrollMetrics(code)!.offset, greaterThan(20));
       final checkbox = geometry.taskCheckboxRect(
         _position(controller, 'nested task'),
@@ -571,7 +566,7 @@ void main() {
       expect(cell.contains(geometry.rowRect(image).center), isTrue);
       height = 90;
       rebuild.value++;
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(geometry.rowRect(image).height, 90);
       expect(
         geometry.rowRect(_position(controller, 'after')).top - before,
@@ -583,7 +578,6 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-
 
   testWidgets(
     'cell rows share body indents, markers, code chrome and text geometry',
@@ -853,7 +847,7 @@ void main() {
         greaterThan(0),
       );
       controller.startSearch('search');
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(controller.searchStatus.value.total, 2);
       expect(state.debugSearchHighlightRects.length, 2);
       for (final rect in state.debugSearchHighlightRects) {
@@ -973,7 +967,7 @@ void main() {
           greaterThan(0),
         );
         await tester.dragFrom(before.viewport.center, const Offset(-120, 0));
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         final after = geometry.horizontalScrollMetrics(position)!;
         expect(after.offset, greaterThan(30));
         expect(geometry.horizontalScrollMetrics(1)!.offset, 0);
@@ -994,7 +988,7 @@ void main() {
         controller.setSelection(ft.TextSelection(hit));
         await tester.pump();
         controller.exec('insertText', {'text': 'X'});
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         final updated = _nodes(controller.state.doc)
             .firstWhere((entry) => entry.$1.type == 'codeBlock')
             .$2;
@@ -1062,7 +1056,7 @@ void main() {
     );
     measuredHeight = 120;
     rebuild.value++;
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     expect(geometry.rowRect(image).height, measuredHeight);
     expect(
       geometry.rowRect(_position(controller, 'after table')).top - before.top,

@@ -4549,12 +4549,6 @@ class Translations$editor$content$zh {
 	/// zh: '纯文本'
 	String get plainText => '纯文本';
 
-	/// zh: '播放'
-	String get play => '播放';
-
-	/// zh: '暂停'
-	String get pause => '暂停';
-
 	/// zh: '静音'
 	String get mute => '静音';
 

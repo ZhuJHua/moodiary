@@ -28,6 +28,7 @@ class _HeightNode {
 }
 
 /// Tracks estimated row heights and maps vertical offsets to row indices.
+@visibleForTesting
 class TiptapHeightIndex {
   TiptapHeightIndex(
     Iterable<m.Node> blocks, {

@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'dart:math' as math;
 
 import 'package:characters/characters.dart';
+import 'package:flutter/foundation.dart' show internal, visibleForTesting;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html;
 import 'package:linkifydart/linkifydart.dart' as linkify;
@@ -20,6 +21,8 @@ part 'model/step.dart';
 part 'model/state.dart';
 part 'model/history.dart';
 part 'model/commands.dart';
+part 'model/input_rules.dart';
+part 'model/marks.dart';
 part 'model/media.dart';
 part 'model/links.dart';
 part 'model/references.dart';

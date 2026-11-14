@@ -489,10 +489,7 @@ extension on TiptapEditorState {
     var range = geometry!.wordBoundary(backward ? head - 1 : head);
     final from = (range.start - start).clamp(0, resolved.parent.content.size),
         to = (range.end - start).clamp(0, resolved.parent.content.size);
-    final text = resolved.parent.content
-        .cut(from, to)
-        .map((n) => n.text ?? ' ')
-        .join();
+    final text = resolved.parent.content.cut(from, to).inlineText(atom: ' ');
     if (text.trim().isEmpty) {
       if (backward && range.start > start) {
         range = geometry!.wordBoundary(range.start - 1);
@@ -631,9 +628,9 @@ extension on TiptapEditorState {
         if (pos.parent.isTextblock) {
           final text = _inlineText(pos.parent), offset = pos.parentOffset;
           if (backward && offset > 0) {
-            target -= text.substring(0, offset).characters.last.length;
+            target -= m.graphemeBefore(text, offset).length;
           } else if (!backward && offset < text.length) {
-            target += text.substring(offset).characters.first.length;
+            target += m.graphemeAfter(text, offset).length;
           } else {
             if (m.tableContext(doc, target) != null) {
               final next = m.Selection.near(

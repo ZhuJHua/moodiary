@@ -1,5 +1,7 @@
 part of '../editor.dart';
 
+final _resolvedBlockStyles = Expando<Map<TargetPlatform, List<TextStyle>>>();
+
 /// The host supplies syntax colors; typography comes from [TiptapEditorStyle.codeBlock].
 /// Returned text must equal the source text.
 typedef TiptapCodeHighlighter = TextSpan Function(
@@ -23,7 +25,6 @@ class TiptapEditorStyle {
     this.codeBlockPadding = const EdgeInsets.fromLTRB(12, 28, 12, 12),
     this.tableCellPadding = const EdgeInsets.fromLTRB(10, 6, 10, 8),
     this.tableBlockGap = 4,
-    this.tableFixedLayout = false,
     this.wrapCodeBlocks = false,
     this.tableMinRowHeight = 42,
     this.tableMinColumnWidth = 64,
@@ -176,8 +177,8 @@ class TiptapEditorStyle {
   /// Caret corner radius and height relative to its text line.
   final double caretRadius, caretHeightFactor;
 
-  /// Controls media alignment, exact line metrics and fixed table columns.
-  final bool centerMedia, exactLineHeight, tableFixedLayout;
+  /// Controls media alignment and exact line metrics.
+  final bool centerMedia, exactLineHeight;
 
   /// Wrap long code lines instead of scrolling the block sideways.
   final bool wrapCodeBlocks;
@@ -301,7 +302,6 @@ class TiptapEditorStyle {
           codeBlockPadding == other.codeBlockPadding &&
           tableCellPadding == other.tableCellPadding &&
           tableBlockGap == other.tableBlockGap &&
-          tableFixedLayout == other.tableFixedLayout &&
           wrapCodeBlocks == other.wrapCodeBlocks &&
           tableMinRowHeight == other.tableMinRowHeight &&
           tableMinColumnWidth == other.tableMinColumnWidth &&
@@ -384,7 +384,6 @@ class TiptapEditorStyle {
     codeBlockPadding,
     tableCellPadding,
     tableBlockGap,
-    tableFixedLayout,
     wrapCodeBlocks,
     tableMinRowHeight,
     tableMinColumnWidth,
@@ -437,12 +436,24 @@ class TiptapEditorStyle {
 
   /// Resolves block typography with platform font fallbacks.
   TextStyle forBlock(m.Node node) {
-    final base = node.type == 'heading'
-        ? headings[((node.attrs['level'] as int? ?? 1) - 1).clamp(0, 5)]
+    final platforms = _resolvedBlockStyles[this] ??= {};
+    final resolved = platforms.putIfAbsent(
+      defaultTargetPlatform,
+      () => [
+        _resolveBlockStyle(paragraph),
+        _resolveBlockStyle(codeBlock, code: true),
+        for (final heading in headings) _resolveBlockStyle(heading),
+      ],
+    );
+    return resolved[node.type == 'heading'
+        ? 2 + ((node.attrs['level'] as int? ?? 1) - 1).clamp(0, 5)
         : node.type == 'codeBlock'
-        ? codeBlock
-        : paragraph;
-    if (node.type == 'codeBlock' &&
+        ? 1
+        : 0];
+  }
+
+  TextStyle _resolveBlockStyle(TextStyle base, {bool code = false}) {
+    if (code &&
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.macOS)) {
       return base.copyWith(

@@ -2,19 +2,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+
 final _schema = ft.Schema.standard();
 
-ft.Node _paragraph(String text) => _schema.node(
-  'paragraph',
-  content: [if (text.isNotEmpty) _schema.node('text', text: text)],
-);
+final _paragraph = TestNodes(_schema).p;
 
 ft.Node _cell(ft.Node content, {int colspan = 1, List<int>? colwidth}) =>
-    _schema.node(
-      'tableCell',
-      attrs: {'colspan': colspan, 'colwidth': colwidth},
-      content: [content],
-    );
+    TestNodes(_schema)
+        .cell([content], attrs: {'colspan': colspan, 'colwidth': colwidth});
 
 ft.Node _row(List<ft.Node> cells) => _schema.node('tableRow', content: cells);
 

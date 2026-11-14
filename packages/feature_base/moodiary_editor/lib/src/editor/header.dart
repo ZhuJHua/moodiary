@@ -1,5 +1,15 @@
 part of '../moodiary_editor.dart';
 
+double _textWidth(String text, TextStyle style) {
+  final painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textDirection: TextDirection.ltr,
+  )..layout();
+  final width = painter.width;
+  painter.dispose();
+  return width;
+}
+
 Map<String, dynamic> _jsonMap(String? raw) {
   try {
     return raw == null ? {} : (jsonDecode(raw) as Map).cast<String, dynamic>();
@@ -53,9 +63,14 @@ class _DiaryHeader extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ValueListenableBuilder<int?>(
+    valueListenable: host._count,
+    builder: (context, _, _) => _build(context),
+  );
+
+  Widget _build(BuildContext context) {
     final config = host._configuration,
-        meta = _jsonMap(config.metaJson),
+        meta = host._meta,
         readOnly = host.readOnly,
         colors = context.theme.colors,
         labels = context.l10n.editor.content,
@@ -117,6 +132,13 @@ class _DiaryHeader extends StatelessWidget {
         ),
       ),
     );
+    final titleStyle = _textStyle(
+      family: font,
+      size: 28 * scale,
+      height: 1.3,
+      weight: FontWeight.w700,
+      color: colors.onSurface,
+    );
     final facts = <Widget>[
       if (!readOnly || weather.isNotEmpty)
         button(
@@ -156,23 +178,15 @@ class _DiaryHeader extends StatelessWidget {
       emphasized: true,
       color: colors.onSurface,
     );
-    double textWidth(String text, double size, FontWeight weight) {
-      final painter = TextPainter(
-        text: TextSpan(
-          text: text,
-          style: _textStyle(
-            family: font,
-            size: size * scale,
-            weight: weight,
-            color: colors.onSurface,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      final width = painter.width;
-      painter.dispose();
-      return width;
-    }
+    double textWidth(String text, double size, FontWeight weight) => _textWidth(
+      text,
+      _textStyle(
+        family: font,
+        size: size * scale,
+        weight: weight,
+        color: colors.onSurface,
+      ),
+    );
 
     // Holds the count's slot while it is computed off the first frame.
     final countWidth = readOnly
@@ -354,16 +368,7 @@ class _DiaryHeader extends StatelessWidget {
                     !keyboard.isAltPressed &&
                     host.title.selection.isValid) {
                   final painter = TextPainter(
-                    text: TextSpan(
-                      text: host.title.text,
-                      style: _textStyle(
-                        family: font,
-                        size: 28 * scale,
-                        height: 1.3,
-                        weight: FontWeight.w700,
-                        color: colors.onSurface,
-                      ),
-                    ),
+                    text: TextSpan(text: host.title.text, style: titleStyle),
                     textDirection: TextDirection.ltr,
                   )..layout(maxWidth: constraints.maxWidth);
                   body =
@@ -401,13 +406,7 @@ class _DiaryHeader extends StatelessWidget {
                     replacementString: ' ',
                   ),
                 ],
-                style: _textStyle(
-                  family: font,
-                  size: 28 * scale,
-                  height: 1.3,
-                  weight: FontWeight.w700,
-                  color: colors.onSurface,
-                ),
+                style: titleStyle,
                 decoration: InputDecoration(
                   filled: false,
                   fillColor: Colors.transparent,
@@ -422,11 +421,7 @@ class _DiaryHeader extends StatelessWidget {
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
                   hintText: readOnly ? null : labels.titlePlaceholder,
-                  hintStyle: _textStyle(
-                    family: font,
-                    size: 28 * scale,
-                    height: 1.3,
-                    weight: FontWeight.w700,
+                  hintStyle: titleStyle.copyWith(
                     color: colors.onSurfaceVariant.withValues(alpha: .55),
                   ),
                 ),

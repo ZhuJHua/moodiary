@@ -1,12 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart';
 
+import '../support/nodes.dart';
+
 void main() {
   final schema = Schema.standard();
-  Node paragraph(String text) => schema.node(
-    'paragraph',
-    content: [if (text.isNotEmpty) schema.node('text', text: text)],
-  );
+  final paragraph = TestNodes(schema).p;
   Node code(String text) => schema.node(
     'codeBlock',
     attrs: {'language': 'dart'},

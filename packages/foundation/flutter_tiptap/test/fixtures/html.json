@@ -19,7 +19,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>Hello world</p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -37,14 +36,7 @@
         }
       ]
     },
-    "clipboardText": "Hello world",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "Hell"
-      }
-    ]
+    "clipboardText": "Hello world"
   },
   {
     "name": "bold",
@@ -84,7 +76,6 @@
         }
       ]
     },
-    "nativeHtml": "<p><strong>B</strong> <strong>b</strong></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -120,14 +111,7 @@
         }
       ]
     },
-    "clipboardText": "B b",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 4,
-        "html": "<strong data-pm-slice=\"0 0 []\">B</strong> <strong>b</strong>"
-      }
-    ]
+    "clipboardText": "B b"
   },
   {
     "name": "docs-normal",
@@ -158,7 +142,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>plain <strong>bold</strong></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -185,14 +168,7 @@
         }
       ]
     },
-    "clipboardText": "plain bold",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "plai"
-      }
-    ]
+    "clipboardText": "plain bold"
   },
   {
     "name": "styles",
@@ -228,7 +204,6 @@
         }
       ]
     },
-    "nativeHtml": "<p><strong><em><s><u>styled</u></s></em></strong></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -260,14 +235,7 @@
         }
       ]
     },
-    "clipboardText": "styled",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "<strong data-pm-slice=\"0 0 []\"><em><s><u>styl</u></s></em></strong>"
-      }
-    ]
+    "clipboardText": "styled"
   },
   {
     "name": "clear-bold",
@@ -294,7 +262,6 @@
         }
       ]
     },
-    "nativeHtml": "<p><strong>ABC</strong></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -317,14 +284,7 @@
         }
       ]
     },
-    "clipboardText": "ABC",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 4,
-        "html": "<strong data-pm-slice=\"0 0 []\">ABC</strong>"
-      }
-    ]
+    "clipboardText": "ABC"
   },
   {
     "name": "clear-italic",
@@ -364,7 +324,6 @@
         }
       ]
     },
-    "nativeHtml": "<p><em>A</em>B<em>C</em></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -400,14 +359,7 @@
         }
       ]
     },
-    "clipboardText": "ABC",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 4,
-        "html": "<em data-pm-slice=\"0 0 []\">A</em>B<em>C</em>"
-      }
-    ]
+    "clipboardText": "ABC"
   },
   {
     "name": "marks",
@@ -473,7 +425,6 @@
         }
       ]
     },
-    "nativeHtml": "<p><u>u</u><s>sd</s><em>i</em><code>c</code><mark>h</mark></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -535,14 +486,7 @@
         }
       ]
     },
-    "clipboardText": "usdich",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "<u data-pm-slice=\"0 0 []\">u</u><s>sd</s><em>i</em>"
-      }
-    ]
+    "clipboardText": "usdich"
   },
   {
     "name": "mark-order",
@@ -575,7 +519,6 @@
         }
       ]
     },
-    "nativeHtml": "<p><a href=\"https:&#47;&#47;example.com\"><strong>link</strong></a></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -604,14 +547,7 @@
         }
       ]
     },
-    "clipboardText": "link",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "<a href=\"https://example.com\" data-pm-slice=\"0 0 []\"><strong>link</strong></a>"
-      }
-    ]
+    "clipboardText": "link"
   },
   {
     "name": "empty-br",
@@ -632,7 +568,6 @@
         }
       ]
     },
-    "nativeHtml": "<p><br></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -644,14 +579,7 @@
         }
       ]
     },
-    "clipboardText": "\n",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 2,
-        "html": "<br data-pm-slice=\"0 0 []\">"
-      }
-    ]
+    "clipboardText": "\n"
   },
   {
     "name": "empty-paragraphs",
@@ -684,7 +612,6 @@
         }
       ]
     },
-    "nativeHtml": "<p></p><p><br></p><p>last</p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -708,19 +635,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n\n\n\nlast",
-    "nativeSlices": [
-      {
-        "from": 3,
-        "to": 4,
-        "html": "<br data-pm-slice=\"0 0 []\">"
-      },
-      {
-        "from": 6,
-        "to": 10,
-        "html": "last"
-      }
-    ]
+    "clipboardText": "\n\n\n\n\nlast"
   },
   {
     "name": "inline-br",
@@ -752,7 +667,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>a<br>b<br></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -777,14 +691,7 @@
         }
       ]
     },
-    "clipboardText": "a\nb\n",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "a<br>b<br>"
-      }
-    ]
+    "clipboardText": "a\nb\n"
   },
   {
     "name": "whitespace",
@@ -806,7 +713,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>a b c</p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -824,14 +730,7 @@
         }
       ]
     },
-    "clipboardText": "a b c",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "a b "
-      }
-    ]
+    "clipboardText": "a b c"
   },
   {
     "name": "nbsp",
@@ -853,7 +752,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>a  b</p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -871,14 +769,7 @@
         }
       ]
     },
-    "clipboardText": "a  b",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "a  b"
-      }
-    ]
+    "clipboardText": "a  b"
   },
   {
     "name": "notes-div",
@@ -916,7 +807,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>first</p><p>second<br>line</p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -950,19 +840,7 @@
         }
       ]
     },
-    "clipboardText": "first\n\nsecond\nline",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "firs"
-      },
-      {
-        "from": 8,
-        "to": 12,
-        "html": "seco"
-      }
-    ]
+    "clipboardText": "first\n\nsecond\nline"
   },
   {
     "name": "unknown",
@@ -993,7 +871,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>unknown <strong>bold</strong></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1020,14 +897,7 @@
         }
       ]
     },
-    "clipboardText": "unknown bold",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "unkn"
-      }
-    ]
+    "clipboardText": "unknown bold"
   },
   {
     "name": "ignore-script",
@@ -1049,7 +919,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>beforeafter</p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1067,14 +936,7 @@
         }
       ]
     },
-    "clipboardText": "beforeafter",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "befo"
-      }
-    ]
+    "clipboardText": "beforeafter"
   },
   {
     "name": "headings",
@@ -1159,7 +1021,6 @@
         }
       ]
     },
-    "nativeHtml": "<h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1243,19 +1104,7 @@
         }
       ]
     },
-    "clipboardText": "One\n\nTwo\n\nThree\n\nFour\n\nFive\n\nSix",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 4,
-        "html": "One"
-      },
-      {
-        "from": 6,
-        "to": 9,
-        "html": "Two"
-      }
-    ]
+    "clipboardText": "One\n\nTwo\n\nThree\n\nFour\n\nFive\n\nSix"
   },
   {
     "name": "quote",
@@ -1291,7 +1140,6 @@
         }
       ]
     },
-    "nativeHtml": "<blockquote><p>A</p><p>B</p></blockquote>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1326,19 +1174,7 @@
         }
       ]
     },
-    "clipboardText": "\n\nA\n\nB",
-    "nativeSlices": [
-      {
-        "from": 2,
-        "to": 3,
-        "html": "A"
-      },
-      {
-        "from": 5,
-        "to": 6,
-        "html": "B"
-      }
-    ]
+    "clipboardText": "\n\nA\n\nB"
   },
   {
     "name": "code",
@@ -1363,7 +1199,6 @@
         }
       ]
     },
-    "nativeHtml": "<pre><code class=\"language-js\">const x = 1;\n  x++;</code></pre>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1387,14 +1222,7 @@
         }
       ]
     },
-    "clipboardText": "const x = 1;\n  x++;",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "cons"
-      }
-    ]
+    "clipboardText": "const x = 1;\n  x++;"
   },
   {
     "name": "code-marks",
@@ -1419,7 +1247,6 @@
         }
       ]
     },
-    "nativeHtml": "<pre><code>bold?\n&lt;a&gt;</code></pre>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1443,14 +1270,7 @@
         }
       ]
     },
-    "clipboardText": "bold?\n<a>",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "bold"
-      }
-    ]
+    "clipboardText": "bold?\n<a>"
   },
   {
     "name": "ul",
@@ -1496,7 +1316,6 @@
         }
       ]
     },
-    "nativeHtml": "<ul><li><p>one</p></li><li><p>two</p></li></ul>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1541,19 +1360,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n\n\none\n\n\n\ntwo",
-    "nativeSlices": [
-      {
-        "from": 3,
-        "to": 6,
-        "html": "one"
-      },
-      {
-        "from": 10,
-        "to": 13,
-        "html": "two"
-      }
-    ]
+    "clipboardText": "\n\n\n\none\n\n\n\ntwo"
   },
   {
     "name": "ol-start",
@@ -1603,7 +1410,6 @@
         }
       ]
     },
-    "nativeHtml": "<ol start=\"3\"><li><p>A</p></li><li><p>B</p></li></ol>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1652,19 +1458,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n\n\nA\n\n\n\nB",
-    "nativeSlices": [
-      {
-        "from": 3,
-        "to": 4,
-        "html": "A"
-      },
-      {
-        "from": 8,
-        "to": 9,
-        "html": "B"
-      }
-    ]
+    "clipboardText": "\n\n\n\nA\n\n\n\nB"
   },
   {
     "name": "nested-list",
@@ -1733,7 +1527,6 @@
         }
       ]
     },
-    "nativeHtml": "<ul><li><p>outer</p><ol start=\"1\"><li><p>inner</p></li></ol></li><li><p>end</p></li></ul>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1801,19 +1594,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n\n\nouter\n\n\n\n\n\ninner\n\n\n\nend",
-    "nativeSlices": [
-      {
-        "from": 3,
-        "to": 7,
-        "html": "oute"
-      },
-      {
-        "from": 12,
-        "to": 16,
-        "html": "inne"
-      }
-    ]
+    "clipboardText": "\n\n\n\nouter\n\n\n\n\n\ninner\n\n\n\nend"
   },
   {
     "name": "list-paragraphs",
@@ -1854,7 +1635,6 @@
         }
       ]
     },
-    "nativeHtml": "<ul><li><p>A</p><p>B</p></li></ul>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1894,19 +1674,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n\n\nA\n\nB",
-    "nativeSlices": [
-      {
-        "from": 3,
-        "to": 4,
-        "html": "A"
-      },
-      {
-        "from": 6,
-        "to": 7,
-        "html": "B"
-      }
-    ]
+    "clipboardText": "\n\n\n\nA\n\nB"
   },
   {
     "name": "word-list",
@@ -1937,7 +1705,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>Word <strong>text</strong></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -1964,14 +1731,7 @@
         }
       ]
     },
-    "clipboardText": "Word text",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "Word"
-      }
-    ]
+    "clipboardText": "Word text"
   },
   {
     "name": "tasks",
@@ -2023,7 +1783,6 @@
         }
       ]
     },
-    "nativeHtml": "<ul data-type=\"taskList\"><li data-type=\"taskItem\" data-checked=\"true\"><label><input type=\"checkbox\" checked=\"checked\"><span></span></label><div><p>Done</p></div></li><li data-type=\"taskItem\" data-checked=\"false\"><label><input type=\"checkbox\"><span></span></label><div><p>Todo</p></div></li></ul>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2074,19 +1833,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n\n\nDone\n\n\n\nTodo",
-    "nativeSlices": [
-      {
-        "from": 3,
-        "to": 7,
-        "html": "Done"
-      },
-      {
-        "from": 11,
-        "to": 15,
-        "html": "Todo"
-      }
-    ]
+    "clipboardText": "\n\n\n\nDone\n\n\n\nTodo"
   },
   {
     "name": "table",
@@ -2194,7 +1941,6 @@
         }
       ]
     },
-    "nativeHtml": "<table><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p>A</p></th><th colspan=\"1\" rowspan=\"1\"><p>B</p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>C</p></td><td colspan=\"1\" rowspan=\"1\"><p>D</p></td></tr></tbody></table>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2301,8 +2047,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n\n\n\n\nA\n\n\n\nB\n\n\n\n\n\nC\n\n\n\nD",
-    "nativeSlices": []
+    "clipboardText": "\n\n\n\n\n\nA\n\n\n\nB\n\n\n\n\n\nC\n\n\n\nD"
   },
   {
     "name": "table-attrs",
@@ -2348,7 +2093,6 @@
         }
       ]
     },
-    "nativeHtml": "<table><tbody><tr><td colspan=\"2\" rowspan=\"2\" style=\"text-align: center\"><p>span</p></td></tr><tr></tr></tbody></table>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2393,8 +2137,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n\n\n\n\nspan\n\n",
-    "nativeSlices": []
+    "clipboardText": "\n\n\n\n\n\nspan\n\n"
   },
   {
     "name": "cell-media",
@@ -2454,7 +2197,6 @@
         }
       ]
     },
-    "nativeHtml": "<table><tbody><tr><td colspan=\"1\" rowspan=\"1\"><p>before</p><img src=\"https:&#47;&#47;example.com&#47;a.png\"><p>after</p></td></tr></tbody></table>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2513,8 +2255,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n\n\n\n\nbefore\n\n\n\nafter",
-    "nativeSlices": []
+    "clipboardText": "\n\n\n\n\n\nbefore\n\n\n\nafter"
   },
   {
     "name": "remote-image",
@@ -2535,7 +2276,6 @@
         }
       ]
     },
-    "nativeHtml": "<img src=\"https:&#47;&#47;example.com&#47;image.png\" data-name=\"caption\" alt=\"caption\" data-width-percent=\"50\">",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2555,8 +2295,7 @@
         }
       ]
     },
-    "clipboardText": "",
-    "nativeSlices": []
+    "clipboardText": ""
   },
   {
     "name": "inline-image",
@@ -2595,7 +2334,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>before</p><img src=\"https:&#47;&#47;example.com&#47;a.png\"><p>after</p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2630,19 +2368,7 @@
         }
       ]
     },
-    "clipboardText": "before\n\n\n\nafter",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "befo"
-      },
-      {
-        "from": 10,
-        "to": 14,
-        "html": "afte"
-      }
-    ]
+    "clipboardText": "before\n\n\n\nafter"
   },
   {
     "name": "image-only-paragraph",
@@ -2666,7 +2392,6 @@
         }
       ]
     },
-    "nativeHtml": "<p></p><img src=\"https:&#47;&#47;example.com&#47;a.png\">",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2689,8 +2414,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n",
-    "nativeSlices": []
+    "clipboardText": "\n\n"
   },
   {
     "name": "named-image",
@@ -2711,7 +2435,6 @@
         }
       ]
     },
-    "nativeHtml": "<img src=\"image-a.jpg\" data-name=\"A &amp; B\" alt=\"A &amp; B\" data-width-percent=\"100\">",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2731,8 +2454,7 @@
         }
       ]
     },
-    "clipboardText": "",
-    "nativeSlices": []
+    "clipboardText": ""
   },
   {
     "name": "video-audio",
@@ -2760,7 +2482,6 @@
         }
       ]
     },
-    "nativeHtml": "<div data-media=\"video\" data-src=\"https:&#47;&#47;example.com&#47;movie.mp4\" data-name=\"Movie\" data-width-percent=\"75\"></div><div data-media=\"audio\" data-src=\"audio-a.m4a\" data-name=\"Song\"></div>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2787,8 +2508,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n",
-    "nativeSlices": []
+    "clipboardText": "\n\n"
   },
   {
     "name": "attachment",
@@ -2810,7 +2530,6 @@
         }
       ]
     },
-    "nativeHtml": "<div data-type=\"attachment\" data-src=\"file-a.pdf\" data-name=\"A.pdf\" data-mime=\"application&#47;pdf\" data-size=\"123\">A.pdf</div>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2831,8 +2550,7 @@
         }
       ]
     },
-    "clipboardText": "",
-    "nativeSlices": []
+    "clipboardText": ""
   },
   {
     "name": "diary-link",
@@ -2865,7 +2583,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>Hello <span data-type=\"diaryLink\" data-id=\"a\" data-label=\"Diary\">Diary</span>!</p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -2894,14 +2611,7 @@
         }
       ]
     },
-    "clipboardText": "Hello Diary!",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "Hell"
-      }
-    ]
+    "clipboardText": "Hello Diary!"
   },
   {
     "name": "dividers",
@@ -2956,7 +2666,6 @@
         }
       ]
     },
-    "nativeHtml": "<div data-type=\"horizontalRule\" data-variant=\"solid\"><hr></div><div data-type=\"horizontalRule\" data-variant=\"dashed\"><hr></div><div data-type=\"horizontalRule\" data-variant=\"dotted\"><hr></div><div data-type=\"horizontalRule\" data-variant=\"double\"><hr></div><div data-type=\"horizontalRule\" data-variant=\"wavy\"><hr></div><div data-type=\"horizontalRule\" data-variant=\"text\" data-label=\"Label\"><span>Label</span></div>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -3010,8 +2719,7 @@
         }
       ]
     },
-    "clipboardText": "\n\n\n\n\n\n\n\n\n\n",
-    "nativeSlices": []
+    "clipboardText": "\n\n\n\n\n\n\n\n\n\n"
   },
   {
     "name": "safari",
@@ -3054,7 +2762,6 @@
         }
       ]
     },
-    "nativeHtml": "<p><strong>Safari</strong> <a href=\"https:&#47;&#47;example.com\">link</a></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -3093,14 +2800,7 @@
         }
       ]
     },
-    "clipboardText": "Safari link",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "<strong data-pm-slice=\"0 0 []\">Safa</strong>"
-      }
-    ]
+    "clipboardText": "Safari link"
   },
   {
     "name": "apple-converted-space",
@@ -3122,7 +2822,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>A B</p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -3140,14 +2839,7 @@
         }
       ]
     },
-    "clipboardText": "A B",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 4,
-        "html": "A B"
-      }
-    ]
+    "clipboardText": "A B"
   },
   {
     "name": "bad-link",
@@ -3181,7 +2873,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>bad <a href=\"mailto:a@example.com\">mail</a></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -3211,14 +2902,7 @@
         }
       ]
     },
-    "clipboardText": "bad mail",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "bad "
-      }
-    ]
+    "clipboardText": "bad mail"
   },
   {
     "name": "escaped",
@@ -3240,7 +2924,6 @@
         }
       ]
     },
-    "nativeHtml": "<p>&lt;tag&gt; &amp; \"quoted\"</p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -3258,14 +2941,7 @@
         }
       ]
     },
-    "clipboardText": "<tag> & \"quoted\"",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "&lt;tag"
-      }
-    ]
+    "clipboardText": "<tag> & \"quoted\""
   },
   {
     "name": "empty",
@@ -3281,7 +2957,6 @@
         }
       ]
     },
-    "nativeHtml": "<p></p>",
     "pasteExpected": {
       "type": "doc",
       "attrs": {
@@ -3293,8 +2968,7 @@
         }
       ]
     },
-    "clipboardText": "",
-    "nativeSlices": []
+    "clipboardText": ""
   },
   {
     "name": "docs-multiple-paragraphs",
@@ -3361,20 +3035,7 @@
         }
       ]
     },
-    "nativeHtml": "<p>first</p><p><strong>second</strong></p>",
-    "clipboardText": "first\n\nsecond",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "firs"
-      },
-      {
-        "from": 8,
-        "to": 12,
-        "html": "<strong data-pm-slice=\"0 0 []\">seco</strong>"
-      }
-    ]
+    "clipboardText": "first\n\nsecond"
   },
   {
     "name": "boundary-whitespace",
@@ -3439,15 +3100,7 @@
         }
       ]
     },
-    "nativeHtml": "<p>a <strong>b </strong>c d</p>",
-    "clipboardText": "a b c d",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 5,
-        "html": "a <strong>b </strong>"
-      }
-    ]
+    "clipboardText": "a b c d"
   },
   {
     "name": "valid-colwidth",
@@ -3535,9 +3188,7 @@
         }
       ]
     },
-    "nativeHtml": "<table><tbody><tr><td colspan=\"1\" rowspan=\"1\" colwidth=\"120\"><p>A</p></td></tr></tbody></table>",
-    "clipboardText": "\n\n\n\n\n\nA",
-    "nativeSlices": []
+    "clipboardText": "\n\n\n\n\n\nA"
   },
   {
     "name": "orphan-nested-list",
@@ -3665,20 +3316,7 @@
         }
       ]
     },
-    "nativeHtml": "<ul><li><p>one</p><ul><li><p>nested</p></li></ul></li><li><p>two</p></li></ul>",
-    "clipboardText": "\n\n\n\none\n\n\n\n\n\nnested\n\n\n\ntwo",
-    "nativeSlices": [
-      {
-        "from": 3,
-        "to": 6,
-        "html": "one"
-      },
-      {
-        "from": 10,
-        "to": 14,
-        "html": "nest"
-      }
-    ]
+    "clipboardText": "\n\n\n\none\n\n\n\n\n\nnested\n\n\n\ntwo"
   },
   {
     "name": "preserve-copied-spaces",
@@ -3717,15 +3355,7 @@
         }
       ]
     },
-    "nativeHtml": "<p>a b</p>",
-    "clipboardText": "a b",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 4,
-        "html": "a b"
-      }
-    ]
+    "clipboardText": "a b"
   },
   {
     "name": "nested-inline-styles",
@@ -3826,20 +3456,7 @@
         }
       ]
     },
-    "nativeHtml": "<p><strong>A</strong></p><p><strong>B </strong><strong><em>I</em></strong></p>",
-    "clipboardText": "A\n\nB I",
-    "nativeSlices": [
-      {
-        "from": 1,
-        "to": 2,
-        "html": "<strong data-pm-slice=\"0 0 []\">A</strong>"
-      },
-      {
-        "from": 4,
-        "to": 7,
-        "html": "<strong data-pm-slice=\"0 0 []\">B </strong><strong><em>I</em></strong>"
-      }
-    ]
+    "clipboardText": "A\n\nB I"
   },
   {
     "name": "empty-cell",
@@ -3944,9 +3561,7 @@
         }
       ]
     },
-    "nativeHtml": "<table><tbody><tr><td colspan=\"1\" rowspan=\"1\"><p><br></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td></tr></tbody></table>",
-    "clipboardText": "\n\n\n\n\n\n\n\n\n\n\n",
-    "nativeSlices": []
+    "clipboardText": "\n\n\n\n\n\n\n\n\n\n\n"
   },
   {
     "name": "linked-image",
@@ -3992,9 +3607,7 @@
         }
       ]
     },
-    "nativeHtml": "<p></p><img src=\"https:&#47;&#47;example.com&#47;p.png\">",
-    "clipboardText": "\n\n",
-    "nativeSlices": []
+    "clipboardText": "\n\n"
   },
   {
     "name": "m5-complete-parity",
@@ -5079,19 +4692,6 @@
           "type": "paragraph"
         }
       ]
-    },
-    "nativeHtml": "<img src=\"image-m5.png\" data-name=\"B01 leading image\" alt=\"B01 leading image\"><p>B02 English descenders hgj. A long paragraph wraps across several lines to compare the same line breaks and the same bottom edge in both editors. This sentence adds enough text to test the available width.</p><p>B03 中文段落：今天用同一篇日记比较两种编辑器的文字排版、段落间距和图片位置。中文换行也应该保持一致。</p><h1>B04 Heading one</h1><p>B05 After H1</p><h2>B06 Heading two</h2><p>B07 After H2</p><h3>B08 Heading three</h3><ul><li><p>B09 Bullet one</p><ul><li><p>B10 Nested bullet</p></li></ul></li><li><p>B11 Bullet two</p></li></ul><ol start=\"3\"><li><p>B12 Ordered</p><ol start=\"1\"><li><p>B13 Nested ordered</p></li></ol></li></ol><ul data-type=\"taskList\"><li data-type=\"taskItem\" data-checked=\"false\"><label><input type=\"checkbox\"><span></span></label><div><p>B14 Task</p><ul data-type=\"taskList\"><li data-type=\"taskItem\" data-checked=\"true\"><label><input type=\"checkbox\" checked=\"checked\"><span></span></label><div><p>B15 Nested task</p></div></li></ul></div></li></ul><blockquote><p>B16 Quote</p><p>B17 Quote second</p></blockquote><pre><code class=\"language-dart\">// B18 Code\nfinal value = 42;\nprint(value);</code></pre><div data-type=\"horizontalRule\" data-variant=\"solid\"><hr></div><div data-type=\"horizontalRule\" data-variant=\"dashed\"><hr></div><div data-type=\"horizontalRule\" data-variant=\"dotted\"><hr></div><div data-type=\"horizontalRule\" data-variant=\"double\"><hr></div><div data-type=\"horizontalRule\" data-variant=\"wavy\"><hr></div><div data-type=\"horizontalRule\" data-variant=\"text\" data-label=\"B24 divider\"><span>B24 divider</span></div><table><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p>B25 Header</p></th><th colspan=\"1\" rowspan=\"1\"><p>B26 Header</p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>B27 cell text</p><img src=\"image-m5.png\" data-width-percent=\"50\"></td><td colspan=\"1\" rowspan=\"1\"><p>B28 cell media</p><div data-media=\"audio\" data-src=\"audio-m5.mp3\" data-name=\"audio-m5.mp3\"></div><div data-type=\"attachment\" data-src=\"file-m5.txt\" data-name=\"file-m5.txt\" data-mime=\"text&#47;plain\" data-size=\"25\">file-m5.txt</div></td></tr></tbody></table><div data-media=\"video\" data-src=\"https:&#47;&#47;interactive-examples.mdn.mozilla.net&#47;media&#47;cc0-videos&#47;flower.mp4\" data-name=\"B29 remote video\"></div><div data-media=\"audio\" data-src=\"audio-m5.mp3\" data-name=\"B30 audio\"></div><div data-type=\"attachment\" data-src=\"file-m5.txt\" data-name=\"B31 attachment.txt\" data-mime=\"text&#47;plain\" data-size=\"25\">B31 attachment.txt</div><p>B32 <span data-type=\"diaryLink\" data-id=\"m5-reference\" data-label=\"Diary link\">Diary link</span> <mark>highlight</mark> <a href=\"https:&#47;&#47;example.com\">link</a> <code>inline code</code> <strong>bold</strong> <em>italic</em></p><p></p>",
-    "nativeSlices": [
-      {
-        "from": 2,
-        "to": 6,
-        "html": "B02 "
-      },
-      {
-        "from": 209,
-        "to": 213,
-        "html": "B03 "
-      }
-    ]
+    }
   }
 ]

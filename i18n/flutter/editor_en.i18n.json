@@ -144,8 +144,6 @@
     "bodyPlaceholder": "Text",
     "codeAutoDetect": "Auto-detect",
     "plainText": "Plain text",
-    "play": "Play",
-    "pause": "Pause",
     "mute": "Mute",
     "fullscreen": "Fullscreen"
   },

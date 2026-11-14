@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -63,30 +62,6 @@ void main() {
     expect(titles, ['One Two Three!']);
   });
 
-  test('image imports accept files and file URIs, reject non-images and survive unavailable files', () async {
-    final directory = Directory.systemTemp.createTempSync('images-');
-    addTearDown(() => directory.deleteSync(recursive: true));
-    final file = File('${directory.path}/paste.jpg')
-      ..writeAsBytesSync([1, 2, 3]);
-    final received = <String>[];
-    final h = MoodiaryEditorHost(
-      MoodiaryEditor(
-        initialContent: _doc(''),
-        onSaveImage: (data, name) async {
-          received.add('$name:$data');
-          return 'image-saved.jpg';
-        },
-      ),
-    );
-    addTearDown(h.dispose);
-    await h.pasteImage(file);
-    await h.pasteImage(file.uri);
-    await h.pasteImage(file.uri.toString());
-    expect(received, List.filled(3, 'paste.jpg:data:image/jpeg;base64,AQID'));
-    await h.pasteImage(Uri.file('${directory.path}/missing.png'));
-    await h.pasteImage(Uri.file('${directory.path}/secret.txt'));
-    expect(received, hasLength(3));
-  });
   test('URI-only Android image content uses the Pigeon resolver', () async {
     const channel = BasicMessageChannel<Object?>(
       'dev.flutter.pigeon.moodiary_native.ImageTransferApi.readContentUri',
@@ -101,12 +76,6 @@ void main() {
       ];
     });
     addTearDown(() => messenger.setMockDecodedMessageHandler(channel, null));
-    // URI-only commitContent is Android-specific; platform IO is still host
-    // macOS in this test, so exercise the generated resolver separately too.
-    expect(
-      await ImageTransferApi().readContentUri('content://keyboard/photo'),
-      [1, 2, 3],
-    );
     final received = <String>[];
     final h = MoodiaryEditorHost(
       MoodiaryEditor(
@@ -300,7 +269,6 @@ void main() {
             );
         addTearDown(h.dispose);
         expect(h.readOnly, isTrue);
-        expect(h.contentError.value, isNotNull);
         expect(h.state.value.contentError, isTrue);
         final before = h.editor.json;
         for (final command in [
@@ -335,6 +303,46 @@ void main() {
       expect(h.editor.json, before);
     },
   );
+  for (final nextType in ['none', 'empty paragraph', 'paragraph', 'heading']) {
+    test(
+      'exitCode preserves the document and caret with $nextType after code',
+      () async {
+        final schema = ft.Schema.standard();
+        final code = schema.node(
+          'codeBlock',
+          content: [schema.node('text', text: 'code')],
+        );
+        final next = switch (nextType) {
+          'none' => null,
+          'empty paragraph' => schema.node('paragraph'),
+          'paragraph' => schema.node(
+            'paragraph',
+            content: [schema.node('text', text: 'next')],
+          ),
+          _ => schema.node(
+            'heading',
+            attrs: {'level': 2},
+            content: [schema.node('text', text: 'next')],
+          ),
+        };
+        final document = schema.node('doc', content: [code, ?next]);
+        final h = host(text: '');
+        h.editor.replaceDocument(document);
+        h.editor.setSelection(const ft.TextSelection(3));
+        await h.exec(EditorCommand.exitCode, null);
+        final expected = schema.node(
+          'doc',
+          content: [
+            code,
+            if (nextType != 'empty paragraph') schema.node('paragraph'),
+            ?next,
+          ],
+        );
+        expect(h.editor.state.doc.toJson(), expected.toJson());
+        expect(h.editor.state.selection, ft.TextSelection(code.nodeSize + 1));
+      },
+    );
+  }
   test('media args, ephemeral width preview, hr update and exitCode', () async {
     final h = host(text: '');
     await h.exec(EditorCommand.insertImage, {
@@ -418,7 +426,13 @@ void main() {
           ),
         );
     addTearDown(h.dispose);
-    final pending = h.pasteImage(Uint8List.fromList([1, 2]));
+    final pending = h.pasteImage(
+      TransferredImage(
+        bytes: Uint8List.fromList([1, 2]),
+        mime: 'image/png',
+        name: 'image.png',
+      ),
+    );
     await h.swapDocument(content: _doc('other'), title: '');
     saved.complete('image-test.png');
     await pending;

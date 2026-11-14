@@ -19,7 +19,6 @@ export 'src/presentation/widget/moodiary_editor_view.dart';
 export 'src/presentation/widget/record_sheet.dart';
 export 'src/toolbar/editor_command.dart';
 export 'src/toolbar/editor_state.dart';
-export 'src/typography.dart';
 
 List<RouteBase> editorRoutes() => [
   GoRoute(

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show listEquals;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_components/moodiary_components.dart';
@@ -103,8 +105,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   final ValueNotifier<int> _activeHeading = ValueNotifier<int>(-1);
 
-  List<({int level, String text})> _headings = const [];
-  int? _characterCount;
+  final _headings = ValueNotifier<List<({int level, String text})>>(const []);
+  final _characterCount = ValueNotifier<int?>(null);
 
   EditControllerProvider get _provider => editControllerProvider(
     widget.diaryId,
@@ -252,6 +254,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     moodiaryRouteObserver.unsubscribe(this);
     WidgetsBinding.instance.removeObserver(this);
     _activeHeading.dispose();
+    _headings.dispose();
+    _characterCount.dispose();
     _autoSaveTimer?.cancel();
     _writingTimer?.cancel();
     _elapsed.dispose();
@@ -574,7 +578,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       _hopTarget = null;
     }
     final diary = editAsync.value ?? _hopTarget;
-    final headings = _headings;
     final panel = _editorController.panel;
     return ListenableBuilder(
       listenable: panel,
@@ -590,123 +593,127 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         },
         child: child!,
       ),
-      child: Scaffold(
-        key: _scaffoldKey,
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          leadingWidth: _hops.length > 1 ? 144 : null,
-          leading: _hops.length > 1
-              ? Row(
-                  children: [
-                    IconButton(
-                      tooltip: context.l10n.diary.home,
-                      icon: const Icon(LucideIcons.house),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    IconButton(
-                      tooltip: context.l10n.diary.goBack,
-                      icon: const Icon(LucideIcons.arrowLeft),
-                      onPressed: _hops.atRoot ? null : () => _goHistory(-1),
-                    ),
-                    IconButton(
-                      tooltip: context.l10n.diary.goForward,
-                      icon: const Icon(LucideIcons.arrowRight),
-                      onPressed: _hops.peek(1) == null
-                          ? null
-                          : () => _goHistory(1),
-                    ),
-                  ],
-                )
-              : null,
-          actions: [
-            if (diary != null && _mode == .edit) ...[
-              ValueListenableBuilder(
-                valueListenable: _editorController.state,
-                builder: (context, state, _) => Row(
-                  mainAxisSize: .min,
-                  children: [
-                    IconButton(
-                      tooltip: context.l10n.editor.toolbar.undo,
-                      icon: const Icon(LucideIcons.undo2),
-                      onPressed: state.canUndo
-                          ? () => _editorController.exec(.undo)
-                          : null,
-                    ),
-                    IconButton(
-                      tooltip: context.l10n.editor.toolbar.redo,
-                      icon: const Icon(LucideIcons.redo2),
-                      onPressed: state.canRedo
-                          ? () => _editorController.exec(.redo)
-                          : null,
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                tooltip: context.l10n.editor.toolbar.find,
-                icon: const Icon(LucideIcons.search),
-                onPressed: _editorController.openSearch,
-              ),
-              Padding(
-                padding: const .only(left: 4, right: 8),
-                child: MCircleButton(
-                  tooltip: context.l10n.common.save,
-                  tone: .plain,
-                  iconSize: 20,
-                  icon: const Icon(LucideIcons.check),
-                  onPressed: _saveAndExit,
-                ),
-              ),
-            ],
-            if (diary != null &&
-                _mode == .read &&
-                DiaryType.fromValue(diary.type).isEditable)
-              IconButton(
-                tooltip: context.l10n.diary.edit,
-                icon: const Icon(LucideIcons.squarePen),
-                onPressed: _enterEdit,
-              ),
-            if (diary != null && _mode == .read) ...[
-              IconButton(
-                tooltip: context.l10n.diary.askAssistant,
-                icon: const Icon(LucideIcons.botMessageSquare),
-                onPressed: () =>
-                    AssistantConversationRoute(citedDiaryId: diary.id)
-                        .push(context),
-              ),
-              IconButton(
-                tooltip: context.l10n.diary.share,
-                icon: const Icon(LucideIcons.share),
-                onPressed: () => DiaryShare.open(context, diary.id),
-              ),
-            ],
-            if (headings.isNotEmpty)
-              IconButton(
-                tooltip: context.l10n.diary.outline,
-                icon: const Icon(LucideIcons.tableOfContents),
-                onPressed: () {
-                  _editorController.panel.hide();
-                  _scaffoldKey.currentState?.openEndDrawer();
-                },
-              ),
-          ],
-        ),
-        endDrawer: headings.isEmpty
-            ? null
-            : _TocDrawer(
-                headings: headings,
-                activeHeading: _activeHeading,
-                onTap: (i) {
-                  _editorController.scrollToHeading(i);
-                  _scaffoldKey.currentState?.closeEndDrawer();
-                },
-              ),
-        body: diary != null
+      child: ValueListenableBuilder<List<({int level, String text})>>(
+        valueListenable: _headings,
+        child: diary != null
             ? SafeArea(bottom: false, child: _buildBody(diary))
             : editAsync.buildLoading(
                 loading: () => const SizedBox.shrink(),
                 data: (d) => SafeArea(bottom: false, child: _buildBody(d)),
               ),
+        builder: (context, headings, body) => Scaffold(
+          key: _scaffoldKey,
+          resizeToAvoidBottomInset: false,
+          appBar: AppBar(
+            leadingWidth: _hops.length > 1 ? 144 : null,
+            leading: _hops.length > 1
+                ? Row(
+                    children: [
+                      IconButton(
+                        tooltip: context.l10n.diary.home,
+                        icon: const Icon(LucideIcons.house),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      IconButton(
+                        tooltip: context.l10n.diary.goBack,
+                        icon: const Icon(LucideIcons.arrowLeft),
+                        onPressed: _hops.atRoot ? null : () => _goHistory(-1),
+                      ),
+                      IconButton(
+                        tooltip: context.l10n.diary.goForward,
+                        icon: const Icon(LucideIcons.arrowRight),
+                        onPressed: _hops.peek(1) == null
+                            ? null
+                            : () => _goHistory(1),
+                      ),
+                    ],
+                  )
+                : null,
+            actions: [
+              if (diary != null && _mode == .edit) ...[
+                ValueListenableBuilder(
+                  valueListenable: _editorController.state,
+                  builder: (context, state, _) => Row(
+                    mainAxisSize: .min,
+                    children: [
+                      IconButton(
+                        tooltip: context.l10n.editor.toolbar.undo,
+                        icon: const Icon(LucideIcons.undo2),
+                        onPressed: state.canUndo
+                            ? () => _editorController.exec(.undo)
+                            : null,
+                      ),
+                      IconButton(
+                        tooltip: context.l10n.editor.toolbar.redo,
+                        icon: const Icon(LucideIcons.redo2),
+                        onPressed: state.canRedo
+                            ? () => _editorController.exec(.redo)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: context.l10n.editor.toolbar.find,
+                  icon: const Icon(LucideIcons.search),
+                  onPressed: _editorController.openSearch,
+                ),
+                Padding(
+                  padding: const .only(left: 4, right: 8),
+                  child: MCircleButton(
+                    tooltip: context.l10n.common.save,
+                    tone: .plain,
+                    iconSize: 20,
+                    icon: const Icon(LucideIcons.check),
+                    onPressed: _saveAndExit,
+                  ),
+                ),
+              ],
+              if (diary != null &&
+                  _mode == .read &&
+                  DiaryType.fromValue(diary.type).isEditable)
+                IconButton(
+                  tooltip: context.l10n.diary.edit,
+                  icon: const Icon(LucideIcons.squarePen),
+                  onPressed: _enterEdit,
+                ),
+              if (diary != null && _mode == .read) ...[
+                IconButton(
+                  tooltip: context.l10n.diary.askAssistant,
+                  icon: const Icon(LucideIcons.botMessageSquare),
+                  onPressed: () =>
+                      AssistantConversationRoute(citedDiaryId: diary.id)
+                          .push(context),
+                ),
+                IconButton(
+                  tooltip: context.l10n.diary.share,
+                  icon: const Icon(LucideIcons.share),
+                  onPressed: () => DiaryShare.open(context, diary.id),
+                ),
+              ],
+              if (headings.isNotEmpty)
+                IconButton(
+                  tooltip: context.l10n.diary.outline,
+                  icon: const Icon(LucideIcons.tableOfContents),
+                  onPressed: () {
+                    _editorController.panel.hide();
+                    _scaffoldKey.currentState?.openEndDrawer();
+                  },
+                ),
+            ],
+          ),
+          endDrawer: headings.isEmpty
+              ? null
+              : _TocDrawer(
+                  headings: headings,
+                  activeHeading: _activeHeading,
+                  onTap: (i) {
+                    _editorController.scrollToHeading(i);
+                    _scaffoldKey.currentState?.closeEndDrawer();
+                  },
+                ),
+          body: body,
+        ),
       ),
     );
   }
@@ -724,13 +731,16 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final showTime = MoodiaryKVs.showWritingTime.get() ?? true;
     final stats = <Widget>[
       if (showWords)
-        AnimatedOpacity(
-          opacity: _characterCount == null ? 0 : 1,
-          duration: const Duration(milliseconds: 120),
-          child: _pillSeg(
-            LucideIcons.text,
-            context.l10n.diary.wordCount(count: _characterCount ?? 0),
-            typo.bodySmall.outline,
+        ValueListenableBuilder<int?>(
+          valueListenable: _characterCount,
+          builder: (context, count, _) => AnimatedOpacity(
+            opacity: count == null ? 0 : 1,
+            duration: const Duration(milliseconds: 120),
+            child: _pillSeg(
+              LucideIcons.text,
+              context.l10n.diary.wordCount(count: count ?? 0),
+              typo.bodySmall.outline,
+            ),
           ),
         ),
       if (showTime)
@@ -851,12 +861,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       initialContentText: diary.contentText,
       onMetadataChanged: (metadata) {
         if (!mounted) return;
-        setState(() {
-          _headings = DiaryType.fromValue(diary.type) == .richText
-              ? const []
-              : metadata.headings;
-          _characterCount = metadata.contentTextCharacterCount;
-        });
+        final List<({int level, String text})> headings =
+            DiaryType.fromValue(diary.type) == .richText
+            ? const []
+            : metadata.headings;
+        if (!listEquals(_headings.value, headings)) _headings.value = headings;
+        _characterCount.value = metadata.contentTextCharacterCount;
       },
       initialTitle: diary.title,
       editable: _mode == .edit,
@@ -1055,7 +1065,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       if (seedId == null) return;
       _hops.reset(seedId);
     }
-    _hops.current?.scrollY = await _editorController.getScrollY();
+    _hops.current?.scrollY = _editorController.getScrollY();
     if (!mounted) return;
     _hops.push(target.id);
     await _showEntry(target, scrollY: 0);
@@ -1066,7 +1076,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _hopping = true;
     try {
       if (!await _flushBeforeHop()) return;
-      _hops.current?.scrollY = await _editorController.getScrollY();
+      _hops.current?.scrollY = _editorController.getScrollY();
       if (!mounted) return;
       while (true) {
         final entry = _hops.peek(delta);

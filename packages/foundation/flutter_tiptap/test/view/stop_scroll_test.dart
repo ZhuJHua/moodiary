@@ -3,10 +3,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+import '../support/settle.dart';
+
 void main() {
   final schema = ft.Schema.standard();
-  ft.Node p(String text) =>
-      schema.node('paragraph', content: [schema.node('text', text: text)]);
+  final p = TestNodes(schema).p;
   for (final drag in [false, true]) {
     for (final mouse in [false, true]) {
       for (final target in [
@@ -149,7 +151,7 @@ void main() {
             await tester.pump(const Duration(milliseconds: 32));
             expect(position.pixels, stoppedOffset);
             await press.up();
-            await tester.pumpAndSettle();
+            await settleEditor(tester);
             expect(controller.state.selection, same(oldSelection));
             expect(controller.state.doc, same(doc));
             expect(focus.hasFocus, isFalse);
@@ -240,7 +242,7 @@ void main() {
       final press = await tester.startGesture(const Offset(200, 200));
       await tester.pump(const Duration(milliseconds: 32));
       await press.up();
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(controller.state.selection, same(oldSelection));
       expect(focus.hasFocus, isTrue);
       expect(tester.testTextInput.isVisible, isTrue);

@@ -7,20 +7,69 @@ import 'package:flutter_tiptap/flutter_tiptap.dart';
 import 'package:moodiary_lint/testing.dart';
 
 import '../support/large_doc.dart';
+import '../support/nodes.dart';
 
 void main() {
   final schema = Schema.standard();
   const commands = EditorCommands();
-  Node p(String text) => schema.node(
-    'paragraph',
-    content: [if (text.isNotEmpty) schema.node('text', text: text)],
-  );
-  Node doc(List<Node> blocks) => schema.node('doc', content: blocks);
+  final p = TestNodes(schema).p;
+  final doc = TestNodes(schema).doc;
   EditorState exec(
     EditorState s,
     String name, [
     Map<String, dynamic> args = const {},
   ]) => s.apply(commands.execute(s, name, args));
+
+  test(
+    'toolbar equality compares formatting sets without depending on order',
+    () {
+      const first = ToolbarState(
+        {'bold', 'italic'},
+        'paragraph',
+        null,
+        true,
+        false,
+        SelectionKind.text,
+        activeNodes: {'bulletList', 'listItem'},
+        cellPosition: 7,
+      );
+      const reordered = ToolbarState(
+        {'italic', 'bold'},
+        'paragraph',
+        null,
+        true,
+        false,
+        SelectionKind.text,
+        activeNodes: {'listItem', 'bulletList'},
+        cellPosition: 7,
+      );
+      const otherCell = ToolbarState(
+        {'bold', 'italic'},
+        'paragraph',
+        null,
+        true,
+        false,
+        SelectionKind.text,
+        activeNodes: {'bulletList', 'listItem'},
+        cellPosition: 12,
+      );
+      const checkedTask = ToolbarState(
+        {'bold', 'italic'},
+        'paragraph',
+        null,
+        true,
+        false,
+        SelectionKind.text,
+        activeNodes: {'bulletList', 'listItem'},
+        cellPosition: 7,
+        taskChecked: true,
+      );
+      expect(first, reordered);
+      expect(first.hashCode, reordered.hashCode);
+      expect(first, isNot(otherCell));
+      expect(first, isNot(checkedTask));
+    },
+  );
 
   test('persistent tree randomized replacements retain summaries, order and old roots', () {
     final random = Random(42);

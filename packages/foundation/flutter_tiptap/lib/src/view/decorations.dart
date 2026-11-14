@@ -8,12 +8,9 @@ extension on _RenderEditorViewport {
     double width = 10000,
     bool ellipsis = false,
   }) {
-    final cache = _chrome[node] ??= {};
+    final cache = _chrome[node] ??= _LruMap(8);
     final key =
         '$text:${style.hashCode}:${_style.textDirection}:$width:$ellipsis';
-    if (!cache.containsKey(key) && cache.length >= 8) {
-      cache.remove(cache.keys.first);
-    }
     return cache.putIfAbsent(
       key,
       () =>
@@ -49,8 +46,27 @@ extension on _RenderEditorViewport {
   _ListMarkerLayout? _markerFor(_Row row, _BlockLayout layout, Offset origin) {
     final marker = row.marker;
     if (marker == null) return null;
-    final line = layout.chunks.first.paragraph!.computeLineMetrics().first;
-    final baseline = origin.dy + line.baseline;
+    if (layout.markerGeneration != layoutGeneration) {
+      layout.markerGeneration = layoutGeneration;
+      layout.markerLayouts.clear();
+    }
+    final local = layout.markerLayouts.putIfAbsent(
+      row,
+      () => _buildMarker(row, layout),
+    );
+    return _ListMarkerLayout(
+      local.bounds.shift(origin),
+      local.baseline + origin.dy,
+      local.textBaseline + origin.dy,
+      local.kind,
+      local.paragraph,
+    );
+  }
+
+  _ListMarkerLayout _buildMarker(_Row row, _BlockLayout layout) {
+    _controller.diagnostics.markerLayouts++;
+    final marker = row.marker!, baseline = layout.chunks.first.firstBaseline;
+    const origin = Offset.zero;
     final style = row.textStyle(_style).copyWith(color: _style.markerColor);
     final shape = _style.bulletGlyphs.indexOf(marker);
     if (shape >= 0) {
@@ -115,7 +131,6 @@ extension on _RenderEditorViewport {
     Offset origin,
     Offset textOrigin,
   ) {
-    final base = _style.forBlock(row.node).copyWith(color: _style.markerColor);
     final marker = _markerFor(row, layout, textOrigin);
     if (marker != null) {
       final paint = Paint()..color = _style.markerColor;
@@ -132,7 +147,10 @@ extension on _RenderEditorViewport {
             marker.bounds.width / 2,
             paint
               ..style = PaintingStyle.stroke
-              ..strokeWidth = math.max(1, (base.fontSize ?? 17) * .06),
+              ..strokeWidth = math.max(
+                1,
+                (_style.forBlock(row.node).fontSize ?? 17) * .06,
+              ),
           );
         case 'square':
           canvas.drawRect(marker.bounds, paint);
@@ -186,6 +204,9 @@ extension on _RenderEditorViewport {
     if (_codeBlockHeader == null &&
         row.node.type == 'codeBlock' &&
         language is String) {
+      final base = _style
+          .forBlock(row.node)
+          .copyWith(color: _style.markerColor);
       canvas.drawParagraph(
         _chromeText(
           row.node,
@@ -253,7 +274,7 @@ extension on _RenderEditorViewport {
     if (layout.node.type == 'horizontalRule') {
       _paintRule(canvas, row, rect, position);
     } else if (_nodeViews.containsKey(layout.node.type)) {
-    } else if (!layout.node.isTextblock) {
+    } else if (!layout.hasText) {
       final card = RRect.fromRectAndRadius(
         origin & Size(rect.width, layout.height),
         const Radius.circular(8),
@@ -403,12 +424,7 @@ class _ListMarkerLayout {
 
 // Paint inline backgrounds separately from glyph runs: padding and radius
 // must neither stretch monospace glyphs nor change the line metrics.
-void _paintInlineChunk(
-  Canvas canvas,
-  _ParagraphChunk chunk,
-  Offset origin,
-  TiptapEditorStyle style,
-) {
+void _prepareInlineChunk(_ParagraphChunk chunk, TiptapEditorStyle style) {
   final paragraph = chunk.paragraph!;
   void background(
     int from,
@@ -452,11 +468,11 @@ void _paintInlineChunk(
         highlight
             ? top + highlightHeight
             : metric.baseline + descent + vertical,
-      ).shift(origin);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(bounds, Radius.circular(radius)),
-        Paint()..color = color,
       );
+      chunk.inlineBackgrounds.add((
+        RRect.fromRectAndRadius(bounds, Radius.circular(radius)),
+        color,
+      ));
     }
   }
 
@@ -487,8 +503,9 @@ void _paintInlineChunk(
       false,
     );
   }
-  canvas.drawParagraph(paragraph, origin);
-  final boxes = paragraph.getBoxesForPlaceholders();
+  final boxes = chunk.chips.isEmpty
+      ? const <ui.TextBox>[]
+      : paragraph.getBoxesForPlaceholders();
   for (final (_, chip, index, at) in chunk.chips) {
     final box = boxes[index].toRect();
     final baseline = paragraph
@@ -499,7 +516,23 @@ void _paintInlineChunk(
       baseline - chip.computeLineMetrics().first.baseline,
       box.width,
       chip.height,
-    ).shift(origin);
+    );
+    chunk.chipRects.add((chip, rect));
+  }
+}
+
+void _paintInlineChunk(
+  Canvas canvas,
+  _ParagraphChunk chunk,
+  Offset origin,
+  TiptapEditorStyle style,
+) {
+  for (final (bounds, color) in chunk.inlineBackgrounds) {
+    canvas.drawRRect(bounds.shift(origin), Paint()..color = color);
+  }
+  canvas.drawParagraph(chunk.paragraph!, origin);
+  for (final (chip, bounds) in chunk.chipRects) {
+    final rect = bounds.shift(origin);
     canvas.drawRRect(
       RRect.fromRectAndRadius(rect, Radius.circular(style.referenceRadius)),
       Paint()..color = style.referenceBackground,

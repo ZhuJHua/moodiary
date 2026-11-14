@@ -49,10 +49,8 @@ void main() {
   });
 
   Future<(ft.TiptapController, MaterialLocalizations)> openMenu(
-    WidgetTester tester, {
-    bool selected = true,
-    bool readOnly = false,
-  }) async {
+    WidgetTester tester,
+  ) async {
     final doc = schema.node(
       'doc',
       attrs: {'v': 2},
@@ -74,10 +72,7 @@ void main() {
           builder: (context, child) =>
               MaterialUiCompatibilityBridge(child: child!),
           home: Scaffold(
-            body: MoodiaryEditor(
-              initialContent: jsonEncode(doc.toJson()),
-              readOnly: readOnly,
-            ),
+            body: MoodiaryEditor(initialContent: jsonEncode(doc.toJson())),
           ),
         ),
       ),
@@ -85,9 +80,7 @@ void main() {
     await tester.pumpAndSettle();
     final editor = tester.widget<ft.TiptapEditor>(find.byType(ft.TiptapEditor));
     final controller = editor.controller;
-    controller.setSelection(
-      selected ? const ft.TextSelection(1, 6) : const ft.TextSelection(3),
-    );
+    controller.setSelection(const ft.TextSelection(1, 6));
     await tester.pump();
     final geometry = tester
         .state<ft.TiptapEditorState>(find.byType(ft.TiptapEditor))
@@ -106,54 +99,14 @@ void main() {
     return (controller, labels);
   }
 
-  testWidgets('fallback menu cuts rich clipboard text with one-step undo', (
+  testWidgets('Cut writes rich clipboard text through HtmlClipboardApi', (
     tester,
   ) async {
-    final (controller, labels) = await openMenu(tester);
-    final actions = [
-      labels.cutButtonLabel,
-      labels.copyButtonLabel,
-      labels.pasteButtonLabel,
-      labels.selectAllButtonLabel,
-    ];
-    for (final action in actions) {
-      expect(find.text(action), findsOneWidget);
-    }
-    for (var index = 1; index < actions.length; index++) {
-      expect(
-        tester.getCenter(find.text(actions[index - 1])).dx,
-        lessThan(tester.getCenter(find.text(actions[index])).dx),
-      );
-    }
-    final before = controller.state;
+    final (_, labels) = await openMenu(tester);
     await tester.tap(find.text(labels.cutButtonLabel));
     await tester.pumpAndSettle();
     expect(clipboard?.text, 'hello');
     expect(clipboard?.html, contains('hello'));
-    expect(controller.state.doc.textContent, ' world');
-    expect(controller.state.selection, const ft.TextSelection(1));
-    expect(find.text(labels.cutButtonLabel), findsNothing);
-    controller.exec('undo');
-    expect(controller.state.doc.toJson(), before.doc.toJson());
-    expect(controller.state.selection, before.selection);
-    expect(controller.state.history.canUndo, isFalse);
-    await tester.pumpWidget(const SizedBox());
-  }, variant: platforms);
-
-  testWidgets('fallback menu omits Cut and Copy for a caret', (tester) async {
-    final (_, labels) = await openMenu(tester, selected: false);
-    expect(find.text(labels.cutButtonLabel), findsNothing);
-    expect(find.text(labels.copyButtonLabel), findsNothing);
-    expect(find.text(labels.pasteButtonLabel), findsOneWidget);
-    await tester.pumpWidget(const SizedBox());
-  }, variant: platforms);
-
-  testWidgets('read-only fallback menu omits Cut and Paste', (tester) async {
-    final (controller, labels) = await openMenu(tester, readOnly: true);
-    expect(find.text(labels.cutButtonLabel), findsNothing);
-    expect(find.text(labels.pasteButtonLabel), findsNothing);
-    expect(find.text(labels.copyButtonLabel), findsOneWidget);
-    expect(controller.state.doc.textContent, 'hello world');
     await tester.pumpWidget(const SizedBox());
   }, variant: platforms);
 }

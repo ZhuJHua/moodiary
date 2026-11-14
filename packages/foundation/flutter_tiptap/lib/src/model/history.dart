@@ -172,3 +172,76 @@ History _rebaseHistory(History history, Transaction transaction) {
     List.unmodifiable(undone.reversed),
   );
 }
+
+extension _HistoryHelpers on EditorCommands {
+  void _history(EditorState state, Transaction tr, bool redo) {
+    final h = state.history,
+        source = redo ? state.history._undone : state.history._done;
+    if (source.isEmpty) return;
+    final event = source.last,
+        snapshot = redo ? source.last.after : source.last.before;
+    tr
+        .setSelection(const TextSelection(0))
+        .step(
+          _DocumentStep(
+            snapshot.doc,
+            redo
+                ? event.blocks
+                : BlockRange(
+                    event.blocks.from,
+                    event.blocks.newTo,
+                    event.blocks.oldTo,
+                  ),
+          ),
+        )
+        .setSelection(snapshot.selection)
+        .setStoredMarks(snapshot.storedMarks)
+        .setMeta('addToHistory', false)
+        .setMeta('history', true);
+    if (event.nested case final nested?) {
+      tr._nestedReplacements
+        ..clear()
+        ..add(
+          redo
+              ? nested
+              : NestedRange(
+                  nested.path,
+                  nested.from,
+                  nested.newTo,
+                  nested.oldTo,
+                ),
+        );
+    }
+    tr.mapping = redo ? event.mapping : event.mapping.invert();
+    if (event.blockMove case final move?) {
+      tr.blockMove = redo ? move : (before: move.after, after: move.before);
+    }
+    tr._historyOverride = History._(
+      h.depth,
+      h.groupDelay,
+      List.unmodifiable(
+        redo ? [...h._done, event] : h._done.sublist(0, h._done.length - 1),
+      ),
+      List.unmodifiable(
+        redo
+            ? h._undone.sublist(0, h._undone.length - 1)
+            : [...h._undone, event],
+      ),
+    );
+  }
+}
+
+class _DocumentStep extends Step {
+  const _DocumentStep(this.doc, [this.blocks]);
+  final BlockRange? blocks;
+  final Node doc;
+  @override
+  StepResult apply(Node before) => StepResult(
+    doc,
+    blocks ?? BlockRange(0, before.childCount, doc.childCount),
+  );
+  @override
+  StepMap getMap() => StepMap.empty;
+  @override
+  Step _inverseFor(Node before, StepResult result) => _DocumentStep(before);
+}

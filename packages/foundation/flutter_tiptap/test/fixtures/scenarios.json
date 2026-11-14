@@ -5011,40 +5011,6 @@
             ]
           },
           {
-            "type": "horizontalRule",
-            "attrs": {
-              "variant": "solid",
-              "label": null
-            }
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 3,
-        "head": 4
-      }
-    },
-    "deviation": "D1/D2: divider deletion is immediate; adjacent media is selected before removal.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "a"
-              }
-            ]
-          },
-          {
             "type": "paragraph"
           }
         ]
@@ -5095,37 +5061,6 @@
       }
     ],
     "expected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "horizontalRule",
-            "attrs": {
-              "variant": "solid",
-              "label": null
-            }
-          },
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "b"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 0,
-        "head": 1
-      }
-    },
-    "deviation": "D1/D2: divider deletion is immediate; adjacent media is selected before removal.",
-    "nativeExpected": {
       "doc": {
         "type": "doc",
         "attrs": {
@@ -5199,39 +5134,6 @@
       }
     ],
     "expected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "a"
-              }
-            ]
-          },
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "b"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 4,
-        "head": 4
-      }
-    },
-    "deviation": "D1/D2: divider deletion is immediate; adjacent media is selected before removal.",
-    "nativeExpected": {
       "doc": {
         "type": "doc",
         "attrs": {
@@ -5335,39 +5237,6 @@
             ]
           },
           {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "b"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 2,
-        "head": 2
-      }
-    },
-    "deviation": "D1/D2: divider deletion is immediate; adjacent media is selected before removal.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "a"
-              }
-            ]
-          },
-          {
             "type": "image",
             "attrs": {
               "src": "test.png",
@@ -5393,7 +5262,7 @@
     }
   },
   {
-    "name": "M1 editable blockquote Backspace joins",
+    "name": "editable blockquote Backspace joins",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -5468,7 +5337,7 @@
     }
   },
   {
-    "name": "M1 editable codeBlock Backspace joins",
+    "name": "editable codeBlock Backspace joins",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -6499,7 +6368,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList depth 1",
+    "name": "toggleBulletList depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -6565,7 +6434,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList depth 1",
+    "name": "toggleOrderedList depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -6635,7 +6504,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList depth 1",
+    "name": "toggleTaskList depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -6704,7 +6573,7 @@
     }
   },
   {
-    "name": "M1 toggleBlockquote depth 1",
+    "name": "toggleBlockquote depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -6765,7 +6634,7 @@
     }
   },
   {
-    "name": "M1 setCodeBlock depth 1",
+    "name": "setCodeBlock depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -6824,7 +6693,7 @@
     }
   },
   {
-    "name": "M1 toggleCodeBlock depth 1",
+    "name": "toggleCodeBlock depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -6883,7 +6752,7 @@
     }
   },
   {
-    "name": "M1 bulletList sinkListItem depth 1",
+    "name": "bulletList sinkListItem depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -6992,7 +6861,7 @@
     }
   },
   {
-    "name": "M1 bulletList liftListItem depth 1",
+    "name": "bulletList liftListItem depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -7091,7 +6960,7 @@
     }
   },
   {
-    "name": "M1 bulletList splitListItem depth 1",
+    "name": "bulletList splitListItem depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -7209,7 +7078,7 @@
     }
   },
   {
-    "name": "M1 bulletList toggleBulletList depth 1",
+    "name": "bulletList toggleBulletList depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -7308,7 +7177,7 @@
     }
   },
   {
-    "name": "M1 bulletList Enter depth 1",
+    "name": "bulletList Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -7426,7 +7295,7 @@
     }
   },
   {
-    "name": "M1 bulletList Backspace depth 1",
+    "name": "bulletList Backspace depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -7525,7 +7394,7 @@
     }
   },
   {
-    "name": "M1 bulletList empty Enter depth 1",
+    "name": "bulletList empty Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -7612,7 +7481,7 @@
     }
   },
   {
-    "name": "M1 orderedList sinkListItem depth 1",
+    "name": "orderedList sinkListItem depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -7729,7 +7598,7 @@
     }
   },
   {
-    "name": "M1 orderedList liftListItem depth 1",
+    "name": "orderedList liftListItem depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -7832,7 +7701,7 @@
     }
   },
   {
-    "name": "M1 orderedList splitListItem depth 1",
+    "name": "orderedList splitListItem depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -7954,7 +7823,7 @@
     }
   },
   {
-    "name": "M1 orderedList toggleOrderedList depth 1",
+    "name": "orderedList toggleOrderedList depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -8057,7 +7926,7 @@
     }
   },
   {
-    "name": "M1 orderedList Enter depth 1",
+    "name": "orderedList Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -8179,7 +8048,7 @@
     }
   },
   {
-    "name": "M1 orderedList Backspace depth 1",
+    "name": "orderedList Backspace depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -8282,7 +8151,7 @@
     }
   },
   {
-    "name": "M1 orderedList empty Enter depth 1",
+    "name": "orderedList empty Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -8373,7 +8242,7 @@
     }
   },
   {
-    "name": "M1 taskList sinkListItem depth 1",
+    "name": "taskList sinkListItem depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -8488,7 +8357,7 @@
     }
   },
   {
-    "name": "M1 taskList liftListItem depth 1",
+    "name": "taskList liftListItem depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -8590,7 +8459,7 @@
     }
   },
   {
-    "name": "M1 taskList splitListItem depth 1",
+    "name": "taskList splitListItem depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -8717,7 +8586,7 @@
     }
   },
   {
-    "name": "M1 taskList toggleTaskList depth 1",
+    "name": "taskList toggleTaskList depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -8819,7 +8688,7 @@
     }
   },
   {
-    "name": "M1 taskList Enter depth 1",
+    "name": "taskList Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -8946,7 +8815,7 @@
     }
   },
   {
-    "name": "M1 taskList Backspace depth 1",
+    "name": "taskList Backspace depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9048,7 +8917,7 @@
     }
   },
   {
-    "name": "M1 taskList empty Enter depth 1",
+    "name": "taskList empty Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9138,7 +9007,7 @@
     }
   },
   {
-    "name": "M1 task checked depth 1",
+    "name": "task checked depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9255,7 +9124,7 @@
     }
   },
   {
-    "name": "M1 wrapIn depth 1",
+    "name": "wrapIn depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9329,7 +9198,7 @@
     }
   },
   {
-    "name": "M1 lift depth 1",
+    "name": "lift depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9393,7 +9262,7 @@
     }
   },
   {
-    "name": "M1 joinBackward depth 1",
+    "name": "joinBackward depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9468,7 +9337,7 @@
     }
   },
   {
-    "name": "M1 joinForward depth 1",
+    "name": "joinForward depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9543,7 +9412,7 @@
     }
   },
   {
-    "name": "M1 selectNodeBackward depth 1",
+    "name": "selectNodeBackward depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9627,7 +9496,7 @@
     }
   },
   {
-    "name": "M1 code Enter depth 1",
+    "name": "code Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9692,7 +9561,7 @@
     }
   },
   {
-    "name": "M1 code Backspace depth 1",
+    "name": "code Backspace depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9739,7 +9608,7 @@
     }
   },
   {
-    "name": "M1 code Shift-Enter depth 1",
+    "name": "code Shift-Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9785,39 +9654,6 @@
             "content": [
               {
                 "type": "text",
-                "text": "x"
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 4,
-        "head": 4
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "codeBlock",
-            "attrs": {
-              "language": "dart"
-            },
-            "content": [
-              {
-                "type": "text",
                 "text": "x\n"
               }
             ]
@@ -9834,7 +9670,7 @@
     }
   },
   {
-    "name": "M1 code ArrowDown depth 1",
+    "name": "code ArrowDown depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9896,7 +9732,7 @@
     }
   },
   {
-    "name": "M1 code Mod-Enter depth 1",
+    "name": "code Mod-Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -9948,39 +9784,6 @@
           },
           {
             "type": "paragraph"
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 4,
-        "head": 4
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "codeBlock",
-            "attrs": {
-              "language": "dart"
-            },
-            "content": [
-              {
-                "type": "text",
-                "text": "x"
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
           }
         ]
       },
@@ -9991,7 +9794,7 @@
     }
   },
   {
-    "name": "M1 code Tab depth 1",
+    "name": "code Tab depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -10037,36 +9840,6 @@
             "content": [
               {
                 "type": "text",
-                "text": "x"
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 2,
-        "head": 2
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "codeBlock",
-            "attrs": {
-              "language": "dart"
-            },
-            "content": [
-              {
-                "type": "text",
                 "text": "  x"
               }
             ]
@@ -10083,7 +9856,7 @@
     }
   },
   {
-    "name": "M1 code Shift-Tab depth 1",
+    "name": "code Shift-Tab depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -10145,7 +9918,7 @@
     }
   },
   {
-    "name": "M1 code no marks depth 1",
+    "name": "code no marks depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -10211,7 +9984,7 @@
     }
   },
   {
-    "name": "M1 HR command depth 1",
+    "name": "HR command depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -10283,7 +10056,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList depth 2",
+    "name": "toggleBulletList depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -10359,7 +10132,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList depth 2",
+    "name": "toggleOrderedList depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -10439,7 +10212,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList depth 2",
+    "name": "toggleTaskList depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -10518,7 +10291,7 @@
     }
   },
   {
-    "name": "M1 toggleBlockquote depth 2",
+    "name": "toggleBlockquote depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -10579,7 +10352,7 @@
     }
   },
   {
-    "name": "M1 setCodeBlock depth 2",
+    "name": "setCodeBlock depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -10648,7 +10421,7 @@
     }
   },
   {
-    "name": "M1 toggleCodeBlock depth 2",
+    "name": "toggleCodeBlock depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -10717,7 +10490,7 @@
     }
   },
   {
-    "name": "M1 bulletList sinkListItem depth 2",
+    "name": "bulletList sinkListItem depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -10836,7 +10609,7 @@
     }
   },
   {
-    "name": "M1 bulletList liftListItem depth 2",
+    "name": "bulletList liftListItem depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -10945,7 +10718,7 @@
     }
   },
   {
-    "name": "M1 bulletList splitListItem depth 2",
+    "name": "bulletList splitListItem depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -11073,7 +10846,7 @@
     }
   },
   {
-    "name": "M1 bulletList toggleBulletList depth 2",
+    "name": "bulletList toggleBulletList depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -11182,7 +10955,7 @@
     }
   },
   {
-    "name": "M1 bulletList Enter depth 2",
+    "name": "bulletList Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -11310,7 +11083,7 @@
     }
   },
   {
-    "name": "M1 bulletList Backspace depth 2",
+    "name": "bulletList Backspace depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -11419,7 +11192,7 @@
     }
   },
   {
-    "name": "M1 bulletList empty Enter depth 2",
+    "name": "bulletList empty Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -11516,7 +11289,7 @@
     }
   },
   {
-    "name": "M1 orderedList sinkListItem depth 2",
+    "name": "orderedList sinkListItem depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -11643,7 +11416,7 @@
     }
   },
   {
-    "name": "M1 orderedList liftListItem depth 2",
+    "name": "orderedList liftListItem depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -11756,7 +11529,7 @@
     }
   },
   {
-    "name": "M1 orderedList splitListItem depth 2",
+    "name": "orderedList splitListItem depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -11888,7 +11661,7 @@
     }
   },
   {
-    "name": "M1 orderedList toggleOrderedList depth 2",
+    "name": "orderedList toggleOrderedList depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -12001,7 +11774,7 @@
     }
   },
   {
-    "name": "M1 orderedList Enter depth 2",
+    "name": "orderedList Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -12133,7 +11906,7 @@
     }
   },
   {
-    "name": "M1 orderedList Backspace depth 2",
+    "name": "orderedList Backspace depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -12246,7 +12019,7 @@
     }
   },
   {
-    "name": "M1 orderedList empty Enter depth 2",
+    "name": "orderedList empty Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -12347,7 +12120,7 @@
     }
   },
   {
-    "name": "M1 taskList sinkListItem depth 2",
+    "name": "taskList sinkListItem depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -12472,7 +12245,7 @@
     }
   },
   {
-    "name": "M1 taskList liftListItem depth 2",
+    "name": "taskList liftListItem depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -12584,7 +12357,7 @@
     }
   },
   {
-    "name": "M1 taskList splitListItem depth 2",
+    "name": "taskList splitListItem depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -12721,7 +12494,7 @@
     }
   },
   {
-    "name": "M1 taskList toggleTaskList depth 2",
+    "name": "taskList toggleTaskList depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -12833,7 +12606,7 @@
     }
   },
   {
-    "name": "M1 taskList Enter depth 2",
+    "name": "taskList Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -12970,7 +12743,7 @@
     }
   },
   {
-    "name": "M1 taskList Backspace depth 2",
+    "name": "taskList Backspace depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13082,7 +12855,7 @@
     }
   },
   {
-    "name": "M1 taskList empty Enter depth 2",
+    "name": "taskList empty Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13182,7 +12955,7 @@
     }
   },
   {
-    "name": "M1 task checked depth 2",
+    "name": "task checked depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13309,7 +13082,7 @@
     }
   },
   {
-    "name": "M1 wrapIn depth 2",
+    "name": "wrapIn depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13393,7 +13166,7 @@
     }
   },
   {
-    "name": "M1 lift depth 2",
+    "name": "lift depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13467,7 +13240,7 @@
     }
   },
   {
-    "name": "M1 joinBackward depth 2",
+    "name": "joinBackward depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13552,7 +13325,7 @@
     }
   },
   {
-    "name": "M1 joinForward depth 2",
+    "name": "joinForward depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13637,7 +13410,7 @@
     }
   },
   {
-    "name": "M1 selectNodeBackward depth 2",
+    "name": "selectNodeBackward depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13731,7 +13504,7 @@
     }
   },
   {
-    "name": "M1 code Enter depth 2",
+    "name": "code Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13806,7 +13579,7 @@
     }
   },
   {
-    "name": "M1 code Backspace depth 2",
+    "name": "code Backspace depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13858,7 +13631,7 @@
     }
   },
   {
-    "name": "M1 code Shift-Enter depth 2",
+    "name": "code Shift-Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -13912,44 +13685,6 @@
                 "content": [
                   {
                     "type": "text",
-                    "text": "x"
-                  }
-                ]
-              },
-              {
-                "type": "paragraph"
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 5,
-        "head": 5
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "blockquote",
-            "content": [
-              {
-                "type": "codeBlock",
-                "attrs": {
-                  "language": "dart"
-                },
-                "content": [
-                  {
-                    "type": "text",
                     "text": "x\n"
                   }
                 ]
@@ -13968,7 +13703,7 @@
     }
   },
   {
-    "name": "M1 code ArrowDown depth 2",
+    "name": "code ArrowDown depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -14043,7 +13778,7 @@
     }
   },
   {
-    "name": "M1 code Mod-Enter depth 2",
+    "name": "code Mod-Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -14118,7 +13853,7 @@
     }
   },
   {
-    "name": "M1 code Tab depth 2",
+    "name": "code Tab depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -14172,41 +13907,6 @@
                 "content": [
                   {
                     "type": "text",
-                    "text": "x"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 3,
-        "head": 3
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "blockquote",
-            "content": [
-              {
-                "type": "codeBlock",
-                "attrs": {
-                  "language": "dart"
-                },
-                "content": [
-                  {
-                    "type": "text",
                     "text": "  x"
                   }
                 ]
@@ -14225,7 +13925,7 @@
     }
   },
   {
-    "name": "M1 code Shift-Tab depth 2",
+    "name": "code Shift-Tab depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -14297,7 +13997,7 @@
     }
   },
   {
-    "name": "M1 code no marks depth 2",
+    "name": "code no marks depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -14373,7 +14073,7 @@
     }
   },
   {
-    "name": "M1 HR command depth 2",
+    "name": "HR command depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -14455,7 +14155,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList depth 3",
+    "name": "toggleBulletList depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -14541,7 +14241,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList depth 3",
+    "name": "toggleOrderedList depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -14631,7 +14331,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList depth 3",
+    "name": "toggleTaskList depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -14720,7 +14420,7 @@
     }
   },
   {
-    "name": "M1 toggleBlockquote depth 3",
+    "name": "toggleBlockquote depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -14791,7 +14491,7 @@
     }
   },
   {
-    "name": "M1 setCodeBlock depth 3",
+    "name": "setCodeBlock depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -14870,7 +14570,7 @@
     }
   },
   {
-    "name": "M1 toggleCodeBlock depth 3",
+    "name": "toggleCodeBlock depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -14949,7 +14649,7 @@
     }
   },
   {
-    "name": "M1 bulletList sinkListItem depth 3",
+    "name": "bulletList sinkListItem depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -15078,7 +14778,7 @@
     }
   },
   {
-    "name": "M1 bulletList liftListItem depth 3",
+    "name": "bulletList liftListItem depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -15197,7 +14897,7 @@
     }
   },
   {
-    "name": "M1 bulletList splitListItem depth 3",
+    "name": "bulletList splitListItem depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -15335,7 +15035,7 @@
     }
   },
   {
-    "name": "M1 bulletList toggleBulletList depth 3",
+    "name": "bulletList toggleBulletList depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -15454,7 +15154,7 @@
     }
   },
   {
-    "name": "M1 bulletList Enter depth 3",
+    "name": "bulletList Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -15592,7 +15292,7 @@
     }
   },
   {
-    "name": "M1 bulletList Backspace depth 3",
+    "name": "bulletList Backspace depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -15711,7 +15411,7 @@
     }
   },
   {
-    "name": "M1 bulletList empty Enter depth 3",
+    "name": "bulletList empty Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -15818,7 +15518,7 @@
     }
   },
   {
-    "name": "M1 orderedList sinkListItem depth 3",
+    "name": "orderedList sinkListItem depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -15955,7 +15655,7 @@
     }
   },
   {
-    "name": "M1 orderedList liftListItem depth 3",
+    "name": "orderedList liftListItem depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -16078,7 +15778,7 @@
     }
   },
   {
-    "name": "M1 orderedList splitListItem depth 3",
+    "name": "orderedList splitListItem depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -16220,7 +15920,7 @@
     }
   },
   {
-    "name": "M1 orderedList toggleOrderedList depth 3",
+    "name": "orderedList toggleOrderedList depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -16343,7 +16043,7 @@
     }
   },
   {
-    "name": "M1 orderedList Enter depth 3",
+    "name": "orderedList Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -16485,7 +16185,7 @@
     }
   },
   {
-    "name": "M1 orderedList Backspace depth 3",
+    "name": "orderedList Backspace depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -16608,7 +16308,7 @@
     }
   },
   {
-    "name": "M1 orderedList empty Enter depth 3",
+    "name": "orderedList empty Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -16719,7 +16419,7 @@
     }
   },
   {
-    "name": "M1 taskList sinkListItem depth 3",
+    "name": "taskList sinkListItem depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -16854,7 +16554,7 @@
     }
   },
   {
-    "name": "M1 taskList liftListItem depth 3",
+    "name": "taskList liftListItem depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -16976,7 +16676,7 @@
     }
   },
   {
-    "name": "M1 taskList splitListItem depth 3",
+    "name": "taskList splitListItem depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -17123,7 +16823,7 @@
     }
   },
   {
-    "name": "M1 taskList toggleTaskList depth 3",
+    "name": "taskList toggleTaskList depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -17245,7 +16945,7 @@
     }
   },
   {
-    "name": "M1 taskList Enter depth 3",
+    "name": "taskList Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -17392,7 +17092,7 @@
     }
   },
   {
-    "name": "M1 taskList Backspace depth 3",
+    "name": "taskList Backspace depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -17514,7 +17214,7 @@
     }
   },
   {
-    "name": "M1 taskList empty Enter depth 3",
+    "name": "taskList empty Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -17624,7 +17324,7 @@
     }
   },
   {
-    "name": "M1 task checked depth 3",
+    "name": "task checked depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -17761,7 +17461,7 @@
     }
   },
   {
-    "name": "M1 wrapIn depth 3",
+    "name": "wrapIn depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -17855,7 +17555,7 @@
     }
   },
   {
-    "name": "M1 lift depth 3",
+    "name": "lift depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -17939,7 +17639,7 @@
     }
   },
   {
-    "name": "M1 joinBackward depth 3",
+    "name": "joinBackward depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18034,7 +17734,7 @@
     }
   },
   {
-    "name": "M1 joinForward depth 3",
+    "name": "joinForward depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18129,7 +17829,7 @@
     }
   },
   {
-    "name": "M1 selectNodeBackward depth 3",
+    "name": "selectNodeBackward depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18233,7 +17933,7 @@
     }
   },
   {
-    "name": "M1 code Enter depth 3",
+    "name": "code Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18318,7 +18018,7 @@
     }
   },
   {
-    "name": "M1 code Backspace depth 3",
+    "name": "code Backspace depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18375,7 +18075,7 @@
     }
   },
   {
-    "name": "M1 code Shift-Enter depth 3",
+    "name": "code Shift-Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18437,49 +18137,6 @@
                     "content": [
                       {
                         "type": "text",
-                        "text": "x"
-                      }
-                    ]
-                  },
-                  {
-                    "type": "paragraph"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 6,
-        "head": 6
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "blockquote",
-            "content": [
-              {
-                "type": "blockquote",
-                "content": [
-                  {
-                    "type": "codeBlock",
-                    "attrs": {
-                      "language": "dart"
-                    },
-                    "content": [
-                      {
-                        "type": "text",
                         "text": "x\n"
                       }
                     ]
@@ -18500,7 +18157,7 @@
     }
   },
   {
-    "name": "M1 code ArrowDown depth 3",
+    "name": "code ArrowDown depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18585,7 +18242,7 @@
     }
   },
   {
-    "name": "M1 code Mod-Enter depth 3",
+    "name": "code Mod-Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18670,7 +18327,7 @@
     }
   },
   {
-    "name": "M1 code Tab depth 3",
+    "name": "code Tab depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18732,46 +18389,6 @@
                     "content": [
                       {
                         "type": "text",
-                        "text": "x"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 4,
-        "head": 4
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "blockquote",
-            "content": [
-              {
-                "type": "blockquote",
-                "content": [
-                  {
-                    "type": "codeBlock",
-                    "attrs": {
-                      "language": "dart"
-                    },
-                    "content": [
-                      {
-                        "type": "text",
                         "text": "  x"
                       }
                     ]
@@ -18792,7 +18409,7 @@
     }
   },
   {
-    "name": "M1 code Shift-Tab depth 3",
+    "name": "code Shift-Tab depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18874,7 +18491,7 @@
     }
   },
   {
-    "name": "M1 code no marks depth 3",
+    "name": "code no marks depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -18960,7 +18577,7 @@
     }
   },
   {
-    "name": "M1 HR command depth 3",
+    "name": "HR command depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -19052,7 +18669,7 @@
     }
   },
   {
-    "name": "M1 rule '- ' depth 1",
+    "name": "rule '- ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -19106,7 +18723,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '- '",
+    "name": "rule undo redo '- '",
     "doc": {
       "type": "doc",
       "content": [
@@ -19168,7 +18785,7 @@
     }
   },
   {
-    "name": "M1 rule '- ' depth 2",
+    "name": "rule '- ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -19232,7 +18849,7 @@
     }
   },
   {
-    "name": "M1 rule '- ' depth 3",
+    "name": "rule '- ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -19306,7 +18923,7 @@
     }
   },
   {
-    "name": "M1 rule '* ' depth 1",
+    "name": "rule '* ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -19360,7 +18977,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '* '",
+    "name": "rule undo redo '* '",
     "doc": {
       "type": "doc",
       "content": [
@@ -19422,7 +19039,7 @@
     }
   },
   {
-    "name": "M1 rule '* ' depth 2",
+    "name": "rule '* ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -19486,7 +19103,7 @@
     }
   },
   {
-    "name": "M1 rule '* ' depth 3",
+    "name": "rule '* ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -19560,7 +19177,7 @@
     }
   },
   {
-    "name": "M1 rule '+ ' depth 1",
+    "name": "rule '+ ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -19614,7 +19231,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '+ '",
+    "name": "rule undo redo '+ '",
     "doc": {
       "type": "doc",
       "content": [
@@ -19676,7 +19293,7 @@
     }
   },
   {
-    "name": "M1 rule '+ ' depth 2",
+    "name": "rule '+ ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -19740,7 +19357,7 @@
     }
   },
   {
-    "name": "M1 rule '+ ' depth 3",
+    "name": "rule '+ ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -19814,7 +19431,7 @@
     }
   },
   {
-    "name": "M1 rule '－ ' depth 1",
+    "name": "rule '－ ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -19868,7 +19485,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '－ '",
+    "name": "rule undo redo '－ '",
     "doc": {
       "type": "doc",
       "content": [
@@ -19930,7 +19547,7 @@
     }
   },
   {
-    "name": "M1 rule '－ ' depth 2",
+    "name": "rule '－ ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -19994,7 +19611,7 @@
     }
   },
   {
-    "name": "M1 rule '－ ' depth 3",
+    "name": "rule '－ ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -20068,7 +19685,7 @@
     }
   },
   {
-    "name": "M1 rule '＊ ' depth 1",
+    "name": "rule '＊ ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -20122,7 +19739,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '＊ '",
+    "name": "rule undo redo '＊ '",
     "doc": {
       "type": "doc",
       "content": [
@@ -20184,7 +19801,7 @@
     }
   },
   {
-    "name": "M1 rule '＊ ' depth 2",
+    "name": "rule '＊ ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -20248,7 +19865,7 @@
     }
   },
   {
-    "name": "M1 rule '＊ ' depth 3",
+    "name": "rule '＊ ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -20322,7 +19939,7 @@
     }
   },
   {
-    "name": "M1 rule '· ' depth 1",
+    "name": "rule '· ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -20376,7 +19993,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '· '",
+    "name": "rule undo redo '· '",
     "doc": {
       "type": "doc",
       "content": [
@@ -20438,7 +20055,7 @@
     }
   },
   {
-    "name": "M1 rule '· ' depth 2",
+    "name": "rule '· ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -20502,7 +20119,7 @@
     }
   },
   {
-    "name": "M1 rule '· ' depth 3",
+    "name": "rule '· ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -20576,7 +20193,7 @@
     }
   },
   {
-    "name": "M1 rule '• ' depth 1",
+    "name": "rule '• ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -20630,7 +20247,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '• '",
+    "name": "rule undo redo '• '",
     "doc": {
       "type": "doc",
       "content": [
@@ -20692,7 +20309,7 @@
     }
   },
   {
-    "name": "M1 rule '• ' depth 2",
+    "name": "rule '• ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -20756,7 +20373,7 @@
     }
   },
   {
-    "name": "M1 rule '• ' depth 3",
+    "name": "rule '• ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -20830,7 +20447,7 @@
     }
   },
   {
-    "name": "M1 rule '1. ' depth 1",
+    "name": "rule '1. ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -20888,7 +20505,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '1. '",
+    "name": "rule undo redo '1. '",
     "doc": {
       "type": "doc",
       "content": [
@@ -20950,7 +20567,7 @@
     }
   },
   {
-    "name": "M1 rule '1. ' depth 2",
+    "name": "rule '1. ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -21018,7 +20635,7 @@
     }
   },
   {
-    "name": "M1 rule '1. ' depth 3",
+    "name": "rule '1. ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -21096,7 +20713,7 @@
     }
   },
   {
-    "name": "M1 rule '３． ' depth 1",
+    "name": "rule '３． ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -21154,7 +20771,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '３． '",
+    "name": "rule undo redo '３． '",
     "doc": {
       "type": "doc",
       "content": [
@@ -21216,7 +20833,7 @@
     }
   },
   {
-    "name": "M1 rule '３． ' depth 2",
+    "name": "rule '３． ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -21284,7 +20901,7 @@
     }
   },
   {
-    "name": "M1 rule '３． ' depth 3",
+    "name": "rule '３． ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -21362,7 +20979,7 @@
     }
   },
   {
-    "name": "M1 rule '[ ] ' depth 1",
+    "name": "rule '[ ] ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -21419,7 +21036,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '[ ] '",
+    "name": "rule undo redo '[ ] '",
     "doc": {
       "type": "doc",
       "content": [
@@ -21481,7 +21098,7 @@
     }
   },
   {
-    "name": "M1 rule '[ ] ' depth 2",
+    "name": "rule '[ ] ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -21548,7 +21165,7 @@
     }
   },
   {
-    "name": "M1 rule '[ ] ' depth 3",
+    "name": "rule '[ ] ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -21625,7 +21242,7 @@
     }
   },
   {
-    "name": "M1 rule '[x] ' depth 1",
+    "name": "rule '[x] ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -21682,7 +21299,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '[x] '",
+    "name": "rule undo redo '[x] '",
     "doc": {
       "type": "doc",
       "content": [
@@ -21744,7 +21361,7 @@
     }
   },
   {
-    "name": "M1 rule '[x] ' depth 2",
+    "name": "rule '[x] ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -21811,7 +21428,7 @@
     }
   },
   {
-    "name": "M1 rule '[x] ' depth 3",
+    "name": "rule '[x] ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -21888,7 +21505,7 @@
     }
   },
   {
-    "name": "M1 rule '【】 ' depth 1",
+    "name": "rule '【】 ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -21945,7 +21562,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '【】 '",
+    "name": "rule undo redo '【】 '",
     "doc": {
       "type": "doc",
       "content": [
@@ -22007,7 +21624,7 @@
     }
   },
   {
-    "name": "M1 rule '【】 ' depth 2",
+    "name": "rule '【】 ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -22074,7 +21691,7 @@
     }
   },
   {
-    "name": "M1 rule '【】 ' depth 3",
+    "name": "rule '【】 ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -22151,7 +21768,7 @@
     }
   },
   {
-    "name": "M1 rule '【 】 ' depth 1",
+    "name": "rule '【 】 ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -22208,7 +21825,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '【 】 '",
+    "name": "rule undo redo '【 】 '",
     "doc": {
       "type": "doc",
       "content": [
@@ -22270,7 +21887,7 @@
     }
   },
   {
-    "name": "M1 rule '【 】 ' depth 2",
+    "name": "rule '【 】 ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -22337,7 +21954,7 @@
     }
   },
   {
-    "name": "M1 rule '【 】 ' depth 3",
+    "name": "rule '【 】 ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -22414,7 +22031,7 @@
     }
   },
   {
-    "name": "M1 rule '「」 ' depth 1",
+    "name": "rule '「」 ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -22471,7 +22088,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '「」 '",
+    "name": "rule undo redo '「」 '",
     "doc": {
       "type": "doc",
       "content": [
@@ -22533,7 +22150,7 @@
     }
   },
   {
-    "name": "M1 rule '「」 ' depth 2",
+    "name": "rule '「」 ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -22600,7 +22217,7 @@
     }
   },
   {
-    "name": "M1 rule '「」 ' depth 3",
+    "name": "rule '「」 ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -22677,7 +22294,7 @@
     }
   },
   {
-    "name": "M1 rule '> ' depth 1",
+    "name": "rule '> ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -22726,7 +22343,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '> '",
+    "name": "rule undo redo '> '",
     "doc": {
       "type": "doc",
       "content": [
@@ -22788,7 +22405,7 @@
     }
   },
   {
-    "name": "M1 rule '> ' depth 2",
+    "name": "rule '> ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -22847,7 +22464,7 @@
     }
   },
   {
-    "name": "M1 rule '> ' depth 3",
+    "name": "rule '> ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -22916,7 +22533,7 @@
     }
   },
   {
-    "name": "M1 rule '》 ' depth 1",
+    "name": "rule '》 ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -22965,7 +22582,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '》 '",
+    "name": "rule undo redo '》 '",
     "doc": {
       "type": "doc",
       "content": [
@@ -23027,7 +22644,7 @@
     }
   },
   {
-    "name": "M1 rule '》 ' depth 2",
+    "name": "rule '》 ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -23086,7 +22703,7 @@
     }
   },
   {
-    "name": "M1 rule '》 ' depth 3",
+    "name": "rule '》 ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -23155,7 +22772,7 @@
     }
   },
   {
-    "name": "M1 rule '＞ ' depth 1",
+    "name": "rule '＞ ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -23204,7 +22821,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '＞ '",
+    "name": "rule undo redo '＞ '",
     "doc": {
       "type": "doc",
       "content": [
@@ -23266,7 +22883,7 @@
     }
   },
   {
-    "name": "M1 rule '＞ ' depth 2",
+    "name": "rule '＞ ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -23325,7 +22942,7 @@
     }
   },
   {
-    "name": "M1 rule '＞ ' depth 3",
+    "name": "rule '＞ ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -23394,7 +23011,7 @@
     }
   },
   {
-    "name": "M1 rule '``` ' depth 1",
+    "name": "rule '``` ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -23441,7 +23058,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '``` '",
+    "name": "rule undo redo '``` '",
     "doc": {
       "type": "doc",
       "content": [
@@ -23503,7 +23120,7 @@
     }
   },
   {
-    "name": "M1 rule '``` ' depth 2",
+    "name": "rule '``` ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -23560,7 +23177,7 @@
     }
   },
   {
-    "name": "M1 rule '``` ' depth 3",
+    "name": "rule '``` ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -23627,7 +23244,7 @@
     }
   },
   {
-    "name": "M1 rule '```dart ' depth 1",
+    "name": "rule '```dart ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -23674,7 +23291,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '```dart '",
+    "name": "rule undo redo '```dart '",
     "doc": {
       "type": "doc",
       "content": [
@@ -23736,7 +23353,7 @@
     }
   },
   {
-    "name": "M1 rule '```dart ' depth 2",
+    "name": "rule '```dart ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -23793,7 +23410,7 @@
     }
   },
   {
-    "name": "M1 rule '```dart ' depth 3",
+    "name": "rule '```dart ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -23860,7 +23477,7 @@
     }
   },
   {
-    "name": "M1 rule '~~~js ' depth 1",
+    "name": "rule '~~~js ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -23907,7 +23524,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '~~~js '",
+    "name": "rule undo redo '~~~js '",
     "doc": {
       "type": "doc",
       "content": [
@@ -23969,7 +23586,7 @@
     }
   },
   {
-    "name": "M1 rule '~~~js ' depth 2",
+    "name": "rule '~~~js ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -24026,7 +23643,7 @@
     }
   },
   {
-    "name": "M1 rule '~~~js ' depth 3",
+    "name": "rule '~~~js ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -24093,7 +23710,7 @@
     }
   },
   {
-    "name": "M1 rule '··· ' depth 1",
+    "name": "rule '··· ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -24140,7 +23757,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '··· '",
+    "name": "rule undo redo '··· '",
     "doc": {
       "type": "doc",
       "content": [
@@ -24202,7 +23819,7 @@
     }
   },
   {
-    "name": "M1 rule '··· ' depth 2",
+    "name": "rule '··· ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -24259,7 +23876,7 @@
     }
   },
   {
-    "name": "M1 rule '··· ' depth 3",
+    "name": "rule '··· ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -24326,7 +23943,7 @@
     }
   },
   {
-    "name": "M1 rule '···dart ' depth 1",
+    "name": "rule '···dart ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -24373,7 +23990,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '···dart '",
+    "name": "rule undo redo '···dart '",
     "doc": {
       "type": "doc",
       "content": [
@@ -24435,7 +24052,7 @@
     }
   },
   {
-    "name": "M1 rule '···dart ' depth 2",
+    "name": "rule '···dart ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -24492,7 +24109,7 @@
     }
   },
   {
-    "name": "M1 rule '···dart ' depth 3",
+    "name": "rule '···dart ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -24559,7 +24176,7 @@
     }
   },
   {
-    "name": "M1 rule '---' depth 1",
+    "name": "rule '---' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -24610,7 +24227,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '---'",
+    "name": "rule undo redo '---'",
     "doc": {
       "type": "doc",
       "content": [
@@ -24672,7 +24289,7 @@
     }
   },
   {
-    "name": "M1 rule '---' depth 2",
+    "name": "rule '---' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -24733,7 +24350,7 @@
     }
   },
   {
-    "name": "M1 rule '---' depth 3",
+    "name": "rule '---' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -24804,7 +24421,7 @@
     }
   },
   {
-    "name": "M1 rule '___ ' depth 1",
+    "name": "rule '___ ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -24855,7 +24472,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '___ '",
+    "name": "rule undo redo '___ '",
     "doc": {
       "type": "doc",
       "content": [
@@ -24917,7 +24534,7 @@
     }
   },
   {
-    "name": "M1 rule '___ ' depth 2",
+    "name": "rule '___ ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -24978,7 +24595,7 @@
     }
   },
   {
-    "name": "M1 rule '___ ' depth 3",
+    "name": "rule '___ ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -25049,7 +24666,7 @@
     }
   },
   {
-    "name": "M1 rule '———' depth 1",
+    "name": "rule '———' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -25100,7 +24717,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '———'",
+    "name": "rule undo redo '———'",
     "doc": {
       "type": "doc",
       "content": [
@@ -25162,7 +24779,7 @@
     }
   },
   {
-    "name": "M1 rule '———' depth 2",
+    "name": "rule '———' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -25223,7 +24840,7 @@
     }
   },
   {
-    "name": "M1 rule '———' depth 3",
+    "name": "rule '———' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -25294,7 +24911,7 @@
     }
   },
   {
-    "name": "M1 rule '－－－' depth 1",
+    "name": "rule '－－－' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -25345,7 +24962,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '－－－'",
+    "name": "rule undo redo '－－－'",
     "doc": {
       "type": "doc",
       "content": [
@@ -25407,7 +25024,7 @@
     }
   },
   {
-    "name": "M1 rule '－－－' depth 2",
+    "name": "rule '－－－' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -25468,7 +25085,7 @@
     }
   },
   {
-    "name": "M1 rule '－－－' depth 3",
+    "name": "rule '－－－' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -25539,7 +25156,7 @@
     }
   },
   {
-    "name": "M1 rule '*** ' depth 1",
+    "name": "rule '*** ' depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -25590,7 +25207,7 @@
     }
   },
   {
-    "name": "M1 rule undo redo '*** '",
+    "name": "rule undo redo '*** '",
     "doc": {
       "type": "doc",
       "content": [
@@ -25652,7 +25269,7 @@
     }
   },
   {
-    "name": "M1 rule '*** ' depth 2",
+    "name": "rule '*** ' depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -25713,7 +25330,7 @@
     }
   },
   {
-    "name": "M1 rule '*** ' depth 3",
+    "name": "rule '*** ' depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -25784,7 +25401,7 @@
     }
   },
   {
-    "name": "M1 ordered join start 2",
+    "name": "ordered join start 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -25872,7 +25489,7 @@
     }
   },
   {
-    "name": "M1 ordered join start 4",
+    "name": "ordered join start 4",
     "doc": {
       "type": "doc",
       "content": [
@@ -25969,7 +25586,7 @@
     }
   },
   {
-    "name": "M1 typed word coalesces identical marks",
+    "name": "typed word coalesces identical marks",
     "doc": {
       "type": "doc",
       "content": [
@@ -26037,7 +25654,7 @@
     }
   },
   {
-    "name": "M1 item containing codeBlock",
+    "name": "item containing codeBlock",
     "doc": {
       "type": "doc",
       "content": [
@@ -26159,7 +25776,7 @@
     }
   },
   {
-    "name": "M1 item containing image",
+    "name": "item containing image",
     "doc": {
       "type": "doc",
       "content": [
@@ -26273,7 +25890,7 @@
     }
   },
   {
-    "name": "M1 mark leak restores pre-delimiter marks",
+    "name": "mark leak restores pre-delimiter marks",
     "doc": {
       "type": "doc",
       "content": [
@@ -26312,51 +25929,7 @@
         "text": "d"
       }
     ],
-    "deviation": "After a mark input rule, restore the marks before its opening delimiter instead of leaking inner marks.",
     "expected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "marks": [
-                  {
-                    "type": "bold"
-                  },
-                  {
-                    "type": "highlight",
-                    "attrs": {
-                      "color": null
-                    }
-                  }
-                ],
-                "text": "abc"
-              },
-              {
-                "type": "text",
-                "marks": [
-                  {
-                    "type": "bold"
-                  }
-                ],
-                "text": "d"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 5,
-        "head": 5
-      }
-    },
-    "nativeExpected": {
       "doc": {
         "type": "doc",
         "attrs": {
@@ -26396,7 +25969,7 @@
     }
   },
   {
-    "name": "M1 splitListItem nested bulletList 1",
+    "name": "splitListItem nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -26508,7 +26081,7 @@
     }
   },
   {
-    "name": "M1 liftListItem nested bulletList 1",
+    "name": "liftListItem nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -26607,7 +26180,7 @@
     }
   },
   {
-    "name": "M1 sinkListItem nested bulletList 1",
+    "name": "sinkListItem nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -26716,7 +26289,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList nested bulletList 1",
+    "name": "toggleBulletList nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -26815,7 +26388,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList nested bulletList 1",
+    "name": "toggleOrderedList nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -26923,7 +26496,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList nested bulletList 1",
+    "name": "toggleTaskList nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -27033,7 +26606,7 @@
     }
   },
   {
-    "name": "M1 Enter nested bulletList 1",
+    "name": "Enter nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -27145,7 +26718,7 @@
     }
   },
   {
-    "name": "M1 Backspace nested bulletList 1",
+    "name": "Backspace nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -27244,7 +26817,7 @@
     }
   },
   {
-    "name": "M1 Delete nested bulletList 1",
+    "name": "Delete nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -27348,7 +26921,7 @@
     }
   },
   {
-    "name": "M1 Tab nested bulletList 1",
+    "name": "Tab nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -27457,7 +27030,7 @@
     }
   },
   {
-    "name": "M1 Shift-Tab nested bulletList 1",
+    "name": "Shift-Tab nested bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -27556,7 +27129,7 @@
     }
   },
   {
-    "name": "M1 empty nested Enter bulletList 1",
+    "name": "empty nested Enter bulletList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -27643,7 +27216,7 @@
     }
   },
   {
-    "name": "M1 splitListItem nested bulletList 2",
+    "name": "splitListItem nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -27811,7 +27384,7 @@
     }
   },
   {
-    "name": "M1 liftListItem nested bulletList 2",
+    "name": "liftListItem nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -27976,7 +27549,7 @@
     }
   },
   {
-    "name": "M1 sinkListItem nested bulletList 2",
+    "name": "sinkListItem nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -28141,7 +27714,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList nested bulletList 2",
+    "name": "toggleBulletList nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -28306,7 +27879,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList nested bulletList 2",
+    "name": "toggleOrderedList nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -28470,7 +28043,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList nested bulletList 2",
+    "name": "toggleTaskList nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -28636,7 +28209,7 @@
     }
   },
   {
-    "name": "M1 Enter nested bulletList 2",
+    "name": "Enter nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -28804,7 +28377,7 @@
     }
   },
   {
-    "name": "M1 Backspace nested bulletList 2",
+    "name": "Backspace nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -28969,7 +28542,7 @@
     }
   },
   {
-    "name": "M1 Delete nested bulletList 2",
+    "name": "Delete nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -29129,7 +28702,7 @@
     }
   },
   {
-    "name": "M1 Tab nested bulletList 2",
+    "name": "Tab nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -29294,7 +28867,7 @@
     }
   },
   {
-    "name": "M1 Shift-Tab nested bulletList 2",
+    "name": "Shift-Tab nested bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -29459,7 +29032,7 @@
     }
   },
   {
-    "name": "M1 empty nested Enter bulletList 2",
+    "name": "empty nested Enter bulletList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -29628,7 +29201,7 @@
     }
   },
   {
-    "name": "M1 splitListItem nested bulletList 3",
+    "name": "splitListItem nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -29852,7 +29425,7 @@
     }
   },
   {
-    "name": "M1 liftListItem nested bulletList 3",
+    "name": "liftListItem nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -30073,7 +29646,7 @@
     }
   },
   {
-    "name": "M1 sinkListItem nested bulletList 3",
+    "name": "sinkListItem nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -30294,7 +29867,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList nested bulletList 3",
+    "name": "toggleBulletList nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -30515,7 +30088,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList nested bulletList 3",
+    "name": "toggleOrderedList nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -30735,7 +30308,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList nested bulletList 3",
+    "name": "toggleTaskList nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -30957,7 +30530,7 @@
     }
   },
   {
-    "name": "M1 Enter nested bulletList 3",
+    "name": "Enter nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -31181,7 +30754,7 @@
     }
   },
   {
-    "name": "M1 Backspace nested bulletList 3",
+    "name": "Backspace nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -31402,7 +30975,7 @@
     }
   },
   {
-    "name": "M1 Delete nested bulletList 3",
+    "name": "Delete nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -31618,7 +31191,7 @@
     }
   },
   {
-    "name": "M1 Tab nested bulletList 3",
+    "name": "Tab nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -31839,7 +31412,7 @@
     }
   },
   {
-    "name": "M1 Shift-Tab nested bulletList 3",
+    "name": "Shift-Tab nested bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -32060,7 +31633,7 @@
     }
   },
   {
-    "name": "M1 empty nested Enter bulletList 3",
+    "name": "empty nested Enter bulletList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -32285,7 +31858,7 @@
     }
   },
   {
-    "name": "M1 splitListItem nested orderedList 1",
+    "name": "splitListItem nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -32401,7 +31974,7 @@
     }
   },
   {
-    "name": "M1 liftListItem nested orderedList 1",
+    "name": "liftListItem nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -32504,7 +32077,7 @@
     }
   },
   {
-    "name": "M1 sinkListItem nested orderedList 1",
+    "name": "sinkListItem nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -32621,7 +32194,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList nested orderedList 1",
+    "name": "toggleBulletList nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -32725,7 +32298,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList nested orderedList 1",
+    "name": "toggleOrderedList nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -32828,7 +32401,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList nested orderedList 1",
+    "name": "toggleTaskList nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -32938,7 +32511,7 @@
     }
   },
   {
-    "name": "M1 Enter nested orderedList 1",
+    "name": "Enter nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -33054,7 +32627,7 @@
     }
   },
   {
-    "name": "M1 Backspace nested orderedList 1",
+    "name": "Backspace nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -33157,7 +32730,7 @@
     }
   },
   {
-    "name": "M1 Delete nested orderedList 1",
+    "name": "Delete nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -33265,7 +32838,7 @@
     }
   },
   {
-    "name": "M1 Tab nested orderedList 1",
+    "name": "Tab nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -33382,7 +32955,7 @@
     }
   },
   {
-    "name": "M1 Shift-Tab nested orderedList 1",
+    "name": "Shift-Tab nested orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -33485,7 +33058,7 @@
     }
   },
   {
-    "name": "M1 empty nested Enter orderedList 1",
+    "name": "empty nested Enter orderedList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -33576,7 +33149,7 @@
     }
   },
   {
-    "name": "M1 splitListItem nested orderedList 2",
+    "name": "splitListItem nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -33752,7 +33325,7 @@
     }
   },
   {
-    "name": "M1 liftListItem nested orderedList 2",
+    "name": "liftListItem nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -33925,7 +33498,7 @@
     }
   },
   {
-    "name": "M1 sinkListItem nested orderedList 2",
+    "name": "sinkListItem nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -34102,7 +33675,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList nested orderedList 2",
+    "name": "toggleBulletList nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -34266,7 +33839,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList nested orderedList 2",
+    "name": "toggleOrderedList nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -34439,7 +34012,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList nested orderedList 2",
+    "name": "toggleTaskList nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -34609,7 +34182,7 @@
     }
   },
   {
-    "name": "M1 Enter nested orderedList 2",
+    "name": "Enter nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -34785,7 +34358,7 @@
     }
   },
   {
-    "name": "M1 Backspace nested orderedList 2",
+    "name": "Backspace nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -34958,7 +34531,7 @@
     }
   },
   {
-    "name": "M1 Delete nested orderedList 2",
+    "name": "Delete nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -35126,7 +34699,7 @@
     }
   },
   {
-    "name": "M1 Tab nested orderedList 2",
+    "name": "Tab nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -35303,7 +34876,7 @@
     }
   },
   {
-    "name": "M1 Shift-Tab nested orderedList 2",
+    "name": "Shift-Tab nested orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -35476,7 +35049,7 @@
     }
   },
   {
-    "name": "M1 empty nested Enter orderedList 2",
+    "name": "empty nested Enter orderedList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -35657,7 +35230,7 @@
     }
   },
   {
-    "name": "M1 splitListItem nested orderedList 3",
+    "name": "splitListItem nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -35893,7 +35466,7 @@
     }
   },
   {
-    "name": "M1 liftListItem nested orderedList 3",
+    "name": "liftListItem nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -36126,7 +35699,7 @@
     }
   },
   {
-    "name": "M1 sinkListItem nested orderedList 3",
+    "name": "sinkListItem nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -36363,7 +35936,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList nested orderedList 3",
+    "name": "toggleBulletList nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -36587,7 +36160,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList nested orderedList 3",
+    "name": "toggleOrderedList nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -36820,7 +36393,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList nested orderedList 3",
+    "name": "toggleTaskList nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -37050,7 +36623,7 @@
     }
   },
   {
-    "name": "M1 Enter nested orderedList 3",
+    "name": "Enter nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -37286,7 +36859,7 @@
     }
   },
   {
-    "name": "M1 Backspace nested orderedList 3",
+    "name": "Backspace nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -37519,7 +37092,7 @@
     }
   },
   {
-    "name": "M1 Delete nested orderedList 3",
+    "name": "Delete nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -37747,7 +37320,7 @@
     }
   },
   {
-    "name": "M1 Tab nested orderedList 3",
+    "name": "Tab nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -37984,7 +37557,7 @@
     }
   },
   {
-    "name": "M1 Shift-Tab nested orderedList 3",
+    "name": "Shift-Tab nested orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -38217,7 +37790,7 @@
     }
   },
   {
-    "name": "M1 empty nested Enter orderedList 3",
+    "name": "empty nested Enter orderedList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -38458,7 +38031,7 @@
     }
   },
   {
-    "name": "M1 splitListItem nested taskList 1",
+    "name": "splitListItem nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -38579,7 +38152,7 @@
     }
   },
   {
-    "name": "M1 liftListItem nested taskList 1",
+    "name": "liftListItem nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -38681,7 +38254,7 @@
     }
   },
   {
-    "name": "M1 sinkListItem nested taskList 1",
+    "name": "sinkListItem nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -38796,7 +38369,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList nested taskList 1",
+    "name": "toggleBulletList nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -38900,7 +38473,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList nested taskList 1",
+    "name": "toggleOrderedList nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -39008,7 +38581,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList nested taskList 1",
+    "name": "toggleTaskList nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -39110,7 +38683,7 @@
     }
   },
   {
-    "name": "M1 Enter nested taskList 1",
+    "name": "Enter nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -39231,7 +38804,7 @@
     }
   },
   {
-    "name": "M1 Backspace nested taskList 1",
+    "name": "Backspace nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -39333,7 +38906,7 @@
     }
   },
   {
-    "name": "M1 Delete nested taskList 1",
+    "name": "Delete nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -39443,7 +39016,7 @@
     }
   },
   {
-    "name": "M1 Tab nested taskList 1",
+    "name": "Tab nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -39558,7 +39131,7 @@
     }
   },
   {
-    "name": "M1 Shift-Tab nested taskList 1",
+    "name": "Shift-Tab nested taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -39660,7 +39233,7 @@
     }
   },
   {
-    "name": "M1 empty nested Enter taskList 1",
+    "name": "empty nested Enter taskList 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -39750,7 +39323,7 @@
     }
   },
   {
-    "name": "M1 splitListItem nested taskList 2",
+    "name": "splitListItem nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -39930,7 +39503,7 @@
     }
   },
   {
-    "name": "M1 liftListItem nested taskList 2",
+    "name": "liftListItem nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -40107,7 +39680,7 @@
     }
   },
   {
-    "name": "M1 sinkListItem nested taskList 2",
+    "name": "sinkListItem nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -40281,7 +39854,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList nested taskList 2",
+    "name": "toggleBulletList nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -40444,7 +40017,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList nested taskList 2",
+    "name": "toggleOrderedList nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -40611,7 +40184,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList nested taskList 2",
+    "name": "toggleTaskList nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -40788,7 +40361,7 @@
     }
   },
   {
-    "name": "M1 Enter nested taskList 2",
+    "name": "Enter nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -40968,7 +40541,7 @@
     }
   },
   {
-    "name": "M1 Backspace nested taskList 2",
+    "name": "Backspace nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -41145,7 +40718,7 @@
     }
   },
   {
-    "name": "M1 Delete nested taskList 2",
+    "name": "Delete nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -41314,7 +40887,7 @@
     }
   },
   {
-    "name": "M1 Tab nested taskList 2",
+    "name": "Tab nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -41488,7 +41061,7 @@
     }
   },
   {
-    "name": "M1 Shift-Tab nested taskList 2",
+    "name": "Shift-Tab nested taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -41665,7 +41238,7 @@
     }
   },
   {
-    "name": "M1 empty nested Enter taskList 2",
+    "name": "empty nested Enter taskList 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -41849,7 +41422,7 @@
     }
   },
   {
-    "name": "M1 splitListItem nested taskList 3",
+    "name": "splitListItem nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -42088,7 +41661,7 @@
     }
   },
   {
-    "name": "M1 liftListItem nested taskList 3",
+    "name": "liftListItem nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -42324,7 +41897,7 @@
     }
   },
   {
-    "name": "M1 sinkListItem nested taskList 3",
+    "name": "sinkListItem nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -42557,7 +42130,7 @@
     }
   },
   {
-    "name": "M1 toggleBulletList nested taskList 3",
+    "name": "toggleBulletList nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -42779,7 +42352,7 @@
     }
   },
   {
-    "name": "M1 toggleOrderedList nested taskList 3",
+    "name": "toggleOrderedList nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -43005,7 +42578,7 @@
     }
   },
   {
-    "name": "M1 toggleTaskList nested taskList 3",
+    "name": "toggleTaskList nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -43241,7 +42814,7 @@
     }
   },
   {
-    "name": "M1 Enter nested taskList 3",
+    "name": "Enter nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -43480,7 +43053,7 @@
     }
   },
   {
-    "name": "M1 Backspace nested taskList 3",
+    "name": "Backspace nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -43716,7 +43289,7 @@
     }
   },
   {
-    "name": "M1 Delete nested taskList 3",
+    "name": "Delete nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -43944,7 +43517,7 @@
     }
   },
   {
-    "name": "M1 Tab nested taskList 3",
+    "name": "Tab nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -44177,7 +43750,7 @@
     }
   },
   {
-    "name": "M1 Shift-Tab nested taskList 3",
+    "name": "Shift-Tab nested taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -44413,7 +43986,7 @@
     }
   },
   {
-    "name": "M1 empty nested Enter taskList 3",
+    "name": "empty nested Enter taskList 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -44656,7 +44229,7 @@
     }
   },
   {
-    "name": "M1 code in list Enter",
+    "name": "code in list Enter",
     "doc": {
       "type": "doc",
       "content": [
@@ -44784,7 +44357,7 @@
     }
   },
   {
-    "name": "M1 code in list Shift-Enter",
+    "name": "code in list Shift-Enter",
     "doc": {
       "type": "doc",
       "content": [
@@ -44892,72 +44465,6 @@
                     "content": [
                       {
                         "type": "text",
-                        "text": "code"
-                      }
-                    ]
-                  },
-                  {
-                    "type": "paragraph"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 24,
-        "head": 24
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "bulletList",
-            "content": [
-              {
-                "type": "listItem",
-                "content": [
-                  {
-                    "type": "paragraph",
-                    "content": [
-                      {
-                        "type": "text",
-                        "text": "first"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "type": "listItem",
-                "content": [
-                  {
-                    "type": "paragraph",
-                    "content": [
-                      {
-                        "type": "text",
-                        "text": "item"
-                      }
-                    ]
-                  },
-                  {
-                    "type": "codeBlock",
-                    "attrs": {
-                      "language": "dart"
-                    },
-                    "content": [
-                      {
-                        "type": "text",
                         "text": "\ncode"
                       }
                     ]
@@ -44978,7 +44485,7 @@
     }
   },
   {
-    "name": "M1 code in list Backspace",
+    "name": "code in list Backspace",
     "doc": {
       "type": "doc",
       "content": [
@@ -45094,7 +44601,7 @@
     }
   },
   {
-    "name": "M1 code in list Tab",
+    "name": "code in list Tab",
     "doc": {
       "type": "doc",
       "content": [
@@ -45179,74 +44686,6 @@
                         "text": "first"
                       }
                     ]
-                  },
-                  {
-                    "type": "bulletList",
-                    "content": [
-                      {
-                        "type": "listItem",
-                        "content": [
-                          {
-                            "type": "paragraph",
-                            "content": [
-                              {
-                                "type": "text",
-                                "text": "item"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "codeBlock",
-                            "attrs": {
-                              "language": "dart"
-                            },
-                            "content": [
-                              {
-                                "type": "text",
-                                "text": "code"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 18,
-        "head": 18
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "bulletList",
-            "content": [
-              {
-                "type": "listItem",
-                "content": [
-                  {
-                    "type": "paragraph",
-                    "content": [
-                      {
-                        "type": "text",
-                        "text": "first"
-                      }
-                    ]
                   }
                 ]
               },
@@ -45290,7 +44729,7 @@
     }
   },
   {
-    "name": "M1 code in list Shift-Tab",
+    "name": "code in list Shift-Tab",
     "doc": {
       "type": "doc",
       "content": [
@@ -45377,64 +44816,6 @@
                     ]
                   }
                 ]
-              }
-            ]
-          },
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "item"
-              }
-            ]
-          },
-          {
-            "type": "codeBlock",
-            "attrs": {
-              "language": "dart"
-            },
-            "content": [
-              {
-                "type": "text",
-                "text": "code"
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 18,
-        "head": 18
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "bulletList",
-            "content": [
-              {
-                "type": "listItem",
-                "content": [
-                  {
-                    "type": "paragraph",
-                    "content": [
-                      {
-                        "type": "text",
-                        "text": "first"
-                      }
-                    ]
-                  }
-                ]
               },
               {
                 "type": "listItem",
@@ -45476,7 +44857,7 @@
     }
   },
   {
-    "name": "M1 code in list ArrowDown",
+    "name": "code in list ArrowDown",
     "doc": {
       "type": "doc",
       "content": [
@@ -45607,7 +44988,7 @@
     }
   },
   {
-    "name": "M1 code in list Mod-Enter",
+    "name": "code in list Mod-Enter",
     "doc": {
       "type": "doc",
       "content": [
@@ -45738,7 +45119,7 @@
     }
   },
   {
-    "name": "M1 checked task split True",
+    "name": "checked task split True",
     "doc": {
       "type": "doc",
       "content": [
@@ -45831,7 +45212,7 @@
     }
   },
   {
-    "name": "M1 checked task split False",
+    "name": "checked task split False",
     "doc": {
       "type": "doc",
       "content": [
@@ -45924,7 +45305,7 @@
     }
   },
   {
-    "name": "M1 paragraph after list Backspace",
+    "name": "paragraph after list Backspace",
     "doc": {
       "type": "doc",
       "content": [
@@ -46019,7 +45400,7 @@
     }
   },
   {
-    "name": "M1 paragraph after list Tab",
+    "name": "paragraph after list Tab",
     "doc": {
       "type": "doc",
       "content": [
@@ -46123,7 +45504,7 @@
     }
   },
   {
-    "name": "M1 toggleBlockquote quote containing list",
+    "name": "toggleBlockquote quote containing list",
     "doc": {
       "type": "doc",
       "content": [
@@ -46199,7 +45580,7 @@
     }
   },
   {
-    "name": "M1 setCodeBlock quote containing list",
+    "name": "setCodeBlock quote containing list",
     "doc": {
       "type": "doc",
       "content": [
@@ -46273,7 +45654,7 @@
     }
   },
   {
-    "name": "M1 toggleCodeBlock quote containing list",
+    "name": "toggleCodeBlock quote containing list",
     "doc": {
       "type": "doc",
       "content": [
@@ -46347,7 +45728,7 @@
     }
   },
   {
-    "name": "M1 setParagraph quote containing list",
+    "name": "setParagraph quote containing list",
     "doc": {
       "type": "doc",
       "content": [
@@ -46418,7 +45799,7 @@
     }
   },
   {
-    "name": "M1 clearFormatting quote containing list",
+    "name": "clearFormatting quote containing list",
     "doc": {
       "type": "doc",
       "content": [
@@ -46489,7 +45870,7 @@
     }
   },
   {
-    "name": "M1 wrapInList bulletList depth 1",
+    "name": "wrapInList bulletList depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -46558,7 +45939,7 @@
     }
   },
   {
-    "name": "M1 wrapInList orderedList depth 1",
+    "name": "wrapInList orderedList depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -46631,7 +46012,7 @@
     }
   },
   {
-    "name": "M1 wrapInList taskList depth 1",
+    "name": "wrapInList taskList depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -46703,7 +46084,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Enter depth 1",
+    "name": "quote nonfirst Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -46790,7 +46171,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Backspace depth 1",
+    "name": "quote nonfirst Backspace depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -46874,7 +46255,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Delete depth 1",
+    "name": "quote nonfirst Delete depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -46958,7 +46339,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Shift-Enter depth 1",
+    "name": "quote nonfirst Shift-Enter depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -47045,7 +46426,7 @@
     }
   },
   {
-    "name": "M1 wrapInList bulletList depth 2",
+    "name": "wrapInList bulletList depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -47124,7 +46505,7 @@
     }
   },
   {
-    "name": "M1 wrapInList orderedList depth 2",
+    "name": "wrapInList orderedList depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -47207,7 +46588,7 @@
     }
   },
   {
-    "name": "M1 wrapInList taskList depth 2",
+    "name": "wrapInList taskList depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -47289,7 +46670,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Enter depth 2",
+    "name": "quote nonfirst Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -47386,7 +46767,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Backspace depth 2",
+    "name": "quote nonfirst Backspace depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -47480,7 +46861,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Delete depth 2",
+    "name": "quote nonfirst Delete depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -47574,7 +46955,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Shift-Enter depth 2",
+    "name": "quote nonfirst Shift-Enter depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -47671,7 +47052,7 @@
     }
   },
   {
-    "name": "M1 wrapInList bulletList depth 3",
+    "name": "wrapInList bulletList depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -47760,7 +47141,7 @@
     }
   },
   {
-    "name": "M1 wrapInList orderedList depth 3",
+    "name": "wrapInList orderedList depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -47853,7 +47234,7 @@
     }
   },
   {
-    "name": "M1 wrapInList taskList depth 3",
+    "name": "wrapInList taskList depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -47945,7 +47326,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Enter depth 3",
+    "name": "quote nonfirst Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -48052,7 +47433,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Backspace depth 3",
+    "name": "quote nonfirst Backspace depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -48156,7 +47537,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Delete depth 3",
+    "name": "quote nonfirst Delete depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -48260,7 +47641,7 @@
     }
   },
   {
-    "name": "M1 quote nonfirst Shift-Enter depth 3",
+    "name": "quote nonfirst Shift-Enter depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -48367,7 +47748,7 @@
     }
   },
   {
-    "name": "M1 mark rule preserves prior bold",
+    "name": "mark rule preserves prior bold",
     "doc": {
       "type": "doc",
       "content": [
@@ -48397,51 +47778,7 @@
         "text": "d"
       }
     ],
-    "deviation": "Mark input rules restore the marks before the opening delimiter.",
     "expected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "marks": [
-                  {
-                    "type": "bold"
-                  },
-                  {
-                    "type": "highlight",
-                    "attrs": {
-                      "color": null
-                    }
-                  }
-                ],
-                "text": "x"
-              },
-              {
-                "type": "text",
-                "marks": [
-                  {
-                    "type": "bold"
-                  }
-                ],
-                "text": "d"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 3,
-        "head": 3
-      }
-    },
-    "nativeExpected": {
       "doc": {
         "type": "doc",
         "attrs": {
@@ -48486,7 +47823,7 @@
     }
   },
   {
-    "name": "M1 mark rule preserves prior italic",
+    "name": "mark rule preserves prior italic",
     "doc": {
       "type": "doc",
       "content": [
@@ -48516,51 +47853,7 @@
         "text": "d"
       }
     ],
-    "deviation": "Mark input rules restore the marks before the opening delimiter.",
     "expected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "marks": [
-                  {
-                    "type": "italic"
-                  },
-                  {
-                    "type": "highlight",
-                    "attrs": {
-                      "color": null
-                    }
-                  }
-                ],
-                "text": "x"
-              },
-              {
-                "type": "text",
-                "marks": [
-                  {
-                    "type": "italic"
-                  }
-                ],
-                "text": "d"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 3,
-        "head": 3
-      }
-    },
-    "nativeExpected": {
       "doc": {
         "type": "doc",
         "attrs": {
@@ -48605,7 +47898,7 @@
     }
   },
   {
-    "name": "M1 mark rule preserves prior underline",
+    "name": "mark rule preserves prior underline",
     "doc": {
       "type": "doc",
       "content": [
@@ -48635,51 +47928,7 @@
         "text": "d"
       }
     ],
-    "deviation": "Mark input rules restore the marks before the opening delimiter.",
     "expected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "marks": [
-                  {
-                    "type": "underline"
-                  },
-                  {
-                    "type": "highlight",
-                    "attrs": {
-                      "color": null
-                    }
-                  }
-                ],
-                "text": "x"
-              },
-              {
-                "type": "text",
-                "marks": [
-                  {
-                    "type": "underline"
-                  }
-                ],
-                "text": "d"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 3,
-        "head": 3
-      }
-    },
-    "nativeExpected": {
       "doc": {
         "type": "doc",
         "attrs": {
@@ -48724,7 +47973,7 @@
     }
   },
   {
-    "name": "M1 mark rule preserves prior highlight",
+    "name": "mark rule preserves prior highlight",
     "doc": {
       "type": "doc",
       "content": [
@@ -48754,43 +48003,7 @@
         "text": "d"
       }
     ],
-    "deviation": "Mark input rules restore the marks before the opening delimiter.",
     "expected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "marks": [
-                  {
-                    "type": "highlight",
-                    "attrs": {
-                      "color": null
-                    }
-                  }
-                ],
-                "text": "x"
-              },
-              {
-                "type": "text",
-                "text": "d"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 3,
-        "head": 3
-      }
-    },
-    "nativeExpected": {
       "doc": {
         "type": "doc",
         "attrs": {
@@ -48823,7 +48036,7 @@
     }
   },
   {
-    "name": "M1 rule in required item paragraph '## '",
+    "name": "rule in required item paragraph '## '",
     "doc": {
       "type": "doc",
       "content": [
@@ -48893,7 +48106,7 @@
     }
   },
   {
-    "name": "M1 rule in required item paragraph '```dart '",
+    "name": "rule in required item paragraph '```dart '",
     "doc": {
       "type": "doc",
       "content": [
@@ -48963,7 +48176,7 @@
     }
   },
   {
-    "name": "M1 rule in required item paragraph '- '",
+    "name": "rule in required item paragraph '- '",
     "doc": {
       "type": "doc",
       "content": [
@@ -49033,7 +48246,7 @@
     }
   },
   {
-    "name": "M1 rule in required item paragraph '[x] '",
+    "name": "rule in required item paragraph '[x] '",
     "doc": {
       "type": "doc",
       "content": [
@@ -49103,7 +48316,7 @@
     }
   },
   {
-    "name": "M1 rule in required item paragraph '> '",
+    "name": "rule in required item paragraph '> '",
     "doc": {
       "type": "doc",
       "content": [
@@ -49173,7 +48386,7 @@
     }
   },
   {
-    "name": "M1 rule in required item paragraph '---'",
+    "name": "rule in required item paragraph '---'",
     "doc": {
       "type": "doc",
       "content": [
@@ -49247,7 +48460,7 @@
     }
   },
   {
-    "name": "M1 rule in required item paragraph '==x=='",
+    "name": "rule in required item paragraph '==x=='",
     "doc": {
       "type": "doc",
       "content": [
@@ -49325,7 +48538,7 @@
     }
   },
   {
-    "name": "M1 literal rule around code **",
+    "name": "literal rule around code **",
     "doc": {
       "type": "doc",
       "content": [
@@ -49404,7 +48617,7 @@
     }
   },
   {
-    "name": "M1 literal rule around code ==",
+    "name": "literal rule around code ==",
     "doc": {
       "type": "doc",
       "content": [
@@ -49483,7 +48696,7 @@
     }
   },
   {
-    "name": "M1 literal rule around code *",
+    "name": "literal rule around code *",
     "doc": {
       "type": "doc",
       "content": [
@@ -49562,7 +48775,7 @@
     }
   },
   {
-    "name": "M1 literal rule around code ~~",
+    "name": "literal rule around code ~~",
     "doc": {
       "type": "doc",
       "content": [
@@ -49641,7 +48854,7 @@
     }
   },
   {
-    "name": "M1 consecutive structural rule '- '",
+    "name": "consecutive structural rule '- '",
     "doc": {
       "type": "doc",
       "content": [
@@ -49722,7 +48935,7 @@
     }
   },
   {
-    "name": "M1 consecutive structural rule '1. '",
+    "name": "consecutive structural rule '1. '",
     "doc": {
       "type": "doc",
       "content": [
@@ -49816,7 +49029,7 @@
     }
   },
   {
-    "name": "M1 consecutive structural rule '[ ] '",
+    "name": "consecutive structural rule '[ ] '",
     "doc": {
       "type": "doc",
       "content": [
@@ -49908,7 +49121,7 @@
     }
   },
   {
-    "name": "M1 consecutive structural rule '> '",
+    "name": "consecutive structural rule '> '",
     "doc": {
       "type": "doc",
       "content": [
@@ -49979,7 +49192,7 @@
     }
   },
   {
-    "name": "M1 split item keeps bold",
+    "name": "split item keeps bold",
     "doc": {
       "type": "doc",
       "content": [
@@ -50088,7 +49301,7 @@
     }
   },
   {
-    "name": "M1 split item keeps italic",
+    "name": "split item keeps italic",
     "doc": {
       "type": "doc",
       "content": [
@@ -50197,7 +49410,7 @@
     }
   },
   {
-    "name": "M1 split item keeps link",
+    "name": "split item keeps link",
     "doc": {
       "type": "doc",
       "content": [
@@ -50307,7 +49520,7 @@
     }
   },
   {
-    "name": "M1 splitListItem rejects code child",
+    "name": "splitListItem rejects code child",
     "doc": {
       "type": "doc",
       "content": [
@@ -50435,7 +49648,7 @@
     }
   },
   {
-    "name": "M1 selected nested atom 1 typing",
+    "name": "selected nested atom 1 typing",
     "doc": {
       "type": "doc",
       "content": [
@@ -50530,7 +49743,7 @@
     }
   },
   {
-    "name": "M1 selected nested atom 1 Enter",
+    "name": "selected nested atom 1 Enter",
     "doc": {
       "type": "doc",
       "content": [
@@ -50619,7 +49832,7 @@
     }
   },
   {
-    "name": "M1 selected nested atom 1 Backspace",
+    "name": "selected nested atom 1 Backspace",
     "doc": {
       "type": "doc",
       "content": [
@@ -50701,7 +49914,7 @@
     }
   },
   {
-    "name": "M1 selected nested atom 2 typing",
+    "name": "selected nested atom 2 typing",
     "doc": {
       "type": "doc",
       "content": [
@@ -50806,7 +50019,7 @@
     }
   },
   {
-    "name": "M1 selected nested atom 2 Enter",
+    "name": "selected nested atom 2 Enter",
     "doc": {
       "type": "doc",
       "content": [
@@ -50905,7 +50118,7 @@
     }
   },
   {
-    "name": "M1 selected nested atom 2 Backspace",
+    "name": "selected nested atom 2 Backspace",
     "doc": {
       "type": "doc",
       "content": [
@@ -50997,7 +50210,7 @@
     }
   },
   {
-    "name": "M1 selected nested atom 3 typing",
+    "name": "selected nested atom 3 typing",
     "doc": {
       "type": "doc",
       "content": [
@@ -51112,7 +50325,7 @@
     }
   },
   {
-    "name": "M1 selected nested atom 3 Enter",
+    "name": "selected nested atom 3 Enter",
     "doc": {
       "type": "doc",
       "content": [
@@ -51221,7 +50434,7 @@
     }
   },
   {
-    "name": "M1 selected nested atom 3 Backspace",
+    "name": "selected nested atom 3 Backspace",
     "doc": {
       "type": "doc",
       "content": [
@@ -51323,7 +50536,7 @@
     }
   },
   {
-    "name": "M1 bulletList end Delete depth 1",
+    "name": "bulletList end Delete depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -51413,7 +50626,7 @@
     }
   },
   {
-    "name": "M1 bulletList end joinForward depth 1",
+    "name": "bulletList end joinForward depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -51512,7 +50725,7 @@
     }
   },
   {
-    "name": "M1 orderedList end Delete depth 1",
+    "name": "orderedList end Delete depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -51606,7 +50819,7 @@
     }
   },
   {
-    "name": "M1 orderedList end joinForward depth 1",
+    "name": "orderedList end joinForward depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -51709,7 +50922,7 @@
     }
   },
   {
-    "name": "M1 taskList end Delete depth 1",
+    "name": "taskList end Delete depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -51802,7 +51015,7 @@
     }
   },
   {
-    "name": "M1 taskList end joinForward depth 1",
+    "name": "taskList end joinForward depth 1",
     "doc": {
       "type": "doc",
       "content": [
@@ -51904,7 +51117,7 @@
     }
   },
   {
-    "name": "M1 bulletList end Delete depth 2",
+    "name": "bulletList end Delete depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -52004,7 +51217,7 @@
     }
   },
   {
-    "name": "M1 bulletList end joinForward depth 2",
+    "name": "bulletList end joinForward depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -52113,7 +51326,7 @@
     }
   },
   {
-    "name": "M1 orderedList end Delete depth 2",
+    "name": "orderedList end Delete depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -52217,7 +51430,7 @@
     }
   },
   {
-    "name": "M1 orderedList end joinForward depth 2",
+    "name": "orderedList end joinForward depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -52330,7 +51543,7 @@
     }
   },
   {
-    "name": "M1 taskList end Delete depth 2",
+    "name": "taskList end Delete depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -52433,7 +51646,7 @@
     }
   },
   {
-    "name": "M1 taskList end joinForward depth 2",
+    "name": "taskList end joinForward depth 2",
     "doc": {
       "type": "doc",
       "content": [
@@ -52545,7 +51758,7 @@
     }
   },
   {
-    "name": "M1 bulletList end Delete depth 3",
+    "name": "bulletList end Delete depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -52655,7 +51868,7 @@
     }
   },
   {
-    "name": "M1 bulletList end joinForward depth 3",
+    "name": "bulletList end joinForward depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -52774,7 +51987,7 @@
     }
   },
   {
-    "name": "M1 orderedList end Delete depth 3",
+    "name": "orderedList end Delete depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -52888,7 +52101,7 @@
     }
   },
   {
-    "name": "M1 orderedList end joinForward depth 3",
+    "name": "orderedList end joinForward depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -53011,7 +52224,7 @@
     }
   },
   {
-    "name": "M1 taskList end Delete depth 3",
+    "name": "taskList end Delete depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -53124,7 +52337,7 @@
     }
   },
   {
-    "name": "M1 taskList end joinForward depth 3",
+    "name": "taskList end joinForward depth 3",
     "doc": {
       "type": "doc",
       "content": [
@@ -53246,7 +52459,7 @@
     }
   },
   {
-    "name": "M2a image insert empty",
+    "name": "image insert empty",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -53301,7 +52514,7 @@
     }
   },
   {
-    "name": "M2a image insert middle",
+    "name": "image insert middle",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -53389,7 +52602,7 @@
     }
   },
   {
-    "name": "M2a image insert list",
+    "name": "image insert list",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -53482,7 +52695,7 @@
     }
   },
   {
-    "name": "M2a image selected delete",
+    "name": "image selected delete",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -53549,7 +52762,7 @@
     }
   },
   {
-    "name": "M2a image selected type",
+    "name": "image selected type",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -53614,7 +52827,7 @@
     }
   },
   {
-    "name": "M2a image selected move",
+    "name": "image selected move",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -53709,7 +52922,7 @@
     }
   },
   {
-    "name": "M2a image rename",
+    "name": "image rename",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -53771,7 +52984,7 @@
     }
   },
   {
-    "name": "M2a video insert empty",
+    "name": "video insert empty",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -53826,7 +53039,7 @@
     }
   },
   {
-    "name": "M2a video insert middle",
+    "name": "video insert middle",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -53914,7 +53127,7 @@
     }
   },
   {
-    "name": "M2a video insert list",
+    "name": "video insert list",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54007,7 +53220,7 @@
     }
   },
   {
-    "name": "M2a video selected delete",
+    "name": "video selected delete",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54074,7 +53287,7 @@
     }
   },
   {
-    "name": "M2a video selected type",
+    "name": "video selected type",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54139,7 +53352,7 @@
     }
   },
   {
-    "name": "M2a video selected move",
+    "name": "video selected move",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54234,7 +53447,7 @@
     }
   },
   {
-    "name": "M2a video rename",
+    "name": "video rename",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54296,7 +53509,7 @@
     }
   },
   {
-    "name": "M2a audio insert empty",
+    "name": "audio insert empty",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54350,7 +53563,7 @@
     }
   },
   {
-    "name": "M2a audio insert middle",
+    "name": "audio insert middle",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54437,7 +53650,7 @@
     }
   },
   {
-    "name": "M2a audio insert list",
+    "name": "audio insert list",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54529,7 +53742,7 @@
     }
   },
   {
-    "name": "M2a audio selected delete",
+    "name": "audio selected delete",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54596,7 +53809,7 @@
     }
   },
   {
-    "name": "M2a audio selected type",
+    "name": "audio selected type",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54660,7 +53873,7 @@
     }
   },
   {
-    "name": "M2a audio selected move",
+    "name": "audio selected move",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54754,7 +53967,7 @@
     }
   },
   {
-    "name": "M2a audio rename",
+    "name": "audio rename",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54815,7 +54028,7 @@
     }
   },
   {
-    "name": "M2a attachment insert empty",
+    "name": "attachment insert empty",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54871,7 +54084,7 @@
     }
   },
   {
-    "name": "M2a attachment insert middle",
+    "name": "attachment insert middle",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -54960,7 +54173,7 @@
     }
   },
   {
-    "name": "M2a attachment insert list",
+    "name": "attachment insert list",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55054,7 +54267,7 @@
     }
   },
   {
-    "name": "M2a attachment selected delete",
+    "name": "attachment selected delete",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55121,7 +54334,7 @@
     }
   },
   {
-    "name": "M2a attachment selected type",
+    "name": "attachment selected type",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55187,7 +54400,7 @@
     }
   },
   {
-    "name": "M2a attachment selected move",
+    "name": "attachment selected move",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55283,7 +54496,7 @@
     }
   },
   {
-    "name": "M2a attachment rename",
+    "name": "attachment rename",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55346,7 +54559,7 @@
     }
   },
   {
-    "name": "M2a width 10",
+    "name": "width 10",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55408,7 +54621,7 @@
     }
   },
   {
-    "name": "M2a width 55.5",
+    "name": "width 55.5",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55470,7 +54683,7 @@
     }
   },
   {
-    "name": "M2a width 200",
+    "name": "width 200",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55532,7 +54745,7 @@
     }
   },
   {
-    "name": "M2a width None",
+    "name": "width None",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55594,7 +54807,7 @@
     }
   },
   {
-    "name": "M2a autolink example.com",
+    "name": "autolink example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55653,7 +54866,7 @@
     }
   },
   {
-    "name": "M2a paste example.com",
+    "name": "paste example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55711,7 +54924,7 @@
     }
   },
   {
-    "name": "M2a autolink https://example.com/a",
+    "name": "autolink https://example.com/a",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55770,7 +54983,7 @@
     }
   },
   {
-    "name": "M2a paste https://example.com/a",
+    "name": "paste https://example.com/a",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55828,7 +55041,7 @@
     }
   },
   {
-    "name": "M2a autolink www.example.com",
+    "name": "autolink www.example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55887,7 +55100,7 @@
     }
   },
   {
-    "name": "M2a paste www.example.com",
+    "name": "paste www.example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -55945,7 +55158,7 @@
     }
   },
   {
-    "name": "M2a autolink user@example.com",
+    "name": "autolink user@example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56004,7 +55217,7 @@
     }
   },
   {
-    "name": "M2a paste user@example.com",
+    "name": "paste user@example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56062,7 +55275,7 @@
     }
   },
   {
-    "name": "M2a autolink https://example.com/path?q=x",
+    "name": "autolink https://example.com/path?q=x",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56121,7 +55334,7 @@
     }
   },
   {
-    "name": "M2a paste https://example.com/path?q=x",
+    "name": "paste https://example.com/path?q=x",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56179,7 +55392,7 @@
     }
   },
   {
-    "name": "M2a setLink example.com",
+    "name": "setLink example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56252,7 +55465,7 @@
     }
   },
   {
-    "name": "M2a setLink mailto:a@b.com",
+    "name": "setLink mailto:a@b.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56325,7 +55538,7 @@
     }
   },
   {
-    "name": "M2a setLink javascript:evil()",
+    "name": "setLink javascript:evil()",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56382,7 +55595,7 @@
     }
   },
   {
-    "name": "M2a setLink //example.com:8080",
+    "name": "setLink //example.com:8080",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56455,7 +55668,7 @@
     }
   },
   {
-    "name": "M2a link range 1",
+    "name": "link range 1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56535,7 +55748,7 @@
     }
   },
   {
-    "name": "M2a unset link 1",
+    "name": "unset link 1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56601,7 +55814,7 @@
     }
   },
   {
-    "name": "M2a link range 3",
+    "name": "link range 3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56681,7 +55894,7 @@
     }
   },
   {
-    "name": "M2a unset link 3",
+    "name": "unset link 3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56747,7 +55960,7 @@
     }
   },
   {
-    "name": "M2a link range 5",
+    "name": "link range 5",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56827,7 +56040,7 @@
     }
   },
   {
-    "name": "M2a unset link 5",
+    "name": "unset link 5",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56893,7 +56106,7 @@
     }
   },
   {
-    "name": "M2a diary [[",
+    "name": "diary [[",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -56961,7 +56174,7 @@
     }
   },
   {
-    "name": "M2a diary 【【",
+    "name": "diary 【【",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57029,7 +56242,7 @@
     }
   },
   {
-    "name": "M2a diary 「「",
+    "name": "diary 「「",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57097,7 +56310,7 @@
     }
   },
   {
-    "name": "M2a diary delete",
+    "name": "diary delete",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57162,7 +56375,7 @@
     }
   },
   {
-    "name": "M2a paste paragraphs",
+    "name": "paste paragraphs",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57236,7 +56449,7 @@
     }
   },
   {
-    "name": "M2a move list unit",
+    "name": "move list unit",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57341,7 +56554,7 @@
     }
   },
   {
-    "name": "M2a width 60",
+    "name": "width 60",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57406,7 +56619,7 @@
     }
   },
   {
-    "name": "M2a width invalid",
+    "name": "width invalid",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57471,7 +56684,7 @@
     }
   },
   {
-    "name": "M2a paste selected example.com",
+    "name": "paste selected example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57535,7 +56748,7 @@
     }
   },
   {
-    "name": "M2a paste selected https://example.com",
+    "name": "paste selected https://example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57599,7 +56812,7 @@
     }
   },
   {
-    "name": "M2a paste selected www.example.com",
+    "name": "paste selected www.example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57663,7 +56876,7 @@
     }
   },
   {
-    "name": "M2a paste selected user@example.com",
+    "name": "paste selected user@example.com",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57727,7 +56940,7 @@
     }
   },
   {
-    "name": "M2a toggleLink apply",
+    "name": "toggleLink apply",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57791,7 +57004,7 @@
     }
   },
   {
-    "name": "M2a toggleLink remove",
+    "name": "toggleLink remove",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57863,7 +57076,7 @@
     }
   },
   {
-    "name": "M2a diary consumes following space",
+    "name": "diary consumes following space",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -57927,7 +57140,7 @@
     }
   },
   {
-    "name": "M2a media caret into heading",
+    "name": "media caret into heading",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -58011,7 +57224,7 @@
     }
   },
   {
-    "name": "M2a media selected Enter",
+    "name": "media selected Enter",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -58085,7 +57298,7 @@
     }
   },
   {
-    "name": "M2a paste code",
+    "name": "paste code",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -58147,7 +57360,7 @@
     }
   },
   {
-    "name": "M2a autolink boundary example.com1",
+    "name": "autolink boundary example.com1",
     "doc": {
       "type": "doc",
       "content": [
@@ -58191,7 +57404,7 @@
     }
   },
   {
-    "name": "M2a autolink boundary example.com,",
+    "name": "autolink boundary example.com,",
     "doc": {
       "type": "doc",
       "content": [
@@ -58235,7 +57448,7 @@
     }
   },
   {
-    "name": "M2a autolink boundary (example.com)",
+    "name": "autolink boundary (example.com)",
     "doc": {
       "type": "doc",
       "content": [
@@ -58295,7 +57508,7 @@
     }
   },
   {
-    "name": "M2a autolink boundary [example.com]",
+    "name": "autolink boundary [example.com]",
     "doc": {
       "type": "doc",
       "content": [
@@ -58355,7 +57568,7 @@
     }
   },
   {
-    "name": "M2a autolink boundary https://example.com/a(b)",
+    "name": "autolink boundary https://example.com/a(b)",
     "doc": {
       "type": "doc",
       "content": [
@@ -58411,7 +57624,7 @@
     }
   },
   {
-    "name": "M2a autolink boundary a.com b.com",
+    "name": "autolink boundary a.com b.com",
     "doc": {
       "type": "doc",
       "content": [
@@ -58471,7 +57684,7 @@
     }
   },
   {
-    "name": "M2a autolink Enter",
+    "name": "autolink Enter",
     "doc": {
       "type": "doc",
       "content": [
@@ -58530,7 +57743,7 @@
     }
   },
   {
-    "name": "M2a structured paste marks",
+    "name": "structured paste marks",
     "doc": {
       "type": "doc",
       "content": [
@@ -58596,7 +57809,7 @@
     }
   },
   {
-    "name": "M2a structured paste diary",
+    "name": "structured paste diary",
     "doc": {
       "type": "doc",
       "content": [
@@ -58658,7 +57871,7 @@
     }
   },
   {
-    "name": "M2a structured paste media",
+    "name": "structured paste media",
     "doc": {
       "type": "doc",
       "content": [
@@ -58718,7 +57931,7 @@
     }
   },
   {
-    "name": "M2a structured paste list",
+    "name": "structured paste list",
     "doc": {
       "type": "doc",
       "content": [
@@ -58802,7 +58015,7 @@
     }
   },
   {
-    "name": "M2a structured paste open list",
+    "name": "structured paste open list",
     "doc": {
       "type": "doc",
       "content": [
@@ -58886,7 +58099,7 @@
     }
   },
   {
-    "name": "M2a structured paste multi paragraphs",
+    "name": "structured paste multi paragraphs",
     "doc": {
       "type": "doc",
       "content": [
@@ -58965,7 +58178,7 @@
     }
   },
   {
-    "name": "M2b addRowBefore0",
+    "name": "addRowBefore0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -59226,7 +58439,7 @@
     }
   },
   {
-    "name": "M2b addRowBefore2",
+    "name": "addRowBefore2",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -59487,7 +58700,7 @@
     }
   },
   {
-    "name": "M2b addRowAfter0",
+    "name": "addRowAfter0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -59748,7 +58961,7 @@
     }
   },
   {
-    "name": "M2b addRowAfter2",
+    "name": "addRowAfter2",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -60009,7 +59222,7 @@
     }
   },
   {
-    "name": "M2b deleteRow0",
+    "name": "deleteRow0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -60192,7 +59405,7 @@
     }
   },
   {
-    "name": "M2b deleteRow2",
+    "name": "deleteRow2",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -60375,7 +59588,7 @@
     }
   },
   {
-    "name": "M2b addColumnBefore0",
+    "name": "addColumnBefore0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -60631,7 +59844,7 @@
     }
   },
   {
-    "name": "M2b addColumnBefore2",
+    "name": "addColumnBefore2",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -60887,7 +60100,7 @@
     }
   },
   {
-    "name": "M2b addColumnAfter0",
+    "name": "addColumnAfter0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -61143,7 +60356,7 @@
     }
   },
   {
-    "name": "M2b addColumnAfter2",
+    "name": "addColumnAfter2",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -61399,7 +60612,7 @@
     }
   },
   {
-    "name": "M2b deleteColumn0",
+    "name": "deleteColumn0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -61587,7 +60800,7 @@
     }
   },
   {
-    "name": "M2b deleteColumn2",
+    "name": "deleteColumn2",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -61775,7 +60988,7 @@
     }
   },
   {
-    "name": "M2b toggleHeaderRow0",
+    "name": "toggleHeaderRow0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -62003,7 +61216,7 @@
     }
   },
   {
-    "name": "M2b toggleHeaderRow2",
+    "name": "toggleHeaderRow2",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -62231,7 +61444,7 @@
     }
   },
   {
-    "name": "M2b deleteTable0",
+    "name": "deleteTable0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -62364,7 +61577,7 @@
     }
   },
   {
-    "name": "M2b deleteTable2",
+    "name": "deleteTable2",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -62497,7 +61710,7 @@
     }
   },
   {
-    "name": "M2b insert table empty",
+    "name": "insert table empty",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -62685,7 +61898,7 @@
     }
   },
   {
-    "name": "M2b insert table text",
+    "name": "insert table text",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -62894,7 +62107,7 @@
     }
   },
   {
-    "name": "M2b Tab",
+    "name": "Tab",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -63121,7 +62334,7 @@
     }
   },
   {
-    "name": "M2b Shift-Tab",
+    "name": "Shift-Tab",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -63348,7 +62561,7 @@
     }
   },
   {
-    "name": "M2b Enter",
+    "name": "Enter",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -63578,7 +62791,7 @@
     }
   },
   {
-    "name": "M2b Backspace",
+    "name": "Backspace",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -63805,7 +63018,7 @@
     }
   },
   {
-    "name": "M2b Delete",
+    "name": "Delete",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -64032,7 +63245,7 @@
     }
   },
   {
-    "name": "M2b ArrowDown",
+    "name": "ArrowDown",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -64259,7 +63472,7 @@
     }
   },
   {
-    "name": "M2b tab adds row",
+    "name": "tab adds row",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -64519,7 +63732,7 @@
     }
   },
   {
-    "name": "M2b next cell",
+    "name": "next cell",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -64749,7 +63962,7 @@
     }
   },
   {
-    "name": "M2b prev cell",
+    "name": "prev cell",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -64979,7 +64192,7 @@
     }
   },
   {
-    "name": "M2b merged addRowBefore",
+    "name": "merged addRowBefore",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -65266,7 +64479,7 @@
     }
   },
   {
-    "name": "M2b merged addRowAfter",
+    "name": "merged addRowAfter",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -65553,7 +64766,7 @@
     }
   },
   {
-    "name": "M2b merged deleteRow",
+    "name": "merged deleteRow",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -65727,7 +64940,7 @@
     }
   },
   {
-    "name": "M2b merged addColumnBefore",
+    "name": "merged addColumnBefore",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -66019,7 +65232,7 @@
     }
   },
   {
-    "name": "M2b merged addColumnAfter",
+    "name": "merged addColumnAfter",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -66298,7 +65511,7 @@
     }
   },
   {
-    "name": "M2b merged deleteColumn",
+    "name": "merged deleteColumn",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -66525,7 +65738,7 @@
     }
   },
   {
-    "name": "M2b merged toggleHeaderRow",
+    "name": "merged toggleHeaderRow",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -66775,7 +65988,7 @@
     }
   },
   {
-    "name": "M2b merged roundtrip",
+    "name": "merged roundtrip",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67019,7 +66232,7 @@
     }
   },
   {
-    "name": "M2b search aa findNext",
+    "name": "search aa findNext",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67105,7 +66318,7 @@
     }
   },
   {
-    "name": "M2b search aa findPrev",
+    "name": "search aa findPrev",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67191,7 +66404,7 @@
     }
   },
   {
-    "name": "M2b search aa replaceCurrent",
+    "name": "search aa replaceCurrent",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67277,7 +66490,7 @@
     }
   },
   {
-    "name": "M2b search aa replaceAll",
+    "name": "search aa replaceAll",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67363,7 +66576,7 @@
     }
   },
   {
-    "name": "M2b search 中文 findNext",
+    "name": "search 中文 findNext",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67449,7 +66662,7 @@
     }
   },
   {
-    "name": "M2b search 中文 findPrev",
+    "name": "search 中文 findPrev",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67535,7 +66748,7 @@
     }
   },
   {
-    "name": "M2b search 中文 replaceCurrent",
+    "name": "search 中文 replaceCurrent",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67621,7 +66834,7 @@
     }
   },
   {
-    "name": "M2b search 中文 replaceAll",
+    "name": "search 中文 replaceAll",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67707,7 +66920,7 @@
     }
   },
   {
-    "name": "M2b search A findNext",
+    "name": "search A findNext",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67793,7 +67006,7 @@
     }
   },
   {
-    "name": "M2b search A findPrev",
+    "name": "search A findPrev",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67879,7 +67092,7 @@
     }
   },
   {
-    "name": "M2b search A replaceCurrent",
+    "name": "search A replaceCurrent",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -67965,7 +67178,7 @@
     }
   },
   {
-    "name": "M2b search A replaceAll",
+    "name": "search A replaceAll",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -68051,7 +67264,7 @@
     }
   },
   {
-    "name": "M2b search \\n findNext",
+    "name": "search \\n findNext",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -68137,7 +67350,7 @@
     }
   },
   {
-    "name": "M2b search \\n findPrev",
+    "name": "search \\n findPrev",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -68223,7 +67436,7 @@
     }
   },
   {
-    "name": "M2b search \\n replaceCurrent",
+    "name": "search \\n replaceCurrent",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -68309,7 +67522,7 @@
     }
   },
   {
-    "name": "M2b search \\n replaceAll",
+    "name": "search \\n replaceAll",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -68395,7 +67608,7 @@
     }
   },
   {
-    "name": "M2b case sensitive",
+    "name": "case sensitive",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -68464,7 +67677,7 @@
     }
   },
   {
-    "name": "M2b replace undo",
+    "name": "replace undo",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -68537,7 +67750,7 @@
     }
   },
   {
-    "name": "M2b normalize short row",
+    "name": "normalize short row",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -68754,7 +67967,7 @@
     }
   },
   {
-    "name": "M2b normalize overlong rowspan",
+    "name": "normalize overlong rowspan",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -68996,7 +68209,7 @@
     }
   },
   {
-    "name": "M2b normalize conflicting widths",
+    "name": "normalize conflicting widths",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -69242,7 +68455,7 @@
     }
   },
   {
-    "name": "M2b zero sized table",
+    "name": "zero sized table",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -69282,7 +68495,7 @@
     }
   },
   {
-    "name": "M2b existing corpus 0",
+    "name": "existing corpus 0",
     "doc": {
       "type": "doc",
       "content": [
@@ -69679,7 +68892,7 @@
     }
   },
   {
-    "name": "M2b literal replacement [$&]",
+    "name": "literal replacement [$&]",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -69726,9 +68939,7 @@
         }
       }
     ],
-    "referenceError": "out of range",
-    "deviation": "prosemirror-search 1.1.1 computes group-zero replacement offsets outside the matched block and throws on replaceAll; native preserves group-zero content at the actual match position.",
-    "nativeExpected": {
+    "expected": {
       "doc": {
         "type": "doc",
         "attrs": {
@@ -69764,47 +68975,10 @@
         "total": 6,
         "current": 0
       }
-    },
-    "expected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "aaaa 中文中文 Aa aa"
-              }
-            ]
-          },
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "中文 aaaa"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 1,
-        "head": 3
-      },
-      "search": {
-        "query": "aa",
-        "total": 6,
-        "current": 1
-      }
     }
   },
   {
-    "name": "M2b literal replacement $&$&",
+    "name": "literal replacement $&$&",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -69851,9 +69025,7 @@
         }
       }
     ],
-    "referenceError": "out of range",
-    "deviation": "prosemirror-search 1.1.1 computes group-zero replacement offsets outside the matched block and throws on replaceAll; native preserves group-zero content at the actual match position.",
-    "nativeExpected": {
+    "expected": {
       "doc": {
         "type": "doc",
         "attrs": {
@@ -69889,47 +69061,10 @@
         "total": 12,
         "current": 0
       }
-    },
-    "expected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "aaaa 中文中文 Aa aa"
-              }
-            ]
-          },
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "中文 aaaa"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 1,
-        "head": 3
-      },
-      "search": {
-        "query": "aa",
-        "total": 6,
-        "current": 1
-      }
     }
   },
   {
-    "name": "M2b literal replacement $$",
+    "name": "literal replacement $$",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -70015,7 +69150,7 @@
     }
   },
   {
-    "name": "M2b literal replacement x$$y",
+    "name": "literal replacement x$$y",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -70101,7 +69236,7 @@
     }
   },
   {
-    "name": "M2b literal replacement $1",
+    "name": "literal replacement $1",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -70187,7 +69322,7 @@
     }
   },
   {
-    "name": "M2b literal replacement $0",
+    "name": "literal replacement $0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -70234,45 +69369,6 @@
         }
       }
     ],
-    "referenceError": "out of range",
-    "deviation": "prosemirror-search 1.1.1 computes group-zero replacement offsets outside the matched block and throws on replaceAll; native preserves group-zero content at the actual match position.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "aaaa 中文中文 Aa aa"
-              }
-            ]
-          },
-          {
-            "type": "paragraph",
-            "content": [
-              {
-                "type": "text",
-                "text": "中文 aaaa"
-              }
-            ]
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 1,
-        "head": 3
-      },
-      "search": {
-        "query": "aa",
-        "total": 6,
-        "current": 1
-      }
-    },
     "expected": {
       "doc": {
         "type": "doc",
@@ -70312,7 +69408,7 @@
     }
   },
   {
-    "name": "M2b literal replacement \\n",
+    "name": "literal replacement \\n",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -70398,7 +69494,7 @@
     }
   },
   {
-    "name": "M2b clear search",
+    "name": "clear search",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -70488,7 +69584,7 @@
     }
   },
   {
-    "name": "M2b ArrowLeft0",
+    "name": "ArrowLeft0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -70715,7 +69811,7 @@
     }
   },
   {
-    "name": "M2b ArrowLeft3",
+    "name": "ArrowLeft3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -70942,7 +70038,7 @@
     }
   },
   {
-    "name": "M2b Shift-ArrowLeft0",
+    "name": "Shift-ArrowLeft0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -71169,7 +70265,7 @@
     }
   },
   {
-    "name": "M2b Shift-ArrowLeft3",
+    "name": "Shift-ArrowLeft3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -71396,7 +70492,7 @@
     }
   },
   {
-    "name": "M2b ArrowRight0",
+    "name": "ArrowRight0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -71623,7 +70719,7 @@
     }
   },
   {
-    "name": "M2b ArrowRight3",
+    "name": "ArrowRight3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -71850,7 +70946,7 @@
     }
   },
   {
-    "name": "M2b Shift-ArrowRight0",
+    "name": "Shift-ArrowRight0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -72077,7 +71173,7 @@
     }
   },
   {
-    "name": "M2b Shift-ArrowRight3",
+    "name": "Shift-ArrowRight3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -72304,7 +71400,7 @@
     }
   },
   {
-    "name": "M2b ArrowUp0",
+    "name": "ArrowUp0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -72531,7 +71627,7 @@
     }
   },
   {
-    "name": "M2b ArrowUp3",
+    "name": "ArrowUp3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -72758,7 +71854,7 @@
     }
   },
   {
-    "name": "M2b Shift-ArrowUp0",
+    "name": "Shift-ArrowUp0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -72985,7 +72081,7 @@
     }
   },
   {
-    "name": "M2b Shift-ArrowUp3",
+    "name": "Shift-ArrowUp3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -73212,7 +72308,7 @@
     }
   },
   {
-    "name": "M2b ArrowDown0",
+    "name": "ArrowDown0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -73439,7 +72535,7 @@
     }
   },
   {
-    "name": "M2b ArrowDown3",
+    "name": "ArrowDown3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -73666,7 +72762,7 @@
     }
   },
   {
-    "name": "M2b Shift-ArrowDown0",
+    "name": "Shift-ArrowDown0",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -73893,7 +72989,7 @@
     }
   },
   {
-    "name": "M2b Shift-ArrowDown3",
+    "name": "Shift-ArrowDown3",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -74120,7 +73216,7 @@
     }
   },
   {
-    "name": "M2b normalize node selection table",
+    "name": "normalize node selection table",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -74350,7 +73446,7 @@
     }
   },
   {
-    "name": "M2b normalize node selection row",
+    "name": "normalize node selection row",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -74580,7 +73676,7 @@
     }
   },
   {
-    "name": "M2b normalize node selection cell",
+    "name": "normalize node selection cell",
     "doc": {
       "type": "doc",
       "attrs": {
@@ -74810,7 +73906,7 @@
     }
   },
   {
-    "name": "M2b Backspace after table",
+    "name": "Backspace after table",
     "doc": {
       "type": "doc",
       "attrs": {

@@ -24,7 +24,8 @@ class MoodiaryEditorView extends StatefulWidget {
   final String initialContent;
   final String? initialContentText;
   final ValueChanged<TiptapMetadata>? onMetadataChanged;
-  final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onChanged;
+  final void Function(String content, String plainText)? onChangedWithText;
 
   final String initialTitle;
   final ValueChanged<String>? onTitleChanged;
@@ -68,7 +69,8 @@ class MoodiaryEditorView extends StatefulWidget {
     required this.initialContent,
     this.initialContentText,
     this.onMetadataChanged,
-    required this.onChanged,
+    this.onChanged,
+    this.onChangedWithText,
     this.initialTitle = '',
     this.onTitleChanged,
     this.controller,
@@ -267,9 +269,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   void _previewImages(List<String> images, int index, List<Object> heroTags) {
     final resolved = [
       for (final src in images)
-        src.startsWith('http://') || src.startsWith('https://')
-            ? src
-            : AppFiles.getRealPath('image', src),
+        isNetworkMedia(src) ? src : AppFiles.getRealPath('image', src),
     ];
     MImageBrowser.show(
       context,
@@ -337,6 +337,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onMetadataChanged: widget.onMetadataChanged,
       initialTitle: widget.initialTitle,
       onChanged: widget.onChanged,
+      onChangedWithText: widget.onChangedWithText,
       onTitleChanged: widget.onTitleChanged,
       onActiveHeadingChanged: widget.onActiveHeadingChanged,
       onUrlTap: _openUrl,

@@ -35,6 +35,18 @@ class Fragment extends Iterable<Node> {
   @override
   Iterator<Node> get iterator => blocks?.iterator ?? _nodes!.iterator;
 
+  static final _inlineTexts = Expando<String>();
+  static final _inlineBreakTexts = Expando<String>();
+
+  String inlineText({String atom = '\ufffc', bool breaks = false}) {
+    String build() => map(
+      (node) => node.text ?? (breaks && node.type == 'hardBreak' ? '\n' : atom),
+    ).join();
+    if (atom != '\ufffc') return build();
+    final cache = breaks ? _inlineBreakTexts : _inlineTexts;
+    return cache[this] ??= build();
+  }
+
   static List<Node> _normalize(Iterable<Node> nodes) {
     final result = <Node>[];
     for (final node in nodes) {
@@ -176,6 +188,8 @@ int _rawTextLength(Map raw) => raw['text'] is String
 
 /// An immutable document node with attributes, marks and persistent child content.
 class Node {
+  @visibleForTesting
+  static int debugRowLookups = 0;
   Node._(
     this.schema,
     this.type,
@@ -271,6 +285,7 @@ class Node {
       : content.blocks?.summary.rowCount ?? 0;
   int rowsBefore(int childIndex) => content.blocks?.rowsBefore(childIndex) ?? 0;
   DocumentRow rowAt(int row) {
+    debugRowLookups++;
     RangeError.checkValueInInterval(row, 0, rowCount - 1, 'row');
     var node = this, position = type == 'doc' ? -1 : 0;
     final path = <int>[];
@@ -285,22 +300,48 @@ class Node {
   }
 
   int rowIndexAt(int position) {
-    final resolved = resolve(position);
-    var count = 0;
-    for (var d = 0; d <= resolved.depth; d++) {
-      final parent = resolved.node(d);
+    RangeError.checkValueInInterval(position, 0, content.size, 'position');
+    var parent = this, count = 0, offset = position;
+    while (true) {
       if (parent.isTextblock || parent.isLeaf || parent.type == 'tableRow') {
         break;
       }
-      count += parent.rowsBefore(resolved.index(d));
+      final index = parent.content.indexAt(offset);
+      count += parent.rowsBefore(index);
+      if (index == parent.childCount) break;
+      final start = parent.content.positionAt(index),
+          child = parent.child(index);
+      if (offset == start || child.isLeaf) break;
+      offset -= start + 1;
+      parent = child;
     }
     return count.clamp(0, math.max(0, rowCount - 1));
   }
 
   Iterable<DocumentRow> rows({int from = 0, int? to}) sync* {
-    for (var i = from; i < (to ?? rowCount); i++) {
-      yield rowAt(i);
+    final end = to ?? rowCount;
+    if (from >= end) return;
+    RangeError.checkValueInInterval(from, 0, rowCount - 1, 'from');
+    RangeError.checkValueInInterval(end, from, rowCount, 'to');
+    final path = <int>[];
+    Iterable<DocumentRow> visit(Node node, int position, int first) sync* {
+      if (first >= end || first + node.rowCount <= from) return;
+      if (node.isTextblock || node.isLeaf || node.type == 'tableRow') {
+        yield DocumentRow(node, position, List.unmodifiable(path));
+        return;
+      }
+      var childPosition = position + 1, row = first, index = 0;
+      for (final child in node.content) {
+        if (row >= end) break;
+        path.add(index++);
+        yield* visit(child, childPosition, row);
+        path.removeLast();
+        childPosition += child.nodeSize;
+        row += child.rowCount;
+      }
     }
+
+    yield* visit(this, type == 'doc' ? -1 : 0, 0);
   }
 
   bool get isOpaque => _raw != null;
@@ -385,6 +426,35 @@ class Node {
       b.depth - depth,
     );
   }
+
+  void nodesBetween(
+    int from,
+    int to,
+    bool? Function(Node node, int position, Node parent, int index) visit, {
+    int start = 0,
+  }) {
+    var index = content.indexAt(from);
+    var position = content.positionAt(index);
+    while (index < childCount && position < to) {
+      final node = child(index), end = position + node.nodeSize;
+      if (end > from &&
+          visit(node, start + position, this, index) != false &&
+          !node.isLeaf) {
+        node.nodesBetween(
+          math.max(0, from - position - 1),
+          math.min(node.content.size, to - position - 1),
+          visit,
+          start: start + position + 1,
+        );
+      }
+      position = end;
+      index++;
+    }
+  }
+
+  void descendants(
+    bool? Function(Node node, int position, Node parent, int index) visit,
+  ) => nodesBetween(0, content.size, visit);
 
   Node? nodeAt(int pos) {
     final resolved = resolve(pos);
@@ -532,6 +602,8 @@ class Slice {
 }
 
 class ResolvedPos {
+  @visibleForTesting
+  static int debugResolutions = 0;
   ResolvedPos._(
     this.doc,
     this.pos,
@@ -587,8 +659,6 @@ class ResolvedPos {
     return 0;
   }
 
-  int posAtIndex(int index, [int? depth]) =>
-      start(depth) + node(depth).content.positionAt(index);
   Node? get nodeAfter {
     if (index() == parent.childCount) return null;
     final child = parent.child(index());
@@ -635,6 +705,7 @@ class ResolvedPos {
   }
 
   static ResolvedPos _resolve(Node doc, int pos) {
+    debugResolutions++;
     RangeError.checkValueInInterval(pos, 0, doc.content.size, 'pos');
     final bi = doc.content.indexAt(pos);
     final bs = doc.content.positionAt(bi);
@@ -674,6 +745,25 @@ class DocumentRow {
   final Node node;
   final int position;
   final List<int> path;
+  bool get isAtomRow => !node.isTextblock && node.type != 'tableRow';
+}
+
+String graphemeBefore(String text, int offset) {
+  var range = CharacterRange.at(text, offset);
+  if (range.current.isNotEmpty) {
+    range = CharacterRange.at(text.substring(0, offset), offset);
+  }
+  range.moveBack();
+  return range.current;
+}
+
+String graphemeAfter(String text, int offset) {
+  var range = CharacterRange.at(text, offset);
+  if (range.current.isNotEmpty) {
+    range = CharacterRange.at(text.substring(offset), 0);
+  }
+  range.moveNext();
+  return range.current;
 }
 
 /// Row indices before and after an immutable document change.

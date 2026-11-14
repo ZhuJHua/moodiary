@@ -7,14 +7,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/ime.dart';
 import '../support/large_doc.dart';
+import '../support/nodes.dart';
+import '../support/settle.dart';
 
 void main() {
   final schema = ft.Schema.standard();
-  ft.Node paragraph(String text) => schema.node(
-    'paragraph',
-    content: [if (text.isNotEmpty) schema.node('text', text: text)],
-  );
+  final paragraph = TestNodes(schema).p;
   ft.TiptapController controller(List<ft.Node> blocks, {int position = 1}) =>
       ft.TiptapController(
         state: ft.EditorState(
@@ -58,53 +58,7 @@ void main() {
     return key;
   }
 
-  Future<void> delta(
-    WidgetTester tester,
-    GlobalKey<ft.TiptapEditorState> key, {
-    String text = '',
-    int? from,
-    int? to,
-    TextRange composing = TextRange.empty,
-    int? caret,
-  }) async {
-    final old = key.currentState!.debugInputValue;
-    from ??= old.selection.start;
-    to ??= old.selection.end;
-    final client =
-        (tester.testTextInput.log
-                        .lastWhere(
-                          (call) => call.method == 'TextInput.setClient',
-                        )
-                        .arguments
-                    as List)
-                .first
-            as int;
-    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
-      SystemChannels.textInput.name,
-      SystemChannels.textInput.codec.encodeMethodCall(
-        MethodCall('TextInputClient.updateEditingStateWithDeltas', [
-          client,
-          {
-            'deltas': [
-              {
-                'oldText': old.text,
-                'deltaStart': from,
-                'deltaEnd': to,
-                'deltaText': text,
-                'selectionBase': caret ?? from + text.length,
-                'selectionExtent': caret ?? from + text.length,
-                'composingBase': composing.start,
-                'composingExtent': composing.end,
-              },
-            ],
-          },
-        ]),
-      ),
-      (_) {},
-    );
-    await tester.pump();
-    await tester.pump();
-  }
+  const delta = FakeIme.delta;
 
   testWidgets('first paint lays out the viewport before its offscreen cache', (
     tester,
@@ -351,8 +305,7 @@ void main() {
     expect(tasks.state.doc.child(0).child(0).attrs['checked'], true);
     expect(tasks.state.doc.child(0).textContent, 'D');
 
-    ft.Node item(List<ft.Node> content) =>
-        schema.node('listItem', content: content);
+    final item = TestNodes(schema).item;
     final nested = controller([
       schema.node(
         'bulletList',
@@ -421,8 +374,7 @@ void main() {
   });
 
   testWidgets('an IME clear in a table cell stops at the cell', (tester) async {
-    ft.Node cell(String text) =>
-        schema.node('tableCell', content: [paragraph(text)]);
+    final cell = TestNodes(schema).textCell;
     final c = controller([
       schema.node(
         'table',
@@ -787,7 +739,7 @@ void main() {
         await press.up();
         await tester.pump();
         await tester.tap(find.text('Copy'));
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         expect(find.text('Copy'), findsNothing);
         expect(c.state.selection.empty, collapses);
       },
@@ -852,7 +804,7 @@ void main() {
     ) async {
       final c = await openMenu(tester);
       await tester.tap(find.text('Paste'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(c.state.doc.textContent, 'pasted world');
       expect(c.state.selection.empty, isTrue);
       expect(find.text('Menu'), findsNothing);
@@ -864,7 +816,7 @@ void main() {
       final c = await openMenu(tester);
       clipboard = null;
       await tester.tap(find.text('Paste'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(c.state.doc.textContent, 'hello world');
       expect(find.text('Menu'), findsNothing);
     });
@@ -879,7 +831,7 @@ void main() {
       expect(find.text('Menu'), findsOneWidget);
       expect(find.text('Select all'), findsNothing);
       await tester.tap(find.text('Copy'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(c.state.selection.empty, isTrue);
       expect(c.state.selection.from, c.state.doc.content.size - 1);
       expect(find.text('Menu'), findsNothing);
@@ -894,7 +846,7 @@ void main() {
       await tester.pump();
       expect(c.state.selection, isA<ft.AllSelection>());
       await tester.tap(find.text('Copy'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(c.state.selection.empty, isTrue);
       expect(find.text('Menu'), findsNothing);
     });

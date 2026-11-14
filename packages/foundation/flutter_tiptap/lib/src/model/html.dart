@@ -101,47 +101,35 @@ class TiptapHtmlCodec {
     );
   }
 
-  String plainText(Node doc, {int from = 0, int? to}) {
+  String plainText(
+    Node doc, {
+    int from = 0,
+    int? to,
+    String separator = '\n\n',
+  }) {
     to ??= doc.content.size;
+    final end = to;
     final out = StringBuffer();
-    void walk(Node parent, int lo, int hi, int base) {
-      var index = parent.content.indexAt(lo);
-      var position = parent.content.positionAt(index);
-      while (index < parent.childCount && position < hi) {
-        final node = parent.child(index), end = position + node.nodeSize;
-        if (end > lo) {
-          final global = base + position;
-          if (!node.isText &&
-              node.schema.nodes[node.type]?.inline != true &&
-              global > from) {
-            out.write('\n\n');
-          }
-          if (node.isText) {
-            out.write(
-              node.text!.substring(
-                math.max(0, lo - position),
-                math.min(node.nodeSize, hi - position),
-              ),
-            );
-          } else if (node.type == referenceNodeType) {
-            out.write(node.attrs['label'] ?? node.attrs['id'] ?? '');
-          } else if (node.type == 'hardBreak') {
-            out.write('\n');
-          } else if (!node.isLeaf) {
-            walk(
-              node,
-              math.max(0, lo - position - 1),
-              math.min(node.content.size, hi - position - 1),
-              global + 1,
-            );
-          }
-        }
-        position = end;
-        index++;
+    doc.nodesBetween(from, end, (node, position, parent, index) {
+      if (!node.isText &&
+          node.schema.nodes[node.type]?.inline != true &&
+          position > from) {
+        out.write(separator);
       }
-    }
-
-    walk(doc, from, to, 0);
+      if (node.isText) {
+        out.write(
+          node.text!.substring(
+            math.max(0, from - position),
+            math.min(node.nodeSize, end - position),
+          ),
+        );
+      } else if (node.type == referenceNodeType) {
+        out.write(node.attrs['label'] ?? node.attrs['id'] ?? '');
+      } else if (node.type == 'hardBreak') {
+        out.write('\n');
+      }
+      return true;
+    });
     return out.toString();
   }
 
@@ -596,7 +584,7 @@ class TiptapHtmlCodec {
       el.attributes[name]?.isNotEmpty == true ? el.attributes[name] : null;
   num? _width(dom.Element el) {
     final value = num.tryParse(el.attributes['data-width-percent'] ?? '');
-    return value?.isFinite == true ? value!.round().clamp(25, 100) : null;
+    return clampWidthPercent(value);
   }
 
   static const _escape = HtmlEscape(HtmlEscapeMode.element);

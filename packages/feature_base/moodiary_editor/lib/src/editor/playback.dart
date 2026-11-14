@@ -29,9 +29,7 @@ class _MediaPlayback extends ChangeNotifier {
     } else {
       final path = resolved.path;
       final controller = video = MVideoPlaybackController(
-        source: path.startsWith('http://') || path.startsWith('https://')
-            ? VideoSource.network(Uri.parse(path))
-            : VideoSource.file(path),
+        source: VideoSource.fromPath(path),
         portFactory: host._videoPortFactory,
         autoPlay: false,
       );
@@ -97,15 +95,17 @@ extension _HostMedia on MoodiaryEditorHost {
     bool poster = false,
   }) {
     final name = node.attrs['src'] as String? ?? '';
-    final key = (name, poster), cached = _mediaSources[(name, poster)];
+    final key = (name, poster), cached = _mediaSources.get((name, poster));
     if (cached != null) return Future.value(cached);
-    final pending = _mediaRequests[key];
+    final pending = _mediaRequests.get(key);
     if (pending != null) return pending;
     final request = _loadMedia(node, poster: poster);
-    _mediaRequests[key] = request;
+    _mediaRequests.put(key, request);
     unawaited(
       request.whenComplete(() {
-        if (identical(_mediaRequests[key], request)) _mediaRequests.remove(key);
+        if (identical(_mediaRequests.get(key), request)) {
+          _mediaRequests.remove(key);
+        }
       }),
     );
     return request;
@@ -119,8 +119,7 @@ extension _HostMedia on MoodiaryEditorHost {
     final key = (name, poster);
     final generation = _generation;
     ({String path, String mime})? source;
-    if (name.startsWith('https://') ||
-        name.startsWith('http://') ||
+    if (isNetworkMedia(name) ||
         node.type == 'image' && name.startsWith('data:image/')) {
       source = poster ? null : (path: name, mime: '');
     } else {
@@ -137,25 +136,20 @@ extension _HostMedia on MoodiaryEditorHost {
       }
     }
     if (!_disposed && generation == _generation && source != null) {
-      _mediaSources[key] = source;
+      _mediaSources.put(key, source);
     }
     return source;
   }
 
   void _probeDocumentImages(ft.Node doc) {
     final images = <String, ft.Node>{};
-    void collect(ft.Node node) {
+    doc.descendants((node, position, parent, index) {
       if (node.type == 'image') {
         final name = node.attrs['src'] as String? ?? '';
         if (_isSafeMediaName(name)) images.putIfAbsent(name, () => node);
-      } else if (!node.isTextblock) {
-        for (final child in node.content) {
-          collect(child);
-        }
       }
-    }
-
-    collect(doc);
+      return !node.isTextblock && node.type != 'image';
+    });
     _pendingImageProbes = images.values.iterator;
     _imageProbeGeneration = _generation;
     _pumpImageProbes();

@@ -1,1 +1,1 @@
-export 'src/model.dart';
+export 'src/model.dart' hide isResizableMedia, isMediaNode, mediaWidthFactor;

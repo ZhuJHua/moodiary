@@ -130,12 +130,6 @@ extension _HostTransfer on MoodiaryEditorHost {
         name = payload.name;
         dataUri = 'data:${payload.mime};base64,${base64Encode(payload.bytes)}';
       }
-      if (payload is String && payload.startsWith('data:image/')) {
-        dataUri = payload;
-      }
-      if (payload is Uint8List) {
-        dataUri = 'data:image/png;base64,${base64Encode(payload)}';
-      }
       if (payload is KeyboardInsertedContent) {
         if (!payload.mimeType.startsWith('image/')) return;
         name = 'image.${payload.mimeType.split('/').last}';
@@ -148,28 +142,6 @@ extension _HostTransfer on MoodiaryEditorHost {
         if (bytes != null) {
           dataUri = 'data:${payload.mimeType};base64,${base64Encode(bytes)}';
         }
-      }
-      if (payload is Map) {
-        dataUri = payload['dataUri'] as String?;
-        name = payload['name'] as String? ?? name;
-      }
-      final uri = switch (payload) {
-        final Uri value => value,
-        final String value => Uri.tryParse(value),
-        final KeyboardInsertedContent value => Uri.tryParse(value.uri),
-        final File value => value.uri,
-        _ => null,
-      };
-      if (dataUri == null && uri?.scheme == 'file') {
-        name = uri!.pathSegments.last;
-        if (!RegExp(
-          r'\.(png|jpe?g|webp|gif|heic|heif|tiff?|bmp)$',
-          caseSensitive: false,
-        ).hasMatch(name)) {
-          return;
-        }
-        dataUri =
-            'data:${imageMimeOf(name)};base64,${base64Encode(await File.fromUri(uri).readAsBytes())}';
       }
       if (dataUri == null ||
           !dataUri.startsWith('data:image/') ||

@@ -56,7 +56,7 @@ void main() {
         double at(double size, {String? family}) => buildEditorStyle(
           brightness: Brightness.light,
           fontFamily: family,
-          fontSize: size / 17,
+          fontScale: size / 17,
         ).paragraph.letterSpacing!;
         for (final (size, tracking) in <(double, double)>[
           (12, 0),
@@ -108,8 +108,7 @@ void main() {
         expect(s.marks['code']!.letterSpacing, 0);
         final scaled = buildEditorStyle(
           brightness: Brightness.light,
-          fontScale: 1.25,
-          fontSize: 1.1,
+          fontScale: 1.25 * 1.1,
         );
         // 17 * 1.25 * 1.1 = 23.375, between the 23 and 24 pt entries.
         expect(
@@ -133,27 +132,6 @@ void main() {
       expect(s.headings.map((h) => h.letterSpacing), everyElement(0));
     }, variant: TargetPlatformVariant({platform}));
   }
-  test('typography values reach the editor style', () {
-    const values = EditorTypography(
-      fontSize: 1.2,
-      lineHeight: 1.9,
-      paragraphSpacing: .6,
-    );
-    final s = buildEditorStyle(
-      brightness: Brightness.light,
-      fontScale: 1.1,
-      fontSize: values.fontSize,
-      lineHeight: values.lineHeight,
-      paragraphSpacing: values.paragraphSpacing,
-    );
-    expect(s.paragraph.fontSize, closeTo(17 * 1.1 * 1.2, .001));
-    expect(s.paragraph.height, 1.9);
-    expect(s.blockSpacing, closeTo(s.paragraph.fontSize! * .75 * .6, .001));
-    expect(
-      s.headingTopSpacing![1],
-      closeTo(s.headings[1].fontSize! * 1.4 * .6, .001),
-    );
-  });
   for (final brightness in [Brightness.light, Brightness.dark]) {
     testWidgets(
       'title is transparent and empty metadata uses faint roles in $brightness',
@@ -241,42 +219,6 @@ void main() {
       Color.lerp(colors.surface, colors.onSurfaceVariant, .7),
     );
   });
-  testWidgets(
-    'typography updates the mounted host without replacing its document or selection',
-    (tester) async {
-      Future<void> pump(EditorTypography typography) async {
-        await tester.pumpWidget(
-          _app(
-            MoodiaryEditor(
-              initialContent: 'The quick brown fox',
-              typography: typography,
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-      }
-
-      await pump(const EditorTypography());
-      ft.TiptapEditor editor() => tester.widget(find.byType(ft.TiptapEditor));
-      final controller = editor().controller, json = editor().controller.json;
-      controller.setSelection(const ft.TextSelection(3));
-      await pump(
-        const EditorTypography(
-          fontSize: 1.1,
-          lineHeight: 2,
-          paragraphSpacing: .5,
-        ),
-      );
-      expect(editor().controller, same(controller));
-      expect(editor().style.paragraph.fontSize, closeTo(18.7, .001));
-      expect(editor().style.paragraph.height, 2);
-      expect(editor().style.blockSpacing, closeTo(17 * 1.1 * .75 * .5, .001));
-      expect(controller.json, json);
-      expect(controller.state.selection, const ft.TextSelection(3));
-      await pump(const EditorTypography());
-      expect(editor().style.paragraph.fontSize, 17);
-    },
-  );
   for (final heading in [false, true]) {
     testWidgets(
       'tracked ${heading ? 'H2' : 'body'} width matches plain Text metrics on Apple',

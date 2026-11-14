@@ -50,12 +50,9 @@ ft.TiptapEditorStyle buildEditorStyle({
   required Brightness brightness,
   String? fontFamily,
   double fontScale = 1,
-  double fontSize = 1,
-  double lineHeight = 1.65,
-  double paragraphSpacing = 1,
   bool firstLineIndent = false,
 }) {
-  final dark = brightness == Brightness.dark, body = 17 * fontScale * fontSize;
+  final dark = brightness == Brightness.dark, body = 17 * fontScale;
   // UIKit's public system-font alias resolves in Flutter; the hidden .SF UI
   // Mono name falls back to a proportional font.
   final mono =
@@ -75,7 +72,7 @@ ft.TiptapEditorStyle buildEditorStyle({
   final base = _textStyle(
     family: fontFamily,
     size: body,
-    height: lineHeight,
+    height: 1.65,
     color: onSurface,
   ).copyWith(leadingDistribution: TextLeadingDistribution.even);
   return ft.TiptapEditorStyle(
@@ -83,21 +80,13 @@ ft.TiptapEditorStyle buildEditorStyle({
     exactLineHeight: true,
     textRuns: _textRuns,
     taskMinHeight: body * (1.2 + .275),
-    blockGap: (previous, next) =>
-        _blockGap(previous, next, body, fontScale, paragraphSpacing),
-    cellBlockGap: (previous, next) => _blockGap(
-      previous,
-      next,
-      body,
-      fontScale,
-      paragraphSpacing,
-      cell: true,
-    ),
+    blockGap: (previous, next) => _blockGap(previous, next, body, fontScale),
+    cellBlockGap: (previous, next) =>
+        _blockGap(previous, next, body, fontScale, cell: true),
     codeBlockPadding: const EdgeInsets.fromLTRB(12, 38, 12, 12),
     tableCellPadding: const EdgeInsets.fromLTRB(10, 6 + 1 / 3, 10, 6 + 1 / 3),
     tableMinRowHeight: 0,
-    tableFixedLayout: true,
-    tableMinColumnWidth: 100 * fontScale * fontSize,
+    tableMinColumnWidth: 100 * fontScale,
     overflowBackground: surface,
     overflowIndicatorColor: variant.withValues(alpha: .55),
     taskIndent: body * 1.2 + 10,
@@ -123,10 +112,10 @@ ft.TiptapEditorStyle buildEditorStyle({
     ],
     headingTopSpacing: [
       for (final (i, size) in [1.5, 1.25, 1.125, 1.0, 1.0, 1.0].indexed)
-        body * size * [1.5, 1.4, 1.3, 1.2, 1.2, 1.2][i] * paragraphSpacing,
+        body * size * [1.5, 1.4, 1.3, 1.2, 1.2, 1.2][i],
     ],
-    headingBottomSpacing: body * .4 * paragraphSpacing,
-    blockSpacing: body * .75 * paragraphSpacing,
+    headingBottomSpacing: body * .4,
+    blockSpacing: body * .75,
     firstLineIndent: firstLineIndent ? body * 2 : 0,
     listIndent: body * 1.5,
     quoteIndent: body * 1.25,
@@ -207,8 +196,7 @@ double _blockGap(
   ft.Node? previous,
   ft.Node? next,
   double body,
-  double scale,
-  double spacing, {
+  double scale, {
   bool cell = false,
 }) {
   bool media(ft.Node n) => const {
@@ -236,20 +224,20 @@ double _blockGap(
   double bottom(ft.Node? n) => n == null
       ? 0
       : n.type == 'horizontalRule'
-      ? em(n) * spacing
+      ? em(n)
       : media(n)
-      ? body * .75 * spacing
+      ? body * .75
       : 0;
   double top = 0;
   if (next != null) {
     if (next.type == 'horizontalRule') {
-      top = em(next) * spacing;
+      top = em(next);
     } else if (next.type == 'table' ||
         media(next) && (cell || previous == null)) {
-      top = body * .75 * spacing;
+      top = body * .75;
     } else if (!cell && previous != null) {
       top = previous.type == 'heading'
-          ? em(next) * .4 * spacing
+          ? em(next) * .4
           : next.type == 'heading'
           ? em(next) *
                 [
@@ -259,15 +247,11 @@ double _blockGap(
                   1.2,
                   1.2,
                   1.2,
-                ][((next.attrs['level'] as num? ?? 1).toInt() - 1).clamp(
-                  0,
-                  5,
-                )] *
-                spacing
-          : body * .75 * spacing;
+                ][((next.attrs['level'] as num? ?? 1).toInt() - 1).clamp(0, 5)]
+          : body * .75;
     }
   }
-  if (next != null && media(next)) top = math.max(top, body * .75 * spacing);
+  if (next != null && media(next)) top = math.max(top, body * .75);
   return math.max(top, bottom(previous));
 }
 
@@ -292,6 +276,10 @@ Iterable<(String, TextStyle)> _textRuns(String text, TextStyle style) sync* {
 }
 
 // Unknown labels use the common grammars with automatic language detection.
+final _codeHighlightCache = LRUCache<(String?, String, Brightness), TextSpan>(
+  maxSize: 32,
+);
+
 @visibleForTesting
 TextSpan buildCodeHighlight(
   String? language,
@@ -299,6 +287,9 @@ TextSpan buildCodeHighlight(
   Brightness brightness,
 ) {
   final resolved = components.resolveCodeLanguage(language);
+  final key = (resolved, text, brightness),
+      cached = _codeHighlightCache.get(key);
+  if (cached != null) return cached;
   final renderer = components.TextSpanRenderer(
     null,
     brightness == Brightness.dark
@@ -320,5 +311,7 @@ TextSpan buildCodeHighlight(
     }
   }
   result.render(renderer);
-  return renderer.span ?? TextSpan(text: text);
+  final span = renderer.span ?? TextSpan(text: text);
+  _codeHighlightCache.put(key, span);
+  return span;
 }

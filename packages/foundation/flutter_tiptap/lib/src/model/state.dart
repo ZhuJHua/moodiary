@@ -19,8 +19,6 @@ class Transaction {
   Selection selection;
   List<Mark>? storedMarks;
   final List<Step> _steps = [];
-  final List<Step> _inverses = [];
-  final List<BlockRange> _replacements = [];
   final List<NestedRange> _nestedReplacements = [];
 
   /// One range per step, addressed in that step's before/after documents.
@@ -32,8 +30,6 @@ class Transaction {
   }
 
   List<Step> get steps => List.unmodifiable(_steps);
-  List<Step> get inverses => List.unmodifiable(_inverses.reversed);
-  List<BlockRange> get replacements => List.unmodifiable(_replacements);
   BlockRange? get replacedBlocks => _replacedBlocks;
   BlockRange? _replacedBlocks;
   Mapping mapping = Mapping();
@@ -45,7 +41,6 @@ class Transaction {
   bool get composing => metadata['composition'] != null;
   Transaction step(Step step) {
     final result = step.apply(doc);
-    final inverse = step._inverseFor(doc, result);
     final map = step.getMap();
     if (step is _DocumentStep || step is _RestoreBlocksStep) {
       final r = result.blocks;
@@ -79,8 +74,6 @@ class Transaction {
       );
     }
     _steps.add(step);
-    _inverses.add(inverse);
-    _replacements.add(result.blocks);
     doc = result.doc;
     _documents.add(doc);
     selection = selection.map(doc, Mapping([map]));
@@ -413,6 +406,35 @@ class ToolbarState {
   final bool? taskChecked;
   final int? cellPosition;
   bool get inTable => cellPosition != null;
+
+  @override
+  bool operator ==(Object other) =>
+      other is ToolbarState &&
+      _sameSet(activeMarks, other.activeMarks) &&
+      blockType == other.blockType &&
+      headingLevel == other.headingLevel &&
+      canUndo == other.canUndo &&
+      canRedo == other.canRedo &&
+      selectionKind == other.selectionKind &&
+      _sameSet(activeNodes, other.activeNodes) &&
+      taskChecked == other.taskChecked &&
+      cellPosition == other.cellPosition;
+
+  @override
+  int get hashCode => Object.hash(
+    Object.hashAllUnordered(activeMarks),
+    blockType,
+    headingLevel,
+    canUndo,
+    canRedo,
+    selectionKind,
+    Object.hashAllUnordered(activeNodes),
+    taskChecked,
+    cellPosition,
+  );
+
+  static bool _sameSet(Set<String> first, Set<String> second) =>
+      first.length == second.length && first.containsAll(second);
 }
 
 NestedRange? _combineNestedRanges(

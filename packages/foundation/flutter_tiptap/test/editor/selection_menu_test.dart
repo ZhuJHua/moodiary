@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/settle.dart';
+
 void main() {
   final schema = ft.Schema.standard();
   String? clipboard;
@@ -115,7 +117,7 @@ void main() {
     expect(labels, ['Cut', 'Copy', 'Paste', 'Select all']);
     final before = controller.state;
     await tester.tap(find.text('Cut'));
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     expect(clipboard, 'hello');
     expect(controller.state.doc.textContent, ' world');
     expect(controller.state.selection, const ft.TextSelection(1));
@@ -152,7 +154,7 @@ void main() {
       );
       final before = controller.state;
       await tester.tap(find.text(action));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(tester.takeException(), isNull);
       expect(clipboard, 'selected');
       expect(controller.state.selection.empty, isTrue);
@@ -203,7 +205,7 @@ void main() {
           final before = controller.state;
           final revision = controller.revision;
           write.complete();
-          await tester.pumpAndSettle();
+          await settleEditor(tester);
           expect(clipboard, 'hello');
           expect(tester.takeException(), isNull);
           expect(controller.state.doc.toJson(), before.doc.toJson());

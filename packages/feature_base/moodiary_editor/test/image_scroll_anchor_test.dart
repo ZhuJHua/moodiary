@@ -5,13 +5,13 @@ import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:mui/mui.dart';
 
+import 'support/nodes.dart';
+
 final _schema = ft.Schema.standard();
 
-ft.Node _paragraph(String text) =>
-    _schema.node('paragraph', content: [_schema.node('text', text: text)]);
+final _paragraph = TestNodes(_schema).p;
 
-ft.Node _image(int index) =>
-    _schema.node('image', attrs: {'src': 'image-$index'});
+ft.Node _image(int index) => TestNodes(_schema).image('image-$index');
 
 ft.Node _document() => _schema.node(
   'doc',

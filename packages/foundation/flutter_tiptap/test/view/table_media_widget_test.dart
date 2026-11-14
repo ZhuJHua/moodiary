@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
@@ -41,12 +40,12 @@ void main() {
       );
       addTearDown(controller.dispose);
       final widths = <String, double>{};
-      Future<void> render(bool fixed) async {
+      Future<void> render() async {
         await tester.pumpWidget(
           CupertinoApp(
             home: ft.TiptapEditor(
               controller: controller,
-              style: ft.TiptapEditorStyle(tableFixedLayout: fixed),
+              style: const ft.TiptapEditorStyle(),
               nodeViews: {
                 'image': (_, view) {
                   widths[view.node.attrs['src']! as String] = view.width;
@@ -59,9 +58,7 @@ void main() {
         await tester.pump();
       }
 
-      await render(false);
-      expect(widths.values.first, closeTo(widths.values.last, .01));
-      await render(true);
+      await render();
       expect(widths.values.first, closeTo(widths.values.last, .01));
       expect(widths.values.first, closeTo(((800 - 32) / 2 - 20) / 2, .01));
     },

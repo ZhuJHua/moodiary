@@ -5,10 +5,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+
 void main() {
   final schema = ft.Schema.standard();
-  ft.Node p(String text) =>
-      schema.node('paragraph', content: [schema.node('text', text: text)]);
+  final p = TestNodes(schema).p;
   ft.Node targetText() => schema.node(
     'paragraph',
     content: [

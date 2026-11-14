@@ -1,5 +1,17 @@
 part of '../model.dart';
 
+final _codeOutdent = RegExp(r' {1,2}');
+final _trailingCodeLines = RegExp(r'\n[ \t]*\n[ \t]*$');
+final _codeLineIndent = RegExp(r'^[ \t]*');
+final _backwardWord = RegExp(
+  r'(?:\s+|[\p{L}\p{N}_]+|[^\p{L}\p{N}_\s])$',
+  unicode: true,
+);
+final _forwardWord = RegExp(
+  r'^(?:\s+|[\p{L}\p{N}_]+|[^\p{L}\p{N}_\s])',
+  unicode: true,
+);
+
 class _NodeRange {
   const _NodeRange(this.from, this.to, this.depth);
   final ResolvedPos from, to;
@@ -559,10 +571,7 @@ extension _NestedCommands on EditorCommands {
       final count = outdent
           ? (text.startsWith('\t', line)
                 ? 1
-                : RegExp(r'^ {1,2}')
-                          .stringMatch(text.substring(line))
-                          ?.length ??
-                      0)
+                : _codeOutdent.matchAsPrefix(text, line)?[0]?.length ?? 0)
           : 0;
       if (outdent && count == 0) continue;
       tr.replace(
@@ -589,7 +598,7 @@ extension _NestedCommands on EditorCommands {
         !exit &&
             tr.selection.empty &&
             pos.parentOffset == pos.parent.content.size
-        ? RegExp(r'\n[ \t]*\n[ \t]*$').firstMatch(pos.parent.textContent)
+        ? _trailingCodeLines.firstMatch(pos.parent.textContent)
         : null;
     if (exit || trailingLines != null) {
       final current = tr.doc.resolve(tr.selection.from),
@@ -622,7 +631,7 @@ extension _NestedCommands on EditorCommands {
       final start = tr.selection.from;
       final prefix = pos.parent.textContent.substring(0, pos.parentOffset);
       final line = prefix.substring(prefix.lastIndexOf('\n') + 1);
-      final indent = RegExp(r'^[ \t]*').stringMatch(line)!;
+      final indent = _codeLineIndent.stringMatch(line)!;
       final text = '\n$indent';
       tr.replace(
         start,
@@ -914,7 +923,7 @@ extension _JoinCommands on EditorCommands {
       );
       return true;
     }
-    if (_mediaTypes.contains(other.type)) {
+    if (isMediaNode(other)) {
       tr.setSelection(
         NodeSelection(tr.doc, backward ? cut.pos - other.nodeSize : cut.pos),
       );
@@ -969,5 +978,241 @@ extension _JoinCommands on EditorCommands {
       return true;
     }
     return false;
+  }
+}
+
+extension _StructureHelpers on EditorCommands {
+  void _toggleTaskItem(Transaction tr, Map<String, dynamic> args) {
+    final pos = tr.doc.resolve(tr.selection.from),
+        depth = _ancestor(
+          tr.doc.resolve(tr.selection.from),
+          (t) => t == 'taskItem',
+        );
+    if (depth != null) {
+      tr.step(
+        AttrStep(
+          pos.before(depth),
+          'checked',
+          args['checked'] ?? pos.node(depth).attrs['checked'] != true,
+        ),
+      );
+    }
+  }
+
+  void _hardBreak(EditorState state, Transaction tr) {
+    if (_codeEnter(tr)) return;
+    if (_leaveSelectedAtom(state, tr)) return;
+    final marks =
+        (state.storedMarks ?? state.doc.resolve(state.selection.from).marks)
+            .where((m) => state.doc.schema.marks[m.type]?.keepOnSplit != false)
+            .toList();
+    tr
+        .step(
+          ReplaceStep(
+            state.selection.from,
+            state.selection.to,
+            Slice(Fragment([state.doc.schema.node('hardBreak')]), 0, 0),
+          ),
+        )
+        .setSelection(TextSelection(state.selection.from + 1))
+        .setStoredMarks(marks);
+  }
+
+  void _delete(
+    EditorState state,
+    Transaction tr, {
+    required bool backward,
+    required bool word,
+  }) {
+    final selection = state.selection;
+    if (selection is GapSelection) {
+      final pos = tr.doc.resolve(selection.head);
+      final other = backward ? pos.nodeBefore : pos.nodeAfter;
+      if (other == null || !other.isAtom) return;
+      final at = backward ? selection.head - other.nodeSize : selection.head;
+      if (other.type == 'horizontalRule') {
+        tr.replace(at, at + other.nodeSize);
+        tr.setSelection(
+          Selection.beside(
+            tr.doc,
+            at.clamp(0, tr.doc.content.size),
+            bias: backward ? -1 : 1,
+          ),
+        );
+      } else {
+        tr.setSelection(NodeSelection(tr.doc, at));
+      }
+      return;
+    }
+    final cell = tableContext(tr.doc, selection.head);
+    if (cell != null && selection.empty) {
+      final resolved = tr.doc.resolve(selection.head);
+      if ((backward && selection.head == cell.cellPosition + 2) ||
+          (!backward &&
+              selection.head == cell.cellPosition + cell.cell.nodeSize - 2)) {
+        return;
+      }
+      if (!resolved.parent.isTextblock) return;
+    }
+    if (!selection.empty) {
+      tr.replace(selection.from, selection.to);
+      final target = selection.from.clamp(0, tr.doc.content.size);
+      tr.setSelection(Selection.near(tr.doc, target));
+      return;
+    }
+    final pos = tr.doc.resolve(selection.head);
+    if (!pos.parent.isTextblock) return;
+    final offset = pos.parentOffset, size = pos.parent.content.size;
+    if ((backward && offset == 0) || (!backward && offset == size)) {
+      if (backward &&
+          pos.parent.type == 'codeBlock' &&
+          (pos.pos == 1 || size == 0)) {
+        _setBlock(state, tr, 'paragraph', const {});
+        while (_lift(tr)) {}
+        return;
+      }
+      if (!backward && _deleteAtItemEnd(tr)) return;
+      if (backward && _paragraphIntoList(tr, join: true)) return;
+      if (backward && _quoteBackspace(tr)) return;
+      if (backward &&
+          pos.depth >= 2 &&
+          _isItem(pos.node(pos.depth - 1).type) &&
+          pos.index(pos.depth - 1) == 0) {
+        if (_lift(tr, list: true)) return;
+      }
+      if (_joinBoundary(tr, backward: backward)) return;
+      if (backward &&
+          pos.pos == 1 &&
+          pos.parent.type != 'paragraph' &&
+          size == 0) {
+        _setBlock(state, tr, 'paragraph', const {});
+      }
+      return;
+    }
+    final text = pos.parent.content.inlineText();
+    var count = 0;
+    if (word) {
+      final segment = backward
+          ? text.substring(0, offset)
+          : text.substring(offset);
+      final match = (backward ? _backwardWord : _forwardWord).firstMatch(
+        segment,
+      );
+      count = match?[0]?.length ?? 0;
+    } else {
+      count = backward
+          ? graphemeBefore(text, offset).length
+          : graphemeAfter(text, offset).length;
+    }
+    final from = backward ? selection.head - count : selection.head;
+    final to = backward ? selection.head : selection.head + count;
+    tr
+        .step(ReplaceStep(from, to, Slice.empty))
+        .setSelection(TextSelection(from));
+  }
+
+  void _deleteBefore(Transaction tr, int position) {
+    final pos = tr.doc.resolve(position);
+    var floor = pos.parent.type == 'codeBlock' ? pos.depth : 0;
+    for (var d = pos.depth; d > 0 && floor == 0; d--) {
+      if (_isCell(pos.node(d))) floor = d;
+    }
+    var head = pos.start();
+    tr.replace(head, position);
+    // Deepest first, so the outer positions stay valid.
+    for (var d = pos.depth; d > floor; d--) {
+      final from = pos.start(d - 1), to = pos.before(d);
+      if (from == to) continue;
+      final parent = pos.node(d - 1);
+      if (_isItem(parent.type)) {
+        // An item must open with a paragraph, so only its text goes.
+        final opening = parent.child(0);
+        tr.replace(from + opening.nodeSize, to);
+        head -= to - from - opening.nodeSize;
+        tr.replace(from + 1, from + 1 + opening.content.size);
+        head -= opening.content.size;
+        continue;
+      }
+      tr.replace(from, to);
+      head -= to - from;
+    }
+    tr.setSelection(Selection.near(tr.doc, head)).setMeta('closeHistory', true);
+  }
+}
+
+extension _StructureDispatch on EditorCommands {
+  void _deleteBackward(
+    EditorState state,
+    Transaction tr,
+    Map<String, dynamic> args,
+  ) {
+    if (state._inputRule != null) {
+      _undoInputRule(state, tr);
+    } else {
+      _delete(state, tr, backward: true, word: args['word'] == true);
+    }
+  }
+
+  void _splitBlock(EditorState state, Transaction tr) {
+    if (!_codeFenceEnter(tr) && !_codeEnter(tr) && !_splitItem(tr)) {
+      this._split(state, tr);
+    }
+  }
+
+  void _toggleBlockquote(Transaction tr) {
+    final depth = _ancestor(
+      tr.doc.resolve(tr.selection.from),
+      (type) => type == 'blockquote',
+    );
+    if (depth == null) {
+      _wrap(tr, 'blockquote', null);
+    } else {
+      _lift(tr);
+    }
+  }
+
+  void _arrowDown(Transaction tr) {
+    final pos = tr.doc.resolve(tr.selection.head);
+    if (tr.selection.empty &&
+        pos.parent.type == 'codeBlock' &&
+        pos.parentOffset == pos.parent.content.size) {
+      if (tr.doc.nodeAt(pos.after()) != null) {
+        tr.setSelection(Selection.near(tr.doc, pos.after()));
+      } else {
+        _codeEnter(tr, exit: true);
+      }
+    }
+  }
+
+  void _tab(Transaction tr) {
+    if (!_codeIndent(tr, outdent: false) &&
+        !_paragraphIntoList(tr, join: false)) {
+      _sink(tr);
+    }
+  }
+
+  void _shiftTab(Transaction tr) {
+    if (!_codeIndent(tr, outdent: true)) _lift(tr, list: true);
+  }
+
+  void _heading(
+    EditorState state,
+    Transaction tr,
+    String name,
+    Map<String, dynamic> args,
+  ) {
+    final level = args['level'] as int? ?? 1;
+    if (level < 1 || level > 6) throw ArgumentError.value(level, 'level');
+    final active = state.doc.resolve(state.selection.from).parent;
+    _setBlock(
+      state,
+      tr,
+      name == 'toggleHeading' &&
+              active.type == 'heading' &&
+              active.attrs['level'] == level
+          ? 'paragraph'
+          : 'heading',
+      {'level': level},
+    );
   }
 }

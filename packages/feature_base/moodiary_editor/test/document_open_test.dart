@@ -283,7 +283,7 @@ void main() {
     expect(identical(host.editor.state.doc, current), isTrue);
     expect(host.title.text, 'current');
     expect(host.readOnly, isFalse);
-    expect(host.contentError.value, isNull);
+    expect(host.state.value.contentError, isFalse);
     expect(host.state.value.canUndo, isFalse);
   });
 
@@ -333,7 +333,6 @@ void main() {
         addTearDown(host.dispose);
         await host.documentLoaded;
         expect(host.readOnly, isTrue);
-        expect(host.contentError.value, isNotNull);
         expect(host.state.value.contentError, isTrue);
         expect(host.editor.state.doc.textContent, contains('Heading'));
         final before = host.editor.json;

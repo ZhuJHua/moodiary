@@ -6,6 +6,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+
 class _Pixels {
   _Pixels(this.image, this.bytes, this.scale);
   final ui.Image image;
@@ -64,8 +66,7 @@ Future<_Pixels> _pixels(GlobalKey key, WidgetTester tester) async =>
 void main() {
   final schema = ft.Schema.standard();
   const red = Color(0xffff0000), black = Color(0xff000000);
-  ft.Node p(String text) =>
-      schema.node('paragraph', content: [schema.node('text', text: text)]);
+  final p = TestNodes(schema).p;
   Future<void> mount(
     WidgetTester tester,
     ft.TiptapController controller,

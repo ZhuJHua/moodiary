@@ -29,14 +29,20 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
 
   ft.TiptapEditorStyle? _style;
   ColorScheme? _colors;
-  (Brightness, String?, double, bool, EditorTypography)? _styleKey;
+  (Brightness, String?, double, bool)? _styleKey;
   late final ft.TiptapCodeHighlighter _codeHighlight = _highlight;
+  (String, String?)? _fontKey;
+  (String?, double, String?, bool)? _headerKey;
+  Widget? _header;
+  late final ft.TiptapNodeViewBuilder _codeBlockHeader = _buildCodeHeader;
+  Widget _buildCodeHeader(BuildContext context, ft.TiptapNodeView node) =>
+      _CodeHeader(node: node, readOnly: host.readOnly);
   @override
   void initState() {
     super.initState();
     host = MoodiaryEditorHost(widget);
     widget.controller?._bind(host);
-    host.addListener(_changed);
+    host._viewChanges.addListener(_changed);
     host.state.addListener(_stateChanged);
     host.editor.onPasteConverted = _offerRestore;
     WidgetsBinding.instance.addObserver(this);
@@ -115,7 +121,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
     _closeRestore();
     WidgetsBinding.instance.removeObserver(this);
     moodiaryRouteObserver.unsubscribe(this);
-    host.removeListener(_changed);
+    host._viewChanges.removeListener(_changed);
     host.state.removeListener(_stateChanged);
     unawaited(host.flush());
     widget.controller?._unbind(host);
@@ -171,7 +177,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
       font?.family,
       widget.fontScale,
       widget.firstLineIndent,
-      widget.typography,
     );
     if (_styleKey != styleKey || _colors != colors) {
       _styleKey = styleKey;
@@ -181,130 +186,131 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
         brightness: context.theme.brightness,
         fontFamily: font?.family,
         fontScale: widget.fontScale,
-        fontSize: widget.typography.fontSize,
-        lineHeight: widget.typography.lineHeight,
-        paragraphSpacing: widget.typography.paragraphSpacing,
         firstLineIndent: widget.firstLineIndent,
       );
     }
-    if (font != null) {
+    final fontKey = font == null ? null : (font.family, font.path);
+    if (font != null && _fontKey != fontKey) {
       unawaited(
         FontManager.loadFont(fontName: font.family, fontPath: font.path),
       );
     }
+    _fontKey = fontKey;
+    final headerKey = (
+      font?.family,
+      widget.fontScale,
+      widget.metaJson,
+      host.readOnly,
+    );
+    if (_header == null || _headerKey != headerKey) {
+      _headerKey = headerKey;
+      _header = _DiaryHeader(
+        host: host,
+        font: font?.family,
+        scale: widget.fontScale,
+      );
+    }
     return Material(
       color: context.theme.colors.surface,
-      child: DragTarget<Object>(
-        onWillAcceptWithDetails: (details) => !host.readOnly,
-        onAcceptWithDetails: (details) =>
-            unawaited(host.pasteImage(details.data)),
-        builder: (context, _, _) => MediaQuery.withNoTextScaling(
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Positioned.fill(
-                child: ft.TiptapEditor(
-                  key: host.editorKey,
-                  controller: host.editor,
-                  focusNode: host.bodyFocus,
-                  scrollController: host.scroll,
-                  readOnly: host.readOnly,
-                  keyboardEnabled: !host.panelMode,
-                  style: _style!,
-                  codeHighlighter: _codeHighlight,
-                  placeholder: host._loading
-                      ? ''
-                      : context.l10n.editor.content.bodyPlaceholder,
-                  // Room for the caret ring under the last line, and no more:
-                  // a document that fits above the keyboard must not scroll.
-                  caretBottomMargin: _linkBar && !host.readOnly ? 12 + 52 : 12,
-                  onEditingTap: () => widget.controller?.panel.showKeyboard(),
-                  onFind: widget.controller?.openSearch,
-                  onEditLink: () =>
-                      unawaited(widget.controller?.editLink(context)),
-                  onEscape: _escape,
-                  onBoundaryNavigation: (direction) {
-                    if (host.readOnly ||
-                        !const {'up', 'shiftTab', 'tab'}.contains(direction)) {
-                      return false;
-                    }
-                    host.title.selection = TextSelection.collapsed(
-                      offset: host.title.text.length,
-                    );
-                    unawaited(host.focusTitle());
-                    return true;
-                  },
-                  header: _DiaryHeader(
-                    host: host,
-                    font: font?.family,
-                    scale: widget.fontScale,
-                  ),
-                  footer: host.readOnly
-                      ? Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(height: 24),
-                            _LinkedDiaries(host: host),
-                            // Read mode runs under the gesture bar, like iOS.
-                            SizedBox(
-                              height: MediaQuery.viewPaddingOf(context).bottom,
-                            ),
-                          ],
-                        )
-                      : null,
-                  nodeViews: host.nodeViews,
-                  nodeHeightEstimator: host.estimateNodeHeight,
-                  codeBlockHeader: (context, node) =>
-                      _CodeHeader(node: node, readOnly: host.readOnly),
-                  contextMenuBuilder: _contextMenu,
-                  onLinkTap: widget.onUrlTap,
-                  onReferenceTap: widget.onOpenDiaryLink,
-                  onPasteText: parsePastedMarkdown,
-                  onPasteImage: host.pasteImage,
-                  onPasteClipboard: host.pasteClipboard,
-                  onCopyClipboard: host.copyClipboard,
-                ),
-              ),
-              ValueListenableBuilder<ft.TiptapReferenceSuggestion?>(
-                valueListenable: host.editor.suggestion,
-                builder: (context, suggestion, _) {
-                  if (suggestion == null || host.readOnly) {
-                    return const SizedBox.shrink();
+      child: MediaQuery.withNoTextScaling(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: ft.TiptapEditor(
+                key: host.editorKey,
+                controller: host.editor,
+                focusNode: host.bodyFocus,
+                scrollController: host.scroll,
+                readOnly: host.readOnly,
+                keyboardEnabled: !host.panelMode,
+                style: _style!,
+                codeHighlighter: _codeHighlight,
+                placeholder: host._loading
+                    ? ''
+                    : context.l10n.editor.content.bodyPlaceholder,
+                // Room for the caret ring under the last line, and no more:
+                // a document that fits above the keyboard must not scroll.
+                caretBottomMargin: _linkBar && !host.readOnly ? 12 + 52 : 12,
+                onEditingTap: () => widget.controller?.panel.showKeyboard(),
+                onFind: widget.controller?.openSearch,
+                onEditLink: () =>
+                    unawaited(widget.controller?.editLink(context)),
+                onEscape: _escape,
+                onBoundaryNavigation: (direction) {
+                  if (host.readOnly ||
+                      !const {'up', 'shiftTab', 'tab'}.contains(direction)) {
+                    return false;
                   }
-                  return Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 8,
-                    child: Material(
-                      color: context.theme.colors.surfaceContainer,
-                      borderRadius: BorderRadius.circular(12),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 180),
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
-                            if (suggestion.loading)
-                              const Padding(
-                                padding: EdgeInsets.all(12),
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              ),
-                            for (final item in suggestion.items)
-                              ListTile(
-                                dense: true,
-                                title: Text(item.label),
-                                onTap: () => host.editor.insertReference(item),
-                              ),
-                          ],
-                        ),
+                  host.title.selection = TextSelection.collapsed(
+                    offset: host.title.text.length,
+                  );
+                  unawaited(host.focusTitle());
+                  return true;
+                },
+                header: _header,
+                footer: host.readOnly
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 24),
+                          _LinkedDiaries(host: host),
+                          // Read mode runs under the gesture bar, like iOS.
+                          SizedBox(
+                            height: MediaQuery.viewPaddingOf(context).bottom,
+                          ),
+                        ],
+                      )
+                    : null,
+                nodeViews: host.nodeViews,
+                nodeHeightEstimator: host.estimateNodeHeight,
+                codeBlockHeader: _codeBlockHeader,
+                contextMenuBuilder: _contextMenu,
+                onLinkTap: widget.onUrlTap,
+                onReferenceTap: widget.onOpenDiaryLink,
+                onPasteText: parsePastedMarkdown,
+                onPasteImage: host.pasteImage,
+                onPasteClipboard: host.pasteClipboard,
+                onCopyClipboard: host.copyClipboard,
+              ),
+            ),
+            ValueListenableBuilder<ft.TiptapReferenceSuggestion?>(
+              valueListenable: host.editor.suggestion,
+              builder: (context, suggestion, _) {
+                if (suggestion == null || host.readOnly) {
+                  return const SizedBox.shrink();
+                }
+                return Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 8,
+                  child: Material(
+                    color: context.theme.colors.surfaceContainer,
+                    borderRadius: BorderRadius.circular(12),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 180),
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          if (suggestion.loading)
+                            const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: Center(child: CircularProgressIndicator()),
+                            ),
+                          for (final item in suggestion.items)
+                            ListTile(
+                              dense: true,
+                              title: Text(item.label),
+                              onTap: () => host.editor.insertReference(item),
+                            ),
+                        ],
                       ),
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

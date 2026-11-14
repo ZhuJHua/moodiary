@@ -4,17 +4,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/model.dart';
 
 import '../support/large_doc.dart';
+import '../support/nodes.dart';
 
 void main() {
   final schema = Schema.standard();
   const commands = EditorCommands();
-  Node p(String text) => schema.node(
-    'paragraph',
-    content: [if (text.isNotEmpty) schema.node('text', text: text)],
-  );
-  Node item(String text) => schema.node('listItem', content: [p(text)]);
-  Node list(Iterable<Node> items) => schema.node('bulletList', content: items);
-  Node doc(Iterable<Node> children) => schema.node('doc', content: children);
+  final p = TestNodes(schema).p;
+  final item = TestNodes(schema).textItem;
+  final list = TestNodes(schema).list;
+  final doc = TestNodes(schema).doc;
 
   test('content matching enforces required paragraphs, code marks and block groups', () {
     expect(schema.node('listItem').validContent(Fragment([p('x')])), isTrue);

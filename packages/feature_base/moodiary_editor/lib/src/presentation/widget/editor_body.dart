@@ -126,8 +126,7 @@ class _EditorBodyState extends State<EditorBody> {
         editable: widget.editable && widget.type.isEditable,
         firstLineIndent: firstLineIndent,
         fontScale: fontScale,
-        onChanged: (content) =>
-            widget.onChanged(content, TiptapContent.parse(content).plainText),
+        onChangedWithText: widget.onChanged,
         onOpenDiaryLink: widget.onOpenDiaryLink,
         metaJson: widget.metaJson,
         metaReady: widget.metaReady,

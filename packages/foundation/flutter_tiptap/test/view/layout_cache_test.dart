@@ -4,10 +4,11 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+
 void main() {
   final schema = ft.Schema.standard();
-  ft.Node paragraph(String text) =>
-      schema.node('paragraph', content: [schema.node('text', text: text)]);
+  final paragraph = TestNodes(schema).p;
   ft.Node document([List<ft.Node> prefix = const []]) => schema.node(
     'doc',
     content: [
@@ -21,7 +22,6 @@ void main() {
     WidgetTester tester,
     ft.TiptapController controller, {
     ft.TiptapEditorStyle style = const ft.TiptapEditorStyle(
-      tableFixedLayout: true,
       tableMinColumnWidth: 150,
     ),
   }) async {
@@ -251,7 +251,7 @@ void main() {
     final tableBefore = controller.diagnostics.layoutsFor(table.child(0));
     expect(
       controller.diagnostics.cachedLayouts,
-      greaterThan(controller.diagnostics.visibleRows),
+      greaterThan(controller.diagnostics.visibleBlocks),
     );
     final end = controller.state.doc.content.size - 1;
     controller.setSelection(ft.TextSelection(end, end));

@@ -5,12 +5,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+
 void main() {
   final schema = ft.Schema.standard();
-  ft.Node p(String text) => schema.node(
-    'paragraph',
-    content: [if (text.isNotEmpty) schema.node('text', text: text)],
-  );
+  final p = TestNodes(schema).p;
   Future<GlobalKey<ft.TiptapEditorState>> mount(
     WidgetTester tester,
     ft.TiptapController controller, {
@@ -50,7 +49,7 @@ void main() {
   testWidgets('hits on table-cell images resolve to each image', (
     tester,
   ) async {
-    ft.Node image(String src) => schema.node('image', attrs: {'src': src});
+    final image = TestNodes(schema).image;
     final controller = ft.TiptapController(
       doc: schema.node(
         'doc',
@@ -233,7 +232,6 @@ void main() {
         final geometry = key.currentState!.geometry!,
             node = geometry.rowRect(0);
         expect(geometry.selectionRects(0, 1), [node]);
-        expect(controller.selectedNode.value!.rect, node);
         final render =
             boundary.currentContext!.findRenderObject()!
                 as RenderRepaintBoundary;

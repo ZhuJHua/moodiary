@@ -5,14 +5,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+
 final _schema = ft.Schema.standard();
 const _platforms = TargetPlatformVariant({
   TargetPlatform.android,
   TargetPlatform.iOS,
 });
 
-ft.Node _paragraph(String text) =>
-    _schema.node('paragraph', content: [_schema.node('text', text: text)]);
+final _paragraph = TestNodes(_schema).p;
 
 ft.Node _block(bool table) => table
     ? _schema.node(
@@ -59,7 +60,6 @@ Future<ft.TiptapEditorState> _mount(
                 readOnly: true,
                 style: const ft.TiptapEditorStyle(
                   wrapCodeBlocks: false,
-                  tableFixedLayout: true,
                   tableMinColumnWidth: 100,
                 ),
               ),

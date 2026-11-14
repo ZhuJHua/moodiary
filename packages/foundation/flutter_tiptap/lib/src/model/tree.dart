@@ -239,7 +239,24 @@ class BlockTree extends Iterable<Node> {
   }
 
   /// Count of editable/atom rows before a child index.
-  int rowsBefore(int index) => summaryBetween(0, index).rowCount;
+  int rowsBefore(int index) {
+    RangeError.checkValueInInterval(index, 0, length, 'index');
+    var tree = _root, count = 0;
+    while (tree != null && index > 0) {
+      if (index >= tree.summary.blockCount) {
+        return count + tree.summary.rowCount;
+      }
+      final left = tree.left!;
+      if (index <= left.summary.blockCount) {
+        tree = left;
+      } else {
+        count += left.summary.rowCount;
+        index -= left.summary.blockCount;
+        tree = tree.right;
+      }
+    }
+    return count;
+  }
 
   /// Child containing a row, and that child's first row index.
   (int, int) childForRow(int row) {

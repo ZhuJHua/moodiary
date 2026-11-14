@@ -12,6 +12,7 @@ class _TiptapTextInput with TextInputClient, DeltaTextInputClient {
   static const _windowSize = 2048;
   final TiptapEditorState owner;
   TextInputConnection? _connection;
+  (String?, double, FontWeight?, TextDirection, TextAlign)? _lastStyle;
   TextEditingValue _value = TextEditingValue.empty;
   TextEditingValue? _platformValue;
   TextEditingValue? _nativeValue;
@@ -40,6 +41,7 @@ class _TiptapTextInput with TextInputClient, DeltaTextInputClient {
     }
     synchronize();
     if (!attached) {
+      _lastStyle = null;
       _connection = TextInput.attach(
         this,
         TextInputConfiguration(
@@ -108,8 +110,7 @@ class _TiptapTextInput with TextInputClient, DeltaTextInputClient {
     final start = math.max<int>(0, offset - 64);
     final text = block.content
         .cut(start, math.min<int>(block.content.size, offset + 64))
-        .map((n) => n.isText ? n.text! : '\n')
-        .join();
+        .inlineText(atom: '\n');
     var position = start, result = start;
     for (final cluster in text.characters) {
       position += cluster.length;
@@ -243,9 +244,9 @@ class _TiptapTextInput with TextInputClient, DeltaTextInputClient {
     var from = selection.start, to = selection.end;
     if (selection.isCollapsed) {
       if (backward && from > 0) {
-        from -= _value.text.substring(0, from).characters.last.length;
+        from -= m.graphemeBefore(_value.text, from).length;
       } else if (!backward && to < _value.text.length) {
-        to += _value.text.substring(to).characters.first.length;
+        to += m.graphemeAfter(_value.text, to).length;
       }
     }
     if (from == to) {
@@ -623,6 +624,15 @@ class _TiptapTextInput with TextInputClient, DeltaTextInputClient {
         .resolve(controller.state.selection.head)
         .parent;
     final base = style.forBlock(node);
+    final nextStyle = (
+      base.fontFamily,
+      base.fontSize ?? 17.0,
+      base.fontWeight,
+      style.textDirection,
+      style.textAlign,
+    );
+    if (nextStyle == _lastStyle) return;
+    _lastStyle = nextStyle;
     _connection!.updateStyle(
       TextInputStyle(
         fontFamily: base.fontFamily,

@@ -1,6 +1,55 @@
 part of '../model.dart';
 
+final _pasteLineBreaks = RegExp(r'\n+');
+
 extension _PasteCommands on EditorCommands {
+  void _insertCommittedLines(
+    EditorState state,
+    Transaction tr,
+    String text,
+    Object? composition,
+  ) {
+    text = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+    void run(String name, [Map<String, dynamic> args = const {}]) {
+      final previous = tr.mapping;
+      tr.mapping = Mapping();
+      _execute(
+        EditorState._(
+          tr.doc,
+          tr.selection,
+          tr.storedMarks,
+          state.history,
+          null,
+        ),
+        tr,
+        name,
+        args,
+      );
+      tr.mapping = Mapping([...previous.maps, ...tr.mapping.maps]);
+    }
+
+    void insert(String value) {
+      if (value.isNotEmpty || !tr.selection.empty) {
+        run('insertText', {
+          'text': value,
+          'committed': false,
+          'composition': composition,
+        });
+      }
+    }
+
+    if (tr.doc.resolve(tr.selection.from).parent.type == 'codeBlock') {
+      insert(text);
+    } else {
+      final parts = text.split('\n');
+      for (var index = 0; index < parts.length; index++) {
+        if (index > 0) run('splitBlock');
+        insert(parts[index]);
+      }
+    }
+    tr.setMeta('composition', composition).setMeta('closeHistory', true);
+  }
+
   void _pasteText(Transaction tr, String text, {bool plain = false}) {
     text = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
     final pos = tr.doc.resolve(tr.selection.from), schema = tr.doc.schema;
@@ -13,7 +62,7 @@ extension _PasteCommands on EditorCommands {
       );
       return;
     }
-    final parts = text.split(RegExp(r'\n+'));
+    final parts = text.split(_pasteLineBreaks);
     final pastedContent = parts.join();
     final link = !plain && !tr.selection.empty
         ? _linkDetector
@@ -71,37 +120,23 @@ extension _PasteCommands on EditorCommands {
     int end, {
     bool preserveLinks = false,
   }) {
-    void visit(Node node, int position) {
-      if (node.type == 'codeBlock') return;
-      if (node.isTextblock) {
-        final start = math.max(from, position + 1);
-        final stop = math.min(end, position + 1 + node.content.size);
-        if (start >= stop) return;
+    tr.doc.nodesBetween(from, end, (node, position, parent, index) {
+      if (node.type == 'codeBlock') return false;
+      if (!node.isTextblock) return true;
+      final start = math.max(from, position + 1);
+      final stop = math.min(end, position + 1 + node.content.size);
+      if (start < stop) {
         _linkify(
           tr,
           node.content
               .cut(start - position - 1, stop - position - 1)
-              .map((node) => node.text ?? '\ufffc')
-              .join(),
+              .inlineText(),
           start,
           preserveLinks: preserveLinks,
         );
-        return;
       }
-      var offset = position + 1;
-      for (final child in node.content) {
-        if (offset >= end) break;
-        if (offset + child.nodeSize > from) visit(child, offset);
-        offset += child.nodeSize;
-      }
-    }
-
-    for (final row in tr.doc.rows(
-      from: tr.doc.rowIndexAt(from),
-      to: tr.doc.rowIndexAt(end) + 1,
-    )) {
-      visit(row.node, row.position);
-    }
+      return false;
+    });
   }
 }
 
@@ -243,4 +278,19 @@ Fragment _closePasteFragment(
     );
   }
   return fragment;
+}
+
+extension _PasteDispatch on EditorCommands {
+  void _pasteSlice(Transaction tr, Map<String, dynamic> args) {
+    final slice = args['slice'] as Slice;
+    final from = tr.selection.from, to = tr.selection.to;
+    _replacePasteRange(tr, from, to, slice);
+    final start = tr.mapping.map(from, -1).clamp(0, tr.doc.content.size);
+    final end = tr.mapping.map(to, 1).clamp(0, tr.doc.content.size);
+    tr.setSelection(Selection.near(tr.doc, end));
+    if (args['applyPasteRules'] != false && start < end) {
+      _pasteLinks(tr, start, end, preserveLinks: true);
+    }
+    if (start < end) _unlinkTrailingWhitespace(tr, (from: start, to: end));
+  }
 }

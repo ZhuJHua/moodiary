@@ -4,11 +4,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 import 'package:moodiary_di/moodiary_di.dart';
@@ -19,11 +16,6 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:mui/mui.dart';
 
-const _output = String.fromEnvironment('LAYOUT_RESEARCH_OUTPUT');
-const _exportImages = bool.fromEnvironment(
-  'LAYOUT_RESEARCH_PNG',
-  defaultValue: true,
-);
 const _checks = [
   'paintBounds',
   'overlap',
@@ -105,35 +97,6 @@ void main() {
           .where((file) => file.path.endsWith('.json'))
           .toList()
         ..sort((first, second) => first.path.compareTo(second.path));
-  final audits = <String, Map<String, List<String>>>{};
-  setUpAll(() async {
-    if (_output.isNotEmpty) {
-      await ui.loadFontFromList(
-        File('/Library/Fonts/Arial Unicode.ttf').readAsBytesSync(),
-        fontFamily: 'sans-serif',
-      );
-      await ui.loadFontFromList(
-        File('/Library/Fonts/Arial Unicode.ttf').readAsBytesSync(),
-        fontFamily: 'Roboto',
-      );
-      await ui.loadFontFromList(
-        File('/System/Library/Fonts/SFNSMono.ttf').readAsBytesSync(),
-        fontFamily: 'monospace',
-      );
-      final manifest =
-          jsonDecode(await rootBundle.loadString('FontManifest.json')) as List;
-      for (final family in manifest.cast<Map<String, dynamic>>()) {
-        for (final font
-            in (family['fonts'] as List).cast<Map<String, dynamic>>()) {
-          final data = await rootBundle.load(font['asset'] as String);
-          await ui.loadFontFromList(
-            data.buffer.asUint8List(),
-            fontFamily: family['family'] as String,
-          );
-        }
-      }
-    }
-  });
   setUp(() => getIt.registerSingleton<IKVStorage>(MemoryKVStorage()));
   tearDown(getIt.reset);
 
@@ -146,12 +109,10 @@ void main() {
     for (final width in [390, 768]) {
       for (final readOnly in [false, true]) {
         final id = '$name-$width-${readOnly ? 'read' : 'edit'}';
-        testWidgets('$id collect layout evidence', (tester) async {
+        testWidgets('$id preserves nested layout invariants', (tester) async {
           final violations = {for (final check in _checks) check: <String>[]};
-          audits[id] = violations;
           await tester.binding.setSurfaceSize(Size(width.toDouble(), 10000));
           addTearDown(() => tester.binding.setSurfaceSize(null));
-          final boundary = GlobalKey();
           await tester.pumpWidget(
             TranslationProvider(
               child: MaterialApp(
@@ -162,14 +123,8 @@ void main() {
                 ],
                 builder: (context, child) =>
                     MaterialUiCompatibilityBridge(child: child!),
-                home: RepaintBoundary(
-                  key: boundary,
-                  child: Scaffold(
-                    body: MoodiaryEditor(
-                      initialContent: raw,
-                      readOnly: readOnly,
-                    ),
-                  ),
+                home: Scaffold(
+                  body: MoodiaryEditor(initialContent: raw, readOnly: readOnly),
                 ),
               ),
             ),
@@ -221,11 +176,6 @@ void main() {
             for (final row in doc.rows())
               (position: row.position, rect: geometry.rowRect(row.position)),
           ];
-          final blocks = <Map<String, Object?>>[];
-          final carets = <Map<String, Object?>>[];
-          final selections = <Map<String, Object?>>[];
-          final nodeViews = <Map<String, Object?>>[];
-          final markers = <Map<String, Object?>>[];
           final retryPositions = <int>[];
           bool scrollable(int position) =>
               (geometry.horizontalScrollMetrics(position)?.maxScrollExtent ??
@@ -261,27 +211,9 @@ void main() {
             if (node.isText || position < 0) continue;
             final rect = geometry.rowRect(position);
             final cell = geometry.cellRect(position);
-            final metrics = geometry.horizontalScrollMetrics(position);
-            blocks.add({
-              'type': node.type,
-              'position': position,
-              'size': node.nodeSize,
-              'rect': _rect(rect),
-              'cell': cell == null ? null : _rect(cell),
-              'ancestors': entry.ancestors
-                  .map((parent) => parent.type)
-                  .toList(),
-              if (metrics != null)
-                'horizontal': {
-                  'viewport': _rect(metrics.viewport),
-                  'offset': metrics.offset,
-                  'extent': metrics.maxScrollExtent,
-                },
-            });
             if (!node.isTextblock && !node.isLeaf) continue;
             final marker = state.debugListMarker(position);
             if (marker != null) {
-              markers.add({'position': position, 'rect': _rect(marker.bounds)});
               if (marker.bounds.left < style.padding.left - 1 &&
                   !scrollable(position)) {
                 violations['markers']!.add(
@@ -321,10 +253,6 @@ void main() {
                 position + node.nodeSize - 1,
                 visibleOnly: false,
               )) {
-                selections.add({
-                  'position': position,
-                  'rect': _rect(selection),
-                });
                 if (!_contains(rect, selection) &&
                     !(node.type == 'codeBlock' && scrollable(position))) {
                   violations['selection']!.add(
@@ -395,11 +323,6 @@ void main() {
           for (var position = 0; position <= doc.content.size; position++) {
             final caret = geometry.caretRect(position);
             final hit = geometry.positionForOffset(caret.center);
-            carets.add({
-              'position': position,
-              'rect': _rect(caret),
-              'hit': hit,
-            });
             final owner = entries
                 .where(
                   (entry) =>
@@ -497,11 +420,6 @@ void main() {
               render.localToGlobal(Offset.zero),
             );
             final rect = point & render.size;
-            nodeViews.add({
-              'type': view.node.type,
-              'position': view.position,
-              'rect': _rect(rect),
-            });
             if (!scrollable(view.position) && !_withinWidth(content, rect)) {
               violations['paintBounds']!.add(
                 'node view ${view.node.type} ${view.position}: ${_rect(rect)}',
@@ -538,51 +456,6 @@ void main() {
           while ((exception = tester.takeException()) != null) {
             violations['framework']!.add(exception.toString());
           }
-          if (_output.isNotEmpty) {
-            await tester.runAsync(() async {
-              final directory = Directory('$_output/native')
-                ..createSync(recursive: true);
-              final data = {
-                'fixture': name,
-                'width': width,
-                'readOnly': readOnly,
-                'contentBounds': _rect(content),
-                'bottom': rows
-                    .map((row) => row.rect.bottom)
-                    .fold<double>(0, math.max),
-                'rows': rows
-                    .map(
-                      (row) => {
-                        'position': row.position,
-                        'rect': _rect(row.rect),
-                      },
-                    )
-                    .toList(),
-                'blocks': blocks,
-                'nodeViews': nodeViews,
-                'markers': markers,
-                'carets': carets,
-                'selections': selections,
-                'violations': violations,
-              };
-              File('${directory.path}/$id.json').writeAsStringSync(
-                const JsonEncoder.withIndent('  ').convert(data),
-              );
-              if (_exportImages) {
-                final render =
-                    boundary.currentContext!.findRenderObject()!
-                        as RenderRepaintBoundary;
-                final image = await render.toImage(pixelRatio: 2);
-                final bytes = await image.toByteData(
-                  format: ui.ImageByteFormat.png,
-                );
-                File('${directory.path}/$id.png')
-                    .writeAsBytesSync(bytes!.buffer.asUint8List());
-                image.dispose();
-              }
-            });
-          }
-          final revealed = <Map<String, Object?>>[];
           for (final position in retryPositions) {
             if (geometry.positionForOffset(
                   geometry.caretRect(position).center,
@@ -593,31 +466,11 @@ void main() {
             }
             final caret = geometry.caretRect(position);
             final hit = geometry.positionForOffset(caret.center);
-            revealed.add({
-              'position': position,
-              'rect': _rect(caret),
-              'hit': hit,
-            });
             if (hit != position) {
               violations['roundTrip']!.add('$position -> $hit after reveal');
             }
           }
-          if (_output.isNotEmpty) {
-            final evidence = File('$_output/native/$id.json');
-            final data =
-                jsonDecode(evidence.readAsStringSync()) as Map<String, dynamic>;
-            data['revealedCarets'] = revealed;
-            data['violations'] = violations;
-            evidence.writeAsStringSync(
-              const JsonEncoder.withIndent('  ').convert(data),
-            );
-          }
-          final scrollStates = <Map<String, Object?>>[];
           if (name.startsWith('rich_')) {
-            final directory = _output.isEmpty
-                ? null
-                : Directory('$_output/scroll/native');
-            directory?.createSync(recursive: true);
             final tables = entries
                 .where((entry) => entry.node.type == 'table')
                 .toList();
@@ -664,7 +517,7 @@ void main() {
                 await tester.pumpAndSettle();
                 await _settleMedia(tester);
               }
-              final paintedRects = auditPaintedCells('column ${column + 1}');
+              auditPaintedCells('column ${column + 1}');
               final currentRects = {
                 for (final row in contentRows)
                   row.position: geometry.rowRect(row.position),
@@ -705,70 +558,6 @@ void main() {
                   }
                 }
               }
-              scrollStates.add({
-                'column': column + 1,
-                'nodeViews': [
-                  for (final entry in paintedRects.entries)
-                    {'position': entry.key, 'rect': _rect(entry.value)},
-                ],
-                'blocks': [
-                  for (final row in contentRows)
-                    {
-                      'position': row.position,
-                      'type': row.node.type,
-                      'rect': _rect(currentRects[row.position]!),
-                      'cell': geometry.cellRect(row.position) == null
-                          ? null
-                          : _rect(geometry.cellRect(row.position)!),
-                    },
-                ],
-              });
-              if (directory == null) continue;
-              if (_exportImages) {
-                await tester.runAsync(() async {
-                  final render =
-                      boundary.currentContext!.findRenderObject()!
-                          as RenderRepaintBoundary;
-                  final image = await render.toImage(pixelRatio: 2);
-                  final bytes = await image.toByteData(
-                    format: ui.ImageByteFormat.png,
-                  );
-                  File('${directory.path}/$id-col${column + 1}.png')
-                      .writeAsBytesSync(bytes!.buffer.asUint8List());
-                  image.dispose();
-                });
-              }
-              File(
-                '${directory.path}/$id-col${column + 1}.json',
-              ).writeAsStringSync(
-                jsonEncode({
-                  'fixture': name,
-                  'width': width,
-                  'readOnly': readOnly,
-                  'column': column + 1,
-                  'bottom': rows
-                      .map((row) => row.rect.bottom)
-                      .fold<double>(0, math.max),
-                  'rows': rows.map((row) => {'rect': _rect(row.rect)}).toList(),
-                  'tables': [
-                    for (final table in tables)
-                      {
-                        'position': table.position,
-                        'viewport': _rect(
-                          geometry
-                              .horizontalScrollMetrics(table.position)!
-                              .viewport,
-                        ),
-                        'offset': geometry
-                            .horizontalScrollMetrics(table.position)!
-                            .offset,
-                        'extent': geometry
-                            .horizontalScrollMetrics(table.position)!
-                            .maxScrollExtent,
-                      },
-                  ],
-                }),
-              );
             }
           }
           await tester.pumpWidget(const SizedBox.shrink());
@@ -833,28 +622,15 @@ void main() {
           await tester.pumpAndSettle();
           measuredHeight.dispose();
           controller.dispose();
-          if (_output.isNotEmpty) {
-            final evidence = File('$_output/native/$id.json');
-            final data =
-                jsonDecode(evidence.readAsStringSync()) as Map<String, dynamic>;
-            data['measurement'] = {
-              'target': target.position,
-              'before': _rect(targetBefore),
-              'after': _rect(targetAfter),
-            };
-            data['scrollStates'] = scrollStates;
-            data['violations'] = violations;
-            evidence.writeAsStringSync(
-              const JsonEncoder.withIndent('  ').convert(data),
+          for (final check in _checks) {
+            final findings = violations[check]!;
+            expect(
+              findings,
+              isEmpty,
+              reason: '$check: ${findings.take(8).join('\n')}',
             );
           }
         });
-        for (final check in _checks) {
-          test('$id $check', () {
-            final findings = audits[id]![check]!;
-            expect(findings, isEmpty, reason: findings.take(8).join('\n'));
-          });
-        }
       }
     }
   }

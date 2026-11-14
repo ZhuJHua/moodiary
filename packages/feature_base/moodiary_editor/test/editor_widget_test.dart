@@ -20,11 +20,11 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:mui/mui.dart';
 
+import 'support/nodes.dart';
+import 'support/settle.dart';
+
 final _schema = ft.Schema.standard();
-ft.Node _p(String text) => _schema.node(
-  'paragraph',
-  content: [if (text.isNotEmpty) _schema.node('text', text: text)],
-);
+final _p = TestNodes(_schema).p;
 String _json(List<ft.Node> nodes) =>
     jsonEncode(_schema.node('doc', attrs: {'v': 2}, content: nodes).toJson());
 Widget _app(Widget child, {Brightness brightness = Brightness.light}) =>
@@ -118,7 +118,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       final editor = _editor(tester).controller;
       final mod =
           {
@@ -156,7 +156,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 250));
         expect(editor.json, before);
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         expect(c.searchOpen.value, false);
         expect(
           c.focusTarget.value,
@@ -184,7 +184,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await c.focusTitle();
       await tester.pump();
       await c.imeTarget.suppressKeyboard(false);
@@ -202,7 +202,7 @@ void main() {
         expect(c.focusTarget.value, EditorFocusTarget.editor);
         expect(_editor(tester).controller.state.selection.head, 1);
         await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         expect(c.focusTarget.value, EditorFocusTarget.title);
         final title = tester.widget<TextField>(
           find.byKey(const ValueKey('editor-title')),
@@ -220,7 +220,7 @@ void main() {
       await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(c.focusTarget.value, EditorFocusTarget.title);
       final body = _editor(tester).controller.json;
       final field = find.descendant(
@@ -251,7 +251,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await c.focus();
       final editor = _editor(tester).controller;
       editor.setSelection(const ft.TextSelection(1, 5));
@@ -266,11 +266,11 @@ void main() {
       await tester.sendKeyDownEvent(mod);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
       await tester.sendKeyUpEvent(mod);
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(find.byType(MSheetScaffold<void>), findsOneWidget);
       expect(c.focusTarget.value, EditorFocusTarget.none);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(find.byType(MSheetScaffold<void>), findsNothing);
       expect(c.focusTarget.value, EditorFocusTarget.editor);
       expect(editor.state.selection, const ft.TextSelection(1, 5));
@@ -278,6 +278,44 @@ void main() {
     },
     variant: interactionPlatforms,
   );
+
+  testWidgets('toolbar follows content errors across document swaps', (
+    tester,
+  ) async {
+    final controller = MoodiaryEditorController();
+    await tester.pumpWidget(
+      _app(
+        EditorToolbarHost(
+          controller: controller,
+          editable: true,
+          onInsertMedia: (_) async {},
+          statusBar: const Text('editor status'),
+          child: MoodiaryEditor(
+            controller: controller,
+            initialContent: '{broken',
+          ),
+        ),
+      ),
+    );
+    await settleEditor(tester);
+    expect(controller.state.value.contentError, isTrue);
+    expect(_editor(tester).readOnly, isTrue);
+    expect(find.text('editor status'), findsNothing);
+
+    await controller.swapDocument(content: _json([_p('valid')]), title: '');
+    await settleEditor(tester);
+    expect(controller.state.value.contentError, isFalse);
+    expect(_editor(tester).readOnly, isFalse);
+    expect(find.text('editor status'), findsOneWidget);
+
+    await controller.swapDocument(content: '{broken', title: '');
+    await settleEditor(tester);
+    expect(controller.state.value.contentError, isTrue);
+    expect(_editor(tester).readOnly, isTrue);
+    expect(find.text('editor status'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
     'divider caret exposes style picker without selecting the divider; Escape dismisses it',
@@ -300,12 +338,12 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await c.focus();
       final editor = _editor(tester).controller;
       final at = editor.state.doc.child(0).nodeSize;
       editor.setSelection(ft.TextSelection(at + 2));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(c.state.value.selection, EditorSelectionKind.caret);
       expect(c.state.value.nodeType, EditorNodeType.horizontalRule);
       await tester.tap(find.text(l10n.editor.toolbar.style));
@@ -330,18 +368,12 @@ void main() {
       brightness: Brightness.light,
       fontFamily: 'Custom',
       fontScale: 1.2,
-      fontSize: 1.1,
-      lineHeight: 1.8,
-      paragraphSpacing: .7,
       firstLineIndent: true,
     );
-    expect(style.paragraph.fontSize, closeTo(17 * 1.2 * 1.1, .001));
+    expect(style.paragraph.fontSize, closeTo(17 * 1.2, .001));
     expect(style.paragraph.fontFamily, 'Custom');
-    expect(style.paragraph.height, 1.8);
-    expect(
-      style.blockSpacing,
-      closeTo(style.paragraph.fontSize! * .75 * .7, .001),
-    );
+    expect(style.paragraph.height, 1.65);
+    expect(style.blockSpacing, closeTo(style.paragraph.fontSize! * .75, .001));
     expect(style.firstLineIndent, style.paragraph.fontSize! * 2);
     expect(style.headings.first.fontSize, style.paragraph.fontSize! * 1.5);
     expect(
@@ -398,7 +430,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       final editor = _editor(tester);
       editor.controller.setSelection(const ft.TextSelection(1, 6));
       await editor.controller.copy(write: editor.onCopyClipboard);
@@ -422,7 +454,7 @@ void main() {
       expect(editor.controller.state.doc.content.first.type, 'heading');
       expect(find.byIcon(LucideIcons.x), findsOneWidget);
       editor.controller.setSelection(const ft.TextSelection(1));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(find.byIcon(LucideIcons.x), findsNothing);
       pending = Completer<HtmlClipboardContent>();
       final paste = editor.onPasteClipboard!();
@@ -461,7 +493,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     expect(enabled, isEmpty);
     await controller.focus();
     await tester.pump();
@@ -484,7 +516,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     await controller.focus();
     await tester.pump();
     final before = tester.testTextInput.log
@@ -516,7 +548,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await controller.focus();
       await tester.pump();
       final engine = _editor(tester).controller;
@@ -554,7 +586,7 @@ void main() {
   );
 
   testWidgets(
-    'compact line height contains nested task checkboxes without drifting later blocks',
+    'default line height contains nested task checkboxes without drifting later blocks',
     (tester) async {
       final task = _schema.node(
         'taskList',
@@ -578,17 +610,12 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-        _app(
-          MoodiaryEditor(
-            initialContent: _json([task]),
-            typography: const EditorTypography(lineHeight: 1.4),
-          ),
-        ),
+        _app(MoodiaryEditor(initialContent: _json([task]))),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       final geometry = _geometry(tester);
-      expect(geometry.rowRect(2).height, closeTo(17 * 1.4, .001));
-      expect(geometry.rowRect(11).height, closeTo(17 * 1.475, .001));
+      expect(geometry.rowRect(2).height, closeTo(17 * 1.65, .001));
+      expect(geometry.rowRect(11).height, closeTo(17 * 1.65, .001));
       expect(geometry.taskCheckboxRect(2)!.left, closeTo(16, .001));
       expect(
         geometry.taskCheckboxRect(11)!.left,
@@ -633,7 +660,7 @@ void main() {
           MoodiaryEditor(readOnly: true, fontScale: scale, initialContent: doc),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       final top = tester.widget<Text>(find.text('Top title.txt'));
       final cell = tester.widget<Text>(find.text('file-m5.txt'));
       for (final text in [top, cell]) {
@@ -706,8 +733,8 @@ void main() {
     await tester.pumpWidget(
       _app(MoodiaryEditor(initialContent: _json([doc, _p('')]))),
     );
-    await tester.pumpAndSettle();
-    expect(find.byTooltip(l10n.editor.content.play), findsNWidgets(2));
+    await settleEditor(tester);
+    expect(find.byTooltip(l10n.ui.play), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
 
@@ -737,9 +764,9 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     expect(await _editor(tester).onPasteClipboard!(), true);
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     expect(saved, ['photo.jpg:data:image/jpeg;base64,AQID']);
     expect(
       _editor(tester).controller.state.doc.content.map((n) => n.type),
@@ -802,30 +829,30 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await tester.tap(find.text('Happy'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       final mood = find.byKey(const ValueKey('meta-mood'));
       expect(mood, findsOneWidget);
       expect(tester.getSize(mood).width, 300);
       expect(tester.getTopLeft(mood).dy, lessThan(200));
       await tester.tap(find.text('Sad'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(calls, ['mood:sad']);
       await tester.tap(find.text('Clear'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await tester.tap(find.text('Cloudy'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(calls.last, 'weather:101');
       for (final label in ['Fetch weather', 'Clear weather']) {
         await tester.tap(find.text('Clear'));
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         await tester.tap(find.text(label));
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
       }
       expect(calls, containsAll(['weather:auto', 'weather:clear']));
       await tester.tap(find.text('Home'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(calls.last, 'locate');
       meta.value = {
         ...meta.value,
@@ -838,10 +865,10 @@ void main() {
           },
         ],
       };
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(find.text('20m'), findsOneWidget);
       await tester.tap(find.text('Nearby cafe'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(calls.last, 'place:cafe');
       for (final (label, expected) in [
         ('Locate', 'auto'),
@@ -850,15 +877,15 @@ void main() {
         ('Clear place', 'clear'),
       ]) {
         await tester.tap(find.text('Home'));
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         await tester.tap(find.text(label));
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         expect(calls.last, 'place:$expected');
       }
       await tester.tap(find.text('#test'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await tester.tap(find.text('Remove tag'));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(calls.last, 'tag:0');
       expect(find.byKey(const ValueKey('meta-tag')), findsNothing);
     },
@@ -880,7 +907,7 @@ void main() {
         ),
       );
       await tester.pumpWidget(content());
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await tester.tap(find.byKey(const ValueKey('editor-title')));
       await tester.pump();
       tester.testTextInput.updateEditingValue(
@@ -944,7 +971,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await controller.focus();
       await tester.pump();
       final editor = _editor(tester).controller;
@@ -982,7 +1009,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       await controller.focus();
       await tester.pump();
       final call = tester.testTextInput.log.lastWhere(
@@ -1008,7 +1035,7 @@ void main() {
         ),
         (_) {},
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(received, ['image.png:data:image/png;base64,AQID']);
       expect(
         _editor(tester).controller.state.doc.child(0).attrs['src'],
@@ -1057,7 +1084,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(_editor(tester).scrollController!.positions, hasLength(1));
       await tester.tap(find.text('2026-11-07'));
       await tester.tap(find.text('Personal'));
@@ -1067,17 +1094,17 @@ void main() {
           .getTopLeft(find.byKey(const ValueKey('editor-title')))
           .dy;
       final before = _geometry(tester).rowRect(0).top;
-      await controller.setScrollY(70);
+      controller.setScrollY(70);
       await tester.pump();
       expect(
         tester.getTopLeft(find.byKey(const ValueKey('editor-title'))).dy,
         closeTo(titleTop - 70, .01),
       );
       expect(_geometry(tester).rowRect(0).top, closeTo(before - 70, .01));
-      expect(await controller.getScrollY(), 70);
+      expect(controller.getScrollY(), 70);
       await controller.scrollToHeading(1);
       await tester.pump();
-      expect(await controller.getScrollY(), greaterThan(700));
+      expect(controller.getScrollY(), greaterThan(700));
       await controller.swapDocument(
         content: _json(nodes),
         title: 'Next',
@@ -1085,7 +1112,7 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
-      expect(await controller.getScrollY(), closeTo(100, .01));
+      expect(controller.getScrollY(), closeTo(100, .01));
       expect(
         tester
             .widget<TextField>(find.byKey(const ValueKey('editor-title')))
@@ -1156,7 +1183,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       final doc = _editor(tester).controller.state.doc;
       for (final position in positions) {
         expect(doc.nodeAt(position)?.type, 'image');
@@ -1216,7 +1243,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       final tags = tester
           .widgetList<Hero>(find.byType(Hero))
           .map((hero) => hero.tag)
@@ -1290,7 +1317,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(
         tester
             .widget<TextField>(find.byKey(const ValueKey('editor-title')))
@@ -1306,11 +1333,11 @@ void main() {
       await controller.exec(EditorCommand.previewImage);
       expect(gallery, ['image-one.png', 'image-two.png']);
       expect(index, 1);
-      await controller.setScrollY(10000);
-      await tester.pumpAndSettle();
+      controller.setScrollY(10000);
+      await settleEditor(tester);
       await tester.tap(find.text('Report'));
       await tester.pump(const Duration(milliseconds: 350));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(opened, contains('attachment-test.pdf:Report:application/pdf'));
       await tester.tap(find.text('Related'));
       expect(opened, contains('other'));
@@ -1360,7 +1387,7 @@ void main() {
             ),
           ),
         );
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         final editor = _editor(tester), geometry = _geometry(tester);
         final cell = geometry.cellRect(4)!;
         expect(
@@ -1415,7 +1442,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       final editor = _editor(tester), geometry = _geometry(tester);
       final rect = geometry.rowRect(0);
       expect(rect.width, closeTo((800 - 32) * .5, .01));
@@ -1423,7 +1450,7 @@ void main() {
       await tester.tapAt(
         tester.getTopLeft(find.byType(ft.TiptapEditor)) + rect.center,
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(controller.state.value.node?.type, EditorNodeType.image);
       final before = editor.controller.json;
       await controller.exec(EditorCommand.previewMediaWidth, {'percent': 25});
@@ -1434,8 +1461,8 @@ void main() {
       await tester.pump();
       expect(geometry.rowRect(0).width, closeTo(384, .01));
       expect(find.text('Voice'), findsOneWidget);
-      await controller.setScrollY(10000);
-      await tester.pumpAndSettle();
+      controller.setScrollY(10000);
+      await settleEditor(tester);
       expect(find.text('dart'), findsOneWidget);
       await tester.tap(find.text(l10n.editor.content.codeCopy));
       await tester.pump(const Duration(milliseconds: 350));

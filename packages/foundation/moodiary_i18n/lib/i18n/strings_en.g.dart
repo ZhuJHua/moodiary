@@ -1659,8 +1659,6 @@ class _Translations$editor$content$en extends Translations$editor$content$zh {
 	@override String get bodyPlaceholder => 'Text';
 	@override String get codeAutoDetect => 'Auto-detect';
 	@override String get plainText => 'Plain text';
-	@override String get play => 'Play';
-	@override String get pause => 'Pause';
 	@override String get mute => 'Mute';
 	@override String get fullscreen => 'Fullscreen';
 }

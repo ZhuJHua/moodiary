@@ -1,14 +1,7 @@
 part of '../editor.dart';
 
-String _inlineText(m.Node node) => node.content
-    .map(
-      (n) => n.isText
-          ? n.text!
-          : n.type == 'hardBreak'
-          ? '\n'
-          : '\ufffc',
-    )
-    .join();
+String _inlineText(m.Node node) => node.content.inlineText(breaks: true);
+final _chunkBoundaries = [RegExp(r'\n'), RegExp(r'[.!?。！？]'), RegExp(r'\s')];
 
 class _ParagraphChunk {
   _ParagraphChunk(
@@ -22,6 +15,8 @@ class _ParagraphChunk {
   final List<int> paddingOffsets = [];
   final List<(int, int, double, double, Color, double, double)> codeBoxes = [];
   final List<(int, int, Color, double, double)> highlightBoxes = [];
+  final List<(RRect, Color)> inlineBackgrounds = [];
+  final List<(ui.Paragraph, Rect)> chipRects = [];
   void dispose() {
     paragraph?.dispose();
     paragraph = null;
@@ -29,6 +24,8 @@ class _ParagraphChunk {
       chip.$2.dispose();
     }
     chips.clear();
+    inlineBackgrounds.clear();
+    chipRects.clear();
   }
 
   int paragraphOffset(int local) =>
@@ -50,6 +47,8 @@ class _ParagraphChunk {
   double indent = 0;
   int get prefix => indent > 0 ? 1 : 0;
   double? exactHeight;
+  double firstLineHeight = 24;
+  double firstBaseline = 0;
   double get height => exactHeight ?? paragraph?.height ?? 0;
   _ParagraphChunk shift(int delta) {
     final shifted =
@@ -61,6 +60,8 @@ class _ParagraphChunk {
             style: style,
           )
           ..exactHeight = exactHeight
+          ..firstLineHeight = firstLineHeight
+          ..firstBaseline = firstBaseline
           ..indent = indent
           ..alignment = alignment
           ..base = base
@@ -68,6 +69,8 @@ class _ParagraphChunk {
           ..paddingOffsets.addAll(paddingOffsets)
           ..codeBoxes.addAll(codeBoxes)
           ..highlightBoxes.addAll(highlightBoxes);
+    shifted.inlineBackgrounds.addAll(inlineBackgrounds);
+    shifted.chipRects.addAll(chipRects);
     paragraph = null;
     chips.clear();
     return shifted;
@@ -86,12 +89,15 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
   _BlockLayout._(this.node, this.text, this.chunks);
   final m.Node node;
   final String text;
+  bool get hasText => node.isTextblock;
   late final List<_ParagraphChunk> chunks;
   double height = 0;
   double? width;
   TiptapEditorStyle? style;
   TextSpan? highlight;
   final Set<_TableRowLayout> tableUsers = {};
+  int markerGeneration = -1;
+  final markerLayouts = _LruMap<_Row, _ListMarkerLayout>(8);
 
   void dispose() {
     for (final chunk in chunks) {
@@ -129,11 +135,7 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
       if (end < to) {
         final lower = start + 2800;
         var found = false;
-        for (final pattern in [
-          RegExp(r'\n'),
-          RegExp(r'[.!?。！？]'),
-          RegExp(r'\s'),
-        ]) {
+        for (final pattern in _chunkBoundaries) {
           final matches = pattern
               .allMatches(text, lower)
               .takeWhile((m) => m.end <= end)
@@ -221,7 +223,7 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
       if (chunk.paragraph != null &&
           chunk.width == width &&
           identical(chunk.style, style) &&
-          chunk.base == base &&
+          (identical(chunk.base, base) || chunk.base == base) &&
           chunk.alignment == (textAlign ?? style.textAlign) &&
           chunk.indent == (chunk.start == 0 ? firstLineIndent : 0) &&
           identical(highlight, codeHighlight)) {
@@ -449,15 +451,18 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
           ),
         );
       chunk.paragraph = paragraph;
+      final lines = paragraph.computeLineMetrics();
+      chunk.firstLineHeight = lines.isEmpty ? 24 : lines.first.height;
+      chunk.firstBaseline = lines.isEmpty ? 0 : lines.first.baseline;
       chunk.exactHeight = style.exactLineHeight
-          ? paragraph.computeLineMetrics().length *
-                (base.fontSize ?? 17) *
-                (base.height ?? 1.5)
+          ? lines.length * (base.fontSize ?? 17) * (base.height ?? 1.5)
           : null;
       chunk.width = width;
       chunk.style = style;
       chunk.base = base;
       chunk.alignment = textAlign ?? style.textAlign;
+      _prepareInlineChunk(chunk, style);
+      diagnostics.decorationLayouts++;
       diagnostics.paragraphLayouts++;
       changed = true;
     }
@@ -531,7 +536,6 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
     }
     final natural = font.copyWith(height: ui.kTextHeightNone);
     final key = (natural, sample);
-    if (_caretFonts.length > 256) _caretFonts.clear();
     final (ascent, descent) = _caretFonts.putIfAbsent(key, () {
       final painter = TextPainter(
         text: TextSpan(text: sample, style: natural),
@@ -614,8 +618,7 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
     final (index, y) = chunkAt(offset);
     final chunk = chunks[index], paragraph = chunk.paragraph!;
     final local = (offset - chunk.start).clamp(0, chunk.end - chunk.start);
-    final lines = paragraph.computeLineMetrics();
-    final lineHeight = lines.isEmpty ? 24.0 : lines.first.height;
+    final lineHeight = chunk.firstLineHeight;
     if (local < chunk.end - chunk.start) {
       final boxes = paragraph.getBoxesForRange(
         chunk.paragraphOffset(local),
@@ -641,11 +644,7 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
           lineHeight,
         );
       }
-      final start = text
-          .substring(chunk.start, chunk.start + local)
-          .characters
-          .last
-          .length;
+      final start = m.graphemeBefore(text, chunk.start + local).length;
       final boxes = paragraph.getBoxesForRange(
         chunk.paragraphOffset(local - start),
         chunk.paragraphOffset(local),
@@ -751,7 +750,7 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
   }
 }
 
-final _caretFonts = <(TextStyle, String), (double, double)>{};
+final _caretFonts = _LruMap<(TextStyle, String), (double, double)>(256);
 
 class _CaretGeometry {
   const _CaretGeometry(this.rect, this.baseline, this.ascent, this.descent);

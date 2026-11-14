@@ -7,88 +7,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/ime.dart';
 import '../support/large_doc.dart';
-
-class _Engine {
-  _Engine(this.tester) {
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.textInput,
-      (call) async {
-        if (call.method == 'TextInput.setClient') {
-          client = (call.arguments as List).first as int;
-        }
-        if (call.method == 'TextInput.setEditingState') {
-          final next = TextEditingValue.fromJSON(
-            Map<String, dynamic>.from(call.arguments as Map),
-          );
-          if (hold) {
-            pending.add(next);
-          } else {
-            value = next;
-          }
-        }
-        return null;
-      },
-    );
-    addTearDown(() => tester.testTextInput.register());
-  }
-  final WidgetTester tester;
-  int? client;
-  bool hold = false;
-  final pending = <TextEditingValue>[];
-  TextEditingValue value = TextEditingValue.empty;
-  Future<void> edit({
-    String text = '',
-    int? from,
-    int? to,
-    TextRange composing = TextRange.empty,
-    bool selectionOnly = false,
-  }) async {
-    final old = value;
-    from ??= old.selection.start;
-    to ??= old.selection.end;
-    final caret = selectionOnly
-        ? old.selection.extentOffset
-        : from + text.length;
-    value = TextEditingValue(
-      text: selectionOnly ? old.text : old.text.replaceRange(from, to, text),
-      selection: TextSelection.collapsed(offset: caret),
-      composing: composing,
-    );
-    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
-      SystemChannels.textInput.name,
-      SystemChannels.textInput.codec.encodeMethodCall(
-        MethodCall('TextInputClient.updateEditingStateWithDeltas', [
-          client!,
-          {
-            'deltas': [
-              {
-                'oldText': old.text,
-                'deltaStart': selectionOnly ? -1 : from,
-                'deltaEnd': selectionOnly ? -1 : to,
-                'deltaText': text,
-                'selectionBase': caret,
-                'selectionExtent': caret,
-                'composingBase': composing.start,
-                'composingExtent': composing.end,
-              },
-            ],
-          },
-        ]),
-      ),
-      (_) {},
-    );
-  }
-}
+import '../support/nodes.dart';
 
 void main() {
   final schema = ft.Schema.standard();
-  ft.Node p(String text) => schema.node(
-    'paragraph',
-    content: [if (text.isNotEmpty) schema.node('text', text: text)],
-  );
-  ft.Node item(String text) => schema.node('listItem', content: [p(text)]);
-  ft.Node doc(List<ft.Node> nodes) => schema.node('doc', content: nodes);
+  final p = TestNodes(schema).p;
+  final item = TestNodes(schema).textItem;
+  final doc = TestNodes(schema).doc;
   Future<GlobalKey<ft.TiptapEditorState>> mount(
     WidgetTester tester,
     ft.TiptapController controller, {
@@ -387,7 +314,7 @@ void main() {
     testWidgets(
       'IME typing, Return and deletion inside $kind preserve channel ordering',
       (tester) async {
-        final engine = _Engine(tester);
+        final engine = FakeIme(tester);
         final block = kind == 'list'
             ? schema.node('bulletList', content: [item('')])
             : kind == 'quote'
@@ -444,7 +371,7 @@ void main() {
   testWidgets(
     '10k-item single list virtualises rows and IME lays out only the edited row',
     (tester) async {
-      final engine = _Engine(tester);
+      final engine = FakeIme(tester);
       final root = generateLargeListDocument();
       final position = root.rowAt(10000).position + 4;
       final controller = ft.TiptapController(
@@ -453,8 +380,8 @@ void main() {
       );
       final key = await mount(tester, controller);
       expect(key.currentState!.geometry!.rowCount, 20000);
-      expect(controller.diagnostics.visibleRows, lessThan(100));
-      expect(controller.diagnostics.rowLayouts, lessThan(120));
+      expect(controller.diagnostics.visibleBlocks, lessThan(100));
+      expect(controller.diagnostics.blockLayouts, lessThan(120));
       for (var i = 0; i < 20; i++) {
         final count = controller.diagnostics.paragraphLayouts;
         await tester.pump();
@@ -475,9 +402,9 @@ void main() {
         controller.diagnostics.paragraphLayouts - before,
         1,
         reason:
-            '${controller.diagnostics.lastLaidOutRows} offset=${key.currentState!.geometry!.scrollOffset} rows=${controller.state.doc.rowCount} old=$oldOffset oldRect=$oldRect newRect=${key.currentState!.geometry!.caretRect(controller.state.selection.head)}',
+            '${controller.diagnostics.lastLaidOutBlocks} offset=${key.currentState!.geometry!.scrollOffset} rows=${controller.state.doc.rowCount} old=$oldOffset oldRect=$oldRect newRect=${key.currentState!.geometry!.caretRect(controller.state.selection.head)}',
       );
-      expect(controller.diagnostics.lastLaidOutRows, {10000});
+      expect(controller.diagnostics.lastLaidOutBlocks, {10000});
       expect(controller.state.doc.rowAt(10000).node.textContent, contains('中'));
       expect(
         identical(

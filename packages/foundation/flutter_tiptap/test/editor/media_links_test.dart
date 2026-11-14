@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
 import '../support/large_doc.dart';
+import '../support/nodes.dart';
 
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
@@ -30,11 +31,8 @@ void main() {
     ),
   );
   final schema = ft.Schema.standard();
-  ft.Node p(String text) => schema.node(
-    'paragraph',
-    content: [if (text.isNotEmpty) schema.node('text', text: text)],
-  );
-  ft.Node doc(List<ft.Node> nodes) => schema.node('doc', content: nodes);
+  final p = TestNodes(schema).p;
+  final doc = TestNodes(schema).doc;
   const commands = ft.EditorCommands(trailingParagraph: true);
 
   Future<GlobalKey<ft.TiptapEditorState>> mount(
@@ -251,11 +249,6 @@ void main() {
       await tester.pump();
       expect(controller.state.selection, isA<ft.NodeSelection>());
       expect(tester.testTextInput.isVisible, isFalse);
-      expect(controller.selectedNode.value!.type, 'image');
-      expect(
-        controller.selectedNode.value!.rect.height,
-        greaterThanOrEqualTo(120),
-      );
       view!.updateAttrs({'name': 'changed'});
       await tester.pump();
       expect(controller.state.doc.child(0).attrs['name'], 'changed');

@@ -1,16 +1,21 @@
 part of '../editor.dart';
 
 /// Layout counters for inspecting viewport work and per-node cache reuse.
+@visibleForTesting
 class TiptapDiagnostics {
   int blockLayouts = 0;
+  int layoutQueries = 0;
+  int measurementComparisons = 0;
+  int decorationLayouts = 0;
+  int markerLayouts = 0;
+  int cellRowMaterializations = 0;
+  int selectionRows = 0;
+  int selectedTextNodes = 0;
   int paragraphLayouts = 0;
   int fullDocumentScans = 0;
   int visibleBlocks = 0;
   int cachedLayouts = 0;
   int cachedTextLength = 0;
-  int get visibleRows => visibleBlocks;
-  int get rowLayouts => blockLayouts;
-  Set<int> get lastLaidOutRows => Set.unmodifiable(lastLaidOutBlocks);
   final Set<int> lastLaidOutBlocks = {};
   final Expando<int> _nodeLayouts = Expando<int>();
   int layoutsFor(m.Node node) => _nodeLayouts[node] ?? 0;
@@ -44,7 +49,19 @@ class TiptapController extends ChangeNotifier {
         );
     _toolbar = ValueNotifier(_state.toolbar);
   }
-  void _searchNotify() => notifyListeners();
+  final ChangeNotifier _searchRepaint = ChangeNotifier();
+  final ChangeNotifier _nodeHeights = ChangeNotifier();
+  Set<m.Node> _invalidatedNodeHeights = {};
+  void invalidateNodeHeights(Iterable<m.Node> nodes) {
+    _invalidatedNodeHeights = nodes.toSet();
+    try {
+      _nodeHeights.notifyListeners();
+    } finally {
+      _invalidatedNodeHeights = {};
+    }
+  }
+
+  void _searchNotify() => _searchRepaint.notifyListeners();
   m.SearchIndex _searchIndex = m.SearchIndex();
   m.Node? _searchDoc;
   (int, int) _searchVisible = (0, 0);
@@ -114,7 +131,11 @@ class TiptapController extends ChangeNotifier {
     await _searchDone;
     if (_disposed || generation != _searchGeneration) return;
     final before = state.doc, revision = _revision;
-    final tr = await _searchIndex.replaceAllAsync(state, text);
+    final tr = await _searchIndex.replaceAllAsync(
+      state,
+      text,
+      matches: _searchMatches,
+    );
     if (!_disposed && identical(before, state.doc) && revision == _revision) {
       apply(tr);
     }
@@ -128,18 +149,14 @@ class TiptapController extends ChangeNotifier {
     _searchDoc = null;
     _searchMatches = [];
     _searchStatus.value = const m.SearchStatus();
-    notifyListeners();
+    _searchNotify();
   }
 
   /// Supplies candidates for the active reference query.
   final TiptapReferenceCandidates? referenceCandidates;
-  final ValueNotifier<TiptapSelectedNode?> _selectedNode = ValueNotifier(null);
   final ValueNotifier<TiptapReferenceSuggestion?> _suggestion = ValueNotifier(
     null,
   );
-
-  /// Selected node details, updated after viewport layout.
-  ValueListenable<TiptapSelectedNode?> get selectedNode => _selectedNode;
 
   /// Reference popup state, or null when no suggestion is active.
   ValueListenable<TiptapReferenceSuggestion?> get suggestion => _suggestion;
@@ -227,19 +244,6 @@ class TiptapController extends ChangeNotifier {
 
   void _updateHostGeometry(TiptapGeometry geometry) {
     final selection = state.selection;
-    if (selection is m.NodeSelection) {
-      final node = state.doc.nodeAt(selection.from)!,
-          rect = geometry.rowRect(selection.from),
-          old = _selectedNode.value;
-      if (old == null ||
-          !identical(old.node, node) ||
-          old.position != selection.from ||
-          old.rect != rect) {
-        _selectedNode.value = TiptapSelectedNode(node, selection.from, rect);
-      }
-    } else if (_selectedNode.value != null) {
-      _selectedNode.value = null;
-    }
     _suggestionRect = geometry.caretRect(selection.head);
     final active = _suggestion.value;
     if (active != null && active.caretRect != _suggestionRect) {
@@ -251,14 +255,6 @@ class TiptapController extends ChangeNotifier {
         loading: active.loading,
       );
     }
-  }
-
-  /// Called by a host for an image clipboard payload.
-  Future<void> pasteImage(
-    Object payload,
-    FutureOr<void> Function(Object payload)? handler,
-  ) async {
-    await handler?.call(payload);
   }
 
   /// Copies the selected slice as text and HTML, optionally cutting it.
@@ -278,8 +274,7 @@ class TiptapController extends ChangeNotifier {
     );
     _clipboardText = text;
     _clipboardSlice = state.doc.slice(selection.from, selection.to);
-    final html = m.TiptapHtmlCodec(state.doc.schema)
-        .serializeSlice(_clipboardSlice!);
+    final html = codec.serializeSlice(_clipboardSlice!);
     _clipboardHtml = html;
     if (write == null) {
       await Clipboard.setData(ClipboardData(text: text));
@@ -470,6 +465,7 @@ class TiptapController extends ChangeNotifier {
   String? _convertedText;
 
   /// Layout counters populated by the attached editor viewport.
+  @visibleForTesting
   final TiptapDiagnostics diagnostics = TiptapDiagnostics();
   m.Transaction? _lastTransaction;
   TextRange _composing = TextRange.empty;
@@ -486,6 +482,7 @@ class TiptapController extends ChangeNotifier {
   bool get inTable => table != null;
 
   /// The enclosing table cell's document position, if any.
+  @visibleForTesting
   int? get cellPosition => table?.cellPosition;
 
   /// The last applied transaction; null after replacing the document.
@@ -522,12 +519,9 @@ class TiptapController extends ChangeNotifier {
     final node = selection is m.NodeSelection
         ? state.doc.nodeAt(selection.from)
         : null;
-    _widthPreview =
-        percent == null ||
-            node == null ||
-            !const {'image', 'video'}.contains(node.type)
+    _widthPreview = percent == null || node == null || !m.isResizableMedia(node)
         ? null
-        : (node: node, percent: percent.clamp(25, 100));
+        : (node: node, percent: m.clampWidthPercent(percent)!);
     notifyListeners();
   }
 
@@ -549,17 +543,7 @@ class TiptapController extends ChangeNotifier {
       _composing = TextRange.empty;
     }
     final next = _state.toolbar, old = _toolbar.value;
-    if (!setEquals(next.activeMarks, old.activeMarks) ||
-        next.blockType != old.blockType ||
-        next.headingLevel != old.headingLevel ||
-        next.canUndo != old.canUndo ||
-        next.canRedo != old.canRedo ||
-        next.selectionKind != old.selectionKind ||
-        !setEquals(next.activeNodes, old.activeNodes) ||
-        next.taskChecked != old.taskChecked ||
-        next.cellPosition != old.cellPosition) {
-      _toolbar.value = next;
-    }
+    if (next != old) _toolbar.value = next;
     _refreshSuggestion();
     _refreshSearch();
     notifyListeners();
@@ -583,12 +567,6 @@ class TiptapController extends ChangeNotifier {
     _notifyChange();
   }
 
-  /// Parses document JSON asynchronously and replaces the document.
-  Future<void> loadJson(String json) async {
-    final doc = await _state.doc.schema.parseAsync(json);
-    if (!_disposed) replaceDocument(doc);
-  }
-
   void _setComposing(TextRange range) {
     if (_composing == range) return;
     _composing = range;
@@ -598,38 +576,67 @@ class TiptapController extends ChangeNotifier {
   }
 
   /// Plain text for the selected range, including reference labels.
-  String get selectedText {
+  String get selectedText => selectedTextPrefix();
+
+  String selectedTextPrefix({int? maxLength}) {
     final doc = _state.doc, selection = _state.selection;
     if (selection.empty) return '';
     final from = doc.rowIndexAt(selection.from),
         to = doc.rowIndexAt(selection.to - 1);
-    final result = <String>[];
-    for (var i = from; i <= to && i < doc.rowCount; i++) {
-      final row = doc.rowAt(i), block = row.node;
-      if (!block.isTextblock) {
-        result.add('\ufffc');
-        continue;
-      }
-      final start = row.position + 1;
-      result.add(
-        block.content
-            .cut(
-              (selection.from - start).clamp(0, block.content.size),
-              (selection.to - start).clamp(0, block.content.size),
-            )
-            .map(
-              (n) => n.isText
-                  ? n.text!
-                  : n.type == 'hardBreak'
-                  ? '\n'
-                  : n.type == m.referenceNodeType
-                  ? (n.attrs['label'] ?? n.attrs['id'] ?? '').toString()
-                  : '\ufffc',
-            )
-            .join(),
+    final result = StringBuffer();
+    var first = true;
+    void append(String text) {
+      final remaining = maxLength == null
+          ? text.length
+          : math.max(0, maxLength - result.length);
+      result.write(
+        text.length <= remaining ? text : text.substring(0, remaining),
       );
     }
-    return result.join('\n');
+
+    for (final row in doc.rows(
+      from: from,
+      to: math.min(to + 1, doc.rowCount),
+    )) {
+      if (!first) append('\n');
+      first = false;
+      final block = row.node;
+      if (!block.isTextblock) {
+        append('\ufffc');
+      } else {
+        final start = row.position + 1;
+        var offset = 0;
+        for (final inline in block.content) {
+          diagnostics.selectedTextNodes++;
+          final end = offset + inline.nodeSize;
+          if (end > selection.from - start && offset < selection.to - start) {
+            append(
+              inline.isText
+                  ? inline.text!.substring(
+                      (selection.from - start - offset).clamp(
+                        0,
+                        inline.nodeSize,
+                      ),
+                      (selection.to - start - offset).clamp(0, inline.nodeSize),
+                    )
+                  : inline.type == 'hardBreak'
+                  ? '\n'
+                  : inline.type == m.referenceNodeType
+                  ? (inline.attrs['label'] ?? inline.attrs['id'] ?? '')
+                        .toString()
+                  : '\ufffc',
+            );
+          }
+          offset = end;
+          if (offset >= selection.to - start ||
+              maxLength != null && result.length >= maxLength) {
+            break;
+          }
+        }
+      }
+      if (maxLength != null && result.length >= maxLength) break;
+    }
+    return result.toString();
   }
 
   /// Multi-line text committed by an IME, as a keyboard's clipboard panel does.
@@ -648,44 +655,12 @@ class TiptapController extends ChangeNotifier {
 
   /// Inserts literal text with line breaks grouped into one undo event.
   void insertPlainText(String text) {
-    text = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
-    final group = 'paste-${developer.Timeline.now}';
-    var started = false;
-    void applyPart(m.Transaction transaction) {
-      if (!started) transaction.setMeta('closeHistory', true);
-      apply(transaction);
-      started = true;
-    }
-
-    if (_state.doc.resolve(_state.selection.from).parent.type == 'codeBlock') {
-      if (text.isNotEmpty || !_state.selection.empty) {
-        applyPart(
-          commands.execute(_state, 'insertText', {
-            'text': text,
-            'committed': false,
-            'composition': group,
-          }),
-        );
-      }
-      return;
-    }
-    final parts = text.split('\n');
-    for (var i = 0; i < parts.length; i++) {
-      if (i > 0) {
-        applyPart(
-          commands.execute(_state, 'splitBlock')..setMeta('composition', group),
-        );
-      }
-      if (parts[i].isNotEmpty || !_state.selection.empty) {
-        applyPart(
-          commands.execute(_state, 'insertText', {
-            'text': parts[i],
-            'committed': false,
-            'composition': group,
-          }),
-        );
-      }
-    }
+    apply(
+      commands.execute(_state, 'insertCommittedLines', {
+        'text': text,
+        'composition': 'paste-${developer.Timeline.now}',
+      }),
+    );
   }
 
   @override
@@ -695,7 +670,8 @@ class TiptapController extends ChangeNotifier {
     _suggestionCancellation?._cancel();
     _searchGeneration++;
     _searchStatus.dispose();
-    _selectedNode.dispose();
+    _searchRepaint.dispose();
+    _nodeHeights.dispose();
     _suggestion.dispose();
     _toolbar.dispose();
     super.dispose();

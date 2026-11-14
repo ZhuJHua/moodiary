@@ -5,10 +5,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
+import '../support/nodes.dart';
+
 void main() {
   final schema = ft.Schema.standard();
-  ft.Node p(String text) =>
-      schema.node('paragraph', content: [schema.node('text', text: text)]);
+  final p = TestNodes(schema).p;
   const source = 'const double = (value) => 21;';
   const red = Color(0xffb02040), blue = Color(0xff244fa0);
   final colors = <TextSpan>[
@@ -142,10 +143,8 @@ void main() {
   testWidgets(
     'disc circle and square are bounded baseline-aligned shapes at three depths',
     (tester) async {
-      ft.Node list(List<ft.Node> children) =>
-          schema.node('bulletList', content: children);
-      ft.Node item(List<ft.Node> children) =>
-          schema.node('listItem', content: children);
+      final list = TestNodes(schema).list;
+      final item = TestNodes(schema).item;
       final root = schema.node(
         'doc',
         content: [

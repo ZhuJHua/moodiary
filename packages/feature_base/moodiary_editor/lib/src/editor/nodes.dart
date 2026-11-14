@@ -156,10 +156,8 @@ class _MediaNodeState extends State<_MediaNode> {
           if (!mounted || host._disposed || generation != host._generation) {
             return;
           }
-          final previous = host._imageRatios[name];
-          if (previous?.header == true) return;
-          host._imageRatios[name] = (ratio: ratio, header: false);
-          if (!synchronous && previous?.ratio != ratio) setState(() {});
+          final changed = host._recordImageRatio(name, ratio, probed: false);
+          if (!synchronous && changed) setState(() {});
         }, onError: (Object error, StackTrace? stack) {});
         _imageStream!.addListener(_imageListener!);
       }
@@ -188,12 +186,17 @@ class _MediaNodeState extends State<_MediaNode> {
     ),
   );
   @override
-  Widget build(
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: widget.host._imageChanges,
+    builder: (context, _) => _build(context),
+  );
+
+  Widget _build(
     BuildContext context,
   ) => FutureBuilder<({String path, String mime})?>(
     key: ValueKey((widget.host, _generation, _name, widget.view.node.type)),
     future: _source,
-    initialData: widget.host._mediaSources[(_name, false)],
+    initialData: widget.host._mediaSources.get((_name, false)),
     builder: (context, snapshot) {
       final path = snapshot.data?.path;
       final type = widget.view.node.type;
@@ -215,7 +218,7 @@ class _MediaNodeState extends State<_MediaNode> {
             children: [
               FutureBuilder<({String path, String mime})?>(
                 future: _poster,
-                initialData: widget.host._mediaSources[(_name, true)],
+                initialData: widget.host._mediaSources.get((_name, true)),
                 builder: (context, poster) => poster.data == null
                     ? ColoredBox(
                         color: context.theme.colors.surfaceContainerHigh,
@@ -358,46 +361,6 @@ class _MediaNodeState extends State<_MediaNode> {
   );
 }
 
-// highlight.js ids from the shared highlighter, shown by their usual names.
-const _codeLanguageNames = {
-  'arduino': 'Arduino',
-  'bash': 'Bash',
-  'c': 'C',
-  'cpp': 'C++',
-  'csharp': 'C#',
-  'css': 'CSS',
-  'diff': 'Diff',
-  'go': 'Go',
-  'graphql': 'GraphQL',
-  'ini': 'INI',
-  'java': 'Java',
-  'javascript': 'JavaScript',
-  'json': 'JSON',
-  'kotlin': 'Kotlin',
-  'less': 'Less',
-  'lua': 'Lua',
-  'makefile': 'Makefile',
-  'markdown': 'Markdown',
-  'objectivec': 'Objective-C',
-  'perl': 'Perl',
-  'php': 'PHP',
-  'php-template': 'PHP template',
-  'python': 'Python',
-  'python-repl': 'Python REPL',
-  'r': 'R',
-  'ruby': 'Ruby',
-  'rust': 'Rust',
-  'scss': 'SCSS',
-  'shell': 'Shell',
-  'sql': 'SQL',
-  'swift': 'Swift',
-  'typescript': 'TypeScript',
-  'vbnet': 'VB.NET',
-  'wasm': 'WebAssembly',
-  'xml': 'HTML / XML',
-  'yaml': 'YAML',
-};
-
 class _CodeHeader extends StatefulWidget {
   const _CodeHeader({required this.node, required this.readOnly});
   final ft.TiptapNodeView node;
@@ -420,7 +383,7 @@ class _CodeHeaderState extends State<_CodeHeader> {
     return switch (language) {
       null || '' => labels.codeAutoDetect,
       'plaintext' || 'text' || 'txt' => labels.plainText,
-      final id => _codeLanguageNames[id] ?? id,
+      final id => components.codeLanguageNames[id] ?? id,
     };
   }
 
@@ -465,7 +428,7 @@ class _CodeHeaderState extends State<_CodeHeader> {
               for (final id in <String?>[
                 null,
                 'plaintext',
-                ..._codeLanguageNames.keys,
+                ...components.codeLanguageNames.keys,
               ])
                 MenuItemButton(
                   trailingIcon: id == language

@@ -1,21 +1,5 @@
 part of '../editor.dart';
 
-class _NodeSizeKey {
-  const _NodeSizeKey(this.node, this.width);
-
-  final m.Node node;
-  final double width;
-
-  @override
-  bool operator ==(Object other) =>
-      other is _NodeSizeKey &&
-      width == other.width &&
-      identical(node, other.node);
-
-  @override
-  int get hashCode => Object.hash(identityHashCode(node), width);
-}
-
 class _NodeViewParentData extends ContainerBoxParentData<RenderBox> {
   int row = 0;
   int position = 0;
@@ -27,6 +11,11 @@ class _ViewportElement extends RenderObjectElement {
   final Map<int, Element> _children = {};
   final Map<int, Element> _chromeChildren = {};
   final Map<int, m.Node> _viewNodes = {};
+  final Map<
+    int,
+    ({TiptapNodeView view, TiptapNodeViewBuilder builder, Widget child})
+  >
+  _viewWidgets = {};
   @override
   _EditorViewport get widget => super.widget as _EditorViewport;
   @override
@@ -42,13 +31,16 @@ class _ViewportElement extends RenderObjectElement {
   void update(covariant _EditorViewport newWidget) {
     final old = widget;
     super.update(newWidget);
+    if (old.style != newWidget.style || old.readOnly != newWidget.readOnly) {
+      _viewWidgets.clear();
+    }
     if (!mapEquals(old.nodeViews, newWidget.nodeViews) ||
         old.nodeHeightEstimator != newWidget.nodeHeightEstimator) {
       renderObject.markNeedsLayout();
     }
   }
 
-  void _buildVisible(Set<int> visible) {
+  void _buildVisible(Map<int, _ViewTarget> entries) {
     owner!.buildScope(this, () {
       for (final slot in [-1, -2]) {
         final child = updateChild(
@@ -64,61 +56,81 @@ class _ViewportElement extends RenderObjectElement {
       }
       final remaining = Map<int, Element>.of(_children),
           nextChildren = <int, Element>{},
-          nextNodes = <int, m.Node>{};
-      final entries = renderObject._visibleViews(visible);
+          nextNodes = <int, m.Node>{},
+          nextWidgets =
+              <
+                int,
+                ({
+                  TiptapNodeView view,
+                  TiptapNodeViewBuilder builder,
+                  Widget child,
+                })
+              >{};
+      final previousSlots = HashMap<m.Node, Queue<int>>.identity();
+      for (final entry in _viewNodes.entries) {
+        (previousSlots[entry.value] ??= Queue<int>()).add(entry.key);
+      }
       final desired = entries.values.map((entry) => entry.node).toSet();
       for (final entry in entries.entries) {
         final index = entry.key, target = entry.value, node = target.node;
-        final builder = node.type == 'codeBlock'
-            ? widget.codeBlockHeader
-            : widget.nodeViews[node.type];
-        if (builder == null) continue;
+        final builder = target.builder;
         final selection = widget.controller.state.selection;
         final width = target.width;
         final position = target.position;
-        final view = TiptapNodeView(
-          node: node,
-          position: position,
-          selected:
-              !widget.readOnly &&
-              selection is m.NodeSelection &&
-              selection.from == position,
-          width: width,
-          updateAttrs: (attrs) {
-            // A delayed host callback must not update a different node after an edit.
-            if (!identical(
-                  widget.controller.state.doc.nodeAt(position),
-                  node,
-                ) ||
-                widget.readOnly) {
-              return;
-            }
-            final tr = widget.controller.state.tr;
-            for (final entry in attrs.entries) {
-              tr.step(m.AttrStep(position, entry.key, entry.value));
-            }
-            widget.controller.apply(tr);
-          },
-        );
-        final child = Builder(builder: (context) => builder(context, view));
-        int? previous;
-        for (final entry in remaining.entries) {
-          if (identical(_viewNodes[entry.key], node)) {
-            previous = entry.key;
-            break;
-          }
-        }
+        final slots = previousSlots[node];
+        int? previous = slots == null || slots.isEmpty
+            ? null
+            : slots.removeFirst();
         if (previous == null &&
             remaining.containsKey(index) &&
             _viewNodes[index]?.type == node.type &&
             !desired.contains(_viewNodes[index])) {
           previous = index;
         }
+        final selected =
+            !widget.readOnly &&
+            selection is m.NodeSelection &&
+            selection.from == position;
+        final cached = _viewWidgets[previous];
+        final reuse =
+            cached != null &&
+            identical(cached.view.node, node) &&
+            cached.view.position == position &&
+            cached.view.selected == selected &&
+            cached.view.width == width &&
+            cached.builder == builder;
+        final view = reuse
+            ? cached.view
+            : TiptapNodeView(
+                node: node,
+                position: position,
+                selected: selected,
+                width: width,
+                updateAttrs: (attrs) {
+                  // A delayed host callback must not update a different node after an edit.
+                  if (!identical(
+                        widget.controller.state.doc.nodeAt(position),
+                        node,
+                      ) ||
+                      widget.readOnly) {
+                    return;
+                  }
+                  final tr = widget.controller.state.tr;
+                  for (final entry in attrs.entries) {
+                    tr.step(m.AttrStep(position, entry.key, entry.value));
+                  }
+                  widget.controller.apply(tr);
+                },
+              );
+        final child = reuse
+            ? cached.child
+            : Builder(builder: (context) => builder(context, view));
         final old = previous == null ? null : remaining.remove(previous);
         final element = updateChild(old, child, index);
         if (element != null) {
           nextChildren[index] = element;
           nextNodes[index] = node;
+          nextWidgets[index] = (view: view, builder: builder, child: child);
         }
       }
       for (final entry in remaining.entries) {
@@ -130,6 +142,9 @@ class _ViewportElement extends RenderObjectElement {
       _viewNodes
         ..clear()
         ..addAll(nextNodes);
+      _viewWidgets
+        ..clear()
+        ..addAll(nextWidgets);
     });
   }
 
@@ -188,82 +203,83 @@ extension _NodeViewLayout on _RenderEditorViewport {
       child = data.nextSibling;
     }
     if (_offset.pixels > oldTop && (_contentTop - oldTop).abs() > .01) {
-      _offset.correctBy(_contentTop - oldTop);
+      _correctScroll(_contentTop - oldTop);
     }
   }
 
   Map<int, _ViewTarget> _visibleViews(Set<int> visible) {
     final result = <int, _ViewTarget>{};
     for (final index in visible) {
-      final row = _row(index), layout = _layoutBlock(index);
-      if (layout is _TableRowLayout) {
-        for (final (block, _) in layout.contentRows()) {
-          final node = block.layout.node;
-          if (!_nodeViews.containsKey(node.type) &&
-              !(node.type == 'codeBlock' && _codeBlockHeader != null)) {
-            continue;
-          }
-          final position = row.position + block.position;
-          final available = block.width;
-          final width = _widthFor(node, available);
-          final point =
-              _origin(index) +
-              block.origin +
-              Offset(
-                _style.centerMedia &&
-                        const {'image', 'video'}.contains(node.type)
-                    ? (available - width) / 2
-                    : 0,
-                0,
-              );
-          result[position] = _ViewTarget(
-            node,
-            position,
-            index,
-            width,
-            point,
-            table: true,
-          );
-        }
-      } else if (_nodeViews.containsKey(row.node.type) ||
-          row.node.type == 'codeBlock' && _codeBlockHeader != null) {
-        result[row.position] = _ViewTarget(
-          row.node,
-          row.position,
+      for (final block in _contentBlocks(index)) {
+        final node = block.layout.node, builder = _viewBuilderFor(node);
+        if (builder == null) continue;
+        final width = _widthFor(node, block.width);
+        final (origin, _) = _mediaBox(
+          node,
+          block.origin,
+          block.width,
+          measured: block.cellRow == null,
+          clampCenter: block.cellRow == null,
+        );
+        final code = node.type == 'codeBlock';
+        result[block.absolutePosition] = _ViewTarget(
+          node,
+          block.absolutePosition,
           index,
-          _nodeWidth(index),
-          _nodeOrigin(index),
+          width,
+          origin,
+          table: block.cellRow != null,
+          builder: builder,
+          constraints: code
+              ? BoxConstraints.tightFor(
+                  width: math.max(1, width - 16),
+                  height: math.max(24, _style.codeBlockPadding.top - 10),
+                )
+              : _style.centerMedia
+              ? BoxConstraints(maxWidth: width)
+              : BoxConstraints.tightFor(width: width),
+          offset: code ? const Offset(8, 2) : Offset.zero,
         );
       }
     }
     return result;
   }
 
-  double _widthFor(m.Node node, double available) {
-    final preview = _controller._widthPreview;
-    final percent = identical(preview?.node, node)
-        ? preview!.percent
-        : node.attrs['widthPercent'];
-    return math.max(
-      1,
-      available * (percent is num ? percent.clamp(25, 100) / 100 : 1),
-    );
+  TiptapNodeViewBuilder? _viewBuilderFor(m.Node node) =>
+      node.type == 'codeBlock' ? _codeBlockHeader : _nodeViews[node.type];
+
+  (Offset, double) _mediaBox(
+    m.Node node,
+    Offset origin,
+    double available, {
+    bool measured = false,
+    bool clampCenter = false,
+  }) {
+    final requested = _widthFor(node, available);
+    final width = measured
+        ? _nodeSizes.get(node, requested)?.width ?? requested
+        : requested;
+    var inset = _style.centerMedia && m.isResizableMedia(node)
+        ? (available - width) / 2
+        : 0.0;
+    if (clampCenter) inset = math.max(0, inset);
+    return (origin + Offset(inset, 0), width);
   }
 
-  Offset _nodeOrigin(int index) {
-    final row = _row(index), available = _nodeWidth(index);
-    final width = _measuredSize(row.node, available)?.width ?? available;
-    return _rowOrigin(index) +
-        Offset(
-          _style.centerMedia && const {'image', 'video'}.contains(row.node.type)
-              ? math.max(0, (_contentWidth - row.indent - width) / 2)
-              : 0,
-          0,
+  double _widthFor(
+    m.Node node,
+    double available, {
+    bool clampWidth = true,
+    bool usePreview = true,
+  }) {
+    final preview = usePreview ? _controller._widthPreview : null;
+    final width =
+        available *
+        m.mediaWidthFactor(
+          node,
+          preview: identical(preview?.node, node) ? preview!.percent : null,
         );
-  }
-
-  double _nodeWidth(int index) {
-    return _widthFor(_row(index).node, _contentWidth - _row(index).indent);
+    return clampWidth ? math.max(1, width) : width;
   }
 
   Set<int> _visibleNodeRows() {
@@ -274,9 +290,7 @@ extension _NodeViewLayout on _RenderEditorViewport {
       index++
     ) {
       if ((_row(index).node.type == 'tableRow' ||
-              _nodeViews.containsKey(_row(index).node.type) ||
-              _row(index).node.type == 'codeBlock' &&
-                  _codeBlockHeader != null) &&
+              _viewBuilderFor(_row(index).node) != null) &&
           _rowOrigin(index).dy < size.height &&
           _rowOrigin(index).dy + _heights!.heightAt(index) >= 0) {
         visible.add(index);
@@ -287,8 +301,8 @@ extension _NodeViewLayout on _RenderEditorViewport {
 
   bool _layoutNodeViews() {
     final visible = _visibleNodeRows();
-    _buildNodeViews(visible);
     final targets = _visibleViews(visible);
+    _buildNodeViews(targets);
     var child = firstChild;
     final tables = <int>{};
     while (child != null) {
@@ -300,40 +314,18 @@ extension _NodeViewLayout on _RenderEditorViewport {
       final target = targets[data.row]!;
       data.position = target.position;
       final code = target.node.type == 'codeBlock';
-      child.layout(
-        code
-            ? BoxConstraints.tightFor(
-                width: math.max(1, target.width - 16),
-                height: math.max(24, _style.codeBlockPadding.top - 10),
-              )
-            : _style.centerMedia
-            ? BoxConstraints(maxWidth: target.width)
-            : BoxConstraints.tightFor(width: target.width),
-        parentUsesSize: true,
-      );
+      child.layout(target.constraints, parentUsesSize: true);
       if (!code) {
         final height = child.size.height;
         final changed =
-            _measuredSize(target.node, target.width)?.height != height ||
+            _nodeSizes.get(target.node, target.width)?.height != height ||
             _layouts[target.node]?.height != height;
-        final sizeKey = _NodeSizeKey(target.node, target.width);
-        _nodeSizes.remove(sizeKey);
-        _nodeSizes[sizeKey] = child.size;
-        if (_nodeSizes.length > 512) _nodeSizes.remove(_nodeSizes.keys.first);
+        _nodeSizes.put(target.node, target.width, child.size);
         _layouts[target.node]?.height = height;
         if (target.table) {
           if (changed) {
-            final seen = <_TableRowLayout>{};
-            void invalidate(_BlockLayout layout) {
-              for (final table in layout.tableUsers) {
-                if (!seen.add(table)) continue;
-                table.invalidate();
-                invalidate(table);
-              }
-            }
-
             final cached = _layouts[target.node];
-            if (cached != null) invalidate(cached);
+            if (cached != null) _invalidateTableUsers(cached);
             final row = _row(target.row),
                 layout = _layouts[_row(target.row).node] as _TableRowLayout;
             for (final (block, cell) in layout.contentRows()) {
@@ -376,10 +368,7 @@ extension _NodeViewLayout on _RenderEditorViewport {
             )
           : target == null
           ? Offset.zero
-          : target.origin +
-                (target.node.type == 'codeBlock'
-                    ? const Offset(8, 2)
-                    : Offset.zero);
+          : target.origin + target.offset;
       child = data.nextSibling;
     }
   }
@@ -393,10 +382,16 @@ class _ViewTarget {
     this.width,
     this.origin, {
     this.table = false,
+    required this.builder,
+    required this.constraints,
+    required this.offset,
   });
   final m.Node node;
   final int position, row;
   final double width;
   final Offset origin;
   final bool table;
+  final TiptapNodeViewBuilder builder;
+  final BoxConstraints constraints;
+  final Offset offset;
 }

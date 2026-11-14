@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
 
@@ -19,17 +18,18 @@ import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-import 'editor/media_cache.dart';
 import 'ime/ime_panel.dart';
 import 'media.dart';
 import 'toolbar/editor_command.dart';
 import 'toolbar/editor_state.dart';
 import 'toolbar/link_sheet.dart';
-import 'typography.dart';
 
 part 'editor/apple_tracking.dart';
 part 'editor/header.dart';
 part 'editor/host.dart';
+part 'editor/document_load.dart';
+part 'editor/derived_state.dart';
+part 'editor/commands.dart';
 part 'editor/media_controls.dart';
 part 'editor/meta_options.dart';
 part 'editor/nodes.dart';
@@ -64,6 +64,7 @@ class MoodiaryEditor extends StatefulWidget {
   final bool readOnly;
 
   final ValueChanged<String>? onChanged;
+  final void Function(String content, String plainText)? onChangedWithText;
 
   final ValueChanged<String>? onTitleChanged;
 
@@ -123,7 +124,6 @@ class MoodiaryEditor extends StatefulWidget {
   final bool firstLineIndent;
 
   final double fontScale;
-  final EditorTypography typography;
 
   final EditorFont? Function()? fontResolver;
 
@@ -138,6 +138,7 @@ class MoodiaryEditor extends StatefulWidget {
     this.initialTitle = '',
     this.readOnly = false,
     this.onChanged,
+    this.onChangedWithText,
     this.onTitleChanged,
     this.onActiveHeadingChanged,
     this.onImageTap,
@@ -168,7 +169,6 @@ class MoodiaryEditor extends StatefulWidget {
     this.onOpenGraph,
     this.firstLineIndent = false,
     this.fontScale = 1.0,
-    this.typography = const EditorTypography(),
     this.fontResolver,
     this.mediaResolver,
   });
@@ -188,37 +188,12 @@ bool _isSafeMediaName(String name) {
   return false;
 }
 
-abstract interface class EditorHost {
-  ValueListenable<EditorState> get state;
-  ValueListenable<EditorFocusTarget> get focusTarget;
-  ValueListenable<EditorSearchState?> get search;
-  Future<void> exec(EditorCommand command, Map<String, Object?>? args);
-  Future<void> flush();
-  Future<void> focus();
-  Future<void> blur();
-  Future<void> focusTitle();
-  Future<void> holdSelection();
-  Future<void> setPanelMode(bool value);
-  Future<bool> suppressKeyboard(bool value);
-  Future<void> dismissKeyboard();
-  Future<void> scrollToHeading(int index);
-  Future<double> getScrollY();
-  Future<void> setScrollY(double value);
-  Future<void> swapDocument({
-    required String content,
-    required String title,
-    String? contentText,
-    double scrollY = 0,
-  });
-  Future<void> resumeVideo(String name, Duration position);
-}
-
 enum EditorFocusTarget { none, editor, title }
 
 typedef EditorSearchState = ({String query, int total, int current});
 
 class MoodiaryEditorController {
-  EditorHost? _host;
+  MoodiaryEditorHost? _host;
 
   final _state = ValueNotifier<EditorState>(.empty);
   final _focus = ValueNotifier<EditorFocusTarget>(.none);
@@ -239,9 +214,7 @@ class MoodiaryEditorController {
 
   Future<void> editLink(BuildContext context) async {
     final host = _host;
-    if (host is! MoodiaryEditorHost ||
-        host.readOnly ||
-        !host.bodyFocus.hasPrimaryFocus) {
+    if (host == null || host.readOnly || !host.bodyFocus.hasPrimaryFocus) {
       return;
     }
     final state = host.state.value, generation = host._generation;
@@ -261,7 +234,7 @@ class MoodiaryEditorController {
     await exec(.setLink, {'text': input.text, 'href': input.href});
   }
 
-  void _bind(EditorHost host) {
+  void _bind(MoodiaryEditorHost host) {
     final old = _host;
     if (old != null) _unbind(old);
     _host = host;
@@ -277,10 +250,8 @@ class MoodiaryEditorController {
   void _syncFocus() =>
       _focus.value = _host?.focusTarget.value ?? EditorFocusTarget.none;
   void _syncSearch() => _search.value = _host?.search.value;
-  @visibleForTesting
-  void bindHostForTesting(EditorHost host) => _bind(host);
 
-  void _unbind(EditorHost host) {
+  void _unbind(MoodiaryEditorHost host) {
     if (!identical(_host, host)) return;
     host.state.removeListener(_syncState);
     host.focusTarget.removeListener(_syncFocus);
@@ -311,7 +282,7 @@ class MoodiaryEditorController {
   void openSearch() {
     if (_searchOpen.value) return;
     _searchSource = _focus.value;
-    if (_host case final MoodiaryEditorHost host) {
+    if (_host case final host?) {
       _searchSelection = host.editor.state.selection;
       _searchDocument = host.editor.state.doc;
       _searchTitleSelection = host.title.selection;
@@ -333,7 +304,7 @@ class MoodiaryEditorController {
     _searchDocument = null;
     _searchTitleSelection = null;
     if (_focus.value != .none) return;
-    if (_host case final MoodiaryEditorHost host
+    if (_host case final host?
         when identical(document, host.editor.state.doc)) {
       if (selection != null) host.editor.setSelection(selection);
       if (titleSelection != null) host.title.selection = titleSelection;
@@ -408,11 +379,9 @@ class MoodiaryEditorController {
     await _host?.scrollToHeading(index);
   }
 
-  Future<double> getScrollY() async {
-    return (await _host?.getScrollY()) ?? 0;
-  }
+  double getScrollY() => _host?.getScrollY() ?? 0;
 
-  Future<void> setScrollY(double value) async => _host?.setScrollY(value);
+  void setScrollY(double value) => _host?.setScrollY(value);
   Future<void> resumeVideo(String name, Duration position) async =>
       _host?.resumeVideo(name, position);
   Future<void> swapDocument({

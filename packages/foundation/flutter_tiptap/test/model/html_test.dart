@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart';
 import 'package:moodiary_lint/testing.dart';
 
+import '../support/nodes.dart';
+
 void main() {
   final fixtures = jsonDecode(
     File('$repoRoot/packages/foundation/flutter_tiptap/test/fixtures/html.json')
@@ -13,8 +15,7 @@ void main() {
   final schema = Schema.standard(), codec = TiptapHtmlCodec(Schema.standard());
 
   Node docWith(Node paragraph) => schema.node('doc', content: [paragraph]);
-  Node text(String value) =>
-      schema.node('paragraph', content: [schema.node('text', text: value)]);
+  final text = TestNodes(schema).p;
   const heading = <String, dynamic>{
     'type': 'doc',
     'content': [

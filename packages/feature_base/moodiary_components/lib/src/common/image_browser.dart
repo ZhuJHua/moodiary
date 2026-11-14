@@ -71,10 +71,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
 
   final _probing = <String>{};
 
-  static bool _isNetwork(String image) =>
-      image.startsWith('http://') || image.startsWith('https://');
-
-  ImageProvider _providerOf(String image) => _isNetwork(image)
+  ImageProvider _providerOf(String image) => isNetworkMedia(image)
       ? CachedNetworkImageProvider(image)
       : FastImage(image) as ImageProvider;
 
@@ -224,7 +221,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
   Widget _buildPage(int index, {required bool hero}) {
     final image = widget.images[index];
     final placeholder = _placeholderOf(image);
-    final local = !_isNetwork(image);
+    final local = !isNetworkMedia(image);
     if (local && !_regions.containsKey(image)) {
       unawaited(_probe(image));
     }
@@ -296,7 +293,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
 
   ImageProvider? _placeholderOf(String image) {
     final tier = widget.placeholderTier;
-    if (tier == null || _isNetwork(image)) return null;
+    if (tier == null || isNetworkMedia(image)) return null;
     return FastImage(image, tier: tier);
   }
 
@@ -308,7 +305,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
     var path = image;
     String? tempPath;
     try {
-      if (_isNetwork(image)) {
+      if (isNetworkMedia(image)) {
         toast.loading();
         try {
           final resp = await getIt<IHttpClient>().requestBytes(
@@ -363,7 +360,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
   }
 
   Future<_ImageInfoData> _loadInfo(String image) async {
-    if (_isNetwork(image)) {
+    if (isNetworkMedia(image)) {
       String? resolution;
       try {
         final size = await MediaManager.getImageSize(_providerOf(image))

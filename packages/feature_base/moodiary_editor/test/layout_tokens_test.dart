@@ -42,53 +42,45 @@ void main() {
   });
 
   test('collapsed margins remain pinned to the document layout tokens', () {
-    for (final font in [.85, 1.0, 1.3]) {
-      for (final spacing in [0.0, 1.0, 2.0]) {
-        final style = buildEditorStyle(
-          brightness: Brightness.light,
-          fontSize: font,
-          paragraphSpacing: spacing,
-        );
-        final body = 17 * font, gap = style.blockGap!;
-        expect(style.exactLineHeight, true);
-        expect(style.tableFixedLayout, true);
-        expect(gap(null, node('image')), body * .75 * spacing);
-        expect(gap(node('image'), node('paragraph')), body * .75 * spacing);
-        expect(gap(node('paragraph'), node('paragraph')), body * .75 * spacing);
-        expect(style.blockSpacing, body * .75 * spacing);
-        expect(
-          gap(node('heading', {'level': 2}), node('image')),
-          body * .75 * spacing,
-        );
-        expect(
-          gap(node('paragraph'), node('heading', {'level': 2})),
-          body * 1.25 * 1.4 * spacing,
-        );
-        expect(
-          gap(node('heading', {'level': 1}), node('heading', {'level': 2})),
-          body * 1.25 * .4 * spacing,
-        );
-        expect(gap(node('paragraph'), node('table')), body * .75 * spacing);
-        expect(
-          gap(node('horizontalRule', {'variant': 'text'}), node('table')),
-          (13 > body * .75 ? 13 : body * .75) * spacing,
-        );
-        expect(gap(node('paragraph'), null), 0);
-        expect(style.cellBlockGap!(node('paragraph'), node('paragraph')), 0);
-        expect(
-          style.cellBlockGap!(node('paragraph'), node('image')),
-          body * .75 * spacing,
-        );
-        expect(style.taskIndent, body * 1.2 + 10);
-        expect(style.taskMinHeight, body * (1.2 + .275));
-        expect(style.nestedTaskIndent, body * .2);
-        expect(style.codeBlock.fontSize, 14);
-        expect(style.codeBlockPadding.top, 4 + 28 + 6);
-        expect(style.ruleHeights!['solid'], body + 1);
-        expect(style.ruleHeights!['wavy'], body + 6);
-        expect(style.ruleHeights!['text'], 13 * 2.4);
-      }
-    }
+    const font = 1.0, spacing = 1.0;
+    final style = buildEditorStyle(brightness: Brightness.light);
+    final body = 17 * font, gap = style.blockGap!;
+    expect(style.exactLineHeight, true);
+    expect(gap(null, node('image')), body * .75 * spacing);
+    expect(gap(node('image'), node('paragraph')), body * .75 * spacing);
+    expect(gap(node('paragraph'), node('paragraph')), body * .75 * spacing);
+    expect(style.blockSpacing, body * .75 * spacing);
+    expect(
+      gap(node('heading', {'level': 2}), node('image')),
+      body * .75 * spacing,
+    );
+    expect(
+      gap(node('paragraph'), node('heading', {'level': 2})),
+      body * 1.25 * 1.4 * spacing,
+    );
+    expect(
+      gap(node('heading', {'level': 1}), node('heading', {'level': 2})),
+      body * 1.25 * .4 * spacing,
+    );
+    expect(gap(node('paragraph'), node('table')), body * .75 * spacing);
+    expect(
+      gap(node('horizontalRule', {'variant': 'text'}), node('table')),
+      (13 > body * .75 ? 13 : body * .75) * spacing,
+    );
+    expect(gap(node('paragraph'), null), 0);
+    expect(style.cellBlockGap!(node('paragraph'), node('paragraph')), 0);
+    expect(
+      style.cellBlockGap!(node('paragraph'), node('image')),
+      body * .75 * spacing,
+    );
+    expect(style.taskIndent, body * 1.2 + 10);
+    expect(style.taskMinHeight, body * (1.2 + .275));
+    expect(style.nestedTaskIndent, body * .2);
+    expect(style.codeBlock.fontSize, 14);
+    expect(style.codeBlockPadding.top, 4 + 28 + 6);
+    expect(style.ruleHeights!['solid'], body + 1);
+    expect(style.ruleHeights!['wavy'], body + 6);
+    expect(style.ruleHeights!['text'], 13 * 2.4);
   });
   test(
     'SF tracking does not compress fallback CJK runs at maximum font size',
@@ -97,7 +89,7 @@ void main() {
       addTearDown(() => debugDefaultTargetPlatformOverride = null);
       final style = buildEditorStyle(
         brightness: Brightness.light,
-        fontSize: 1.3,
+        fontScale: 1.3,
       );
       const text = 'B03 中文段落：字，Ａ。 한글𠀀 end';
       final runs = style.textRuns!(text, style.paragraph).toList();

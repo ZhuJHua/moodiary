@@ -1,13 +1,33 @@
 part of '../editor.dart';
 
-var _orderedGutters = Expando<LinkedHashMap<TiptapEditorStyle, double>>();
+var _orderedGutters = Expando<_LruMap<TiptapEditorStyle, double>>();
+var _lastOrderedGutters = Expando<(TiptapEditorStyle, double)>();
+
+double _containerIndent(
+  m.Node node,
+  TiptapEditorStyle style,
+  int taskDepth, {
+  bool quoteBorder = false,
+}) => switch (node.type) {
+  'blockquote' =>
+    quoteBorder
+        ? math.max(style.quoteIndent, style.quoteBorderWidth)
+        : style.quoteIndent,
+  'bulletList' || 'orderedList' => _listGutter(node, style),
+  'taskList' =>
+    (style.taskIndent ?? style.listIndent) +
+        (taskDepth > 0 ? style.nestedTaskIndent : 0),
+  _ => 0,
+};
 
 double _listGutter(m.Node list, TiptapEditorStyle style) {
   if (list.type != 'orderedList') return style.listIndent;
-  final cache = _orderedGutters[list] ??= LinkedHashMap();
-  final cached = cache.remove(style);
+  final last = _lastOrderedGutters[list];
+  if (last != null && identical(last.$1, style)) return last.$2;
+  final cache = _orderedGutters[list] ??= _LruMap(8);
+  final cached = cache[style];
   if (cached != null) {
-    cache[style] = cached;
+    _lastOrderedGutters[list] = (style, cached);
     return cached;
   }
   double measure(String text) {
@@ -41,7 +61,7 @@ double _listGutter(m.Node list, TiptapEditorStyle style) {
   }
   final gutter = math.max(style.listIndent, width + 8);
   cache[style] = gutter;
-  if (cache.length > 8) cache.remove(cache.keys.first);
+  _lastOrderedGutters[list] = (style, gutter);
   return gutter;
 }
 
@@ -77,6 +97,17 @@ class _Row {
   final int? listEnd;
   m.Node get node => value.node;
   int get position => value.position;
+  bool get isCode => node.type == 'codeBlock';
+  m.Node get scrollOwner => table ?? node;
+  int get scrollOwnerPosition =>
+      table == null ? position : position - tableRowPosition - 1;
+  bool get showsOverflowIndicator =>
+      table == null || tableRow == table!.childCount - 1;
+  Color overflowBackground(TiptapEditorStyle style) =>
+      table == null ||
+          tableRow == 0 && table!.child(0).child(0).type == 'tableHeader'
+      ? style.codeBackground
+      : style.overflowBackground;
   void fit(double width, TiptapEditorStyle style) {
     final minimum = math.min(width / 2, 96.0);
     final scale = _naturalIndent == 0
@@ -111,7 +142,7 @@ class _Row {
       position += 1 + parent.content.positionAt(childIndex);
       if (child.type == 'blockquote') {
         quotes.add((indent, position));
-        indent += style.quoteIndent;
+        indent += _containerIndent(child, style, taskDepth);
         quoteColor = true;
       } else if (const {
         'bulletList',
@@ -119,12 +150,10 @@ class _Row {
         'taskList',
       }.contains(child.type)) {
         if (child.type == 'taskList') {
-          indent +=
-              (style.taskIndent ?? style.listIndent) +
-              (taskDepth > 0 ? style.nestedTaskIndent : 0);
+          indent += _containerIndent(child, style, taskDepth);
           taskDepth++;
         } else {
-          currentGutter = _listGutter(child, style);
+          currentGutter = _containerIndent(child, style, taskDepth);
           indent += currentGutter;
         }
         listDepth++;
@@ -179,9 +208,9 @@ class _Row {
     return result;
   }
 
-  double get codeInset => node.type == 'codeBlock' ? codePadding.left : 0;
-  double get codeTop => node.type == 'codeBlock' ? codePadding.top : 0;
-  double get codeBottom => node.type == 'codeBlock' ? codePadding.bottom : 0;
+  double get codeInset => isCode ? codePadding.left : 0;
+  double get codeTop => isCode ? codePadding.top : 0;
+  double get codeBottom => isCode ? codePadding.bottom : 0;
   TextStyle textStyle(TiptapEditorStyle style) {
     var base = style.forBlock(node);
     if (quoteColor) base = base.copyWith(color: style.markerColor);
@@ -194,11 +223,14 @@ class _Row {
     return base;
   }
 
-  double spacing(m.Node root, int index, TiptapEditorStyle style) {
+  double spacing(
+    m.Node root,
+    int index,
+    TiptapEditorStyle style, {
+    _Row? next,
+  }) {
     if (node.type == 'tableRow' && tableRow + 1 < table!.childCount) return 0;
-    final next = index + 1 < root.rowCount
-        ? _Row.at(root, index + 1, style)
-        : null;
+    next ??= index + 1 < root.rowCount ? _Row.at(root, index + 1, style) : null;
     if (compact && next != null && next.position < listEnd!) return 0;
     final gap = root.type == 'doc' ? style.blockGap : style.cellBlockGap;
     if (gap != null) {
@@ -240,6 +272,17 @@ class _CellRow {
   final double width, spacing;
   double scrollOffset = 0;
   Rect? clip;
+  m.Node get scrollOwner => row.scrollOwner;
+  bool get isCode => row.isCode;
+  bool get showsOverflowIndicator => row.showsOverflowIndicator;
+  Color overflowBackground(TiptapEditorStyle style) =>
+      row.overflowBackground(style);
+  int get absolutePosition => position;
+  int? get taskPosition => row.taskPosition == null
+      ? null
+      : position - row.position + row.taskPosition!;
+  int get scrollOwnerPosition =>
+      row.table == null ? position : position - row.tableRowPosition - 1;
   double get height => layout.height + row.codeTop + row.codeBottom;
   Offset get textOrigin =>
       origin + Offset(row.codeInset - scrollOffset, row.codeTop);
@@ -256,4 +299,82 @@ class _CellRow {
         )
         ..scrollOffset = scrollOffset
         ..clip = (clip?.shift(offset) ?? bounds).intersect(bounds);
+}
+
+class _ContentBlock {
+  const _ContentBlock(
+    this.row,
+    this.layout,
+    this.absolutePosition,
+    this.origin,
+    this.textOrigin,
+    this.width, {
+    this.clip,
+    this.cellRow,
+  });
+
+  final _Row row;
+  final _BlockLayout layout;
+  final int absolutePosition;
+  final Offset origin, textOrigin;
+  final double width;
+  final Rect? clip;
+  final _CellRow? cellRow;
+  double get height => layout.height + row.codeTop + row.codeBottom;
+  Rect get rect => origin & Size(width, height);
+  int? get taskPosition {
+    final block = cellRow;
+    if (block == null) return row.taskPosition;
+    final position = block.taskPosition;
+    return position == null
+        ? null
+        : absolutePosition - block.absolutePosition + position;
+  }
+
+  int get scrollOwnerPosition => cellRow == null
+      ? row.scrollOwnerPosition
+      : absolutePosition -
+            cellRow!.absolutePosition +
+            cellRow!.scrollOwnerPosition;
+  bool containsPosition(int position) =>
+      position >= absolutePosition &&
+      position < absolutePosition + layout.node.nodeSize;
+}
+
+extension _ContentBlocks on _RenderEditorViewport {
+  int _rowIndexAt(Offset point) =>
+      _heights!.indexAt(point.dy + _paintOffset - _contentTop);
+
+  Iterable<_ContentBlock> _contentBlocks(
+    int index, {
+    bool includeTables = false,
+  }) sync* {
+    final row = _row(index), layout = _layoutBlock(index);
+    if (layout is _TableRowLayout) {
+      final origin = _origin(index);
+      for (final (block, cell) in layout.contentRows(
+        includeTables: includeTables,
+      )) {
+        yield _ContentBlock(
+          block.row,
+          block.layout,
+          row.position + block.absolutePosition,
+          origin + block.origin,
+          origin + block.textOrigin,
+          block.width,
+          clip: (block.clip ?? cell.rect).shift(origin),
+          cellRow: block,
+        );
+      }
+    } else {
+      yield _ContentBlock(
+        row,
+        layout,
+        row.position,
+        _rowOrigin(index),
+        _origin(index),
+        _contentWidth - row.indent,
+      );
+    }
+  }
 }

@@ -7,12 +7,12 @@ import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:mui/mui.dart';
 
+import 'support/nodes.dart';
+import 'support/settle.dart';
+
 final _schema = ft.Schema.standard();
 
-ft.Node _paragraph([String text = '']) => _schema.node(
-  'paragraph',
-  content: [if (text.isNotEmpty) _schema.node('text', text: text)],
-);
+final _paragraph = TestNodes(_schema).p;
 
 ft.Node _table({bool nested = false}) => _schema.node(
   'table',
@@ -121,7 +121,7 @@ class _Harness {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
   }
 
   Future<List<int>> pixel(
@@ -207,7 +207,7 @@ void main() {
             metrics.viewport.topCenter + const Offset(0, 10),
             const Offset(-2000, 0),
           );
-          await tester.pumpAndSettle();
+          await settleEditor(tester);
           final end = geometry.horizontalScrollMetrics(1)!;
           expect(end.offset, end.maxScrollExtent);
           final right = await harness.pixel(
@@ -224,7 +224,7 @@ void main() {
             end.viewport.topCenter + const Offset(0, 10),
             const Offset(2000, 0),
           );
-          await tester.pumpAndSettle();
+          await settleEditor(tester);
           expect(geometry.horizontalScrollMetrics(1)!.offset, 0);
           expect(harness.fades(), initialFades);
           expect(await harness.pixel(tester, left, dpr), border);
@@ -241,12 +241,12 @@ void main() {
       final harness = _Harness();
       await harness.mount(tester, controller);
       harness.focus.requestFocus();
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       controller.exec('insertTable');
       await tester.pump();
       final inserted = harness.editor.currentState!.debugCaret.rect;
       final insertedPixel = await harness.pixel(tester, inserted!.center, 1);
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(inserted, harness.editor.currentState!.debugCaret.rect);
       expect(insertedPixel, await harness.pixel(tester, inserted.center, 1));
       final headers = _nodes(controller.state.doc)
@@ -257,7 +257,7 @@ void main() {
       await tester.pump();
       final tapped = harness.editor.currentState!.debugCaret.rect;
       final tappedPixel = await harness.pixel(tester, tapped!.center, 1);
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(tapped, harness.editor.currentState!.debugCaret.rect);
       expect(tappedPixel, await harness.pixel(tester, tapped.center, 1));
       expect(tapped.left, greaterThan(second.left));
@@ -301,7 +301,7 @@ void main() {
         tableMetrics.viewport.topCenter + const Offset(0, 5),
         const Offset(-40, 0),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(geometry.horizontalScrollMetrics(nested)!.offset, greaterThan(0));
       expect(geometry.horizontalScrollMetrics(1)!.offset, 0);
       expect(geometry.horizontalScrollMetrics(code)!.offset, 0);
@@ -309,7 +309,7 @@ void main() {
         tableMetrics.viewport.topCenter + const Offset(0, 5),
         const Offset(2000, 0),
       );
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(geometry.horizontalScrollMetrics(nested)!.offset, 0);
       expect(harness.fades(), initial);
       final codePoint = Offset(
@@ -317,7 +317,7 @@ void main() {
         codeMetrics.viewport.top + 8,
       );
       await tester.dragFrom(codePoint, const Offset(-30, 0));
-      await tester.pumpAndSettle();
+      await settleEditor(tester);
       expect(geometry.horizontalScrollMetrics(code)!.offset, greaterThan(0));
       expect(geometry.horizontalScrollMetrics(nested)!.offset, 0);
       expect(geometry.horizontalScrollMetrics(1)!.offset, 0);
@@ -352,7 +352,7 @@ void main() {
             const Offset(-80, 0),
             kind: kind,
           );
-          await tester.pumpAndSettle();
+          await settleEditor(tester);
           expect(controller.state.selection, selection);
           expect(harness.focus.hasFocus, isFalse);
           expect(
@@ -381,16 +381,16 @@ void main() {
         .firstWhere((entry) => entry.$1.type == 'codeBlock');
     controller.setSelection(ft.TextSelection(code.$2 + code.$1.nodeSize - 1));
     controller.insertPlainText('edited');
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     harness.focus.unfocus();
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     final selection = controller.state.selection;
     final metrics = harness.geometry.horizontalScrollMetrics(1)!;
     await tester.dragFrom(
       metrics.viewport.topCenter + const Offset(0, 10),
       const Offset(-80, 0),
     );
-    await tester.pumpAndSettle();
+    await settleEditor(tester);
     expect(harness.focus.hasFocus, isFalse);
     expect(controller.state.selection, selection);
     expect(harness.geometry.horizontalScrollMetrics(1)!.offset, greaterThan(0));
@@ -410,7 +410,7 @@ void main() {
             .firstWhere((entry) => entry.$1.type == 'codeBlock');
         final point = harness.geometry.caretRect(code.$2 + 3).center;
         await tester.tapAt(point, kind: PointerDeviceKind.mouse);
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         expect(harness.focus.hasFocus, isTrue);
         expect(
           controller.state.selection.head,
@@ -443,7 +443,7 @@ void main() {
           isFalse,
           reason: 'after mouse up',
         );
-        await tester.pumpAndSettle();
+        await settleEditor(tester);
         expect(
           controller.state.selection.empty,
           isFalse,

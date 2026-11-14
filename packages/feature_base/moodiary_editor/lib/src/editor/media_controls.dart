@@ -38,7 +38,7 @@ extension on _MediaNodeState {
         progress = audio?.progress.value ?? components.AudioProgress.zero,
         scale = widget.host._configuration.fontScale,
         family = widget.host._configuration.fontResolver?.call()?.family,
-        line = widget.host._configuration.typography.lineHeight;
+        line = 1.65;
     final colors = context.theme.colors;
     final time =
         '${_formatDuration(progress.position)} / ${_formatDuration(progress.duration)}';
@@ -58,9 +58,7 @@ extension on _MediaNodeState {
       child: Row(
         children: [
           _mediaButton(
-            progress.playing
-                ? context.l10n.editor.content.pause
-                : context.l10n.editor.content.play,
+            progress.playing ? context.l10n.ui.pause : context.l10n.ui.play,
             CustomPaint(
               size: const Size(18, 18),
               painter: _MediaGlyph(colors.surface, progress.playing),
@@ -98,15 +96,10 @@ extension on _MediaNodeState {
                   height: math.max(20, 12 * scale * line),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final painter = TextPainter(
-                        text: TextSpan(text: time, style: timeStyle),
-                        textDirection: TextDirection.ltr,
-                      )..layout();
                       final width = math.min(
-                        painter.width,
+                        _textWidth(time, timeStyle),
                         math.max(0.0, constraints.maxWidth - 8),
                       );
-                      painter.dispose();
                       return Row(
                         children: [
                           Expanded(
@@ -171,9 +164,7 @@ extension on _MediaNodeState {
         child: Row(
           children: [
             _mediaButton(
-              playing
-                  ? context.l10n.editor.content.pause
-                  : context.l10n.editor.content.play,
+              playing ? context.l10n.ui.pause : context.l10n.ui.play,
               CustomPaint(
                 size: const Size(20, 20),
                 painter: _MediaGlyph(
@@ -297,7 +288,7 @@ extension on _MediaNodeState {
         size: 12 * widget.host._configuration.fontScale,
         weight: weight,
         color: color,
-        height: widget.host._configuration.typography.lineHeight,
+        height: 1.65,
       ).copyWith(
         fontFeatures: const [FontFeature.tabularFigures()],
         shadows: [

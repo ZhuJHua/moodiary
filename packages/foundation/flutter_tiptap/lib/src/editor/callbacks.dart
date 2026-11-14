@@ -34,18 +34,6 @@ class TiptapNodeView {
   final ValueChanged<Map<String, Object?>> updateAttrs;
 }
 
-/// The selected node and its bounds in editor viewport coordinates.
-class TiptapSelectedNode {
-  const TiptapSelectedNode(this.node, this.position, this.rect);
-  final m.Node node;
-  final int position;
-
-  /// Coordinates in the editor viewport.
-  final Rect rect;
-  String get type => node.type;
-  Map<String, Object?> get attrs => node.attrs;
-}
-
 /// A reference target with a stored identifier and display label.
 class TiptapReferenceItem {
   const TiptapReferenceItem({required this.id, required this.label});
@@ -56,12 +44,9 @@ class TiptapReferenceItem {
 class TiptapCancellation {
   bool _cancelled = false;
   bool get cancelled => _cancelled;
-  final Completer<void> _signal = Completer<void>();
-  Future<void> get whenCancelled => _signal.future;
   void _cancel() {
     if (_cancelled) return;
     _cancelled = true;
-    _signal.complete();
   }
 }
 

@@ -51,7 +51,7 @@ class _MetaOptions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final config = host._configuration,
-        meta = _jsonMap(config.metaJson),
+        meta = host._meta,
         colors = context.theme.colors,
         labels = context.l10n.editor.meta;
     void choose(VoidCallback action) => Navigator.of(context).pop(action);
