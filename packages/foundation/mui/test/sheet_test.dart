@@ -120,6 +120,34 @@ void main() {
       await tester.pumpAndSettle();
       expect(closed, isTrue);
     });
+
+    testWidgets('enableDrag: false：下拉不再能关闭，拖柄一并收掉', (tester) async {
+      var closed = false;
+      await tester.pumpWidget(
+        host((context) async {
+          await MSheet.show<void>(
+            context,
+            enableDrag: false,
+            builder: (_) => const MSheetScaffold<void>(
+              title: '不可下拉',
+              child: SizedBox(height: 200),
+            ),
+          );
+          closed = true;
+        }),
+      );
+
+      await open(tester);
+      // 从卡片顶部往下拖：没有拖柄，卡片本身也不可拖
+      final rect = tester.getRect(find.byType(MSheetScaffold<void>));
+      await tester.dragFrom(
+        rect.topCenter + const Offset(0, 8),
+        const Offset(0, 300),
+      );
+      await tester.pumpAndSettle();
+      expect(closed, isFalse);
+      expect(find.text('不可下拉'), findsOneWidget);
+    });
   });
 
   group('容器形态', () {
