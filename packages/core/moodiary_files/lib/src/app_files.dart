@@ -76,15 +76,24 @@ class AppFiles {
       name.startsWith('backup-import-') ||
       (name.startsWith('moodiary-backup-') && name.endsWith('.zip'));
 
+  /// Support-directory entries that hold only disposable files, cleaned as cache.
+  static const supportCacheEntries = {'editor'};
+
   /// Mirror FastImageDerivatives' grace period for incomplete downloads.
   static const partialDownloadGrace = Duration(hours: 1);
 
   static Future<int> clearCache({
     String? cachePath,
+    String? supportPath,
     bool protectWorkspaces = true,
     Set<String>? filePaths,
   }) {
     final path = cachePath ?? _cachePath;
+    final support = supportPath ?? (cachePath == null ? _filePath : null);
+    final supportRoots = [
+      if (support != null)
+        for (final name in supportCacheEntries) join(support, name),
+    ];
     return Isolate.run(() {
       var freed = 0;
       void remove(FileSystemEntity entity) {
@@ -117,12 +126,22 @@ class AppFiles {
       if (filePaths != null) {
         // A report cleanup removes only its snapshot, retaining newly made files.
         for (final filePath in filePaths) {
-          if (!isWithin(path, filePath)) continue;
-          final top = split(relative(filePath, from: path)).first;
-          if (protectWorkspaces && isProtectedCacheEntry(top)) continue;
+          if (isWithin(path, filePath)) {
+            final top = split(relative(filePath, from: path)).first;
+            if (protectWorkspaces && isProtectedCacheEntry(top)) continue;
+          } else if (!supportRoots.any((root) => isWithin(root, filePath))) {
+            continue;
+          }
           if (FileSystemEntity.typeSync(filePath, followLinks: false) ==
               FileSystemEntityType.file) {
             remove(File(filePath));
+          }
+        }
+        for (final root in supportRoots) {
+          try {
+            Directory(root).deleteSync();
+          } on FileSystemException {
+            // Missing, or still holds files outside the snapshot.
           }
         }
         return freed;
