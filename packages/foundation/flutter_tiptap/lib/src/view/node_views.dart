@@ -33,6 +33,7 @@ class _ViewportElement extends RenderObjectElement {
     super.update(newWidget);
     if (old.style != newWidget.style || old.readOnly != newWidget.readOnly) {
       _viewWidgets.clear();
+      renderObject.markNeedsLayout();
     }
     if (!mapEquals(old.nodeViews, newWidget.nodeViews) ||
         old.nodeHeightEstimator != newWidget.nodeHeightEstimator) {
