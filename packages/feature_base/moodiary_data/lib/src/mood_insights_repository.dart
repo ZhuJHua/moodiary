@@ -13,16 +13,12 @@ class MoodInsightsRepository {
 
   /// [start, end) in local calendar time, stored as UTC microseconds.
   Future<List<MoodInsightEntry>> entries(DateTime start, DateTime end) =>
-      _query(
-        'WHERE show = 1 AND time >= ? AND time < ?',
-        [Variable(dbTime(start)), Variable(dbTime(end))],
-      );
+      _query('WHERE show = 1 AND time >= ? AND time < ?', [
+        Variable(dbTime(start)),
+        Variable(dbTime(end)),
+      ]);
 
-  /// Every visible diary as the same light projection, without a time bound.
-  ///
-  /// Aggregates whose totals already cover all visible rows (the statistics
-  /// payload) use this so their mood counts read the same population; a bounded
-  /// query would silently drop future-dated diaries from the distribution.
+  /// Every visible diary, future-dated ones included.
   Future<List<MoodInsightEntry>> allVisibleEntries() =>
       _query('WHERE show = 1', const []);
 

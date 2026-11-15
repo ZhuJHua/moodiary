@@ -1,10 +1,5 @@
-/// Diary, category and statistics use cases shared by the in-app assistant
-/// tools and the local MCP server.
-///
-/// The package owns the business rules (content conversion, media re-derivation,
-/// recycle versus permanent delete, category validation, search fusion) and
-/// returns domain objects. Tool names, JSON schemas, model-facing text and the
-/// protocol adapters stay in each client.
+/// Shared diary business rules and domain results. Protocol adapters, schemas
+/// and model-facing text belong to callers.
 library;
 
 export 'src/category_ops.dart';

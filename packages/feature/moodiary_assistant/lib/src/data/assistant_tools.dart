@@ -616,96 +616,58 @@ abstract final class AssistantToolRegistry {
 
   static DiaryWrites _writes() => DiaryWrites(
     diaries: getIt<DiaryRepository>(),
-    categories: getIt.isRegistered<CategoryRepository>()
-        ? getIt<CategoryRepository>()
-        : null,
+    categories: getIt<CategoryRepository>(),
   );
 
-  static CategoryOps _categoryOps() => CategoryOps(
-    categories: getIt<CategoryRepository>(),
-    diaries: getIt<DiaryRepository>(),
-  );
+  static CategoryOps _categoryOps() =>
+      CategoryOps(categories: getIt<CategoryRepository>());
 
   static DiaryStatsOps _stats() => DiaryStatsOps(
     diaries: getIt<DiaryRepository>(),
     categories: getIt<CategoryRepository>(),
-    insights: getIt.isRegistered<MoodInsightsRepository>()
-        ? getIt<MoodInsightsRepository>()
-        : null,
+    insights: getIt<MoodInsightsRepository>(),
   );
-
-  static Future<KeywordSearch> _keywordSearch(Map<String, dynamic> input) {
-    return _queries().keyword(
-      query: ((input['query'] as String?) ?? '').trim(),
-      categoryId: _trimToNull(input['categoryId']),
-      start: _parseDate(input['startDate']),
-      endExclusive: _parseDate(input['endDate'])?.add(const Duration(days: 1)),
-      sort: (input['sort'] as String?)?.trim(),
-      limit: _parseLimit(input['limit']),
-    );
-  }
-
-  static Future<List<SemanticHit>> _semanticHits(
-    Map<String, dynamic> input, {
-    required int limit,
-  }) {
-    return _queries().semanticHits(
-      query: ((input['query'] as String?) ?? '').trim(),
-      limit: limit,
-      categoryId: _trimToNull(input['categoryId']),
-      start: _parseDate(input['startDate']),
-      endExclusive: _parseDate(input['endDate'])?.add(const Duration(days: 1)),
-    );
-  }
 
   static Future<String> _searchDiaries(Map<String, dynamic> input) async {
     final mode = (input['mode'] as String?)?.trim() ?? 'auto';
     final limit = _parseLimit(input['limit']);
     final hasQuery = ((input['query'] as String?) ?? '').trim().isNotEmpty;
-    final semanticOn = hasQuery && semanticAvailable;
-    final wantKeyword = mode != 'meaning';
-    final wantMeaning = mode != 'keyword' && semanticOn;
     final queries = _queries();
+    final query = ((input['query'] as String?) ?? '').trim();
+    final categoryId = _trimToNull(input['categoryId']);
+    final start = _parseDate(input['startDate']);
+    final endExclusive = _parseDate(input['endDate'])
+        ?.add(const Duration(days: 1));
 
-    final keyword = wantKeyword
-        ? await _keywordSearch(input)
-        : (
-            results: <Diary>[],
-            total: 0,
-            keywords: <String>[],
-            categoryId: _trimToNull(input['categoryId']),
-            start: _parseDate(input['startDate']),
-            endExclusive: _parseDate(input['endDate'])
-                ?.add(const Duration(days: 1)),
-          );
-
-    final hits = wantMeaning
-        ? await _semanticHits(input, limit: limit)
-        : const <SemanticHit>[];
-
-    final rows = queries.fuse(keyword.results, hits, limit: limit);
-    if (rows.isEmpty) {
+    final result = await queries.search(
+      mode: mode,
+      query: query,
+      categoryId: categoryId,
+      start: start,
+      endExclusive: endExclusive,
+      sort: (input['sort'] as String?)?.trim(),
+      limit: limit,
+    );
+    if (result.total == 0) {
       final base = await _emptyQueryMessage(
-        keyword.keywords,
-        keyword.categoryId,
-        keyword.start,
-        keyword.endExclusive,
+        result.keywords,
+        categoryId,
+        start,
+        endExclusive,
       );
       final how = !hasQuery
           ? ''
-          : wantMeaning
+          : result.meaningRan
           ? ' Both the keyword and the meaning path ran.'
-          : semanticOn
+          : result.semanticAvailable
           ? ' Only the keyword path ran.'
           : ' Only the keyword path ran; the semantic index is off.';
       return '$base$how';
     }
-    final resolved = await queries.resolve(rows);
     return _formatSearchRows(
-      resolved,
-      total:
-          keyword.total + hits.length - queries.overlap(keyword.results, hits),
-      atLeast: wantMeaning && hits.length >= limit,
+      result.rows,
+      total: result.total,
+      atLeast: result.totalIsLowerBound,
     );
   }
 
@@ -946,7 +908,6 @@ abstract final class AssistantToolRegistry {
       final updated = await _writes().update(
         id: id,
         patch: patch,
-        requireVisible: true,
         index: (title == null && content == null)
             ? IndexMode.skip
             : IndexMode.inline,
@@ -973,10 +934,7 @@ abstract final class AssistantToolRegistry {
     if (id.isEmpty) return 'Failed: no diary id given.';
 
     try {
-      final result = await _writes().delete(
-        id: id,
-        reportAlreadyRecycled: true,
-      );
+      final result = await _writes().delete(id: id);
       final title = result.diary.title.trim().isEmpty
           ? 'Untitled'
           : result.diary.title.trim();
@@ -1023,7 +981,7 @@ abstract final class AssistantToolRegistry {
     }
 
     try {
-      await _categoryOps().update(id: id, name: name, nameSet: true);
+      await _categoryOps().update(id: id, name: name);
       return 'Renamed the category to "$name" (id=$id).';
     } on DiaryOpsException {
       return 'Failed: no category with id=$id.';

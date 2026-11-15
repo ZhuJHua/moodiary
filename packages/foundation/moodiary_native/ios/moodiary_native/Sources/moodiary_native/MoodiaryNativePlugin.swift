@@ -7,6 +7,5 @@ public class MoodiaryNativePlugin: NSObject, FlutterPlugin {
     ImageTransferApiSetup.setUp(binaryMessenger: messenger, api: ImageTransfer())
     KeyboardHeightStreamHandler.register(with: messenger, streamHandler: KeyboardHeight())
     SystemPasteApiSetup.setUp(binaryMessenger: messenger, api: SystemPaste(messenger: messenger))
-    BackgroundKeepAliveApiSetup.setUp(binaryMessenger: messenger, api: BackgroundKeepAlive())
   }
 }

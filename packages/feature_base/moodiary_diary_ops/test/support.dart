@@ -17,18 +17,6 @@ MoodiaryDatabase openTestDatabase() => MoodiaryDatabase.forTesting(
   ),
 );
 
-/// A Tiptap document holding one paragraph with a single text run.
-String paragraphDoc(String text) => jsonEncode(
-  TiptapContent.newDoc([
-    {
-      'type': 'paragraph',
-      'content': [
-        {'type': 'text', 'text': text},
-      ],
-    },
-  ]),
-);
-
 /// A stored diary row. [linkTo] appends diary mentions to the paragraph, so the
 /// repository derives the same link rows the editor would.
 Diary makeDiary(

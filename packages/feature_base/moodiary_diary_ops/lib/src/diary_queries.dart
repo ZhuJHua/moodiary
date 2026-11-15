@@ -1,31 +1,44 @@
 /// Read side of the diary catalog: keyword search, semantic search, fusion,
-/// paging and the batch reads the tool layer needs.
+/// and the batch reads the tool layer needs.
 library;
 
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-import 'diary_display.dart';
-
-/// Result of the keyword path of a search: the rows, the total match count and
-/// the filters that produced them (the tool layer echoes them in its answer).
-typedef KeywordSearch = ({
+/// Keyword matches and their total count.
+typedef _KeywordSearch = ({
   List<Diary> results,
   int total,
   List<String> keywords,
-  String? categoryId,
-  DateTime? start,
-  DateTime? endExclusive,
+});
+
+typedef DiarySearch = ({
+  List<SearchRow> rows,
+  int total,
+  bool totalIsLowerBound,
+  bool meaningRan,
+  bool semanticAvailable,
+  List<String> keywords,
 });
 
 /// One fused row: a diary (when it could be loaded), how it was found and the
 /// semantic similarity when the meaning path contributed it.
 typedef SearchRow = ({Diary diary, bool keyword, bool meaning, double? score});
 
+typedef _FusedSearchRow = ({
+  String id,
+  Diary? diary,
+  bool keyword,
+  bool meaning,
+  double? score,
+});
+
+final RegExp _whitespace = RegExp(r'\s+');
+
 /// Upper bound on the ids one batch read accepts.
 const int maxBatchRead = 10;
 
-/// Every read the assistant tools and the MCP server perform.
+/// Diary search and batch reads.
 class DiaryQueries {
   DiaryQueries({required this.diaries, this.semantic});
 
@@ -34,12 +47,57 @@ class DiaryQueries {
   /// The local semantic index, when the device has one enabled.
   final EmbedIndexService? semantic;
 
-  /// Keyword hit path, or a filtered browse when [query] is empty.
-  ///
-  /// When the keyword path returns a full page the repository is asked for the
-  /// complete count as well, because the fused answer reports how many matches
-  /// exist beyond the rows shown.
-  Future<KeywordSearch> keyword({
+  /// Searches both paths and returns their fused ranking.
+  Future<DiarySearch> search({
+    String mode = 'auto',
+    required String query,
+    String? categoryId,
+    DateTime? start,
+    DateTime? endExclusive,
+    String? sort,
+    required int limit,
+  }) async {
+    final semanticAvailable = semantic?.enabled ?? false;
+    final keywordRan = mode != 'meaning';
+    final meaningRan =
+        mode != 'keyword' && query.isNotEmpty && semanticAvailable;
+    final keywordResult = keywordRan
+        ? await _keyword(
+            query: query,
+            categoryId: categoryId,
+            start: start,
+            endExclusive: endExclusive,
+            sort: sort,
+            limit: limit,
+          )
+        : (results: <Diary>[], total: 0, keywords: <String>[]);
+    final hits = meaningRan
+        ? await _semanticHits(
+            query: query,
+            limit: limit,
+            categoryId: categoryId,
+            start: start,
+            endExclusive: endExclusive,
+          )
+        : const <SemanticHit>[];
+    final fused = _fuse(keywordResult.results, hits, limit: limit);
+    final rows = await _resolve(fused);
+    return (
+      rows: rows,
+      total:
+          keywordResult.total +
+          hits.length -
+          _overlap(keywordResult.results, hits),
+      totalIsLowerBound: meaningRan && hits.length >= limit,
+      meaningRan: meaningRan,
+      semanticAvailable: semanticAvailable,
+      keywords: keywordResult.keywords,
+    );
+  }
+
+  /// Keyword search, or filtered browsing for an empty query. Full pages also
+  /// query the complete match count.
+  Future<_KeywordSearch> _keyword({
     required String query,
     String? categoryId,
     DateTime? start,
@@ -48,7 +106,7 @@ class DiaryQueries {
     required int limit,
   }) async {
     final keywordsForDisplay = query
-        .split(RegExp(r'\s+'))
+        .split(_whitespace)
         .where((e) => e.isNotEmpty)
         .toList();
 
@@ -60,7 +118,7 @@ class DiaryQueries {
         categoryId: categoryId,
         start: start,
         end: endExclusive,
-        sort: _toSearchSort(sort),
+        sort: _parseSearchSort(sort),
         limit: limit,
       );
       results = [for (final hit in hits) hit.diary];
@@ -82,11 +140,12 @@ class DiaryQueries {
               .where((d) => categoryId == null || d.categoryId == categoryId)
               .where((d) => _inRange(d.time, start, endExclusive))
               .toList()
-            ..sort(_diaryComparator(sort));
+            ..sort(diarySortComparator(parseDiarySort(sort)));
+      total = results.length;
     } else {
       results = await diaries.getDiaryByCategory(
         categoryId: categoryId,
-        sort: _toDiarySort(sort),
+        sort: parseDiarySort(sort),
         limit: limit,
       );
     }
@@ -95,14 +154,11 @@ class DiaryQueries {
       results: results,
       total: total ?? results.length,
       keywords: keywordsForDisplay,
-      categoryId: categoryId,
-      start: start,
-      endExclusive: endExclusive,
     );
   }
 
   /// Meaning based hits; empty when no query or no enabled index.
-  Future<List<SemanticHit>> semanticHits({
+  Future<List<SemanticHit>> _semanticHits({
     required String query,
     required int limit,
     String? categoryId,
@@ -122,8 +178,11 @@ class DiaryQueries {
   }
 
   /// Reciprocal-rank fusion of the keyword and meaning paths.
-  List<({String id, Diary? diary, bool keyword, bool meaning, double? score})>
-  fuse(List<Diary> keyword, List<SemanticHit> hits, {required int limit}) {
+  List<_FusedSearchRow> _fuse(
+    List<Diary> keyword,
+    List<SemanticHit> hits, {
+    required int limit,
+  }) {
     const k = 60;
     final score = <String, double>{};
     final byId = <String, Diary>{};
@@ -157,10 +216,7 @@ class DiaryQueries {
   }
 
   /// Loads the diaries the fused rows only know by id.
-  Future<List<SearchRow>> resolve(
-    List<({String id, Diary? diary, bool keyword, bool meaning, double? score})>
-    rows,
-  ) async {
+  Future<List<SearchRow>> _resolve(List<_FusedSearchRow> rows) async {
     final resolved = <SearchRow>[];
     for (final row in rows) {
       if (row.diary != null) {
@@ -186,7 +242,7 @@ class DiaryQueries {
 
   /// Number of rows the keyword and meaning paths share, so the fused total
   /// does not count a diary twice.
-  int overlap(List<Diary> keyword, List<SemanticHit> hits) {
+  int _overlap(List<Diary> keyword, List<SemanticHit> hits) {
     final ids = {for (final d in keyword) d.id};
     var n = 0;
     for (final h in hits) {
@@ -195,43 +251,13 @@ class DiaryQueries {
     return n;
   }
 
-  /// One page of visible diaries. A time window is read in full and paged here
-  /// because the repository only pages by category.
-  Future<List<Diary>> page({
-    String? categoryId,
-    DateTime? start,
-    DateTime? end,
-    DiarySort sort = DiarySort.timeDesc,
-    int offset = 0,
-    int limit = 20,
-  }) async {
-    if (start == null && end == null) {
-      return diaries.getDiaryByCategory(
-        categoryId: categoryId,
-        offset: offset,
-        limit: limit,
-        sort: sort,
-      );
-    }
-    final all = await diaries.getDiariesByDateRange(
-      start ?? DateTime.utc(1970),
-      end ?? DateTime.utc(9000),
-    );
-    final filtered = [
-      for (final diary in all)
-        if (categoryId == null || diary.categoryId == categoryId) diary,
-    ]..sort(diarySortComparator(sort));
-    return filtered.skip(offset).take(limit).toList();
-  }
-
   /// Batch read by business id; hidden diaries count as missing.
   Future<({List<Diary> found, List<String> missing})> read(
-    List<String> ids, {
-    int max = maxBatchRead,
-  }) async {
+    List<String> ids,
+  ) async {
     final found = <Diary>[];
     final missing = <String>[];
-    for (final id in ids.take(max)) {
+    for (final id in ids.take(maxBatchRead)) {
       final diary = await diaries.getDiaryByBusinessId(id);
       if (diary == null || !diary.show) {
         missing.add(id);
@@ -241,91 +267,18 @@ class DiaryQueries {
     }
     return (found: found, missing: missing);
   }
-
-  /// Tag usage over visible diaries, most used first. The database has no tag
-  /// index, so this aggregates over every visible diary.
-  Future<
-    ({
-      List<({String tag, int diaries})> tags,
-      int totalDistinct,
-      int scannedDiaries,
-    })
-  >
-  tags({required int limit}) async {
-    final all = await diaries.getAllDiaries();
-    final counts = <String, int>{};
-    var visible = 0;
-    for (final diary in all) {
-      if (!diary.show) continue;
-      visible++;
-      for (final tag in diary.tags) {
-        counts.update(tag, (count) => count + 1, ifAbsent: () => 1);
-      }
-    }
-    final sorted = counts.entries.toList()
-      ..sort((a, b) {
-        final byCount = b.value.compareTo(a.value);
-        return byCount != 0 ? byCount : a.key.compareTo(b.key);
-      });
-    return (
-      tags: [
-        for (final entry in sorted.take(limit))
-          (tag: entry.key, diaries: entry.value),
-      ],
-      totalDistinct: counts.length,
-      scannedDiaries: visible,
-    );
-  }
-
-  /// Forward and backlink summaries of [diary].
-  ///
-  /// `dangling` lists the diary ids the body mentions but the table does not
-  /// hold, in sorted order: a `moodiary://diary/<id>` link to a permanently
-  /// deleted or never synced diary used to fail silently. `forward` and
-  /// `backlinks` keep the repository's native query semantics, which exclude a
-  /// self link from `forward` (a native bug tracked separately).
-  Future<Map<String, dynamic>> linkSummary(Diary diary) async {
-    final forward = await diaries.getForwardLinks(diary.id);
-    final backlinks = await diaries.getBacklinks(diary.id);
-    Map<String, dynamic> entry(Diary linked) => {
-      'id': linked.id,
-      'title': linked.title,
-      'time': isoUtc(linked.time),
-      'timeLocal': isoLocal(linked.time),
-    };
-    final referenced = DiaryContent.of(diary).links.toList()..sort();
-    final dangling = <String>[];
-    for (final id in referenced) {
-      if (dangling.length >= _danglingLimit) break;
-      if (await diaries.getDiaryByBusinessId(id) == null) dangling.add(id);
-    }
-    return {
-      'forward': [for (final linked in forward) entry(linked)],
-      'backlinks': [for (final linked in backlinks) entry(linked)],
-      'dangling': dangling,
-    };
-  }
 }
 
-/// Upper bound on `dangling`, so one document cannot flood a result with ids.
-const int _danglingLimit = 100;
-
-SearchSort _toSearchSort(String? name) => switch (name) {
+SearchSort _parseSearchSort(String? name) => switch (name) {
   'newest' => SearchSort.timeDesc,
   'oldest' => SearchSort.timeAsc,
   _ => SearchSort.relevance,
 };
 
-DiarySort _toDiarySort(String? name) => switch (name) {
+DiarySort parseDiarySort(String? name) => switch (name) {
   'oldest' => DiarySort.timeAsc,
   'modified' => DiarySort.lastModifiedDesc,
   _ => DiarySort.timeDesc,
-};
-
-int Function(Diary, Diary) _diaryComparator(String? name) => switch (name) {
-  'oldest' => (a, b) => a.time.compareTo(b.time),
-  'modified' => (a, b) => b.lastModified.compareTo(a.lastModified),
-  _ => (a, b) => b.time.compareTo(a.time),
 };
 
 bool _inRange(DateTime time, DateTime? start, DateTime? endExclusive) {

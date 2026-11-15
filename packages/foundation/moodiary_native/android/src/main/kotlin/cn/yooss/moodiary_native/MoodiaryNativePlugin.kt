@@ -8,9 +8,13 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
     private var keyboard: KeyboardHeight? = null
     private var keepAlive: BackgroundKeepAlive? = null
+    private var keepAliveEvents: BackgroundKeepAliveEvents? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = binding.binaryMessenger
+        keepAliveEvents = BackgroundKeepAliveEvents(messenger).also {
+            McpKeepAliveService.events = it
+        }
         HtmlClipboardApi.setUp(messenger, HtmlClipboard(binding.applicationContext))
         ImageTransferApi.setUp(messenger, ImageTransfer(binding.applicationContext))
         keyboard = KeyboardHeight().also { KeyboardHeightStreamHandler.register(messenger, it) }
@@ -21,6 +25,10 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = binding.binaryMessenger
+        if (McpKeepAliveService.events === keepAliveEvents) {
+            McpKeepAliveService.events = null
+        }
+        keepAliveEvents = null
         HtmlClipboardApi.setUp(messenger, null)
         ImageTransferApi.setUp(messenger, null)
         BackgroundKeepAliveApi.setUp(messenger, null)

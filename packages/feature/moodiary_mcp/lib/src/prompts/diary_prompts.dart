@@ -2,43 +2,45 @@
 /// plus argument completions built from what the database already knows.
 library;
 
+import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
-import '../protocol/json_rpc.dart';
-import '../protocol/mcp_types.dart';
-import '../registry/mcp_registry.dart';
+import '../tools/diary_payloads.dart';
+import '../tools/mcp_results.dart';
 
 /// Completions are capped so a picker stays usable.
 const int _completionLimit = 20;
+final RegExp _whitespace = RegExp(r'\s+');
+final RegExp _datePattern = RegExp(r'^\d{4}-\d{2}-\d{2}$');
 
-const McpPrompt _dailyReview = McpPrompt(
+const Prompt _dailyReview = Prompt(
   name: 'daily_review',
   title: 'Review one day',
   description:
       'Asks the model to read the diaries of one day and summarise the mood '
       'and the highlights.',
   arguments: [
-    McpPromptArgument(
+    PromptArgument(
       name: 'date',
       description: 'Day to review, yyyy-MM-dd. Defaults to today.',
     ),
   ],
 );
 
-const McpPrompt _summarizePeriod = McpPrompt(
+const Prompt _summarizePeriod = Prompt(
   name: 'summarize_period',
   title: 'Summarise a period',
   description:
       'Asks the model to read the diaries between two days and summarise the '
       'themes and the mood trend.',
   arguments: [
-    McpPromptArgument(
+    PromptArgument(
       name: 'start',
       description: 'First day of the period, yyyy-MM-dd.',
       required: true,
     ),
-    McpPromptArgument(
+    PromptArgument(
       name: 'end',
       description: 'Last day of the period, yyyy-MM-dd.',
       required: true,
@@ -46,14 +48,14 @@ const McpPrompt _summarizePeriod = McpPrompt(
   ],
 );
 
-const McpPrompt _findConnections = McpPrompt(
+const Prompt _findConnections = Prompt(
   name: 'find_connections',
   title: 'Find related diaries',
   description:
       'Asks the model to find diaries that are related to one diary through '
       'links, people, places or topics.',
   arguments: [
-    McpPromptArgument(
+    PromptArgument(
       name: 'diaryId',
       description: 'Id of the diary to look around, as returned by the tools.',
       required: true,
@@ -62,61 +64,60 @@ const McpPrompt _findConnections = McpPrompt(
 );
 
 void registerDiaryPrompts(
-  McpRegistry registry, {
+  McpServer server, {
   required DiaryRepository diaries,
   required MoodInsightsRepository insights,
 }) {
   final completions = _Completions(insights: insights);
 
-  registry.addPrompt(_dailyReview, (call, arguments) async {
+  registerPrompt(server, _dailyReview, (arguments, call) async {
     final day = _dayArgument(
       'daily_review',
       'date',
       arguments['date'],
       fallback: _today(),
     );
-    return McpPromptResult(
-      description: 'Review of ${_formatDay(day)}',
-      messages: [McpPromptMessage.user(_dailyReviewInstructions(day))],
+    return GetPromptResult(
+      description: 'Review of ${TimeFormat.isoDate(day)}',
+      messages: [userPromptMessage(_dailyReviewInstructions(day))],
     );
   }, complete: completions.handle);
 
-  registry.addPrompt(_summarizePeriod, (call, arguments) async {
+  registerPrompt(server, _summarizePeriod, (arguments, call) async {
     final start = _dayArgument('summarize_period', 'start', arguments['start']);
     final end = _dayArgument('summarize_period', 'end', arguments['end']);
     if (start.isAfter(end)) {
-      throw const JsonRpcException(
-        JsonRpcCode.invalidParams,
+      throw McpError(
+        ErrorCode.invalidParams.value,
         'summarize_period: start must not be after end',
       );
     }
-    return McpPromptResult(
-      description: 'Summary of ${_formatDay(start)} to ${_formatDay(end)}',
-      messages: [
-        McpPromptMessage.user(_summarizePeriodInstructions(start, end)),
-      ],
+    return GetPromptResult(
+      description:
+          'Summary of ${TimeFormat.isoDate(start)} to ${TimeFormat.isoDate(end)}',
+      messages: [userPromptMessage(_summarizePeriodInstructions(start, end))],
     );
   }, complete: completions.handle);
 
-  registry.addPrompt(_findConnections, (call, arguments) async {
+  registerPrompt(server, _findConnections, (arguments, call) async {
     final id = (arguments['diaryId'] ?? '').trim();
     if (id.isEmpty) {
-      throw const JsonRpcException(
-        JsonRpcCode.invalidParams,
+      throw McpError(
+        ErrorCode.invalidParams.value,
         'find_connections: diaryId is required',
       );
     }
     final diary = await diaries.getDiaryByBusinessId(id);
     if (diary == null) {
-      throw JsonRpcException(
-        JsonRpcCode.invalidParams,
+      throw McpError(
+        ErrorCode.invalidParams.value,
         'find_connections: no diary with id="$id"',
       );
     }
-    return McpPromptResult(
+    return GetPromptResult(
       description: 'Connections of diary $id',
       messages: [
-        McpPromptMessage.user(
+        userPromptMessage(
           _findConnectionsInstructions(
             id: diary.id,
             title: diary.title,
@@ -129,12 +130,12 @@ void registerDiaryPrompts(
 }
 
 String _dailyReviewInstructions(DateTime day) {
-  final date = _formatDay(day);
+  final date = TimeFormat.isoDate(day);
   return 'Review my diary entries for $date.\n'
       '\n'
-      '1. Call list_diaries with start="$date" and end="$date" to get that '
+      '1. Call list_diaries with startDate="$date" and endDate="$date" to get that '
       "day's entries and their ids.\n"
-      '2. Call get_diary for every id with format="markdown"; add '
+      '2. Call get_diary with contentFormat="markdown" for every id; add '
       'get_diary_links when an entry mentions another diary.\n'
       '3. Summarise the day: the overall mood, two or three highlights, what I '
       'wrote about people, plans or worries, and one detail I might have '
@@ -146,12 +147,12 @@ String _dailyReviewInstructions(DateTime day) {
 }
 
 String _summarizePeriodInstructions(DateTime start, DateTime end) {
-  final from = _formatDay(start);
-  final to = _formatDay(end);
+  final from = TimeFormat.isoDate(start);
+  final to = TimeFormat.isoDate(end);
   return 'Summarise my diaries from $from to $to.\n'
       '\n'
-      '1. Call list_diaries with start="$from", end="$to" and limit=100; page '
-      'with offset while hasMore is true, and call get_diary format="markdown" '
+      '1. Call list_diaries with startDate="$from", endDate="$to" and limit=100; page '
+      'with offset while hasMore is true, and call get_diary with contentFormat="markdown" '
       'for the entries you quote.\n'
       '2. Call search_diaries for anything that looks recurring, and '
       'get_stats if the mood trend matters.\n'
@@ -169,17 +170,17 @@ String _findConnectionsInstructions({
 }) {
   final shown = title.trim().isEmpty
       ? 'the untitled diary $id'
-      : '"${_oneLine(title, 80)}" (id=$id)';
+      : '"${_oneLine(title)}" (id=$id)';
   final written =
-      '${_formatDay(time.toLocal())} ${_formatClock(time.toLocal())}';
+      '${TimeFormat.isoDate(time.toLocal())} ${_formatClock(time.toLocal())}';
   return 'Find what connects to my diary $shown, written $written.\n'
       '\n'
-      '1. Call get_diary with id="$id" and format="markdown" to read it.\n'
+      '1. Call get_diary with id="$id" and contentFormat="markdown" to read it.\n'
       '2. Call get_diary_links with id="$id" for its forward links and '
       'backlinks.\n'
       '3. Call search_diaries with two or three distinctive phrases from the '
       'body.\n'
-      '4. Call list_diaries with start and end around the same weeks to catch '
+      '4. Call list_diaries with startDate and endDate around the same weeks to catch '
       'entries the search misses.\n'
       '\n'
       'Report the related diaries with their ids, dates and the reason you '
@@ -197,23 +198,23 @@ DateTime _dayArgument(
   final text = raw?.trim() ?? '';
   if (text.isEmpty) {
     if (fallback != null) return fallback;
-    throw JsonRpcException(
-      JsonRpcCode.invalidParams,
+    throw McpError(
+      ErrorCode.invalidParams.value,
       '$prompt: $name is required as yyyy-MM-dd',
     );
   }
-  if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(text)) {
-    throw JsonRpcException(
-      JsonRpcCode.invalidParams,
+  if (!_datePattern.hasMatch(text)) {
+    throw McpError(
+      ErrorCode.invalidParams.value,
       '$prompt: $name must be a date in yyyy-MM-dd form',
     );
   }
   final parsed = DateTime.tryParse(text);
   // DateTime.parse normalizes overflow (2026-02-31 becomes March 3), so compare
   // the rendered day back instead of trusting it.
-  if (parsed == null || _formatDay(parsed) != text) {
-    throw JsonRpcException(
-      JsonRpcCode.invalidParams,
+  if (parsed == null || TimeFormat.isoDate(parsed) != text) {
+    throw McpError(
+      ErrorCode.invalidParams.value,
       '$prompt: $name must be a date in yyyy-MM-dd form',
     );
   }
@@ -227,13 +228,11 @@ DateTime _today() {
 
 /// `yyyy-MM-dd` of a local day: Dart's ISO-8601 output for a local instant
 /// starts with exactly that and zero-pads it the same way.
-String _formatDay(DateTime day) => day.toIso8601String().substring(0, 10);
-
 /// `HH:mm` of a local instant, at offset 11 of the same ISO form.
 String _formatClock(DateTime time) => time.toIso8601String().substring(11, 16);
 
 String _oneLine(String text, [int chars = 80]) =>
-    truncate(text.replaceAll(RegExp(r'\s+'), ' ').trim(), chars);
+    truncate(text.replaceAll(_whitespace, ' ').trim(), chars);
 
 /// Argument completions: the days that hold diaries and the recent diary ids,
 /// the only argument shapes the three prompts take. Every list is capped at
@@ -243,11 +242,7 @@ class _Completions {
 
   final MoodInsightsRepository insights;
 
-  Future<McpCompletionResult> handle(
-    McpCallContext call,
-    String argumentName,
-    String partialValue,
-  ) async {
+  Future<List<String>> handle(String argumentName, String partialValue) async {
     final partial = partialValue.trim().toLowerCase();
     switch (argumentName) {
       case 'date' || 'start' || 'end':
@@ -255,27 +250,27 @@ class _Completions {
       case 'diaryId':
         return _diaryIds(partial);
       default:
-        return const McpCompletionResult(values: []);
+        return const [];
     }
   }
 
-  Future<McpCompletionResult> _dates(String partial) async {
-    final entries = await visibleDiaryEntries(insights);
+  Future<List<String>> _dates(String partial) async {
+    final entries = await insights.allVisibleEntries();
     final values = <String>[];
     final seen = <String>{};
-    final today = _formatDay(_today());
+    final today = TimeFormat.isoDate(_today());
     if (today.startsWith(partial) && seen.add(today)) values.add(today);
     for (final entry in entries) {
       if (values.length >= _completionLimit) break;
-      final day = _formatDay(entry.time.toLocal());
+      final day = TimeFormat.isoDate(entry.time.toLocal());
       if (!day.startsWith(partial) || !seen.add(day)) continue;
       values.add(day);
     }
-    return McpCompletionResult(values: values, total: values.length);
+    return values;
   }
 
-  Future<McpCompletionResult> _diaryIds(String partial) async {
-    final entries = await visibleDiaryEntries(insights);
+  Future<List<String>> _diaryIds(String partial) async {
+    final entries = await insights.allVisibleEntries();
     final values = <String>[];
     for (final entry in entries) {
       if (values.length >= _completionLimit) break;
@@ -285,6 +280,6 @@ class _Completions {
           entry.title.toLowerCase().contains(partial);
       if (matches) values.add(entry.id);
     }
-    return McpCompletionResult(values: values, total: values.length);
+    return values;
   }
 }

@@ -5,14 +5,7 @@ import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart';
 import 'package:mui/mui.dart';
 
-/// Lists the permissions the platform needs before the MCP server can stay
-/// reachable in the background, one row per permission, each with its current
-/// state and the action that grants it.
-///
-/// The settings page owns the summary line of its entry; this sheet reads the
-/// live state itself and refreshes whenever the app returns from a system
-/// settings screen (the app lifecycle observer covers both the runtime
-/// permission dialog and a jump into the app info page).
+/// Permissions for keeping MCP reachable in the background.
 class McpKeepAliveSheet extends StatefulWidget {
   const McpKeepAliveSheet({super.key, required this.keepAlive});
 
@@ -48,27 +41,36 @@ class _McpKeepAliveSheetState extends State<McpKeepAliveSheet>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n.app;
-    final theme = context.theme;
+    final colors = context.theme.colors;
+    final tiles = [
+      for (final status in _statuses) _permissionTile(context, status),
+      SettingListTile(
+        title: l10n.mcpKeepAliveOpenSettings,
+        leading: const Icon(LucideIcons.settings),
+        trailing: const Icon(LucideIcons.externalLink, size: 20),
+        onTap: () => unawaited(_openSettings()),
+      ),
+    ];
     return MSheetScaffold<void>(
-      title: l10n.mcpKeepAliveSheetTitle,
-      subtitle: l10n.mcpKeepAliveSheetSubtitle,
+      title: l10n.mcpKeepAlivePermissionTitle,
       icon: LucideIcons.batteryCharging,
       actions: [MAction(label: l10n.mcpKeepAliveDone, isPrimary: true)],
-      child: Column(
-        mainAxisSize: .min,
-        crossAxisAlignment: .stretch,
-        spacing: 8,
-        children: [
-          for (final status in _statuses) _permissionTile(context, status),
-          _settingsTile(context),
-          Padding(
-            padding: const .symmetric(horizontal: 4, vertical: 2),
-            child: Text(
-              l10n.mcpKeepAliveSettingsHint,
-              style: theme.typography.bodySmall.onSurfaceVariant,
-            ),
-          ),
-        ],
+      child: Material(
+        color: colors.surfaceContainerHigh,
+        clipBehavior: .antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(context.theme.radii.lg),
+        ),
+        child: Column(
+          mainAxisSize: .min,
+          crossAxisAlignment: .stretch,
+          children: [
+            for (var i = 0; i < tiles.length; i++) ...[
+              if (i > 0) const MSettingDivider(),
+              tiles[i],
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -79,94 +81,37 @@ class _McpKeepAliveSheetState extends State<McpKeepAliveSheet>
   ) {
     final theme = context.theme;
     final l10n = context.l10n.app;
-    final granted = status.granted;
-    final (title, description, icon) = switch (status.permission) {
+    final (title, icon, done, action) = switch (status.permission) {
       KeepAlivePermission.batteryOptimization => (
         l10n.mcpKeepAliveBatteryTitle,
-        l10n.mcpKeepAliveBatteryDesc,
         LucideIcons.batteryCharging,
+        l10n.mcpKeepAliveBatteryOff,
+        l10n.mcpKeepAliveBatteryTurnOff,
       ),
       KeepAlivePermission.notifications => (
         l10n.mcpKeepAliveNotificationPermissionTitle,
-        l10n.mcpKeepAliveNotificationPermissionDesc,
         LucideIcons.bell,
+        l10n.mcpKeepAliveNotificationsOn,
+        l10n.mcpKeepAliveNotificationsTurnOn,
       ),
     };
-    final accent = granted ? theme.colors.primary : theme.colors.error;
-    return _surface(
-      context,
-      SettingListTile(
-        title: title,
-        subtitle: Column(
-          crossAxisAlignment: .start,
-          mainAxisSize: .min,
-          children: [
-            Text(
-              description,
-              style: theme.typography.bodyMedium.onSurfaceVariant,
-            ),
-            const SizedBox(height: 2),
-            Row(
+    return SettingListTile(
+      title: title,
+      leading: Icon(icon),
+      trailing: status.granted
+          ? Row(
               mainAxisSize: .min,
+              spacing: 4,
               children: [
-                Icon(
-                  granted ? LucideIcons.checkCircle : LucideIcons.circleAlert,
-                  size: 14,
-                  color: accent,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  granted
-                      ? l10n.mcpKeepAliveGranted
-                      : l10n.mcpKeepAliveNotGranted,
-                  style: theme.typography.bodySmall.onSurfaceVariant.copyWith(
-                    color: accent,
-                  ),
-                ),
+                const Icon(LucideIcons.check, size: 18),
+                Text(done, style: theme.typography.bodyMedium.onSurfaceVariant),
               ],
+            )
+          : TextButton(
+              onPressed: _busy ? null : () => unawaited(_request(status)),
+              child: Text(action),
             ),
-          ],
-        ),
-        leading: Icon(icon, color: accent),
-        trailing: granted
-            ? null
-            : TextButton(
-                onPressed: _busy ? null : () => unawaited(_request(status)),
-                child: Text(l10n.mcpKeepAliveGrant),
-              ),
-        onTap: granted ? null : () => unawaited(_request(status)),
-      ),
-    );
-  }
-
-  Widget _settingsTile(BuildContext context) {
-    final theme = context.theme;
-    return _surface(
-      context,
-      SettingListTile(
-        title: context.l10n.app.mcpKeepAliveOpenSettings,
-        leading: Icon(
-          LucideIcons.settings,
-          color: theme.colors.onSurfaceVariant,
-        ),
-        trailing: Icon(
-          LucideIcons.externalLink,
-          color: theme.colors.onSurfaceVariant,
-        ),
-        onTap: () => unawaited(_openSettings()),
-      ),
-    );
-  }
-
-  Widget _surface(BuildContext context, Widget child) {
-    final theme = context.theme;
-    return Material(
-      color: theme.colors.surfaceContainerHigh,
-      clipBehavior: .antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(theme.radii.lg),
-      ),
-      child: child,
+      onTap: status.granted ? null : () => unawaited(_request(status)),
     );
   }
 

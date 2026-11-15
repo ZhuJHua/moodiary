@@ -1,26 +1,36 @@
-/// Fixtures and JSON-RPC response readers shared by the MCP tool tests.
-///
-/// Every tool test drives the same server over the same in-memory database, so
-/// the diary fixture and the envelope readers live here once instead of being
-/// pasted into each test file; a file only adds the helpers its own tools need.
+/// Shared MCP fixtures and JSON-RPC response readers.
 library;
 
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_mcp/src/server/mcp_server.dart';
-import 'package:moodiary_mcp/src/server/mcp_session.dart';
+import 'package:moodiary_mcp/src/transport/mcp_http_endpoint.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
-/// One diary with a valid Tiptap body, plus the media lists the write path
-/// derives from it.
-///
-/// [content] replaces the generated document verbatim (a legacy diary or a rich
-/// document fixture); [media] appends Tiptap media nodes to the generated one;
-/// [linkTo] adds a `diaryLink` node per id after the paragraph text. Everything
-/// is passed through [withDerivedMedia], which is the same projection the write
-/// path applies.
+MoodiaryDatabase openTestDatabase() => MoodiaryDatabase.forTesting(
+  NativeDatabase.memory(
+    setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
+  ),
+);
+
+/// A Tiptap document holding one paragraph with a single text run.
+String paragraphDoc(String text) => jsonEncode(
+  TiptapContent.newDoc([
+    {
+      'type': 'paragraph',
+      'content': [
+        {'type': 'text', 'text': text},
+      ],
+    },
+  ]),
+);
+
+/// A diary fixture with media derived from its document.
 Diary makeDiary(
   String id,
   String text, {
@@ -33,14 +43,13 @@ Diary makeDiary(
   DateTime? time,
   String? categoryId,
   bool show = true,
+  DiaryMood? mood,
 }) {
   final doc =
       content ??
       (type == 'tiptap'
-          ? jsonEncode({
-              'type': 'doc',
-              'attrs': {'v': 2},
-              'content': [
+          ? jsonEncode(
+              TiptapContent.newDoc([
                 {
                   'type': 'paragraph',
                   'content': [
@@ -53,8 +62,8 @@ Diary makeDiary(
                   ],
                 },
                 ...media,
-              ],
-            })
+              ]),
+            )
           : text);
   return withDerivedMedia(
     Diary(
@@ -66,7 +75,7 @@ Diary makeDiary(
       time: time ?? DateTime.utc(2026, 1, 1),
       lastModified: time ?? DateTime.utc(2026, 1, 1),
       show: show,
-      mood: null,
+      mood: mood,
       imageName: const [],
       audioName: const [],
       videoName: const [],
@@ -76,30 +85,62 @@ Diary makeDiary(
   );
 }
 
-/// A JSON-RPC client over one in-memory server session.
-///
-/// The sequence number is per client, so request ids stay unique inside a test
-/// without every file carrying its own counter.
+/// Business tests use the SDK client and linked SDK stream transports.
 class TestMcpClient {
-  TestMcpClient({required this.server, required this.session});
+  TestMcpClient({required this.server});
 
   final McpServer server;
-  final McpSessionState session;
+  final sdk = McpClient(
+    const Implementation(name: 'test', version: '1'),
+    options: const McpClientOptions(
+      protocol: McpProtocol.legacy,
+      protocolVersion: '2025-06-18',
+    ),
+  );
+  Future<void>? _ready;
 
-  var _seq = 0;
+  Future<void> connect() => _ready ??= _connect();
+
+  Future<void> _connect() async {
+    final toServer = StreamController<List<int>>();
+    final toClient = StreamController<List<int>>();
+    await server.connect(
+      IOStreamTransport(
+        stream: toServer.stream,
+        sink: toClient.sink,
+        maxIncomingMessageBytes: McpHttpEndpoint.maxIncomingMessageBytes,
+      ),
+    );
+    await sdk.connect(
+      IOStreamTransport(
+        stream: toClient.stream,
+        sink: toServer.sink,
+        maxIncomingMessageBytes: McpHttpEndpoint.maxIncomingMessageBytes,
+      ),
+    );
+  }
+
+  Future<void> close() async {
+    await sdk.close();
+    await server.close();
+  }
 
   Future<Map<String, dynamic>> call(
     String method, [
     Map<String, dynamic> params = const {},
   ]) async {
-    final response = await server.handle(session, {
-      'jsonrpc': '2.0',
-      'id': ++_seq,
-      'method': method,
-      'params': params,
-    });
-    expect(response, isNotNull, reason: '$method must answer a request');
-    return response!;
+    await connect();
+    try {
+      final result = await sdk.request(
+        JsonRpcRequest(id: 0, method: method, params: params),
+        _TestResult.new,
+      );
+      return {'result': result.toJson()};
+    } on McpError catch (error) {
+      return {
+        'error': {'code': error.code, 'message': error.message},
+      };
+    }
   }
 
   Future<Map<String, dynamic>> toolCall(
@@ -108,17 +149,9 @@ class TestMcpClient {
   ]) => call('tools/call', {'name': name, 'arguments': arguments});
 
   /// Creates one category through the tool and returns its id.
-  Future<String> newCategory(
-    String name, {
-    String? parentId,
-    Object? color,
-  }) async {
+  Future<String> newCategory(String name, {Object? color}) async {
     final created = structuredOf(
-      await toolCall('create_category', {
-        'name': name,
-        'parentId': ?parentId,
-        'color': ?color,
-      }),
+      await toolCall('create_category', {'name': name, 'color': ?color}),
     );
     expect(created['created'], isTrue);
     return (created['category'] as Map<String, dynamic>)['id'] as String;
@@ -144,14 +177,6 @@ int errorCode(Map<String, dynamic> response) =>
 
 String errorMessage(Map<String, dynamic> response) =>
     (response['error'] as Map)['message'] as String;
-
-String resourceText(Map<String, dynamic> response) {
-  final contents = resultOf(response)['contents'] as List;
-  return (contents.single as Map)['text'] as String;
-}
-
-Map<String, dynamic> resourceJson(Map<String, dynamic> response) =>
-    jsonDecode(resourceText(response)) as Map<String, dynamic>;
 
 List<String> completionValues(Map<String, dynamic> response) {
   final completion = resultOf(response)['completion'] as Map;
@@ -183,3 +208,12 @@ Map<String, dynamic> toolNamed(Map<String, dynamic> listed, String name) =>
 Map<String, dynamic> propertiesOf(Map<String, dynamic> tool) =>
     (tool['inputSchema'] as Map<String, dynamic>)['properties']
         as Map<String, dynamic>;
+
+class _TestResult implements BaseResultData {
+  _TestResult(this.value);
+  final Map<String, dynamic> value;
+  @override
+  Map<String, dynamic>? get meta => value['_meta'] as Map<String, dynamic>?;
+  @override
+  Map<String, dynamic> toJson() => value;
+}

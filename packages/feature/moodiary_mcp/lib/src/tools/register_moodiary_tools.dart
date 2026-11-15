@@ -1,61 +1,56 @@
-/// Diary domain catalog: everything `tools/list`, `resources/*` and `prompts/*`
-/// answer with.
-///
-/// Split by responsibility; [buildMoodiaryRegistry] wires them together and is
-/// the only entry point the service needs.
-library;
-
+import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 
-import '../export/diary_image_renderer.dart';
 import '../media/diary_media.dart';
 import '../prompts/diary_prompts.dart';
-import '../registry/mcp_registry.dart';
-import '../resources/diary_resources.dart';
-import '../resources/media_resources.dart';
+import '../transport/server_icon.dart';
 import 'category_tools.dart';
 import 'diary_tools.dart';
-import 'image_tools.dart';
+import 'mcp_results.dart';
 import 'media_tools.dart';
 import 'stats_tools.dart';
 
-/// Builds the frozen catalog of one server instance.
-///
-/// The catalog is immutable once built, which is why the list-changed
-/// capabilities stay `false`: a client sees database changes by calling the
-/// tools again and through `notifications/resources/updated`.
-McpRegistry buildMoodiaryRegistry({
+McpServer buildMoodiaryServer({
   required DiaryRepository diaries,
   required CategoryRepository categories,
   required MoodInsightsRepository insights,
   required String appVersion,
-  DiaryImageRenderer? imageRenderer,
+  required Uri iconUri,
   DiaryMediaStore? mediaStore,
 }) {
-  final registry = McpRegistry();
-  registerDiaryTools(registry, diaries: diaries, categories: categories);
-  registerCategoryTools(registry, diaries: diaries, categories: categories);
-  registerImageTools(registry, diaries: diaries, renderer: imageRenderer);
+  final server = McpServer(
+    Implementation(
+      name: mcpServerName,
+      title: 'Moodiary',
+      websiteUrl: 'https://github.com/ZhuJHua/moodiary',
+      version: appVersion,
+      icons: [
+        McpIcon(
+          src: iconUri.toString(),
+          mimeType: mcpIconMimeType,
+          sizes: ['${mcpIconEdge}x$mcpIconEdge'],
+        ),
+      ],
+    ),
+    options: const McpServerOptions(
+      protocol: McpProtocol.stable,
+      instructions: mcpServerInstructions,
+    ),
+  );
+  registerDiaryTools(server, diaries: diaries, categories: categories);
+  registerCategoryTools(server, diaries: diaries, categories: categories);
   registerMediaTools(
-    registry,
+    server,
     diaries: diaries,
     categories: categories,
     store: mediaStore,
   );
   registerStatsTools(
-    registry,
-    diaries: diaries,
-    categories: categories,
-    insights: insights,
-    appVersion: appVersion,
-  );
-  registerDiaryResources(
-    registry,
+    server,
     diaries: diaries,
     categories: categories,
     insights: insights,
   );
-  registerMediaResources(registry, diaries: diaries, store: mediaStore);
-  registerDiaryPrompts(registry, diaries: diaries, insights: insights);
-  return registry;
+  registerDiaryPrompts(server, diaries: diaries, insights: insights);
+  return server;
 }

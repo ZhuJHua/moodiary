@@ -1,10 +1,4 @@
-/// The icon the local MCP endpoint advertises to clients.
-///
-/// A 512×512 PNG (palette, ~3.4 KB) rasterised from the app's launcher mark
-/// `mobile/android/app/src/main/res/drawable/ic_launcher_foreground.xml` on the
-/// white adaptive background. It is embedded here rather than shipped as a
-/// Flutter asset so the transport can answer `GET /icon.png` from any isolate
-/// without going through the asset bundle.
+/// Embedded 512×512 launcher PNG, served without the Flutter asset bundle.
 library;
 
 import 'dart:convert';

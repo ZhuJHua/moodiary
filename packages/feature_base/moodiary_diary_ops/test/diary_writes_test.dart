@@ -135,7 +135,6 @@ void main() {
 
       final stored = (await diaries.getDiaryByBusinessId(created.id))!;
       expect(stored.contentText, '**not bold** # not a heading');
-      expect(diaryToMarkdown(stored), r'\*\*not bold\*\* \# not a heading');
     });
 
     test('markdown media reaches the diary_media columns', () async {

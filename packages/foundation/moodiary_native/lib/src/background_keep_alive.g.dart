@@ -34,6 +34,20 @@ Object? _extractReplyValueOrThrow(
   return replyList.firstOrNull;
 }
 
+List<Object?> wrapResponse({
+  Object? result,
+  PlatformException? error,
+  bool empty = false,
+}) {
+  if (empty) {
+    return <Object?>[];
+  }
+  if (error == null) {
+    return <Object?>[result];
+  }
+  return <Object?>[error.code, error.message, error.details];
+}
+
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
   @override
@@ -91,7 +105,7 @@ class BackgroundKeepAliveApi {
     return pigeonVar_replyValue! as bool;
   }
 
-  Future<bool> requestExemption() async {
+  Future<void> requestExemption() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.requestExemption$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -102,12 +116,11 @@ class BackgroundKeepAliveApi {
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
-    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+    _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: false,
+      isNullValid: true,
     );
-    return pigeonVar_replyValue! as bool;
   }
 
   Future<bool> isNotificationsEnabled() async {
@@ -129,7 +142,7 @@ class BackgroundKeepAliveApi {
     return pigeonVar_replyValue! as bool;
   }
 
-  Future<bool> requestNotifications() async {
+  Future<void> requestNotifications() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.requestNotifications$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -140,18 +153,17 @@ class BackgroundKeepAliveApi {
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
-    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+    _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: false,
+      isNullValid: true,
     );
-    return pigeonVar_replyValue! as bool;
   }
 
   Future<void> setKeepAlive(
     bool enabled,
-    String notificationTitle,
     String notificationText,
+    String stopLabel,
   ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.setKeepAlive$pigeonVar_messageChannelSuffix';
@@ -161,7 +173,7 @@ class BackgroundKeepAliveApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[enabled, notificationTitle, notificationText],
+      <Object?>[enabled, notificationText, stopLabel],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
@@ -188,5 +200,44 @@ class BackgroundKeepAliveApi {
       pigeonVar_channelName,
       isNullValid: true,
     );
+  }
+}
+
+abstract class BackgroundKeepAliveEvents {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  Future<void> onStopRequested();
+
+  static void setUp(
+    BackgroundKeepAliveEvents? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) {
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty
+        ? '.$messageChannelSuffix'
+        : '';
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveEvents.onStopRequested$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          try {
+            await api.onStopRequested();
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
   }
 }

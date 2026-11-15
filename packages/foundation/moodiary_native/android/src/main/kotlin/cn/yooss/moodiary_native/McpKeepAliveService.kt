@@ -9,20 +9,39 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
-// 前台服务，让 MCP 服务在离开 App 后仍能对外提供接口。
-//
-// 安卓不允许普通后台进程长期存活，只有带常驻通知的前台服务可以，所以这里的
-// 通知是功能的一部分，不是提示。类型选 specialUse：dataSync 在 Android 15 上
-// 有 6 小时/24 小时的上限，mediaPlayback 之类又与本应用的用途不符。
 class McpKeepAliveService : Service() {
+    private val scope = MainScope()
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // 标题与正文来自 Dart 侧 l10n，缺失时用兜底文案，避免空通知
-        val title = intent?.getStringExtra(EXTRA_TITLE).orEmpty().ifEmpty { DEFAULT_TITLE }
+        if (intent?.action == ACTION_STOP) {
+            val client = events
+            if (client == null) {
+                stopSelf()
+            } else {
+                scope.launch {
+                    try {
+                        client.onStopRequested()
+                    } catch (error: Exception) {
+                        if (error is CancellationException) throw error
+                        Log.w("McpKeepAliveService", "Failed to request MCP shutdown", error)
+                        stopSelf()
+                    }
+                }
+            }
+            return START_NOT_STICKY
+        }
+        val title = applicationInfo.loadLabel(packageManager).toString()
         val text = intent?.getStringExtra(EXTRA_TEXT).orEmpty()
-        val notification = buildNotification(title, text)
+        val stopLabel = intent?.getStringExtra(EXTRA_STOP_LABEL).orEmpty()
+        val notification = buildNotification(title, text, stopLabel)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
                 NOTIFICATION_ID,
@@ -36,21 +55,22 @@ class McpKeepAliveService : Service() {
     }
 
     override fun onDestroy() {
+        scope.cancel()
         stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()
     }
 
-    private fun buildNotification(title: String, text: String): Notification {
+    private fun buildNotification(title: String, text: String, stopLabel: String): Notification {
         ensureChannel()
         val builder = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(text)
-            .setSmallIcon(smallIcon())
+            .setSmallIcon(R.drawable.ic_mcp_keep_alive)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
             .setBadgeIconType(Notification.BADGE_ICON_NONE)
-        // 点通知回到 App，用户才能把服务关掉
+            .addAction(Notification.Action.Builder(null, stopLabel, stopIntent()).build())
         launchIntent()?.let { builder.setContentIntent(it) }
         return builder.build()
     }
@@ -58,7 +78,6 @@ class McpKeepAliveService : Service() {
     private fun ensureChannel() {
         val manager = getSystemService(NotificationManager::class.java) ?: return
         if (manager.getNotificationChannel(CHANNEL_ID) != null) return
-        // 渠道名只在系统设置里可见，用应用名即可，不必再走 l10n
         val channel = NotificationChannel(
             CHANNEL_ID,
             applicationInfo.loadLabel(packageManager).toString(),
@@ -68,10 +87,6 @@ class McpKeepAliveService : Service() {
         channel.setSound(null, null)
         manager.createNotificationChannel(channel)
     }
-
-    // 通知栏只认单色 small icon：宿主应用的 applicationInfo.icon 在 API 26+ 是自适应图标，
-    // 拿来当 smallIcon 会渲染成一整块白色剪影，所以用插件自带的单色 vector。
-    private fun smallIcon(): Int = R.drawable.ic_mcp_keep_alive
 
     private fun launchIntent(): PendingIntent? {
         val launch = packageManager.getLaunchIntentForPackage(packageName) ?: return null
@@ -83,12 +98,20 @@ class McpKeepAliveService : Service() {
         )
     }
 
-    companion object {
-        const val EXTRA_TITLE = "cn.yooss.moodiary_native.keepAliveTitle"
-        const val EXTRA_TEXT = "cn.yooss.moodiary_native.keepAliveText"
+    private fun stopIntent(): PendingIntent = PendingIntent.getService(
+        this,
+        1,
+        Intent(this, McpKeepAliveService::class.java).setAction(ACTION_STOP),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
 
+    companion object {
+        internal var events: BackgroundKeepAliveEvents? = null
+        const val EXTRA_TEXT = "cn.yooss.moodiary_native.keepAliveText"
+        const val EXTRA_STOP_LABEL = "cn.yooss.moodiary_native.keepAliveStopLabel"
+
+        private const val ACTION_STOP = "cn.yooss.moodiary_native.STOP_MCP"
         private const val CHANNEL_ID = "mcp_keep_alive"
         private const val NOTIFICATION_ID = 4201
-        private const val DEFAULT_TITLE = "Moodiary"
     }
 }

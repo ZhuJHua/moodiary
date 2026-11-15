@@ -1,35 +1,21 @@
-/// Write side of the diary catalog: create, patch and delete, with the content
-/// codec and the delete/index policies passed in by the caller.
-///
-/// The invariants live here so the assistant tools and the MCP server cannot
-/// drift apart: a body change re-derives the media lists, every user edit bumps
-/// `lastModified`, and a category id is validated before it is stored.
+/// Shared diary writes. Body edits re-derive media references, user edits
+/// bump `lastModified`, and category ids are validated before storage.
 library;
 
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
-/// How a caller hands a body in.
-///
-/// The assistant writes Markdown and lets the editor conversion keep the
-/// formatting; MCP clients write plain text paragraphs or a raw Tiptap
-/// document (the representation the editor itself stores). The stored
-/// representation differs, so the choice is explicit rather than global.
+/// Input body format, converted to the editor's stored representation.
 enum DiaryContentFormat { markdown, plainText, document }
-
-/// Recycle bin versus permanent removal (which also drops local media).
-enum DiaryDeleteMode { recycle, permanent }
 
 /// What made a write fail. Callers turn this into their own error surface.
 enum DiaryOpsFailure {
   notFound,
-  alreadyRecycled,
   emptyContent,
   invalidCategory,
   fieldRequired,
   noChanges,
-  categoryCycle,
 
   /// A `DiaryContentFormat.document` body is not a Tiptap document object.
   invalidDocument,
@@ -50,9 +36,7 @@ class DiaryOpsException implements Exception {
   String toString() => 'DiaryOpsException($failure)';
 }
 
-/// A partial edit. Every field carries its own "was it sent" flag because the
-/// update tools read an absent field as "leave it alone" and an empty string as
-/// "clear it".
+/// A partial diary edit; an absent field stays unchanged.
 class DiaryPatch {
   const DiaryPatch({
     this.title,
@@ -62,7 +46,6 @@ class DiaryPatch {
     this.categoryId,
     this.time,
     this.tags,
-    this.show,
   });
 
   final String? title;
@@ -75,7 +58,6 @@ class DiaryPatch {
   final String? categoryId;
   final DateTime? time;
   final List<String>? tags;
-  final bool? show;
 
   bool get isEmpty =>
       title == null &&
@@ -83,30 +65,20 @@ class DiaryPatch {
       !moodSet &&
       categoryId == null &&
       time == null &&
-      tags == null &&
-      show == null;
+      tags == null;
 }
 
 typedef _Converted = ({String content, String contentText, DiaryType type});
 
 class DiaryWrites {
-  DiaryWrites({required this.diaries, this.categories});
+  DiaryWrites({required this.diaries, required this.categories});
 
   final DiaryRepository diaries;
 
-  /// Used to validate a category id before it is stored.
-  ///
-  /// Absent when the caller's object graph has no category repository: an id
-  /// cannot be checked without one, so a required id fails as unknown and an
-  /// optional id is dropped.
-  final CategoryRepository? categories;
+  final CategoryRepository categories;
 
-  /// Creates one diary and returns the stored row.
-  ///
-  /// [requireKnownCategory] is false for the assistant, which drops an unknown
-  /// category id instead of failing the tool call. [enforceOwnMedia] is true
-  /// for a caller whose body must not reference media: a new diary owns none
-  /// yet, so any media reference in the converted body is refused.
+  /// Unknown categories are dropped unless [requireKnownCategory] is set.
+  /// [enforceOwnMedia] rejects media references because a new diary owns none.
   Future<Diary> create({
     required String title,
     required String content,
@@ -115,7 +87,6 @@ class DiaryWrites {
     String? categoryId,
     DateTime? time,
     List<String> tags = const [],
-    bool show = true,
     bool requireKnownCategory = true,
     bool enforceOwnMedia = false,
   }) async {
@@ -143,9 +114,7 @@ class DiaryWrites {
       type: converted.type,
       aspect: null,
     );
-    if (time != null || !show) {
-      diary = diary.copyWith(time: time ?? diary.time, show: show);
-    }
+    if (time != null) diary = diary.copyWith(time: time);
     // The body may carry media from the start; the repository stores the four
     // lists rather than re-deriving them, so they are derived here.
     diary = withDerivedMedia(diary);
@@ -153,25 +122,17 @@ class DiaryWrites {
     return diary;
   }
 
-  /// Applies a patch; only the fields present in [patch] change.
-  ///
-  /// [requireVisible] makes a recycled diary look missing, which is what the
-  /// assistant shows the user; MCP clients can still edit a hidden diary.
-  ///
-  /// [enforceOwnMedia] checks a new body against the media the diary already
-  /// owns plus [extraAllowedMedia] (whatever the caller attached in the same
-  /// operation) and fails with `foreignMedia` before anything is derived.
+  /// [enforceOwnMedia] allows existing media plus [extraAllowedMedia].
   Future<Diary> update({
     required String id,
     required DiaryPatch patch,
     DiaryContentFormat format = DiaryContentFormat.markdown,
-    bool requireVisible = false,
     IndexMode index = IndexMode.inline,
     bool enforceOwnMedia = false,
     Set<String> extraAllowedMedia = const {},
   }) async {
     final existing = await diaries.getDiaryByBusinessId(id);
-    if (existing == null || (requireVisible && !existing.show)) {
+    if (existing == null || !existing.show) {
       throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
     }
 
@@ -208,36 +169,20 @@ class DiaryWrites {
     if (patch.tags case final tags?) {
       next = next.copyWith(tags: tags);
     }
-    if (patch.show case final show?) {
-      next = next.copyWith(show: show);
-    }
 
     next = touched(next);
     await diaries.updateADiary(newDiary: next, index: index);
     return next;
   }
 
-  /// Recycles or permanently deletes one diary.
-  ///
-  /// [reportAlreadyRecycled] lets the assistant answer "already in the recycle
-  /// bin" for a hidden row; MCP treats the call as a plain recycle.
   Future<({DiaryDeleteOutcome outcome, Diary diary})> delete({
     required String id,
-    DiaryDeleteMode mode = DiaryDeleteMode.recycle,
-    bool reportAlreadyRecycled = false,
   }) async {
     final existing = await diaries.getDiaryByBusinessId(id);
     if (existing == null) {
       throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
     }
-    if (mode == DiaryDeleteMode.permanent) {
-      final removed = await diaries.deleteADiary(id);
-      if (!removed) {
-        throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
-      }
-      return (outcome: DiaryDeleteOutcome.deleted, diary: existing);
-    }
-    if (!existing.show && reportAlreadyRecycled) {
+    if (!existing.show) {
       return (outcome: DiaryDeleteOutcome.alreadyRecycled, diary: existing);
     }
     await diaries.setVisibility(existing, show: false);
@@ -250,7 +195,7 @@ class DiaryWrites {
   }) async {
     final id = raw?.trim();
     if (id == null || id.isEmpty) return null;
-    final category = await categories?.getCategoryById(id);
+    final category = await categories.getCategoryById(id);
     if (category != null) return id;
     if (requireKnown) {
       throw DiaryOpsException(DiaryOpsFailure.invalidCategory, categoryId: id);
@@ -323,4 +268,4 @@ class DiaryWrites {
   }
 }
 
-enum DiaryDeleteOutcome { recycled, deleted, alreadyRecycled }
+enum DiaryDeleteOutcome { recycled, alreadyRecycled }

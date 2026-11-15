@@ -1,19 +1,9 @@
-/// Argument parsing shared by the tool, resource and prompt handlers.
-///
-/// The view is three-state, because the write tools distinguish "the client did
-/// not send this field" (leave it alone) from "the client sent null" (clear it):
-/// [Args.has] answers the first question and [Args.contains] the second, and the
-/// typed readers below report an absent and a null value the same way. Every
-/// reader throws a [JsonRpcException] with [JsonRpcCode.invalidParams] whose
-/// message starts with [Args.subject] and names the offending argument, so a
-/// model can repair its call from the message alone. Count-like arguments are
-/// clamped to the cap their schema documents instead of failing; a wrong type
-/// always fails.
+/// Shared argument validation. Missing fields and explicit nulls are distinct;
+/// count-like arguments are clamped, while wrong types fail.
 library;
 
+import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-
-import '../protocol/json_rpc.dart';
 
 /// Validating view over the `arguments` object of one MCP call.
 class Args {
@@ -36,25 +26,17 @@ class Args {
       'must be a 32 bit ARGB integer, #RRGGBB or #AARRGGBB; send null or an '
       'empty string to clear the colour';
 
-  /// Whether the client sent [name] at all, even as an explicit `null`.
-  ///
-  /// The `update_*` tools read this as "the caller wants this field changed",
-  /// which is what makes a sent `null` mean "clear it".
+  /// True for explicit null, allowing nullable fields to be cleared.
   bool has(String name) => _raw.containsKey(name);
 
-  /// Whether the client sent [name] with a non-null value.
-  ///
-  /// Non-nullable fields (`title`, `content`, `time`, `visible`) read this, so
-  /// an explicit `null` leaves them alone instead of failing the call.
+  /// False for missing or null fields, leaving non-nullable fields unchanged.
   bool contains(String name) => _raw[name] != null;
 
-  Never _invalid(String name, String problem) => throw JsonRpcException(
-    JsonRpcCode.invalidParams,
-    '$subject: $name $problem',
-  );
+  Never _invalid(String name, String problem) =>
+      throw McpError(ErrorCode.invalidParams.value, '$subject: $name $problem');
 
   Never _invalidMessage(String message) =>
-      throw JsonRpcException(JsonRpcCode.invalidParams, '$subject: $message');
+      throw McpError(ErrorCode.invalidParams.value, '$subject: $message');
 
   /// Required, trimmed, non-empty string.
   String requireText(String name) {
@@ -105,13 +87,8 @@ class Args {
     return parsed;
   }
 
-  /// 32 bit ARGB colour, or `null` when the client clears it.
-  ///
-  /// Three shapes are accepted because they are the three a client actually
-  /// produces: an ARGB integer (what the app stores), `#RRGGBB` (what a colour
-  /// picker copies, taken as opaque) and `#AARRGGBB`. An explicit `null` and an
-  /// empty string both clear the colour, which is why `null` is the answer for
-  /// both and the caller uses [has] to tell clearing from an absent argument.
+  /// Accepts an ARGB integer, `#RRGGBB` or `#AARRGGBB`. Null and blank clear
+  /// the colour; use [has] to distinguish clearing from an absent field.
   int? optionalColor(String name) {
     final value = _raw[name];
     if (value == null) return null;
@@ -220,4 +197,17 @@ class Args {
       _invalidMessage('startDate must not be after endDate');
     }
   }
+}
+
+/// Args owns validation and normalization, including clamped numeric inputs.
+class ToolArgumentSchema extends ToolInputSchema {
+  const ToolArgumentSchema(this.schema);
+
+  final Map<String, dynamic> schema;
+
+  @override
+  Map<String, dynamic> toJson() => schema;
+
+  @override
+  Object toJsonValue() => const {'type': 'object'};
 }

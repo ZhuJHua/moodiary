@@ -5,9 +5,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application>
-        <!-- specialUse：本机 MCP 服务要在离开 App 后继续对外提供接口。不用 dataSync，
-             因为它在 Android 15 上有 6 小时/24 小时的累计时长上限。Google Play 要求
-             在控制台为 specialUse 申报用途，见 packages/feature/moodiary_mcp/README.md。 -->
+        <!-- specialUse keeps the user-enabled local MCP server reachable. -->
         <service
             android:name="cn.yooss.moodiary_native.McpKeepAliveService"
             android:exported="false"

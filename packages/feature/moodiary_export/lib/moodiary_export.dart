@@ -18,7 +18,6 @@ export 'src/data/import/markdown_front_matter.dart';
 export 'src/data/import/markdown_importer.dart';
 export 'src/data/markdown_writer.dart';
 export 'src/data/tiptap_to_ir.dart';
-export 'src/presentation/image_card/card_style.dart';
 export 'src/presentation/share_sheet.dart';
 
 List<RouteBase> exportRoutes() => [

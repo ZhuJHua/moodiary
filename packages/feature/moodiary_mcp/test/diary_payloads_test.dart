@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
+import 'package:moodiary_mcp/src/tools/diary_payloads.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'support.dart';
@@ -72,6 +72,37 @@ String taskListDoc() => jsonEncode(
 
 void main() {
   group('tiptapToMarkdown', () {
+    test('every media kind survives a Markdown round trip', () {
+      const label = r'clip [one] *two* _three_ \ path';
+      final nodes = <Map<String, dynamic>>[
+        for (final (type, src) in [
+          ('image', 'image-1.png'),
+          ('audio', 'audio-1.m4a'),
+          ('video', 'video-1.mp4'),
+          ('attachment', 'file-1.pdf'),
+        ])
+          {
+            'type': type,
+            'attrs': {'src': src, 'name': label},
+          },
+      ];
+      final document = jsonEncode(TiptapContent.newDoc(nodes));
+      final markdown = diaryToMarkdown(
+        makeDiary('media', '', content: document),
+      );
+      final parsed = jsonDecode(MarkdownToTiptap.convert(markdown)!) as Map;
+      final restored = (parsed['content'] as List)
+          .where((node) => node['type'] != 'paragraph')
+          .toList();
+
+      expect(restored, hasLength(nodes.length));
+      for (var index = 0; index < nodes.length; index++) {
+        expect(restored[index]['type'], nodes[index]['type']);
+        expect(restored[index]['attrs']['src'], nodes[index]['attrs']!['src']);
+        expect(restored[index]['attrs']['name'], label);
+      }
+    });
+
     test('renders a table as a GFM pipe table', () {
       expect(
         tiptapToMarkdown(tableDoc()),
@@ -134,6 +165,16 @@ void main() {
   });
 
   group('escaping', () {
+    test('plain text body escapes literal Markdown', () {
+      final diary = makeDiary(
+        'literal',
+        '**not bold** # not a heading',
+        content: TiptapContent.wrapPlainText('**not bold** # not a heading'),
+      );
+
+      expect(diaryToMarkdown(diary), r'\*\*not bold\*\* \# not a heading');
+    });
+
     /// Renders [text] as one paragraph, parses the Markdown back and expects the
     /// document to be unchanged: a caller's literal syntax must stay literal.
     void expectTextRoundTrip(String text) {

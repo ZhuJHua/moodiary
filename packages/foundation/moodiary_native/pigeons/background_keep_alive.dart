@@ -1,7 +1,6 @@
 import 'package:pigeon/pigeon.dart';
 
-// 后台保活：安卓在 specialUse 前台服务里跑常驻通知，iOS 循环播放静音音频；
-// 常驻逻辑本身仍在 Dart 侧（哪个进程活着由系统决定）
+// 安卓后台保活：specialUse 前台服务显示常驻通知，服务逻辑仍在 Dart 侧。
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/src/background_keep_alive.g.dart',
@@ -11,29 +10,28 @@ import 'package:pigeon/pigeon.dart';
       package: 'cn.yooss.moodiary_native',
       includeErrorClass: false,
     ),
-    swiftOut: 'ios/moodiary_native/Sources/moodiary_native/BackgroundKeepAlive.g.swift',
-    swiftOptions: SwiftOptions(includeErrorClass: false),
   ),
 )
 @HostApi()
 abstract class BackgroundKeepAliveApi {
   bool isExempt();
 
-  bool requestExemption();
+  void requestExemption();
 
   // 通知权限只决定常驻通知能否显示，没有它前台服务照样在跑
   bool isNotificationsEnabled();
 
-  bool requestNotifications();
+  void requestNotifications();
 
-  // 安卓：启动/停止前台服务，标题与正文由 Dart 传入（来自 l10n）。
-  // iOS：启动/停止静音音频循环，另外两个参数忽略。
-  void setKeepAlive(
-    bool enabled,
-    String notificationTitle,
-    String notificationText,
-  );
+  // 通知文案由 Dart l10n 传入。
+  void setKeepAlive(bool enabled, String notificationText, String stopLabel);
 
-  // 系统设置里本应用的详情页，用户拒绝过权限后从这里手动打开
+  // 系统设置里本应用的详情页
   void openAppSettings();
+}
+
+@FlutterApi()
+abstract class BackgroundKeepAliveEvents {
+  @async
+  void onStopRequested();
 }

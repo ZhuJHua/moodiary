@@ -40,6 +40,7 @@ void main() {
       db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
       repo = DiaryRepository(db);
       getIt.registerSingleton<DiaryRepository>(repo);
+      getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
       a = diary('搬家');
       b = diary('加班');
       hidden = diary('回收站里的', show: false);

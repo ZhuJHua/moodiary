@@ -13,7 +13,16 @@ import io.flutter.plugin.common.StandardMethodCodec
 import io.flutter.plugin.common.StandardMessageCodec
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 private object BackgroundKeepAlivePigeonUtils {
+
+  fun createConnectionError(channelName: String): FlutterError {
+    return FlutterError("channel-error",  "Unable to establish connection on channel: '$channelName'.", "")  }
 
   fun wrapResult(result: Any?): List<Any?> {
     return listOf(result)
@@ -47,10 +56,10 @@ private open class BackgroundKeepAlivePigeonCodec : StandardMessageCodec() {
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface BackgroundKeepAliveApi {
   fun isExempt(): Boolean
-  fun requestExemption(): Boolean
+  fun requestExemption()
   fun isNotificationsEnabled(): Boolean
-  fun requestNotifications(): Boolean
-  fun setKeepAlive(enabled: Boolean, notificationTitle: String, notificationText: String)
+  fun requestNotifications()
+  fun setKeepAlive(enabled: Boolean, notificationText: String, stopLabel: String)
   fun openAppSettings()
 
   companion object {
@@ -82,7 +91,8 @@ interface BackgroundKeepAliveApi {
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
-              listOf(api.requestExemption())
+              api.requestExemption()
+              listOf(null)
             } catch (exception: Throwable) {
               BackgroundKeepAlivePigeonUtils.wrapError(exception)
             }
@@ -112,7 +122,8 @@ interface BackgroundKeepAliveApi {
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
-              listOf(api.requestNotifications())
+              api.requestNotifications()
+              listOf(null)
             } catch (exception: Throwable) {
               BackgroundKeepAlivePigeonUtils.wrapError(exception)
             }
@@ -128,10 +139,10 @@ interface BackgroundKeepAliveApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val enabledArg = args[0] as Boolean
-            val notificationTitleArg = args[1] as String
-            val notificationTextArg = args[2] as String
+            val notificationTextArg = args[1] as String
+            val stopLabelArg = args[2] as String
             val wrapped: List<Any?> = try {
-              api.setKeepAlive(enabledArg, notificationTitleArg, notificationTextArg)
+              api.setKeepAlive(enabledArg, notificationTextArg, stopLabelArg)
               listOf(null)
             } catch (exception: Throwable) {
               BackgroundKeepAlivePigeonUtils.wrapError(exception)
@@ -157,6 +168,34 @@ interface BackgroundKeepAliveApi {
         } else {
           channel.setMessageHandler(null)
         }
+      }
+    }
+  }
+}
+/** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
+class BackgroundKeepAliveEvents(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+  companion object {
+    /** The codec used by BackgroundKeepAliveEvents. */
+    val codec: MessageCodec<Any?> by lazy {
+      BackgroundKeepAlivePigeonCodec()
+    }
+  }
+  suspend fun onStopRequested()
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveEvents.onStopRequested$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(null) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
+        } else {
+          continuation.resumeWithException(BackgroundKeepAlivePigeonUtils.createConnectionError(channelName))
+        } 
       }
     }
   }
