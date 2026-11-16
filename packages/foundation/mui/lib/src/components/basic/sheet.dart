@@ -177,12 +177,7 @@ class MSheetOptionTile<T> extends StatelessWidget {
               ? scheme.primaryContainer
               : scheme.surfaceContainerHighest,
           clipBehavior: .antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: MuiRadius.md,
-            side: selected
-                ? BorderSide(color: scheme.primary, width: 1.5)
-                : .none,
-          ),
+          shape: const RoundedRectangleBorder(borderRadius: MuiRadius.md),
           child: MInkWell(
             onTap: option.enabled ? onTap : null,
             child: Opacity(

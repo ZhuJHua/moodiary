@@ -74,6 +74,42 @@ class PlaceController extends _$PlaceController {
       return false;
     }
   }
+
+  Future<int> affectedDiaryCount(List<String> placeIds) async {
+    try {
+      return await getIt<DiaryRepository>().countDiariesWithPlaceIds(placeIds);
+    } catch (e, s) {
+      logger.e('load affected diaries failed', error: e, stackTrace: s);
+      return 0;
+    }
+  }
+
+  Future<PlaceMergeRecord?> mergePlaces({
+    required String keptId,
+    required String finalName,
+    required List<String> removedIds,
+  }) async {
+    try {
+      return await _repository.mergePlaces(
+        keptId: keptId,
+        finalName: finalName,
+        removedIds: removedIds,
+      );
+    } catch (e, s) {
+      logger.e('merge places failed', error: e, stackTrace: s);
+      return null;
+    }
+  }
+
+  Future<bool> undoMerge(PlaceMergeRecord record) async {
+    try {
+      await _repository.undoMerge(record);
+      return true;
+    } catch (e, s) {
+      logger.e('undo merge failed', error: e, stackTrace: s);
+      return false;
+    }
+  }
 }
 
 @riverpod

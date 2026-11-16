@@ -1,9 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart' show Override;
 
 final _mui = buildMuiTheme(brightness: Brightness.light);
+
+Future<void> pumpTransition(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump();
+}
 
 Widget muiTestApp(
   Widget child, {
@@ -12,6 +19,7 @@ Widget muiTestApp(
   bool wrapScaffold = true,
   Widget? drawer,
   Key? scaffoldKey,
+  TransitionBuilder? builder,
 }) {
   return ProviderScope(
     overrides: overrides,
@@ -26,6 +34,7 @@ Widget muiTestApp(
           ],
           supportedLocales: AppLocaleUtils.supportedLocales,
           locale: locale,
+          builder: builder,
           home: wrapScaffold
               ? Scaffold(key: scaffoldKey, drawer: drawer, body: child)
               : child,

@@ -14,6 +14,9 @@ enum MapTileSource {
   };
 }
 
+bool mapAvailable(MapTileSource? source, String tiandituKey) =>
+    source != null && (source != .tianditu || tiandituKey.isNotEmpty);
+
 Future<void> showMapSourcePicker(BuildContext context) async {
   final current = MapTileSource.of(MoodiaryKVs.mapTileSource.get()!);
   final picked = await MSheet.picker<MapTileSource>(

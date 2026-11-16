@@ -145,7 +145,10 @@ void main() {
 
     final db = MoodiaryDatabase.forTesting(schema.newConnection());
     await verifier.migrateAndValidate(db, 3);
-    final places = await PlaceRepository(db).getAllPlaces();
+    final places = await PlaceRepository(
+      db,
+      DiaryRepository(db),
+    ).getAllPlaces();
     expect(places, hasLength(2));
     final xihu = places.singleWhere((p) => p.name == '杭州市 西湖区');
     expect(xihu.id, Place.idForName('杭州市 西湖区'), reason: 'id 由地名派生，跨设备一致');
