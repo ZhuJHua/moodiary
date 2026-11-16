@@ -210,10 +210,8 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
   }
 
   void _enterSelection(String id) {
-    if (_selecting) return;
     HapticFeedback.mediumImpact();
-    // 多选态会收起搜索框：查询留着就成了看不见的过滤器，还会把可合并的
-    // 候选限制在最初那次搜索的结果里。
+    // 隐藏搜索框时清除过滤，避免漏掉候选地点。
     setState(() {
       _query = '';
       _selected.add(id);
@@ -235,15 +233,40 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
       for (final p in places)
         if (_selected.contains(p.id)) p,
     ];
-    if (selected.length < 2) {
-      toast.info(message: l10n.diary.placeMergeMinTwo);
+    if (selected.length < 2) return;
+    final choice = await showPlaceMergeSheet(context, candidates: selected);
+    if (choice == null || !mounted) return;
+    final controller = ref.read(placeControllerProvider.notifier);
+    final record = await controller.mergePlaces(
+      keptId: choice.keptId,
+      finalName: choice.name,
+      removedIds: [
+        for (final place in selected)
+          if (place.id != choice.keptId) place.id,
+      ],
+    );
+    if (!mounted) return;
+    if (record == null) {
+      toast.error(message: l10n.diary.placeSaveFailed);
       return;
     }
-    // 弹层自驱整个合并流程（二次确认、进度、撤销倒计时、结果气泡）。
-    final outcome = await showPlaceMergeSheet(context, candidates: selected);
-    if (!mounted) return;
-    if (outcome == null || outcome == PlaceMergeOutcome.cancelled) return;
     _exitSelection();
+    MSnackbar.show(
+      context,
+      message: context.l10n.diary.placeMerged(name: choice.name),
+      icon: LucideIcons.mapPinCheck,
+      action: MSnackbarAction(
+        label: context.l10n.diary.placeUndo,
+        onPressed: () async {
+          final ok = await controller.undoMerge(record);
+          if (ok) {
+            toast.success(message: l10n.diary.placeUndone);
+          } else {
+            toast.error(message: l10n.diary.placeUndoFailed);
+          }
+        },
+      ),
+    );
   }
 }
 
@@ -346,13 +369,14 @@ class _PlaceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
-    final tile = Card.filled(
+    return Card.filled(
       margin: const .symmetric(vertical: 4),
       color: selected ? colors.secondaryContainer : colors.surfaceContainerLow,
       clipBehavior: .antiAlias,
       child: ListTile(
         selected: selected,
         onTap: selecting ? onToggle : onEdit,
+        onLongPress: selecting ? null : onLongPress,
         leading: PlaceBadge(place: place),
         title: Text(
           place.name,
@@ -361,17 +385,19 @@ class _PlaceTile extends StatelessWidget {
           style: context.theme.typography.titleMedium.onSurface,
         ),
         subtitle: Text(
-          count > 0
-              ? context.l10n.diary.placeDiaryCount(count: count)
-              : context.l10n.diary.placeNoDiary,
+          placeCountLabel(context, count),
           style: context.theme.typography.labelSmall.onSurfaceVariant,
         ),
         trailing: selecting
-            ? Padding(
-                padding: const .all(12),
-                child: Icon(
-                  selected ? LucideIcons.circleCheck : LucideIcons.circle,
-                  color: selected ? colors.primary : colors.onSurfaceVariant,
+            ? SizedBox.square(
+                dimension: 48,
+                child: Center(
+                  child: SizedBox.square(
+                    dimension: 22,
+                    child: ExcludeSemantics(
+                      child: MSelectMark(selected: selected),
+                    ),
+                  ),
                 ),
               )
             : Row(
@@ -422,12 +448,6 @@ class _PlaceTile extends StatelessWidget {
                 ],
               ),
       ),
-    );
-    if (selecting) return tile;
-    return GestureDetector(
-      onLongPress: onLongPress,
-      behavior: HitTestBehavior.opaque,
-      child: tile,
     );
   }
 }

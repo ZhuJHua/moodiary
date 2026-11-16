@@ -76,6 +76,53 @@ class PlaceBadge extends StatelessWidget {
   }
 }
 
+class PlaceMarker extends StatelessWidget {
+  final Place place;
+  final double size;
+  final bool selected;
+
+  const PlaceMarker({
+    super.key,
+    required this.place,
+    this.size = 26,
+    this.selected = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final color = placeIconColor(context, place.icon);
+    return AnimatedContainer(
+      duration: Durations.short4,
+      curve: Easing.emphasizedDecelerate,
+      padding: .all(selected ? 5 : 0),
+      decoration: BoxDecoration(
+        shape: .circle,
+        color: color.withValues(alpha: selected ? 0.24 : 0),
+      ),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color,
+          shape: .circle,
+          border: .all(color: theme.onMedia, width: selected ? 3 : 2),
+          boxShadow: MGlassSurface.defaultShadows(theme.colors),
+        ),
+        child: Icon(
+          placeIconOf(place.icon),
+          size: size * 0.5,
+          color: onCategoryColor(color),
+        ),
+      ),
+    );
+  }
+}
+
+String placeCountLabel(BuildContext context, int count) => count > 0
+    ? context.l10n.diary.placeDiaryCount(count: count)
+    : context.l10n.diary.placeNoDiary;
+
 String formatDistance(BuildContext context, double meters) {
   if (meters < 1000) {
     return context.l10n.diary.placeDistanceMeters(meters: meters.round());
@@ -252,8 +299,7 @@ class _PlaceEditorSheetState extends ConsumerState<_PlaceEditorSheet> {
     final source = MapTileSource.of(MoodiaryKVs.mapTileSource.get()!);
     final tiandituKey =
         ref.watch(secretKvProvider(MoodiarySecureKVs.tiandituKey)).value ?? '';
-    final showMap =
-        source != null && (source != .tianditu || tiandituKey.isNotEmpty);
+    final showMap = mapAvailable(source, tiandituKey);
     final others = <Place>[
       for (final p in ref.watch(placeControllerProvider).value ?? const [])
         if (p.id != widget.existing?.id) p,
@@ -282,7 +328,7 @@ class _PlaceEditorSheetState extends ConsumerState<_PlaceEditorSheet> {
         crossAxisAlignment: .start,
         children: [
           if (showMap) ...[
-            _buildMap(source, tiandituKey, others),
+            _buildMap(source!, tiandituKey, others),
             const SizedBox(height: 16),
           ],
           TextField(
@@ -412,7 +458,7 @@ class _PlaceEditorSheetState extends ConsumerState<_PlaceEditorSheet> {
                         point: LatLng(p.latitude, p.longitude),
                         width: 26,
                         height: 26,
-                        child: PlaceBadge(place: p, size: 26),
+                        child: PlaceMarker(place: p),
                       ),
                   ],
                 ),

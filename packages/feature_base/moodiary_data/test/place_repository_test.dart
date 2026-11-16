@@ -1,31 +1,17 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
+import 'support/place_fixtures.dart';
+
 void main() {
   late MoodiaryDatabase db;
   late PlaceRepository repo;
 
-  Place make(
-    String id,
-    String name, {
-    double lat = 30.2841,
-    double lon = 120.1552,
-    String? icon,
-  }) => Place(
-    id: id,
-    name: name,
-    latitude: lat,
-    longitude: lon,
-    icon: icon,
-    lastModified: DateTime.utc(2026, 9, 5),
-  );
-
   setUp(() {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
-    repo = PlaceRepository(db);
+    repo = PlaceRepository(db, DiaryRepository(db));
   });
 
   tearDown(() => db.close());
@@ -43,21 +29,7 @@ void main() {
 
   test('删除：有日记引用时拦住；无引用则行硬删 + 写墓碑', () async {
     await repo.insertAPlace(make('p1', '公司'));
-    await db
-        .into(db.diaries)
-        .insert(
-          DiariesCompanion.insert(
-            id: 'd1',
-            title: '',
-            content: '',
-            contentText: '',
-            time: 0,
-            lastModified: 0,
-            show: 1,
-            type: 'tiptap',
-            placeId: const Value('p1'),
-          ),
-        );
+    await insertDiary(db, 'd1', 'p1');
     expect(await repo.deleteAPlace('p1'), isFalse, reason: '仍有日记引用');
     expect(await repo.getPlaceById('p1'), isNotNull);
     await (db.delete(db.diaries)..where((d) => d.id.equals('d1'))).go();

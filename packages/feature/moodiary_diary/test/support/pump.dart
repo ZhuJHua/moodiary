@@ -1,9 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart' show Override;
 
 final _mui = buildMuiTheme(brightness: Brightness.light);
+
+Future<void> pumpTransition(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump();
+}
 
 Widget muiTestApp(
   Widget child, {
@@ -12,6 +19,7 @@ Widget muiTestApp(
   bool wrapScaffold = true,
   Widget? drawer,
   Key? scaffoldKey,
+  TransitionBuilder? builder,
 }) {
   return ProviderScope(
     overrides: overrides,
@@ -26,6 +34,7 @@ Widget muiTestApp(
           ],
           supportedLocales: AppLocaleUtils.supportedLocales,
           locale: locale,
+          builder: builder,
           home: wrapScaffold
               ? Scaffold(key: scaffoldKey, drawer: drawer, body: child)
               : child,
@@ -33,15 +42,4 @@ Widget muiTestApp(
       ),
     ),
   );
-}
-
-/// 关掉气泡的防抖窗口；断言气泡文案的用例在 `setUp` 里调一次。
-///
-/// `Toast` 走 `SmartDialog.show`，防抖由 flutter_smart_dialog 的进程级 static 表
-/// 按**真实时钟**判断（默认 300ms）：`tester.pump` 只推进 fake clock，同一个
-/// isolate 里上一个用例刚弹过气泡时（真实相隔常常只有几十毫秒），本用例的气泡
-/// 会被静默丢弃，`find.text` 随即随机失败。窗口压到零后，气泡出不出只由本用例
-/// 的调用决定。
-void disableToastDebounce() {
-  SmartDialog.config.custom = SmartConfigCustom(debounceTime: Duration.zero);
 }

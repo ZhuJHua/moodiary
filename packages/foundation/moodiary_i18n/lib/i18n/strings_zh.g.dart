@@ -1982,29 +1982,23 @@ class Translations$diary$zh {
 	/// zh: '已选 {count} 个地点'
 	String placeSelectedTitle({required Object count}) => '已选 ${count} 个地点';
 
-	/// zh: '请至少选择 2 个地点'
-	String get placeMergeMinTwo => '请至少选择 2 个地点';
+	/// zh: '合并地点'
+	String get placeMergeSheetTitle => '合并地点';
 
-	/// zh: '选择最终地址'
-	String get placeMergeSheetTitle => '选择最终地址';
+	/// zh: '保留一个，其余 {count} 个并入它'
+	String placeMergeSheetSubtitle({required Object count}) => '保留一个，其余 ${count} 个并入它';
+
+	/// zh: '保留哪一个'
+	String get placeMergeKeepLabel => '保留哪一个';
+
+	/// zh: '合并后的名称'
+	String get placeMergeNameLabel => '合并后的名称';
 
 	/// zh: '确认合并地点？'
 	String get placeMergeConfirmTitle => '确认合并地点？';
 
 	/// zh: '「{name}」将合并 {count} 个地点，{diaries} 篇日记随之指向它，原地点会被删除。'
 	String placeMergeConfirmMessage({required Object name, required Object count, required Object diaries}) => '「${name}」将合并 ${count} 个地点，${diaries} 篇日记随之指向它，原地点会被删除。';
-
-	/// zh: '正在合并…'
-	String get placeMerging => '正在合并…';
-
-	/// zh: '正在撤销…'
-	String get placeUndoing => '正在撤销…';
-
-	/// zh: '正在更新 {done}/{total} 篇日记'
-	String placeMergeProgress({required Object done, required Object total}) => '正在更新 ${done}/${total} 篇日记';
-
-	/// zh: '没有日记需要改写'
-	String get placeMergeNoDiary => '没有日记需要改写';
 
 	/// zh: '已合并为「{name}」'
 	String placeMerged({required Object name}) => '已合并为「${name}」';

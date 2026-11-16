@@ -11,9 +11,10 @@ import 'diary_repository.dart';
 
 @lazySingleton
 class PlaceRepository {
-  PlaceRepository(this._db);
+  PlaceRepository(this._db, this._diaries);
 
   final MoodiaryDatabase _db;
+  final DiaryRepository _diaries;
 
   final StreamController<PlaceEvent> _events =
       StreamController<PlaceEvent>.broadcast();
@@ -108,139 +109,102 @@ class PlaceRepository {
 
   Future<void> _insertTombstoneRow(SyncTombstone tombstone) => _db
       .into(_db.tombstones)
-      .insertOnConflictUpdate(
-        TombstonesCompanion.insert(
-          key: tombstone.key,
-          timeMs: tombstone.timeMs,
-          pushedBackendsJson: Value(dbStringList(tombstone.pushedBackends)),
-        ),
+      .insertOnConflictUpdate(_tombstoneCompanion(tombstone));
+
+  TombstonesCompanion _tombstoneCompanion(SyncTombstone tombstone) =>
+      TombstonesCompanion.insert(
+        key: tombstone.key,
+        timeMs: tombstone.timeMs,
+        pushedBackendsJson: Value(dbStringList(tombstone.pushedBackends)),
       );
 
-  /// 合并地点：保留 [kept]（可改名），删除 [removed] 并把指向它们的日记
-  /// （含回收站）重指到保留地点。全部在一个事务内提交；
-  /// [placeOrder] 为合并前的排序快照，调用方负责事后维护 KV 并展示撤销入口。
-  ///
-  /// 返回撤销凭据；[removed] 为空时抛 ArgumentError。
   Future<PlaceMergeRecord> mergePlaces({
-    required Place kept,
+    required String keptId,
+    required List<String> removedIds,
     required String finalName,
-    required List<Place> removed,
-    required List<String> placeOrder,
-    required DiaryRepository diaries,
   }) async {
-    if (removed.isEmpty) {
-      throw ArgumentError.value(removed, 'removed', '至少提供一个被合并的地点');
-    }
     final now = DateTime.timestamp();
-    late final Place keptBefore;
-    late final List<Place> removedRows;
-    late final List<Diary> affected;
-    late final List<Diary> repointed;
-    await _db.transaction(() async {
-      final current = await getPlaceById(kept.id);
-      if (current == null) {
-        throw StateError('保留地点不存在：${kept.id}');
-      }
-      keptBefore = current;
-      removedRows = await _getPlacesByIds([for (final p in removed) p.id]);
-      if (removedRows.isEmpty) {
-        throw StateError('被合并的地点均已不存在');
-      }
-      affected = await diaries.getDiariesWithPlaceIds([
-        for (final p in removedRows) p.id,
-      ]);
-      await _db
-          .into(_db.places)
-          .insertOnConflictUpdate(
-            _toCompanion(
-              current.copyWith(name: finalName.trim(), lastModified: now),
-            ),
-          );
-      repointed = await diaries.repointDiaries(affected, kept.id, at: now);
-      for (final place in removedRows) {
-        await (_db.delete(
-          _db.places,
-        )..where((p) => p.id.equals(place.id))).go();
-        await _insertTombstoneRow(SyncTombstone.forPlace(place.id, at: now));
-      }
+    final result = await _db.transaction(() async {
+      final places = await _getPlacesByIds([keptId, ...removedIds]);
+      final kept = places.where((place) => place.id == keptId).firstOrNull;
+      if (kept == null) throw StateError('保留地点不存在：$keptId');
+      final removed = places.where((place) => place.id != keptId).toList();
+      if (removed.isEmpty) throw StateError('被合并的地点均已不存在');
+      final ids = [for (final place in removed) place.id];
+      final affected = await _diaries.getDiariesWithPlaceIds(ids);
+      final renamed = kept.copyWith(name: finalName.trim(), lastModified: now);
+      await _db.into(_db.places).insertOnConflictUpdate(_toCompanion(renamed));
+      final repointed = await _diaries.repointDiaries(
+        affected,
+        keptId,
+        at: now,
+      );
+      await (_db.delete(_db.places)..where((place) => place.id.isIn(ids))).go();
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(_db.tombstones, [
+          for (final place in removed)
+            _tombstoneCompanion(SyncTombstone.forPlace(place.id, at: now)),
+        ]);
+      });
+      return (
+        renamed: renamed,
+        repointed: repointed,
+        record: PlaceMergeRecord(
+          kept: kept,
+          removed: removed,
+          diaryRemap: {for (final diary in affected) diary.id: diary.placeId!},
+        ),
+      );
     });
-    // 提交成功之后才通知界面：事务回滚了就不该有人已经看到新的地点指向。
-    diaries.publishDiaryUpdates(repointed);
-    _events.add(
-      PlaceUpserted(
-        keptBefore.copyWith(name: finalName.trim(), lastModified: now),
-      ),
-    );
-    for (final place in removedRows) {
+    _diaries.publishDiaryUpdates(result.repointed);
+    _events.add(PlaceUpserted(result.renamed));
+    for (final place in result.record.removed) {
       _events.add(PlaceDeleted(place.id));
     }
-    return PlaceMergeRecord(
-      kept: keptBefore,
-      removed: removedRows,
-      diaryRemap: {for (final d in affected) d.id: d.placeId!},
-      placeOrder: placeOrder,
-    );
+    return result.record;
   }
 
-  /// 撤销一次合并（[PlaceMergeRecord] 由 [mergePlaces] 返回）：
-  /// 还原保留地点名称、原样插回被删地点并清掉其墓碑、把日记按凭据指回原地点。
-  /// 全部在一个事务内提交；调用方负责事后还原排序 KV。
-  Future<void> undoMerge(
-    PlaceMergeRecord record, {
-    required DiaryRepository diaries,
-  }) async {
+  Future<void> undoMerge(PlaceMergeRecord record) async {
     final now = DateTime.timestamp();
-    late final List<Place> restored;
-    late final List<Diary> repointed;
-    await _db.transaction(() async {
-      final restoredKept = record.kept.copyWith(lastModified: now);
-      await _db
-          .into(_db.places)
-          .insertOnConflictUpdate(_toCompanion(restoredKept));
+    // 时间戳必须晚于合并墓碑，才能同步复活地点。
+    final restored = [
+      for (final place in [record.kept, ...record.removed])
+        place.copyWith(lastModified: now),
+    ];
+    final repointed = await _db.transaction(() async {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(_db.places, [
+          for (final place in restored) _toCompanion(place),
+        ]);
+      });
       final placeKeys = [
-        for (final p in record.removed) SyncTombstone.placeKey(p.id),
+        for (final place in record.removed) SyncTombstone.placeKey(place.id),
       ];
       await (_db.delete(
         _db.tombstones,
       )..where((t) => t.key.isIn(placeKeys))).go();
-      // 合并时写过（也可能已经上传）这些地点的墓碑，原样的 lastModified 比
-      // 墓碑还旧：同步会跳过这一行，甚至在下一次拉取时把它再删掉。
-      // 所以按撤销时间重新盖章，事件也带同一份快照。
-      restored = [
-        for (final p in record.removed) p.copyWith(lastModified: now),
-      ];
-      for (final place in restored) {
-        await _db.into(_db.places).insertOnConflictUpdate(_toCompanion(place));
-      }
-      final affected = await diaries.getDiariesByIds(
+      final affected = await _diaries.getDiariesByIds(
         record.diaryRemap.keys.toList(),
       );
-      final byId = {for (final d in affected) d.id: d};
       final grouped = <String, List<Diary>>{};
-      for (final entry in record.diaryRemap.entries) {
-        final diary = byId[entry.key];
-        if (diary != null) {
-          grouped.putIfAbsent(entry.value, () => []).add(diary);
-        }
+      for (final diary in affected) {
+        grouped.putIfAbsent(record.diaryRemap[diary.id]!, () => []).add(diary);
       }
       final updated = <Diary>[];
       for (final entry in grouped.entries) {
         updated.addAll(
-          await diaries.repointDiaries(entry.value, entry.key, at: now),
+          await _diaries.repointDiaries(entry.value, entry.key, at: now),
         );
       }
-      repointed = updated;
+      return updated;
     });
-    // 同 [mergePlaces]：事务提交之后才通知界面。
-    diaries.publishDiaryUpdates(repointed);
-    _events.add(PlaceUpserted(record.kept.copyWith(lastModified: now)));
+    _diaries.publishDiaryUpdates(repointed);
     for (final place in restored) {
       _events.add(PlaceUpserted(place));
     }
   }
 
   Future<List<Place>> _getPlacesByIds(List<String> ids) async {
-    if (ids.isEmpty) return const [];
     final rows = await (_db.select(
       _db.places,
     )..where((p) => p.id.isIn(ids))).get();

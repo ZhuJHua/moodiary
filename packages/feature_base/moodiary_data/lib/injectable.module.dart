@@ -46,11 +46,14 @@ class MoodiaryDataPackageModule extends _i526.MicroPackageModule {
     gh.lazySingleton<_i504.MoodInsightsRepository>(
       () => _i504.MoodInsightsRepository(gh<_i527.MoodiaryDatabase>()),
     );
-    gh.lazySingleton<_i925.PlaceRepository>(
-      () => _i925.PlaceRepository(gh<_i527.MoodiaryDatabase>()),
-    );
     gh.lazySingleton<_i952.TombstoneRepository>(
       () => _i952.TombstoneRepository(gh<_i527.MoodiaryDatabase>()),
+    );
+    gh.lazySingleton<_i925.PlaceRepository>(
+      () => _i925.PlaceRepository(
+        gh<_i527.MoodiaryDatabase>(),
+        gh<_i1068.DiaryRepository>(),
+      ),
     );
     gh.lazySingleton<_i135.EmbedQueueWatcher>(
       () => _i135.EmbedQueueWatcher(

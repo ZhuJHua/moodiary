@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:drift/drift.dart';
 import 'package:drift/extensions/fts5.dart';
 import 'package:injectable/injectable.dart';
+import 'package:meta/meta.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -581,7 +582,16 @@ class DiaryRepository {
     return _assemble(await q.get());
   }
 
-  /// 全部指向这些地点的日记（含回收站），地点合并时使用。
+  @internal
+  Future<int> countDiariesWithPlaceIds(List<String> placeIds) async {
+    final count = countAll();
+    final query = _db.selectOnly(_db.diaries)
+      ..addColumns([count])
+      ..where(_db.diaries.placeId.isIn(placeIds));
+    return (await query.getSingle()).read(count)!;
+  }
+
+  @internal
   Future<List<Diary>> getDiariesWithPlaceIds(List<String> placeIds) async {
     if (placeIds.isEmpty) return const [];
     final rows = await (_db.select(
@@ -590,7 +600,7 @@ class DiaryRepository {
     return _assemble(rows);
   }
 
-  /// 按 id 取日记（含回收站），撤销合并时按凭据精确取回。
+  @internal
   Future<List<Diary>> getDiariesByIds(List<String> ids) async {
     if (ids.isEmpty) return const [];
     final rows = await (_db.select(
@@ -599,12 +609,8 @@ class DiaryRepository {
     return _assemble(rows);
   }
 
-  /// 把日记重指到 [placeId] 并推进 last_modified（同步靠它传播）。
-  /// 不做内容重建 —— 只有元数据变更。
-  ///
-  /// 返回改写后的快照，但**不**发 DiaryUpdated：调用方通常在更外层的
-  /// 事务里（如地点合并），事件要等那个事务提交后再用
-  /// [publishDiaryUpdates] 补发，否则回滚之后界面会留着没落地的指向。
+  // 事件等事务提交后再发，避免界面读到回滚的数据。
+  @internal
   Future<List<Diary>> repointDiaries(
     List<Diary> diaries,
     String placeId, {
@@ -612,19 +618,20 @@ class DiaryRepository {
   }) async {
     if (diaries.isEmpty) return const [];
     final atMs = dbTime(at);
-    final updated = <Diary>[];
-    for (final diary in diaries) {
-      await (_db.update(
-        _db.diaries,
-      )..where((d) => d.id.equals(diary.id))).write(
+    final ids = [for (final diary in diaries) diary.id];
+    for (var start = 0; start < ids.length; start += _inChunk) {
+      final chunk = ids.sublist(start, min(start + _inChunk, ids.length));
+      await (_db.update(_db.diaries)..where((d) => d.id.isIn(chunk))).write(
         DiariesCompanion(placeId: Value(placeId), lastModified: Value(atMs)),
       );
-      updated.add(diary.copyWith(placeId: placeId, lastModified: at));
     }
-    return updated;
+    return [
+      for (final diary in diaries)
+        diary.copyWith(placeId: placeId, lastModified: at),
+    ];
   }
 
-  /// 把 [repointDiaries] 的结果补发成 DiaryUpdated（事务提交后调用）。
+  @internal
   void publishDiaryUpdates(Iterable<Diary> diaries) {
     for (final diary in diaries) {
       _events.add(DiaryUpdated(diary));
