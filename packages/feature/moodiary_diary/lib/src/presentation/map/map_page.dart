@@ -293,8 +293,7 @@ class _MapPageState extends ConsumerState<MapPage>
     final l10n = context.l10n.diary;
     final source = MapTileSource.of(_source.value);
     final tiandituKey = keyAsync.value ?? '';
-    final mapAvailable =
-        source != null && (source != .tianditu || tiandituKey.isNotEmpty);
+    final hasMap = mapAvailable(source, tiandituKey);
     final sorted = [...fps]
       ..sort((a, b) => b.stat.count.compareTo(a.stat.count));
 
@@ -316,7 +315,7 @@ class _MapPageState extends ConsumerState<MapPage>
             ),
         ],
       ),
-      _ when !mapAvailable && keyAsync.hasValue => _MapCover(
+      _ when !hasMap && keyAsync.hasValue => _MapCover(
         message: l10n.mapTiandituNoKey,
         actions: [
           FilledButton.tonal(
@@ -348,7 +347,7 @@ class _MapPageState extends ConsumerState<MapPage>
         _buildMapLayer(
           context,
           fps,
-          source: mapAvailable ? source : null,
+          source: hasMap ? source : null,
           tiandituKey: tiandituKey,
           cover: cover,
           headerBottom:

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:drift/drift.dart';
 import 'package:drift/extensions/fts5.dart';
 import 'package:injectable/injectable.dart';
+import 'package:meta/meta.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -579,6 +580,62 @@ class DiaryRepository {
     final q = _visible()..where((d) => d.placeId.equals(placeId));
     _orderBy(q, .timeDesc);
     return _assemble(await q.get());
+  }
+
+  @internal
+  Future<int> countDiariesWithPlaceIds(List<String> placeIds) async {
+    final count = countAll();
+    final query = _db.selectOnly(_db.diaries)
+      ..addColumns([count])
+      ..where(_db.diaries.placeId.isIn(placeIds));
+    return (await query.getSingle()).read(count)!;
+  }
+
+  @internal
+  Future<List<Diary>> getDiariesWithPlaceIds(List<String> placeIds) async {
+    if (placeIds.isEmpty) return const [];
+    final rows = await (_db.select(
+      _db.diaries,
+    )..where((d) => d.placeId.isIn(placeIds))).get();
+    return _assemble(rows);
+  }
+
+  @internal
+  Future<List<Diary>> getDiariesByIds(List<String> ids) async {
+    if (ids.isEmpty) return const [];
+    final rows = await (_db.select(
+      _db.diaries,
+    )..where((d) => d.id.isIn(ids))).get();
+    return _assemble(rows);
+  }
+
+  // 事件等事务提交后再发，避免界面读到回滚的数据。
+  @internal
+  Future<List<Diary>> repointDiaries(
+    List<Diary> diaries,
+    String placeId, {
+    required DateTime at,
+  }) async {
+    if (diaries.isEmpty) return const [];
+    final atMs = dbTime(at);
+    final ids = [for (final diary in diaries) diary.id];
+    for (var start = 0; start < ids.length; start += _inChunk) {
+      final chunk = ids.sublist(start, min(start + _inChunk, ids.length));
+      await (_db.update(_db.diaries)..where((d) => d.id.isIn(chunk))).write(
+        DiariesCompanion(placeId: Value(placeId), lastModified: Value(atMs)),
+      );
+    }
+    return [
+      for (final diary in diaries)
+        diary.copyWith(placeId: placeId, lastModified: at),
+    ];
+  }
+
+  @internal
+  void publishDiaryUpdates(Iterable<Diary> diaries) {
+    for (final diary in diaries) {
+      _events.add(DiaryUpdated(diary));
+    }
   }
 
   Future<Map<String, PlaceFootprint>> placeFootprints() async {

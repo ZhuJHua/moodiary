@@ -48,7 +48,7 @@ void main() {
     );
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
-    places = PlaceRepository(db);
+    places = PlaceRepository(db, diaries);
     root = Directory.systemTemp.createTempSync('md-importer');
     importer = MarkdownImporter(
       diaries: diaries,

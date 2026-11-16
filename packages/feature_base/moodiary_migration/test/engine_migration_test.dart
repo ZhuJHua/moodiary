@@ -204,7 +204,7 @@ void main() {
     database: db,
     diaryRepository: DiaryRepository(db),
     categoryRepository: CategoryRepository(db),
-    placeRepository: PlaceRepository(db),
+    placeRepository: PlaceRepository(db, DiaryRepository(db)),
     fontRepository: FontRepository(db),
     tombstoneRepository: TombstoneRepository(db),
     legacyDir: dir.path,
@@ -220,7 +220,10 @@ void main() {
 
     final repo = DiaryRepository(db);
     final full = (await repo.getDiaryByBusinessId('d-full'))!;
-    final place = (await PlaceRepository(db).getPlaceById(full.placeId!))!;
+    final place = (await PlaceRepository(
+      db,
+      DiaryRepository(db),
+    ).getPlaceById(full.placeId!))!;
     expect(place.name, '厦门 环岛路');
     expect(place.id, Place.idForName('厦门 环岛路'));
     expect(place.latitude, 24.48);
@@ -231,11 +234,17 @@ void main() {
     expect(full.time, DateTime.utc(2026, 1, 1, 8));
     final pos2 = (await repo.getDiaryByBusinessId('d-pos2'))!;
     expect(
-      (await PlaceRepository(db).getPlaceById(pos2.placeId!))!.name,
+      (await PlaceRepository(
+        db,
+        DiaryRepository(db),
+      ).getPlaceById(pos2.placeId!))!.name,
       '1.5000, 2.5000',
     );
     expect((await repo.getDiaryByBusinessId('d-badpos'))!.placeId, isNull);
-    expect(await PlaceRepository(db).getAllPlaces(), hasLength(2));
+    expect(
+      await PlaceRepository(db, DiaryRepository(db)).getAllPlaces(),
+      hasLength(2),
+    );
     expect((await repo.getRecycleBinDiaries()).single.id, 'd-recycled');
 
     final hits = await repo.searchDiaries(query: '苹果');
@@ -363,7 +372,7 @@ void main() {
       database: db,
       diaryRepository: repo,
       categoryRepository: CategoryRepository(db),
-      placeRepository: PlaceRepository(db),
+      placeRepository: PlaceRepository(db, DiaryRepository(db)),
       fontRepository: FontRepository(db),
       tombstoneRepository: TombstoneRepository(db),
       legacyDir: dir.path,

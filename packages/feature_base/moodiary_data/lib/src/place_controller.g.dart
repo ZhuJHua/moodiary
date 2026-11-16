@@ -33,7 +33,7 @@ final class PlaceControllerProvider
   PlaceController create() => PlaceController();
 }
 
-String _$placeControllerHash() => r'cd27cb9c32dbfb384292d4d96a60017a1e3cdd15';
+String _$placeControllerHash() => r'e31dcadc6edf6cb01b9965b190943dd60d4bd70b';
 
 abstract class _$PlaceController extends $AsyncNotifier<List<Place>> {
   FutureOr<List<Place>> build();

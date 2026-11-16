@@ -7,12 +7,14 @@ import 'package:moodiary_models/moodiary_models.dart';
 
 import 'db/database.dart';
 import 'db/db_codec.dart';
+import 'diary_repository.dart';
 
 @lazySingleton
 class PlaceRepository {
-  PlaceRepository(this._db);
+  PlaceRepository(this._db, this._diaries);
 
   final MoodiaryDatabase _db;
+  final DiaryRepository _diaries;
 
   final StreamController<PlaceEvent> _events =
       StreamController<PlaceEvent>.broadcast();
@@ -107,13 +109,107 @@ class PlaceRepository {
 
   Future<void> _insertTombstoneRow(SyncTombstone tombstone) => _db
       .into(_db.tombstones)
-      .insertOnConflictUpdate(
-        TombstonesCompanion.insert(
-          key: tombstone.key,
-          timeMs: tombstone.timeMs,
-          pushedBackendsJson: Value(dbStringList(tombstone.pushedBackends)),
+      .insertOnConflictUpdate(_tombstoneCompanion(tombstone));
+
+  TombstonesCompanion _tombstoneCompanion(SyncTombstone tombstone) =>
+      TombstonesCompanion.insert(
+        key: tombstone.key,
+        timeMs: tombstone.timeMs,
+        pushedBackendsJson: Value(dbStringList(tombstone.pushedBackends)),
+      );
+
+  Future<PlaceMergeRecord> mergePlaces({
+    required String keptId,
+    required List<String> removedIds,
+    required String finalName,
+  }) async {
+    final now = DateTime.timestamp();
+    final result = await _db.transaction(() async {
+      final places = await _getPlacesByIds([keptId, ...removedIds]);
+      final kept = places.where((place) => place.id == keptId).firstOrNull;
+      if (kept == null) throw StateError('保留地点不存在：$keptId');
+      final removed = places.where((place) => place.id != keptId).toList();
+      if (removed.isEmpty) throw StateError('被合并的地点均已不存在');
+      final ids = [for (final place in removed) place.id];
+      final affected = await _diaries.getDiariesWithPlaceIds(ids);
+      final renamed = kept.copyWith(name: finalName.trim(), lastModified: now);
+      await _db.into(_db.places).insertOnConflictUpdate(_toCompanion(renamed));
+      final repointed = await _diaries.repointDiaries(
+        affected,
+        keptId,
+        at: now,
+      );
+      await (_db.delete(_db.places)..where((place) => place.id.isIn(ids))).go();
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(_db.tombstones, [
+          for (final place in removed)
+            _tombstoneCompanion(SyncTombstone.forPlace(place.id, at: now)),
+        ]);
+      });
+      return (
+        renamed: renamed,
+        repointed: repointed,
+        record: PlaceMergeRecord(
+          kept: kept,
+          removed: removed,
+          diaryRemap: {for (final diary in affected) diary.id: diary.placeId!},
         ),
       );
+    });
+    _diaries.publishDiaryUpdates(result.repointed);
+    _events.add(PlaceUpserted(result.renamed));
+    for (final place in result.record.removed) {
+      _events.add(PlaceDeleted(place.id));
+    }
+    return result.record;
+  }
+
+  Future<void> undoMerge(PlaceMergeRecord record) async {
+    final now = DateTime.timestamp();
+    // 时间戳必须晚于合并墓碑，才能同步复活地点。
+    final restored = [
+      for (final place in [record.kept, ...record.removed])
+        place.copyWith(lastModified: now),
+    ];
+    final repointed = await _db.transaction(() async {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(_db.places, [
+          for (final place in restored) _toCompanion(place),
+        ]);
+      });
+      final placeKeys = [
+        for (final place in record.removed) SyncTombstone.placeKey(place.id),
+      ];
+      await (_db.delete(
+        _db.tombstones,
+      )..where((t) => t.key.isIn(placeKeys))).go();
+      final affected = await _diaries.getDiariesByIds(
+        record.diaryRemap.keys.toList(),
+      );
+      final grouped = <String, List<Diary>>{};
+      for (final diary in affected) {
+        grouped.putIfAbsent(record.diaryRemap[diary.id]!, () => []).add(diary);
+      }
+      final updated = <Diary>[];
+      for (final entry in grouped.entries) {
+        updated.addAll(
+          await _diaries.repointDiaries(entry.value, entry.key, at: now),
+        );
+      }
+      return updated;
+    });
+    _diaries.publishDiaryUpdates(repointed);
+    for (final place in restored) {
+      _events.add(PlaceUpserted(place));
+    }
+  }
+
+  Future<List<Place>> _getPlacesByIds(List<String> ids) async {
+    final rows = await (_db.select(
+      _db.places,
+    )..where((p) => p.id.isIn(ids))).get();
+    return [for (final r in rows) _toPlace(r)];
+  }
 }
 
 double distanceMeters(double lat1, double lon1, double lat2, double lon2) {
