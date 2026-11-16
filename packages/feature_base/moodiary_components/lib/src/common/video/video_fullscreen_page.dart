@@ -20,6 +20,13 @@ double scrubMillisPerPixel(Duration duration, double width) {
   return math.min(0.6 * duration.inMilliseconds / width, 1000 / 6);
 }
 
+Uri? _networkUri(String path) {
+  final uri = Uri.tryParse(path);
+  return uri != null && (uri.scheme == 'http' || uri.scheme == 'https')
+      ? uri
+      : null;
+}
+
 Widget defaultVideoSurfaceBuilder(VideoPlaybackPort port) =>
     port is VideoPlayerPluginPort
     ? port.buildSurface()
@@ -101,9 +108,15 @@ class MVideoPlayerPage extends StatefulWidget {
     final String videoPath;
     final String? coverPath;
     try {
-      videoPath = AppFiles.getRealPath('video', name);
-      coverPath = _coverPathOf(name);
-      aspect = await _coverAspect(coverPath);
+      if (_networkUri(name) != null) {
+        videoPath = name;
+        coverPath = null;
+        aspect = null;
+      } else {
+        videoPath = AppFiles.getRealPath('video', name);
+        coverPath = _coverPathOf(name);
+        aspect = await _coverAspect(coverPath);
+      }
     } finally {
       _opening = false;
     }
@@ -182,7 +195,10 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
   void initState() {
     super.initState();
     _player = MVideoPlaybackController(
-      source: .file(widget.videoPath),
+      source: switch (_networkUri(widget.videoPath)) {
+        final uri? => VideoSource.network(uri),
+        null => VideoSource.file(widget.videoPath),
+      },
       portFactory: widget.portFactory,
       initialAspect: widget.initialAspect,
       autoPlay: false,
@@ -1017,6 +1033,15 @@ class _ScrubBarState extends State<_ScrubBar>
     return p.duration * (dx / w).clamp(0.0, 1.0);
   }
 
+  String _semanticValueAt(Duration position) {
+    final duration = widget.progress.value.duration;
+    if (duration <= Duration.zero) return '${_percent.value}%';
+    final percent = (position.inMilliseconds / duration.inMilliseconds * 100)
+        .round()
+        .clamp(0, 100);
+    return '$percent%';
+  }
+
   void _begin(double dx) {
     final at = _timeAt(dx);
     if (at == null) return;
@@ -1058,6 +1083,12 @@ class _ScrubBarState extends State<_ScrubBar>
           slider: true,
           label: widget.semanticLabel,
           value: '$percent%',
+          increasedValue: _semanticValueAt(
+            widget.progress.value.position + _kNudge,
+          ),
+          decreasedValue: _semanticValueAt(
+            widget.progress.value.position - _kNudge,
+          ),
           onIncrease: () => widget.onNudge(_kNudge),
           onDecrease: () => widget.onNudge(-_kNudge),
           child: child,

@@ -222,8 +222,8 @@ class Translations$app$zh {
 	/// zh: '开源许可'
 	String get aboutLicenses => '开源许可';
 
-	/// zh: '反馈 / 答疑'
-	String get aboutFeedback => '反馈 / 答疑';
+	/// zh: '隐私政策'
+	String get aboutPrivacy => '隐私政策';
 
 	/// zh: '字体'
 	String get fontTitle => '字体';
@@ -299,6 +299,27 @@ class Translations$app$zh {
 
 	/// zh: 'AI 助手'
 	String get servicesAssistant => 'AI 助手';
+
+	/// zh: '模型下载'
+	String get servicesModelDownload => '模型下载';
+
+	/// zh: 'Hugging Face 下载源'
+	String get servicesHfEndpoint => 'Hugging Face 下载源';
+
+	/// zh: '官方'
+	String get servicesHfOfficial => '官方';
+
+	/// zh: '自定义地址'
+	String get servicesHfCustomAddress => '自定义地址';
+
+	/// zh: '填写兼容 Hugging Face 的站点'
+	String get servicesHfCustomHint => '填写兼容 Hugging Face 的站点';
+
+	/// zh: '只填根地址，模型路径会自动拼接'
+	String get servicesHfEndpointHelp => '只填根地址，模型路径会自动拼接';
+
+	/// zh: '下载失败，可在「模型下载」中更换下载源'
+	String get servicesModelDownloadFailed => '下载失败，可在「模型下载」中更换下载源';
 
 	/// zh: '和风天气'
 	String get servicesQweather => '和风天气';
@@ -2072,12 +2093,6 @@ class Translations$editor$zh {
 	/// zh: '音频文件错误'
 	String get audioFileError => '音频文件错误';
 
-	/// zh: '当前平台暂不支持编辑器'
-	String get unsupportedPlatform => '当前平台暂不支持编辑器';
-
-	/// zh: '编辑器加载失败 {error}'
-	String loadFailed({required Object error}) => '编辑器加载失败\n${error}';
-
 	/// zh: '选择分类'
 	String get pickCategory => '选择分类';
 
@@ -2193,6 +2208,8 @@ class Translations$editor$zh {
 	String get migrationEnter => '开始使用';
 
 	late final Translations$editor$toolbar$zh toolbar = Translations$editor$toolbar$zh.internal(_root);
+	late final Translations$editor$content$zh content = Translations$editor$content$zh.internal(_root);
+	late final Translations$editor$meta$zh meta = Translations$editor$meta$zh.internal(_root);
 }
 
 // Path: export
@@ -4433,6 +4450,18 @@ class Translations$editor$toolbar$zh {
 	/// zh: '跳出代码块'
 	String get exitCode => '跳出代码块';
 
+	/// zh: '已整理格式'
+	String get pasteFormatted => '已整理格式';
+
+	/// zh: '还原原文'
+	String get restoreOriginal => '还原原文';
+
+	/// zh: '已保留格式'
+	String get pasteKeptFormat => '已保留格式';
+
+	/// zh: '转为纯文本'
+	String get pasteUsePlain => '转为纯文本';
+
 	/// zh: '打开链接'
 	String get openLink => '打开链接';
 
@@ -4528,4 +4557,79 @@ class Translations$editor$toolbar$zh {
 
 	/// zh: '插入失败'
 	String get insertFailed => '插入失败';
+}
+
+// Path: editor.content
+class Translations$editor$content$zh {
+	Translations$editor$content$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '音频进度'
+	String get audioProgress => '音频进度';
+
+	/// zh: '视频进度'
+	String get videoProgress => '视频进度';
+
+	/// zh: '复制'
+	String get codeCopy => '复制';
+
+	/// zh: '已复制'
+	String get codeCopied => '已复制';
+
+	/// zh: '标题'
+	String get titlePlaceholder => '标题';
+
+	/// zh: '正文'
+	String get bodyPlaceholder => '正文';
+
+	/// zh: '自动识别'
+	String get codeAutoDetect => '自动识别';
+
+	/// zh: '纯文本'
+	String get plainText => '纯文本';
+
+	/// zh: '静音'
+	String get mute => '静音';
+
+	/// zh: '全屏播放'
+	String get fullscreen => '全屏播放';
+}
+
+// Path: editor.meta
+class Translations$editor$meta$zh {
+	Translations$editor$meta$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '心情'
+	String get mood => '心情';
+
+	/// zh: '天气'
+	String get weather => '天气';
+
+	/// zh: '位置'
+	String get place => '位置';
+
+	/// zh: '分类'
+	String get category => '分类';
+
+	/// zh: '标签'
+	String get tag => '标签';
+
+	/// zh: '添加标签'
+	String get addTag => '添加标签';
+
+	/// zh: '删除标签'
+	String get removeTag => '删除标签';
+
+	/// zh: '未记录'
+	String get moodUnset => '未记录';
+
+	/// zh: '不记录心情'
+	String get moodClear => '不记录心情';
 }

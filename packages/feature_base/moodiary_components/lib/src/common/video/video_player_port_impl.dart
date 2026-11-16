@@ -8,6 +8,7 @@ class VideoPlayerPluginPort implements VideoPlaybackPort {
   VideoPlayerPluginPort(this.source) {
     _controller = switch (source) {
       VideoFileSource(:final path) => VideoPlayerController.file(File(path)),
+      VideoNetworkSource(:final uri) => VideoPlayerController.networkUrl(uri),
     };
     _controller.addListener(_emit);
   }

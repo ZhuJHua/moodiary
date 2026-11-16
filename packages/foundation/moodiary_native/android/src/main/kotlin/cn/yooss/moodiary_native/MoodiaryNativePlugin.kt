@@ -6,22 +6,20 @@ import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 
 class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
-    private var keyboard: EditorKeyboard? = null
+    private var keyboard: KeyboardHeight? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = binding.binaryMessenger
-        SelectionHandleApi.setUp(messenger, SelectionHandleDrawable)
-        keyboard = EditorKeyboard(binding).also {
-            EditorKeyboardApi.setUp(messenger, it)
-            KeyboardEventsStreamHandler.register(messenger, it.events)
-        }
+        HtmlClipboardApi.setUp(messenger, HtmlClipboard(binding.applicationContext))
+        ImageTransferApi.setUp(messenger, ImageTransfer(binding.applicationContext))
+        keyboard = KeyboardHeight().also { KeyboardHeightStreamHandler.register(messenger, it) }
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = binding.binaryMessenger
-        SelectionHandleApi.setUp(messenger, null)
-        EditorKeyboardApi.setUp(messenger, null)
-        keyboard?.dispose()
+        HtmlClipboardApi.setUp(messenger, null)
+        ImageTransferApi.setUp(messenger, null)
+        keyboard?.activity = null
         keyboard = null
     }
 

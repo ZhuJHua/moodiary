@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_components/moodiary_components.dart';
@@ -31,7 +32,7 @@ class MoodInsightsPage extends ConsumerStatefulWidget {
 class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
     with RouteAware {
   MoodInsightsScope _scope = .month;
-  DateTime _anchor = moodDayKey(DateTime.now());
+  DateTime _anchor = moodDayKey(clock.now());
   DateTime? _selected;
   late final _repository = getIt<MoodInsightsRepository>();
   late Future<_InsightsData> _future;
@@ -113,7 +114,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
 
   void _jump(DateTime anchor, {MoodInsightsScope? scope}) {
     final targetScope = scope ?? _scope;
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     final current = moodPeriodBounds(today, targetScope).start;
     if (moodPeriodBounds(anchor, targetScope).start.isAfter(current)) return;
     setState(() {
@@ -150,7 +151,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
   @override
   Widget build(BuildContext context) {
     final bounds = moodPeriodBounds(_anchor, _scope);
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     final containsToday =
         !today.isBefore(bounds.start) && today.isBefore(bounds.end);
     return Scaffold(
@@ -688,7 +689,7 @@ class _WeekEntries extends StatelessWidget {
             child: Text(
               context.l10n.insights.dayHeader(
                 date: TimeFormat.monthDay(day),
-                weekday: day == moodDayKey(DateTime.now())
+                weekday: day == moodDayKey(clock.now())
                     ? context.l10n.insights.today
                     : TimeFormat.weekdayShort(day),
               ),

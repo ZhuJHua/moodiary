@@ -199,7 +199,7 @@ List<File> _dartFiles(String root) {
   return _dartFileCache.putIfAbsent(root, () {
     final dir = Directory(root);
     if (!dir.existsSync()) return const [];
-    const skip = {'.dart_tool', 'build', 'node_modules', 'target', '.git'};
+    const skip = {'.dart_tool', 'build', 'target', '.git'};
     final out = <File>[];
     void walk(Directory d) {
       for (final entity in d.listSync(followLinks: false)) {
@@ -303,13 +303,15 @@ List<String> _checkLegacyMaterial() {
 }
 
 const Map<String, String> _themeAllowlist = {
+  'packages/feature_base/moodiary_editor/lib/src/editor/style.dart':
+      '文档样式由宿主传入 ColorScheme 角色与排版参数',
+  'packages/foundation/flutter_tiptap/lib/': '独立编辑器包不依赖 mui，样式全部由宿主传入',
   'mobile/lib/app/settings/storage/storage_palette.dart':
       '存储分类色板：设计稿固定的分类编码，按主题明暗切换',
   'packages/foundation/mui/lib/src/themes/': 'mui 的主题层就是色板与 token 的定义处',
   'mobile/lib/app/boot_failure_page.dart':
       '启动失败兜底页：主题系统此刻可能正是坏掉的那一环，刻意零依赖、硬编码配色',
-  'mobile/lib/app/build_badge.dart':
-      'Alpha 环境角标，固定绿色，不随主题变化',
+  'mobile/lib/app/build_badge.dart': 'Alpha 环境角标，固定绿色，不随主题变化',
   'packages/foundation/fast_image/lib/src/tile_debug.dart':
       '看图页 tile 调试叠层：颜色是 tile 状态编码，画在照片上，不跟主题',
   'packages/foundation/mui/lib/src/components/common/env_badge.dart':
@@ -339,7 +341,7 @@ final List<(RegExp, String)> _themeBans = [
     'Colors.* → context.theme.colors.<角色>',
   ),
   (
-    RegExp(r'Theme\.of\([^)]*\)\.(colorScheme|textTheme)'),
+    RegExp(r'(^|[^A-Za-z0-9_])Theme\.of\([^)]*\)\.(colorScheme|textTheme)'),
     'Theme.of(...).colorScheme/textTheme → context.theme.colors / context.theme.typography',
   ),
   (

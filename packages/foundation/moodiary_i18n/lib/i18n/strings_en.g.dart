@@ -111,7 +111,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get aboutUpdateFailed => 'Could not check for updates, try again later';
 	@override String get aboutSource => 'Source code';
 	@override String get aboutLicenses => 'Open source licenses';
-	@override String get aboutFeedback => 'Feedback and help';
+	@override String get aboutPrivacy => 'Privacy policy';
 	@override String get fontTitle => 'Fonts';
 	@override String get fontImportSubtitle => 'Import a ttf / otf font; long-press to remove one';
 	@override String get fontPreview => 'Preview';
@@ -137,6 +137,13 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get qweatherRequired => 'Set up QWeather first';
 	@override String get servicesIntro => 'Add your own third-party credentials here to enable the AI assistant, weather and maps. Credentials are stored on this device only.';
 	@override String get servicesAssistant => 'AI assistant';
+	@override String get servicesModelDownload => 'Model downloads';
+	@override String get servicesHfEndpoint => 'Hugging Face endpoint';
+	@override String get servicesHfOfficial => 'Official';
+	@override String get servicesHfCustomAddress => 'Custom address';
+	@override String get servicesHfCustomHint => 'Enter a Hugging Face-compatible site';
+	@override String get servicesHfEndpointHelp => 'Enter only the base URL. Model paths are added automatically.';
+	@override String get servicesModelDownloadFailed => 'Download failed. Try changing the endpoint in “Model downloads”.';
 	@override String get servicesQweather => 'QWeather';
 	@override String get servicesQweatherHostHint => 'devapi.qweather.com, or your own';
 	@override String get servicesMap => 'Map';
@@ -754,8 +761,6 @@ class _Translations$editor$en extends Translations$editor$zh {
 
 	// Translations
 	@override String get audioFileError => 'Audio file error';
-	@override String get unsupportedPlatform => 'The editor is not supported on this platform';
-	@override String loadFailed({required Object error}) => 'Failed to load the editor\n${error}';
 	@override String get pickCategory => 'Pick a category';
 	@override String get noCategory => 'No category';
 	@override String get migrationTitle => 'Upgrade data migration';
@@ -795,6 +800,8 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String get migrationSummaryMigrated => 'Migrated';
 	@override String get migrationEnter => 'Get started';
 	@override late final _Translations$editor$toolbar$en toolbar = _Translations$editor$toolbar$en._(_root);
+	@override late final _Translations$editor$content$en content = _Translations$editor$content$en._(_root);
+	@override late final _Translations$editor$meta$en meta = _Translations$editor$meta$en._(_root);
 }
 
 // Path: export
@@ -1613,6 +1620,10 @@ class _Translations$editor$toolbar$en extends Translations$editor$toolbar$zh {
 	@override String get tableDelete => 'Delete table';
 	@override String get copyCode => 'Copy code';
 	@override String get exitCode => 'Exit code block';
+	@override String get pasteFormatted => 'Formatting applied';
+	@override String get restoreOriginal => 'Restore original';
+	@override String get pasteKeptFormat => 'Formatting kept';
+	@override String get pasteUsePlain => 'Use plain text';
 	@override String get openLink => 'Open link';
 	@override String get copyLink => 'Copy link';
 	@override String get editLink => 'Edit link';
@@ -1645,4 +1656,41 @@ class _Translations$editor$toolbar$en extends Translations$editor$toolbar$zh {
 	@override String get attachmentFailed => 'Could not save the file';
 	@override String get openFailed => 'No app can open this file';
 	@override String get insertFailed => 'Could not insert';
+}
+
+// Path: editor.content
+class _Translations$editor$content$en extends Translations$editor$content$zh {
+	_Translations$editor$content$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get audioProgress => 'Audio progress';
+	@override String get videoProgress => 'Video progress';
+	@override String get codeCopy => 'Copy';
+	@override String get codeCopied => 'Copied';
+	@override String get titlePlaceholder => 'Title';
+	@override String get bodyPlaceholder => 'Text';
+	@override String get codeAutoDetect => 'Auto-detect';
+	@override String get plainText => 'Plain text';
+	@override String get mute => 'Mute';
+	@override String get fullscreen => 'Fullscreen';
+}
+
+// Path: editor.meta
+class _Translations$editor$meta$en extends Translations$editor$meta$zh {
+	_Translations$editor$meta$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get mood => 'Mood';
+	@override String get weather => 'Weather';
+	@override String get place => 'Location';
+	@override String get category => 'Category';
+	@override String get tag => 'Tag';
+	@override String get addTag => 'Add tag';
+	@override String get removeTag => 'Remove tag';
+	@override String get moodUnset => 'Not recorded';
+	@override String get moodClear => 'Don\'t record';
 }

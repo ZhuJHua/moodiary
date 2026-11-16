@@ -6,9 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/src/data/editor_migration_service.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 void main() {
   const title = '出差第三天';
@@ -123,6 +125,29 @@ void main() {
             type: 'tiptap',
           ),
         );
+
+    test('Markdown conversion crosses the isolate and preserves backup and derived fields', () async {
+      final repo = getIt<DiaryRepository>();
+      const markdown = '## Heading\n\n汉 👨‍👩‍👧‍👦 é **bold**';
+      final source = Diary.empty(type: DiaryType.markdown)
+          .copyWith(content: markdown);
+      await repo.insertDiaries([source], index: .skip);
+      expect(await EditorMigrationService.migrate(source), isTrue);
+      final converted = (await repo.getDiaryByBusinessId(source.id))!;
+      expect(converted.type, DiaryType.tiptap.value);
+      expect(converted.content, MarkdownToTiptap.convert(markdown));
+      expect(
+        converted.contentText,
+        TiptapContent.parse(converted.content).plainText,
+      );
+      final backup = jsonDecode(
+        File('${EditorMigrationService.backupDirPath}/${source.id}.json')
+            .readAsStringSync(),
+      ) as Map;
+      expect(backup['content'], markdown);
+      expect(backup['type'], DiaryType.markdown.value);
+      expect(await EditorMigrationService.migrate(converted), isFalse);
+    });
 
     test('空库直接记为已升级，不进迁移页', () async {
       await EditorMigrationService.refreshRequiresMigration();

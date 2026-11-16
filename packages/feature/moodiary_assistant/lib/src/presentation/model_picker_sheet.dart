@@ -473,7 +473,6 @@ class _ProviderHeader extends StatelessWidget {
         children: [
           ProviderLogo(
             logoUrl: ProviderLogo.urlOf(provider.presetId),
-            name: provider.name,
             size: 20,
           ),
           const SizedBox(width: 8),

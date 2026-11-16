@@ -3,15 +3,9 @@ import 'package:mui/mui.dart';
 
 class ProviderLogo extends StatelessWidget {
   final String? logoUrl;
-  final String name;
   final double size;
 
-  const ProviderLogo({
-    super.key,
-    required this.logoUrl,
-    required this.name,
-    this.size = 40,
-  });
+  const ProviderLogo({super.key, required this.logoUrl, this.size = 40});
 
   static String? urlOf(String presetId) =>
       presetId.isEmpty ? null : 'https://models.dev/logos/$presetId.svg';
@@ -19,11 +13,11 @@ class ProviderLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '#';
     final fallback = Center(
-      child: Text(
-        initial,
-        style: context.theme.typography.titleMedium.onSurfaceVariant,
+      child: Icon(
+        LucideIcons.astroid,
+        size: size * 0.6,
+        color: scheme.onSurfaceVariant,
       ),
     );
     final url = logoUrl;

@@ -51,6 +51,28 @@ void main() {
       });
     });
 
+    test('hardBreaks 保留段内单换行，默认不拆', () {
+      expect(
+        _parse(
+          MarkdownToTiptap.convert('a\n**b**', hardBreaks: true),
+        )['content'][0]['content'],
+        [
+          {'type': 'text', 'text': 'a'},
+          {'type': 'hardBreak'},
+          {
+            'type': 'text',
+            'text': 'b',
+            'marks': [
+              {'type': 'bold'},
+            ],
+          },
+        ],
+      );
+      expect(_content('a\nb')[0]['content'], [
+        {'type': 'text', 'text': 'a\nb'},
+      ]);
+    });
+
     test('空串 → 单个空段落', () {
       expect(_content('')[0], {'type': 'paragraph'});
     });

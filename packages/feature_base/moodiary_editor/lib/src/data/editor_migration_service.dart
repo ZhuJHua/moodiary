@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_data/moodiary_data.dart';
@@ -57,14 +58,15 @@ class EditorMigrationService {
   static Future<void> _writeBackup(Diary diary) async {
     final path = _backupPath(diary.id);
     await Directory(p.dirname(path)).create(recursive: true);
-    await File(path).writeAsString(
-      jsonEncode({
+    final backup = await Isolate.run(
+      () => jsonEncode({
         'id': diary.id,
         'content': diary.content,
         'type': diary.type,
         'savedAt': DateTime.now().toIso8601String(),
       }),
     );
+    await File(path).writeAsString(backup);
   }
 
   @visibleForTesting
@@ -131,8 +133,7 @@ class EditorMigrationService {
     }
   }
 
-  static Future<bool> migrate(Diary diary) async {
-    if (DiaryType.fromValue(diary.type) == .tiptap) return false;
+  static Diary _convertDiary(Diary diary) {
     final json = TiptapContent.ensureMedia(
       _toJson(diary),
       images: diary.imageName,
@@ -140,22 +141,25 @@ class EditorMigrationService {
       videos: diary.videoName,
       files: diary.fileName,
     );
-
-    await _writeBackup(diary);
-
     final converted = diary.copyWith(
       content: json,
       type: DiaryType.tiptap.value,
     );
     final derived = DiaryContent.of(converted);
     final media = derived.media;
-    final newDiary = converted.copyWith(
+    return converted.copyWith(
       contentText: derived.plainText,
       imageName: media.images,
       audioName: media.audios,
       videoName: media.videos,
       fileName: media.files,
     );
+  }
+
+  static Future<bool> migrate(Diary diary) async {
+    if (DiaryType.fromValue(diary.type) == .tiptap) return false;
+    final newDiary = await Isolate.run(() => _convertDiary(diary));
+    await _writeBackup(diary);
     await getIt<DiaryRepository>().updateADiary(
       newDiary: newDiary,
       fromSync: true,

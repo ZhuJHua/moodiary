@@ -1,0 +1,8 @@
+"NSCameraUsageDescription" = "Moodiary uses the camera to take photos and videos for your diary entries.";
+"NSMicrophoneUsageDescription" = "Moodiary uses the microphone to record voice notes and video sound for your diary entries.";
+"NSLocationWhenInUseUsageDescription" = "Moodiary uses your location while you use the app to add the place and weather to a diary entry.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Moodiary only uses your location while you use the app, to add the place and weather to a diary entry. It never tracks your location in the background.";
+"NSPhotoLibraryUsageDescription" = "Moodiary reads your photo library so you can add photos and videos to your diary entries.";
+"NSPhotoLibraryAddUsageDescription" = "Moodiary saves the photos and videos you take or export to your photo library.";
+"NSFaceIDUsageDescription" = "Moodiary uses Face ID to unlock the app when App Lock is on.";
+"NSLocalNetworkUsageDescription" = "Moodiary uses the local network to transfer diary data with your other devices on the same Wi-Fi.";

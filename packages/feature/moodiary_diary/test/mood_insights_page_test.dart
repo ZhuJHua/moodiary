@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -16,6 +17,11 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'support/pump.dart';
+
+final _clock = Clock.fixed(DateTime(2026, 6, 17, 12));
+
+void _testWidgets(String description, WidgetTesterCallback body) =>
+    testWidgets(description, (tester) => withClock(_clock, () => body(tester)));
 
 class _Repository implements MoodInsightsRepository {
   Completer<List<MoodInsightEntry>>? pending;
@@ -76,7 +82,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     repository.rows = [
       for (var year = today.year - 2; year <= today.year; year++)
         for (var month = 1; month <= 12; month++)
@@ -97,7 +103,7 @@ void main() {
   for (final locale in AppLocale.values) {
     for (final brightness in Brightness.values) {
       for (final palette in MoodPalette.values) {
-        testWidgets('$locale $brightness $palette calendar footer scale', (
+        _testWidgets('$locale $brightness $palette calendar footer scale', (
           tester,
         ) async {
           await LocaleSettings.setLocale(locale);
@@ -106,7 +112,7 @@ void main() {
           tester.view.devicePixelRatio = 1;
           addTearDown(tester.view.resetPhysicalSize);
           addTearDown(tester.view.resetDevicePixelRatio);
-          final today = moodDayKey(DateTime.now());
+          final today = moodDayKey(clock.now());
           repository.rows = [
             MoodInsightEntry(id: 'today', time: today, mood: .good),
           ];
@@ -139,6 +145,9 @@ void main() {
                 -300,
                 scrollable: find.byType(Scrollable).first,
               );
+              // Scrolling up can stop with the header under the page's bar.
+              await tester.ensureVisible(find.text(l10n.insights.year));
+              await tester.pumpAndSettle();
               await tester.tap(find.text(l10n.insights.year));
               await tester.pumpAndSettle();
             }
@@ -266,7 +275,7 @@ void main() {
         'Dec 28 – Jan 3',
       ),
     ]) {
-      testWidgets('$locale $scope $start header labels and picker target', (
+      _testWidgets('$locale $scope $start header labels and picker target', (
         tester,
       ) async {
         await LocaleSettings.setLocale(locale);
@@ -310,7 +319,7 @@ void main() {
     }
 
     for (final scale in [1.0, 3.0]) {
-      testWidgets('$locale header fits at text scale $scale', (tester) async {
+      _testWidgets('$locale header fits at text scale $scale', (tester) async {
         await LocaleSettings.setLocale(locale);
         addTearDown(() => LocaleSettings.setLocale(AppLocale.zh));
         await tester.pumpWidget(
@@ -350,7 +359,7 @@ void main() {
       });
     }
 
-    testWidgets('$locale empty, error and retry states', (tester) async {
+    _testWidgets('$locale empty, error and retry states', (tester) async {
       await LocaleSettings.setLocale(locale);
       addTearDown(() => LocaleSettings.setLocale(AppLocale.zh));
       await tester.pumpWidget(
@@ -377,7 +386,7 @@ void main() {
   }
 
   for (final year in [2000, 2023, 2024]) {
-    testWidgets(
+    _testWidgets(
       'year heatmap covers every day of $year with rounded mood colors',
       (tester) async {
         final start = DateTime(year);
@@ -454,10 +463,10 @@ void main() {
     );
   }
 
-  testWidgets('year heatmap selection opens the day footer and diary sheet', (
+  _testWidgets('year heatmap selection opens the day footer and diary sheet', (
     tester,
   ) async {
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     repository.rows = [MoodInsightEntry(id: 'today', time: today, mood: .good)];
     await tester.pumpWidget(
       muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
@@ -501,11 +510,11 @@ void main() {
   });
 
   for (final scope in MoodInsightsScope.values) {
-    testWidgets('$scope opens its picker and jumps to the selected period', (
+    _testWidgets('$scope opens its picker and jumps to the selected period', (
       tester,
     ) async {
       await openPage(tester);
-      final today = moodDayKey(DateTime.now());
+      final today = moodDayKey(clock.now());
       final scopeLabel = switch (scope) {
         .week => l10n.insights.week,
         .month => l10n.insights.month,
@@ -556,7 +565,7 @@ void main() {
   }
 
   for (final scope in [MoodInsightsScope.month, MoodInsightsScope.year]) {
-    testWidgets('$scope selected picker label uses onPrimaryContainer', (
+    _testWidgets('$scope selected picker label uses onPrimaryContainer', (
       tester,
     ) async {
       await openPage(tester);
@@ -565,7 +574,7 @@ void main() {
         await tester.pumpAndSettle();
       }
       await openPicker(tester);
-      final today = moodDayKey(DateTime.now());
+      final today = moodDayKey(clock.now());
       final selected = moodPeriodBounds(today, scope).start;
       final selectedCell = cell(selected);
       final colorScheme = tester.element(selectedCell).theme.colors;
@@ -583,14 +592,14 @@ void main() {
     });
   }
 
-  testWidgets('week picker highlighted row numbers use onPrimaryContainer', (
+  _testWidgets('week picker highlighted row numbers use onPrimaryContainer', (
     tester,
   ) async {
     await openPage(tester);
     await tester.tap(find.text(l10n.insights.week));
     await tester.pumpAndSettle();
     await openPicker(tester);
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     final selectedWeek = moodPeriodBounds(today, .week).start;
     Finder dayCell(DateTime day) =>
         find.byKey(ValueKey('week-day-${day.year}-${day.month}-${day.day}'));
@@ -620,9 +629,9 @@ void main() {
     }
   });
 
-  testWidgets('month picker bounds and averages', (tester) async {
+  _testWidgets('month picker bounds and averages', (tester) async {
     await openPage(tester);
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     await openPicker(tester);
     for (var month = today.month + 1; month <= 12; month++) {
       final future = cell(DateTime(today.year, month));
@@ -664,10 +673,10 @@ void main() {
     expect(cell(DateTime(today.year - 2)), findsOneWidget);
   });
 
-  testWidgets('year picker uses the same full-year mean as the summary', (
+  _testWidgets('year picker uses the same full-year mean as the summary', (
     tester,
   ) async {
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     repository.rows = [
       MoodInsightEntry(
         id: 'end-of-year',
@@ -695,10 +704,10 @@ void main() {
     );
   });
 
-  testWidgets('future-only diaries still allow choosing the current year', (
+  _testWidgets('future-only diaries still allow choosing the current year', (
     tester,
   ) async {
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     repository.rows = [
       MoodInsightEntry(
         id: 'future',
@@ -723,14 +732,14 @@ void main() {
   });
 
   for (final column in [0, 3, 6]) {
-    testWidgets('tapping weekday area $column selects the whole week', (
+    _testWidgets('tapping weekday area $column selects the whole week', (
       tester,
     ) async {
       await openPage(tester);
       await tester.tap(find.text(l10n.insights.week));
       await tester.pumpAndSettle();
       await openPicker(tester);
-      final today = moodDayKey(DateTime.now());
+      final today = moodDayKey(clock.now());
       final week = moodPeriodBounds(
         DateTime(today.year, today.month),
         .week,
@@ -752,55 +761,58 @@ void main() {
     });
   }
 
-  testWidgets('today row stays enabled including its dimmed future day areas', (
-    tester,
-  ) async {
-    await openPage(tester);
-    await tester.tap(find.text(l10n.insights.week));
-    await tester.pumpAndSettle();
-    await openPicker(tester);
-    final today = moodDayKey(DateTime.now());
-    final week = moodPeriodBounds(today, .week).start;
-    final row = find.byKey(
-      ValueKey('week-row-${week.year}-${week.month}-${week.day}'),
-    );
-    final ink = tester.widget<MInkWell>(
-      find.descendant(of: row, matching: find.byType(MInkWell)),
-    );
-    expect(ink.enabled, isTrue);
-    expect(ink.onTap, isNotNull);
-    final highlight = tester.widget<DecoratedBox>(
-      find.descendant(of: row, matching: find.byType(DecoratedBox)),
-    );
-    expect(
-      (highlight.decoration as BoxDecoration).color,
-      tester.element(row).theme.colors.primaryContainer,
-    );
-    final tomorrow = moodDayOffset(today, 1);
-    final target = tomorrow.isBefore(moodDayOffset(week, 7)) ? tomorrow : today;
-    final dayArea = find.byKey(
-      ValueKey('week-day-${target.year}-${target.month}-${target.day}'),
-    );
-    expect(
-      tester
-          .widget<Opacity>(
-            find.descendant(of: dayArea, matching: find.byType(Opacity)),
-          )
-          .opacity,
-      target == today ? 1 : lessThan(1),
-    );
-    await tester.tap(dayArea);
-    await tester.pumpAndSettle();
-    expect(find.byType(BottomSheet), findsNothing);
-    expect(repository.queries.last.end, moodDayOffset(week, 7));
-  });
+  _testWidgets(
+    'today row stays enabled including its dimmed future day areas',
+    (tester) async {
+      await openPage(tester);
+      await tester.tap(find.text(l10n.insights.week));
+      await tester.pumpAndSettle();
+      await openPicker(tester);
+      final today = moodDayKey(clock.now());
+      final week = moodPeriodBounds(today, .week).start;
+      final row = find.byKey(
+        ValueKey('week-row-${week.year}-${week.month}-${week.day}'),
+      );
+      final ink = tester.widget<MInkWell>(
+        find.descendant(of: row, matching: find.byType(MInkWell)),
+      );
+      expect(ink.enabled, isTrue);
+      expect(ink.onTap, isNotNull);
+      final highlight = tester.widget<DecoratedBox>(
+        find.descendant(of: row, matching: find.byType(DecoratedBox)),
+      );
+      expect(
+        (highlight.decoration as BoxDecoration).color,
+        tester.element(row).theme.colors.primaryContainer,
+      );
+      final tomorrow = moodDayOffset(today, 1);
+      final target = tomorrow.isBefore(moodDayOffset(week, 7))
+          ? tomorrow
+          : today;
+      final dayArea = find.byKey(
+        ValueKey('week-day-${target.year}-${target.month}-${target.day}'),
+      );
+      expect(
+        tester
+            .widget<Opacity>(
+              find.descendant(of: dayArea, matching: find.byType(Opacity)),
+            )
+            .opacity,
+        target == today ? 1 : lessThan(1),
+      );
+      await tester.tap(dayArea);
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(repository.queries.last.end, moodDayOffset(week, 7));
+    },
+  );
 
-  testWidgets('future week row is disabled and exposes disabled semantics', (
+  _testWidgets('future week row is disabled and exposes disabled semantics', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
     try {
-      final today = moodDayKey(DateTime.now());
+      final today = moodDayKey(clock.now());
       final month = DateTime(today.year, today.month + 1);
       final week = moodPeriodBounds(moodDayOffset(month, 6), .week).start;
       await tester.pumpWidget(
@@ -841,7 +853,7 @@ void main() {
     (const Locale('zh'), '10月11日 – 10月17日'),
     (const Locale('en'), 'Oct 11 – Oct 17'),
   ]) {
-    testWidgets('week rows expose one localized button each in $locale', (
+    _testWidgets('week rows expose one localized button each in $locale', (
       tester,
     ) async {
       final semantics = tester.ensureSemantics();
@@ -870,7 +882,7 @@ void main() {
             ValueKey('week-row-${week.year}-${week.month}-${week.day}'),
           );
           final node = tester.getSemantics(row);
-          final enabled = !week.isAfter(moodDayKey(DateTime.now()));
+          final enabled = !week.isAfter(moodDayKey(clock.now()));
           expect(
             node,
             matchesSemantics(
@@ -898,7 +910,7 @@ void main() {
   }
 
   for (final scope in MoodInsightsScope.values) {
-    testWidgets('trend connects recorded points across gaps for $scope', (
+    _testWidgets('trend connects recorded points across gaps for $scope', (
       tester,
     ) async {
       await openPage(tester);
@@ -914,7 +926,7 @@ void main() {
       expect(chart.connectGaps, isTrue);
     });
 
-    testWidgets('back to today is conditional and returns to current $scope', (
+    _testWidgets('back to today is conditional and returns to current $scope', (
       tester,
     ) async {
       await openPage(tester);
@@ -933,19 +945,19 @@ void main() {
       expect(todayAction, findsOneWidget);
       expect(
         tester.widget<TodayGlyph>(find.byType(TodayGlyph)).day,
-        DateTime.now().day,
+        clock.now().day,
       );
       await tester.tap(todayAction);
       await tester.pumpAndSettle();
       expect(todayAction, findsNothing);
       expect(
         repository.queries.last.end,
-        moodPeriodBounds(DateTime.now(), scope).end,
+        moodPeriodBounds(clock.now(), scope).end,
       );
     });
   }
 
-  testWidgets('flings navigate but slow drags do not', (tester) async {
+  _testWidgets('flings navigate but slow drags do not', (tester) async {
     await openPage(tester);
     final currentEnd = repository.queries.last.end;
     await tester.timedDrag(
@@ -971,7 +983,7 @@ void main() {
   });
 
   for (final recorded in [true, false]) {
-    testWidgets('fast initial result recorded=$recorded skips placeholders', (
+    _testWidgets('fast initial result recorded=$recorded skips placeholders', (
       tester,
     ) async {
       repository.pending = Completer();
@@ -986,7 +998,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
       repository.pending!.complete([
         if (recorded)
-          MoodInsightEntry(id: 'fast', time: DateTime.now(), mood: .good),
+          MoodInsightEntry(id: 'fast', time: clock.now(), mood: .good),
       ]);
       await tester.pump();
       await tester.pump();
@@ -1004,7 +1016,7 @@ void main() {
     });
   }
 
-  testWidgets('scope switch retains the previous period until data arrives', (
+  _testWidgets('scope switch retains the previous period until data arrives', (
     tester,
   ) async {
     await openPage(tester);
@@ -1028,7 +1040,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 299));
     expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
     repository.pending!.complete([
-      MoodInsightEntry(id: 'year', time: DateTime.now(), mood: .awful),
+      MoodInsightEntry(id: 'year', time: clock.now(), mood: .awful),
     ]);
     await tester.pump();
     expect(
@@ -1039,83 +1051,85 @@ void main() {
     expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
   });
 
-  testWidgets('superseding a slow load restarts delay and ignores its result', (
-    tester,
-  ) async {
-    await openPage(tester);
-    final slow = Completer<List<MoodInsightEntry>>();
-    repository.pending = slow;
-    await tester.tap(find.text(l10n.insights.year));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isTrue);
-    final latest = Completer<List<MoodInsightEntry>>();
-    repository.pending = latest;
-    await tester.tap(find.text(l10n.insights.week));
-    await tester.pump();
-    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
-    await tester.pump(const Duration(milliseconds: 50));
-    latest.complete([
-      MoodInsightEntry(id: 'latest', time: DateTime.now(), mood: .good),
-    ]);
-    await tester.pump();
-    await tester.pump();
-    expect(find.text('4.0'), findsOneWidget);
-    slow.complete([
-      MoodInsightEntry(id: 'stale', time: DateTime.now(), mood: .awful),
-    ]);
-    await tester.pumpAndSettle();
-    expect(find.text('4.0'), findsOneWidget);
-    expect(find.text('1.0'), findsNothing);
-    expect(
-      tester.widget<MoodPeriodHeader>(find.byType(MoodPeriodHeader)).scope,
-      MoodInsightsScope.week,
-    );
-    expect(find.byType(MoodCalendar), findsNothing);
-    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
-  });
+  _testWidgets(
+    'superseding a slow load restarts delay and ignores its result',
+    (tester) async {
+      await openPage(tester);
+      final slow = Completer<List<MoodInsightEntry>>();
+      repository.pending = slow;
+      await tester.tap(find.text(l10n.insights.year));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isTrue);
+      final latest = Completer<List<MoodInsightEntry>>();
+      repository.pending = latest;
+      await tester.tap(find.text(l10n.insights.week));
+      await tester.pump();
+      expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+      await tester.pump(const Duration(milliseconds: 50));
+      latest.complete([
+        MoodInsightEntry(id: 'latest', time: clock.now(), mood: .good),
+      ]);
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('4.0'), findsOneWidget);
+      slow.complete([
+        MoodInsightEntry(id: 'stale', time: clock.now(), mood: .awful),
+      ]);
+      await tester.pumpAndSettle();
+      expect(find.text('4.0'), findsOneWidget);
+      expect(find.text('1.0'), findsNothing);
+      expect(
+        tester.widget<MoodPeriodHeader>(find.byType(MoodPeriodHeader)).scope,
+        MoodInsightsScope.week,
+      );
+      expect(find.byType(MoodCalendar), findsNothing);
+      expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+    },
+  );
 
-  testWidgets('picker jump delays skeleton until new period finishes loading', (
-    tester,
-  ) async {
-    await openPage(tester);
-    await openPicker(tester);
-    final target = DateTime(DateTime.now().year, 1);
-    repository.pending = Completer();
-    await tester.tap(cell(target));
-    await tester.pump();
-    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
-    expect(
-      tester.widget<MoodPeriodHeader>(find.byType(MoodPeriodHeader)).start,
-      target,
-    );
-    expect(
-      tester.widget<MoodCalendar>(find.byType(MoodCalendar)).start,
-      DateTime(DateTime.now().year, DateTime.now().month),
-    );
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byType(BottomSheet), findsNothing);
-    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isTrue);
-    expect(
-      tester.widget<MoodCalendar>(find.byType(MoodCalendar)).start,
-      target,
-    );
-    repository.pending!.complete([
-      MoodInsightEntry(id: 'jumped', time: target, mood: .awful),
-    ]);
-    await tester.pumpAndSettle();
-    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
-    expect(
-      tester
-          .widget<MoodCalendar>(find.byType(MoodCalendar))
-          .days[target]!
-          .level,
-      DiaryMood.awful,
-    );
-  });
+  _testWidgets(
+    'picker jump delays skeleton until new period finishes loading',
+    (tester) async {
+      await openPage(tester);
+      await openPicker(tester);
+      final target = DateTime(clock.now().year, 1);
+      repository.pending = Completer();
+      await tester.tap(cell(target));
+      await tester.pump();
+      expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+      expect(
+        tester.widget<MoodPeriodHeader>(find.byType(MoodPeriodHeader)).start,
+        target,
+      );
+      expect(
+        tester.widget<MoodCalendar>(find.byType(MoodCalendar)).start,
+        DateTime(clock.now().year, clock.now().month),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isTrue);
+      expect(
+        tester.widget<MoodCalendar>(find.byType(MoodCalendar)).start,
+        target,
+      );
+      repository.pending!.complete([
+        MoodInsightEntry(id: 'jumped', time: target, mood: .awful),
+      ]);
+      await tester.pumpAndSettle();
+      expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+      expect(
+        tester
+            .widget<MoodCalendar>(find.byType(MoodCalendar))
+            .days[target]!
+            .level,
+        DiaryMood.awful,
+      );
+    },
+  );
 
   for (final month in [1, 2]) {
-    testWidgets('year heatmap month $month label drills down', (tester) async {
+    _testWidgets('year heatmap month $month label drills down', (tester) async {
       await openPage(tester);
       await tester.tap(find.text(l10n.insights.year));
       await tester.pumpAndSettle();
@@ -1125,7 +1139,7 @@ void main() {
       final label = find.descendant(
         of: find.byType(MHeatmap),
         matching: find.text(
-          TimeFormat.monthAbbr(DateTime(DateTime.now().year - 1, month)),
+          TimeFormat.monthAbbr(DateTime(clock.now().year - 1, month)),
         ),
       );
       await tester.ensureVisible(label);
@@ -1133,7 +1147,7 @@ void main() {
       await tester.pumpAndSettle();
       final calendar = tester.widget<MoodCalendar>(find.byType(MoodCalendar));
       expect(calendar.scope, MoodInsightsScope.month);
-      expect(calendar.start, DateTime(DateTime.now().year - 1, month));
+      expect(calendar.start, DateTime(clock.now().year - 1, month));
       await tester.scrollUntilVisible(
         periodButton,
         -300,
@@ -1151,7 +1165,7 @@ void main() {
   }
 
   for (final scope in MoodInsightsScope.values) {
-    testWidgets('$scope pending period uses the normal layout with bones', (
+    _testWidgets('$scope pending period uses the normal layout with bones', (
       tester,
     ) async {
       repository.pending = Completer();
@@ -1215,7 +1229,7 @@ void main() {
   }
 
   for (final scope in [MoodInsightsScope.month, MoodInsightsScope.year]) {
-    testWidgets('$scope cells replace mood colors with uniform bones', (
+    _testWidgets('$scope cells replace mood colors with uniform bones', (
       tester,
     ) async {
       final start = DateTime(2025, 10);
@@ -1260,11 +1274,11 @@ void main() {
     });
   }
 
-  testWidgets('fast day sheet result skips skeleton entry tiles', (
+  _testWidgets('fast day sheet result skips skeleton entry tiles', (
     tester,
   ) async {
     await openPage(tester);
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     await tester.tap(
       find.descendant(
         of: find.byType(MoodCalendar),
@@ -1296,53 +1310,56 @@ void main() {
     );
   });
 
-  testWidgets('pending day sheet shows two real entry tiles as skeleton rows', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final today = moodDayKey(DateTime.now());
-    repository.rows = [MoodInsightEntry(id: 'today', time: today, mood: .good)];
-    diaries.pending = Completer();
-    await tester.pumpWidget(
-      muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.descendant(
-        of: find.byType(MoodCalendar),
-        matching: find.text('${today.day}'),
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text(l10n.insights.view));
-    await tester.tap(find.text(l10n.insights.view));
-    await tester.pump();
-    expect(find.byType(DiaryEntryTile), findsNothing);
-    await tester.pump(const Duration(milliseconds: 299));
-    expect(find.byType(DiaryEntryTile), findsNothing);
-    await tester.pump(const Duration(milliseconds: 1));
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-    expect(find.byType(DiaryEntryTile), findsNWidgets(2));
-    expect(
-      tester.widget<MSkeleton>(find.byType(MSkeleton).last).enabled,
-      isTrue,
-    );
-    diaries.pending!.complete([
-      Diary.empty(type: .richText).copyWith(title: 'Loaded day diary'),
-    ]);
-    await tester.pumpAndSettle();
-    expect(find.byType(DiaryEntryTile), findsOneWidget);
-    expect(find.text('Loaded day diary'), findsOneWidget);
-    expect(
-      tester.widget<MSkeleton>(find.byType(MSkeleton).last).enabled,
-      isFalse,
-    );
-  });
+  _testWidgets(
+    'pending day sheet shows two real entry tiles as skeleton rows',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final today = moodDayKey(clock.now());
+      repository.rows = [
+        MoodInsightEntry(id: 'today', time: today, mood: .good),
+      ];
+      diaries.pending = Completer();
+      await tester.pumpWidget(
+        muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(MoodCalendar),
+          matching: find.text('${today.day}'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text(l10n.insights.view));
+      await tester.tap(find.text(l10n.insights.view));
+      await tester.pump();
+      expect(find.byType(DiaryEntryTile), findsNothing);
+      await tester.pump(const Duration(milliseconds: 299));
+      expect(find.byType(DiaryEntryTile), findsNothing);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byType(DiaryEntryTile), findsNWidgets(2));
+      expect(
+        tester.widget<MSkeleton>(find.byType(MSkeleton).last).enabled,
+        isTrue,
+      );
+      diaries.pending!.complete([
+        Diary.empty(type: .richText).copyWith(title: 'Loaded day diary'),
+      ]);
+      await tester.pumpAndSettle();
+      expect(find.byType(DiaryEntryTile), findsOneWidget);
+      expect(find.text('Loaded day diary'), findsOneWidget);
+      expect(
+        tester.widget<MSkeleton>(find.byType(MSkeleton).last).enabled,
+        isFalse,
+      );
+    },
+  );
 
-  testWidgets(
+  _testWidgets(
     'empty state replaces all data cards and scope navigation still works',
     (tester) async {
       await tester.pumpWidget(
@@ -1355,23 +1372,23 @@ void main() {
       await tester.tap(find.text(l10n.insights.week));
       await tester.pumpAndSettle();
       expect(find.text(l10n.insights.empty), findsOneWidget);
-      final bounds = moodPeriodBounds(DateTime.now(), .week);
+      final bounds = moodPeriodBounds(clock.now(), .week);
       expect(repository.queries.last.end, bounds.end);
       await tester.tap(find.text(l10n.insights.year));
       await tester.pumpAndSettle();
-      expect(repository.queries.last.end, DateTime(DateTime.now().year + 1));
+      expect(repository.queries.last.end, DateTime(clock.now().year + 1));
       expect(tester.takeException(), isNull);
     },
   );
 
-  testWidgets(
+  _testWidgets(
     'default month, week and year show their respective data blocks',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final now = DateTime.now();
+      final now = clock.now();
       repository.rows = [
         MoodInsightEntry(
           id: 'today',
@@ -1426,14 +1443,14 @@ void main() {
   );
 
   for (final count in [1, 20]) {
-    testWidgets('day sheet wraps $count entries and dismisses by dragging', (
+    _testWidgets('day sheet wraps $count entries and dismisses by dragging', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final today = moodDayKey(DateTime.now());
+      final today = moodDayKey(clock.now());
       repository.rows = [
         MoodInsightEntry(id: 'today', time: today, mood: DiaryMood.good),
       ];
@@ -1505,7 +1522,7 @@ void main() {
     [5.0, 2.5],
     [3.5, 2.5],
   ]) {
-    testWidgets(
+    _testWidgets(
       'weekday bars scale to $values without covering the baseline label',
       (tester) async {
         await tester.pumpWidget(

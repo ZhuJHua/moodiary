@@ -1,7 +1,8 @@
 import 'dart:math' as math;
-import 'dart:ui';
 
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, listEquals;
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart' as glass;
 import 'package:mui/mui.dart';
 
 class MGlassSurface extends StatelessWidget {
@@ -9,9 +10,9 @@ class MGlassSurface extends StatelessWidget {
 
   final OutlinedBorder shape;
 
-  final Color? tint;
-
   final Color? borderColor;
+
+  final double? borderWidth;
 
   final List<BoxShadow>? shadows;
 
@@ -19,8 +20,8 @@ class MGlassSurface extends StatelessWidget {
     super.key,
     required this.child,
     this.shape = const RoundedRectangleBorder(borderRadius: MuiRadius.lg),
-    this.tint,
     this.borderColor,
+    this.borderWidth,
     this.shadows,
   });
 
@@ -34,80 +35,63 @@ class MGlassSurface extends StatelessWidget {
     ),
   ];
 
+  static Future<void> initialize() async {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await glass.LiquidGlassWidgets.initialize(
+        enablePerformanceMonitor: false,
+      );
+    }
+  }
+
+  static Widget wrapApp({required Widget child}) =>
+      glass.LiquidGlassWidgets.wrap(
+        brightnessResolver: Theme.maybeBrightnessOf,
+        child: child,
+      );
+
   @override
   Widget build(BuildContext context) {
-    final config = MGlass.of(context);
     final scheme = context.theme.colors;
-    final dark = scheme.brightness == .dark;
-
-    final base =
-        tint ?? (dark ? scheme.surfaceContainerHigh : scheme.surfaceContainer);
-    final fill = base.withValues(alpha: config.tintAlpha);
+    final base = scheme.brightness == Brightness.dark
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainer;
     final side = BorderSide(
-      color:
-          borderColor ??
-          (dark
-              ? scheme.onSurface.withValues(alpha: 0.18)
-              : scheme.outlineVariant),
-      width: 1 / MediaQuery.devicePixelRatioOf(context),
+      color: borderColor ?? scheme.outlineVariant,
+      width: borderWidth ?? 1 / MediaQuery.devicePixelRatioOf(context),
     );
-
+    final direction = Directionality.maybeOf(context);
     return CustomPaint(
       painter: _GlassShadowPainter(
         shape: shape,
-        textDirection: Directionality.maybeOf(context),
+        textDirection: direction,
         shadows: shadows ?? defaultShadows(scheme),
       ),
-      child: ClipPath(
-        clipper: ShapeBorderClipper(shape: shape),
-        child: BackdropFilter(
-          filter: _backdropFilter(config),
-          child: DecoratedBox(
-            decoration: ShapeDecoration(
-              color: fill,
-              shape: shape.copyWith(side: side),
-            ),
-            child: child,
+      child: glass.GlassContainer(
+        quality: glass.GlassQuality.minimal,
+        useOwnLayer: true,
+        shape: switch (shape) {
+          StadiumBorder() => const glass.LiquidRoundedRectangle(
+            borderRadius: double.infinity,
           ),
+          CircleBorder() => const glass.LiquidOval(),
+          RoundedRectangleBorder(:final borderRadius) =>
+            glass.LiquidRoundedRectangle(
+              borderRadius: borderRadius.resolve(direction).topLeft.x,
+            ),
+          _ => const glass.LiquidRoundedRectangle(borderRadius: 0),
+        },
+        settings: glass.LiquidGlassSettings(
+          glassColor: base.withValues(alpha: 0.62),
+          bodyMode: glass.GlassBodyMode.clear,
+          shadow: const [],
+        ),
+        child: DecoratedBox(
+          decoration: ShapeDecoration(shape: shape.copyWith(side: side)),
+          child: child,
         ),
       ),
     );
   }
-}
-
-ImageFilter _backdropFilter(MGlassConfig config) {
-  final blur = ImageFilter.blur(
-    sigmaX: config.blurSigma,
-    sigmaY: config.blurSigma,
-  );
-  if (config.saturation == 1) return blur;
-  return .compose(outer: _saturate(config.saturation), inner: blur);
-}
-
-ColorFilter _saturate(double s) {
-  const lumR = 0.213, lumG = 0.715, lumB = 0.072;
-  return .matrix(<double>[
-    lumR + s * (1 - lumR),
-    lumG * (1 - s),
-    lumB * (1 - s),
-    0,
-    0,
-    lumR * (1 - s),
-    lumG + s * (1 - lumG),
-    lumB * (1 - s),
-    0,
-    0,
-    lumR * (1 - s),
-    lumG * (1 - s),
-    lumB + s * (1 - lumB),
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-  ]);
 }
 
 class _GlassShadowPainter extends CustomPainter {

@@ -64,8 +64,6 @@ class MoodPeriodHeader extends StatelessWidget {
         label: context.l10n.insights.year,
       ),
     ];
-    // Keep the compact size at normal scale, and let enlarged labels breathe.
-    final enlarged = MediaQuery.textScalerOf(context).scale(14) > 14;
     final text = TextPainter(
       textDirection: Directionality.of(context),
       textScaler: MediaQuery.textScalerOf(context),
@@ -134,7 +132,7 @@ class MoodPeriodHeader extends StatelessWidget {
               child: SizedBox(
                 width: math.min(
                   constraints.maxWidth,
-                  enlarged ? math.max(132, segmentWidth * 3 + 28) : 132,
+                  math.max(132, segmentWidth * 3 + 28),
                 ),
                 child: MSegmentedControl<MoodInsightsScope>(
                   height: math.max(32, segmentHeight + 8),

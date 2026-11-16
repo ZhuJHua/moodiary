@@ -22,7 +22,10 @@ import '../../toolbar/insert_panel.dart';
 
 class MoodiaryEditorView extends StatefulWidget {
   final String initialContent;
-  final ValueChanged<String> onChanged;
+  final String? initialContentText;
+  final ValueChanged<TiptapMetadata>? onMetadataChanged;
+  final ValueChanged<String>? onChanged;
+  final void Function(String content, String plainText)? onChangedWithText;
 
   final String initialTitle;
   final ValueChanged<String>? onTitleChanged;
@@ -64,7 +67,10 @@ class MoodiaryEditorView extends StatefulWidget {
   const MoodiaryEditorView({
     super.key,
     required this.initialContent,
-    required this.onChanged,
+    this.initialContentText,
+    this.onMetadataChanged,
+    this.onChanged,
+    this.onChangedWithText,
     this.initialTitle = '',
     this.onTitleChanged,
     this.controller,
@@ -260,14 +266,17 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     });
   }
 
-  void _previewImages(List<String> images, int index) {
+  void _previewImages(List<String> images, int index, List<Object> heroTags) {
     final resolved = [
       for (final src in images)
-        src.startsWith('http://') || src.startsWith('https://')
-            ? src
-            : AppFiles.getRealPath('image', src),
+        isNetworkMedia(src) ? src : AppFiles.getRealPath('image', src),
     ];
-    MImageBrowser.show(context, images: resolved, initialIndex: index);
+    MImageBrowser.show(
+      context,
+      images: resolved,
+      initialIndex: index,
+      heroTags: heroTags,
+    );
   }
 
   Future<Duration?> _openVideoFullscreen(String name, Duration position) async {
@@ -324,15 +333,18 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       controller: _controller,
       readOnly: !widget.editable,
       initialContent: widget.initialContent,
+      initialContentText: widget.initialContentText,
+      onMetadataChanged: widget.onMetadataChanged,
       initialTitle: widget.initialTitle,
       onChanged: widget.onChanged,
+      onChangedWithText: widget.onChangedWithText,
       onTitleChanged: widget.onTitleChanged,
       onActiveHeadingChanged: widget.onActiveHeadingChanged,
       onUrlTap: _openUrl,
       onAttachmentTap: _openAttachment,
-      onSaveImage: _saveDataUriImage,
       onImageTap: _previewImages,
       onVideoFullscreen: _openVideoFullscreen,
+      onSaveImage: _saveDataUriImage,
       onRequestLinkCandidates: _linkCandidates,
       onOpenDiaryLink: widget.onOpenDiaryLink,
       metaJson: widget.metaJson,
@@ -356,7 +368,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onOpenGraph: widget.onOpenGraph,
       firstLineIndent: widget.firstLineIndent,
       fontScale: widget.fontScale,
-      rolesResolver: getIt<ThemeManager>().editorRoles,
       fontResolver: () => getIt<ThemeManager>().editorFont,
       mediaResolver: appMediaResolver,
     );

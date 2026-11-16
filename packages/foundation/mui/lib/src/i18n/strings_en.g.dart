@@ -36,6 +36,7 @@ class MuiLocalizationsDataEn extends MuiLocalizationsData with BaseTranslations<
 	// Translations
 	@override String get ok => 'OK';
 	@override String get cancel => 'Cancel';
+	@override String get close => 'Close';
 	@override String get back => 'Back';
 	@override String get colorPickerTitle => 'Pick a color';
 	@override String get toastLoading => 'Loading';

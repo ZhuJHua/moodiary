@@ -9,9 +9,9 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const _legalese =
-    'Moodiary is free software licensed under the GNU General Public License '
-    'v3.0. The licenses below cover the Dart, Rust and JavaScript packages it '
-    'is built on.';
+    'Moodiary is free software licensed under the GNU Affero General Public '
+    'License v3.0. The licenses below cover the Dart, Rust and JavaScript '
+    'packages it is built on.';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -168,15 +168,19 @@ class _AboutPageState extends State<AboutPage> {
                   SettingListTile(
                     isLast: true,
                     leading: Icon(
-                      LucideIcons.bug,
+                      LucideIcons.shield,
                       color: scheme.onSurfaceVariant,
                     ),
-                    title: context.l10n.app.aboutFeedback,
+                    title: context.l10n.app.aboutPrivacy,
                     trailing: Icon(
                       LucideIcons.chevronRight,
                       color: scheme.onSurfaceVariant,
                     ),
-                    onTap: () => _open('https://answer.moodiary.net'),
+                    onTap: () => _open(
+                      LocaleSettings.currentLocale == AppLocale.zh
+                          ? 'https://docs.moodiary.net/zh/privacy-policy.html'
+                          : 'https://docs.moodiary.net/privacy-policy.html',
+                    ),
                   ),
                 ],
               ),

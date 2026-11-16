@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:mui/mui.dart';
 
 const double _kCellSize = 11;
@@ -233,7 +234,7 @@ class _Column extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final now = clock.now();
     final today = DateTime(now.year, now.month, now.day);
     return Column(
       mainAxisSize: .min,

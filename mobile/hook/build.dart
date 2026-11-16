@@ -13,9 +13,11 @@ const _rustDirs = [
   'packages/foundation/fast_core/rust',
 ];
 
-const _externalLicensePackages = ['sqlite3_simple', 'sqlite3_vec'];
-const _editorDir = 'packages/feature_base/moodiary_editor/editor';
-const _npmManifest = '$_editorDir/build/third-party-licenses.json';
+const _externalLicensePackages = [
+  'sqlite3_simple',
+  'sqlite3_vec',
+  'flutter_tiptap',
+];
 const _outPath = 'assets/licenses/third_party.json';
 
 typedef _Entry = ({List<String> packages, String text});
@@ -51,8 +53,6 @@ void main(List<String> args) async {
         dir.resolve('about.toml'),
       ],
       ...externalManifests,
-      repoRoot.resolve('$_editorDir/package.json'),
-      repoRoot.resolve('$_editorDir/pnpm-lock.yaml'),
     ]);
   });
 }
@@ -115,7 +115,6 @@ Future<void> _generate(
   for (final e in [
     for (final dir in rustDirs) ...await _rust(dir),
     for (final uri in externalManifests) ..._externalEntries(File.fromUri(uri)),
-    ..._npm(File.fromUri(repoRoot.resolve(_npmManifest))),
   ]) {
     texts.putIfAbsent(e.text, () => <String>{}).addAll(e.packages);
   }
@@ -174,35 +173,5 @@ Future<List<_Entry>> _rust(Uri rustDir) async {
   ];
 }
 
-List<_Entry> _npm(File manifest) {
-  if (!manifest.existsSync()) {
-    throw StateError(
-      '${manifest.path} is missing; it is written by the moodiary_editor build '
-      'hook, which runs before this one. Run `dart tool/task.dart clean` and rebuild.',
-    );
-  }
-
-  final deps = jsonDecode(manifest.readAsStringSync()) as List;
-  return [
-    for (final d in deps.cast<Map<String, dynamic>>())
-      (packages: [_label(d, 'npm')], text: _npmText(d)),
-  ];
-}
-
 String _label(Map<String, dynamic> pkg, String origin) =>
     '${pkg['name']} ${pkg['version']} ($origin)';
-
-String _npmText(Map<String, dynamic> dep) {
-  final text = (dep['licenseText'] as String?)?.trim();
-  final notice = (dep['noticeText'] as String?)?.trim();
-  if (text == null || text.isEmpty) {
-    return [
-      '${dep['name']} is distributed under the ${dep['license']} license.',
-      if (dep['homepage'] is String) dep['homepage'] as String,
-      '',
-      'The package ships no license file; see the project home page for the '
-          'full text.',
-    ].join('\n');
-  }
-  return notice == null || notice.isEmpty ? text : '$text\n\n$notice';
-}

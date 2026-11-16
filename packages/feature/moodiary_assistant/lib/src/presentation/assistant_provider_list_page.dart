@@ -210,7 +210,6 @@ class _ProviderCard extends StatelessWidget {
                   padding: const .only(right: 12),
                   child: ProviderLogo(
                     logoUrl: ProviderLogo.urlOf(provider.presetId),
-                    name: provider.name,
                   ),
                 ),
                 Expanded(
