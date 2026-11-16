@@ -50,6 +50,7 @@ void main() {
   List<String>? lanHosts;
   late DateTime now;
   int interfaceReads = 0;
+  late StreamController<Object?> networkChanges;
   final endpoints = <_ControlledEndpoint>[];
 
   setUpAll(() {
@@ -70,6 +71,7 @@ void main() {
     lanHosts = null;
     now = DateTime.utc(2026);
     interfaceReads = 0;
+    networkChanges = StreamController<Object?>.broadcast();
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
     final diaries = DiaryRepository(db);
     final categories = CategoryRepository(db);
@@ -96,7 +98,7 @@ void main() {
       endpoints.add(endpoint);
       if (!firstEndpoint.isCompleted) firstEndpoint.complete(endpoint);
       return endpoint;
-    });
+    }, networkChanges.stream);
     http = HttpClient();
   });
 
@@ -104,6 +106,7 @@ void main() {
     if (startGate case final gate? when !gate.isCompleted) gate.complete();
     http.close(force: true);
     await service.stop();
+    await networkChanges.close();
     service.state.dispose();
     await db.close();
   });
@@ -226,6 +229,36 @@ void main() {
       expect(interfaceReads, 2);
     },
   );
+
+  test('network changes refresh LAN state without throttling', () async {
+    lanHosts = ['192.168.1.2'];
+    MoodiaryKVs.mcpAllowLan.set(true);
+    await service.enable();
+    expect(interfaceReads, 1);
+    expect(networkChanges.hasListener, isTrue);
+
+    for (final hosts in [
+      <String>['192.168.2.2'],
+      <String>[],
+    ]) {
+      final changed = Completer<void>();
+      void onChanged() => changed.complete();
+      service.state.addListener(onChanged);
+      lanHosts = hosts;
+      networkChanges.add('wifi');
+      await changed.future;
+      service.state.removeListener(onChanged);
+      expect(service.state.value.endpoints.map((endpoint) => endpoint.host), [
+        '127.0.0.1',
+        ...hosts,
+      ]);
+    }
+    expect(interfaceReads, 3);
+    expect(endpoints, hasLength(1));
+
+    await service.stop();
+    expect(networkChanges.hasListener, isFalse);
+  });
 
   test('LAN update during start restarts with the new configuration', () async {
     startGate = Completer<void>();

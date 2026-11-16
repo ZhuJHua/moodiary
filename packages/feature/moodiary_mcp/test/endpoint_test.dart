@@ -46,6 +46,7 @@ void main() {
     await diaries.insertADiary(makeDiary('one', 'A sunny afternoon'));
     endpoint = McpHttpEndpoint(
       now: () => now,
+      listLanHosts: () async => ['192.168.1.2'],
       remoteAddress: (_) => remoteAddress,
       serverFactory: (iconUri) {
         final server = buildMoodiaryServer(
@@ -266,15 +267,6 @@ void main() {
       final response = await request(host: uri.authority, body: initializeBody);
       expect(response.statusCode, HttpStatus.ok, reason: uri.toString());
       await response.drain<void>();
-    }
-  });
-
-  test('LAN endpoints skip cellular and VPN interfaces', () {
-    for (final name in ['wlan0', 'swlan0', 'ap0', 'eth0', 'en0']) {
-      expect(McpHttpEndpoint.isLanInterface(name), isTrue, reason: name);
-    }
-    for (final name in ['rmnet_data0', 'ccmni1', 'v4-rmnet0', 'tun0', 'ppp0']) {
-      expect(McpHttpEndpoint.isLanInterface(name), isFalse, reason: name);
     }
   });
 

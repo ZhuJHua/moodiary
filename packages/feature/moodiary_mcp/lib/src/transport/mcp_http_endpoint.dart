@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 
 import 'http_auth.dart';
 import 'server_icon.dart';
@@ -16,51 +17,17 @@ class McpHttpEndpoint {
     InternetAddress? Function(HttpRequest)? remoteAddress,
     Future<List<String>> Function()? listLanHosts,
   }) : _now = now ?? DateTime.now,
-       _listLanHosts = listLanHosts ?? lanHosts,
+       _listLanHosts =
+           listLanHosts ??
+           (() async {
+             final host = await NetworkStatus.getDeviceIP();
+             return [?host];
+           }),
        _remoteAddress =
            remoteAddress ??
            ((request) => request.connectionInfo?.remoteAddress);
 
   static const maxIncomingMessageBytes = 24 * 1024 * 1024;
-
-  /// Cellular, VPN and tunnel interfaces: a LAN client can't reach them.
-  static const _nonLanPrefixes = [
-    'rmnet',
-    'ccmni',
-    'v4-',
-    'clat',
-    'seth',
-    'pdp',
-    'tun',
-    'utun',
-    'ppp',
-    'ipsec',
-    'dummy',
-  ];
-
-  static bool isLanInterface(String name) =>
-      !_nonLanPrefixes.any(name.startsWith);
-
-  static int _wifiFirst(String name) => name.startsWith('wlan') ? 0 : 1;
-
-  /// IPv4 hosts a LAN client can reach, Wi-Fi first.
-  static Future<List<String>> lanHosts() async {
-    final interfaces = await NetworkInterface.list(
-      type: InternetAddressType.IPv4,
-    );
-    return _lanHosts(interfaces);
-  }
-
-  static List<String> _lanHosts(List<NetworkInterface> interfaces) {
-    final lan = [
-      for (final interface in interfaces)
-        if (isLanInterface(interface.name))
-          for (final address in interface.addresses)
-            if (!address.isLoopback && !address.isLinkLocal)
-              (interface.name, address.address),
-    ]..sort((a, b) => _wifiFirst(a.$1).compareTo(_wifiFirst(b.$1)));
-    return [for (final (_, host) in lan) host];
-  }
 
   static const _maxSessions = 32;
   static const _maxAuthFailures = 5;
@@ -133,11 +100,23 @@ class McpHttpEndpoint {
     onEndpointsChanged?.call(_endpoints);
   }
 
-  Future<void> _refreshLanHosts(HttpServer http) async {
-    if (_hostRefresh case final pending?) return pending;
+  Future<void> refreshLanHosts() async {
+    final http = _http;
+    if (http != null && _allowLan) {
+      await _refreshLanHosts(http, force: true);
+    }
+  }
+
+  Future<void> _refreshLanHosts(HttpServer http, {bool force = false}) async {
+    if (_hostRefresh case final pending?) {
+      await pending;
+      if (!force) return;
+    }
+    if (_http != http) return;
     final now = _now();
     final lastRefresh = _lastHostRefresh;
-    if (lastRefresh != null &&
+    if (!force &&
+        lastRefresh != null &&
         now.difference(lastRefresh) < _hostRefreshInterval) {
       return;
     }
@@ -157,7 +136,7 @@ class McpHttpEndpoint {
       if (_http == http) _setHosts(http, hosts);
     } catch (error, stackTrace) {
       logger.e(
-        'MCP could not enumerate network interfaces',
+        'MCP could not read the LAN address',
         error: error,
         stackTrace: stackTrace,
       );

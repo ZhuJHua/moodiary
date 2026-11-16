@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -49,7 +50,8 @@ class McpServerState {
 @lazySingleton
 class McpService {
   McpService(this._diaries, this._categories, this._insights)
-    : _endpointFactory = null;
+    : _endpointFactory = null,
+      _networkChanges = null;
 
   @visibleForTesting
   McpService.forTesting(
@@ -57,12 +59,14 @@ class McpService {
     this._categories,
     this._insights,
     this._endpointFactory,
+    this._networkChanges,
   );
 
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
   final MoodInsightsRepository _insights;
   final McpHttpEndpoint Function()? _endpointFactory;
+  final Stream<Object?>? _networkChanges;
   final Lock _lock = Lock();
 
   final ValueNotifier<McpServerState> state = ValueNotifier(
@@ -70,6 +74,7 @@ class McpService {
   );
 
   McpHttpEndpoint? _transport;
+  StreamSubscription<Object?>? _networkSubscription;
   String? _token;
 
   bool get enabled => MoodiaryKVs.mcpEnabled.get() ?? false;
@@ -80,13 +85,9 @@ class McpService {
   /// The LAN host clients would use, whether or not the server runs.
   Future<String?> lanHost() async {
     try {
-      return (await McpHttpEndpoint.lanHosts()).firstOrNull;
+      return await NetworkStatus.getDeviceIP();
     } catch (e, s) {
-      logger.e(
-        'MCP could not enumerate network interfaces',
-        error: e,
-        stackTrace: s,
-      );
+      logger.e('MCP could not read the LAN address', error: e, stackTrace: s);
       return null;
     }
   }
@@ -162,6 +163,10 @@ class McpService {
         port: transport.port,
         endpoints: transport.endpoints,
       );
+      if (allowLan) {
+        _networkSubscription = (_networkChanges ?? NetworkStatus.changes)
+            .listen((_) => unawaited(transport.refreshLanHosts()));
+      }
       logger.i('MCP server listening on ${transport.endpoints.join(', ')}');
     } catch (e, s) {
       logger.e('MCP server failed to start', error: e, stackTrace: s);
@@ -216,6 +221,8 @@ class McpService {
   Future<void> _teardown() async {
     final transport = _transport;
     _transport = null;
+    await _networkSubscription?.cancel();
+    _networkSubscription = null;
     await _discard(transport);
   }
 

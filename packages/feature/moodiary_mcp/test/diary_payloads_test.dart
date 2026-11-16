@@ -164,6 +164,28 @@ void main() {
     });
   });
 
+  test('code blocks containing backtick fences round-trip unchanged', () {
+    const body = 'before\n```\n````` embedded\nafter';
+    final doc = jsonEncode(
+      TiptapContent.newDoc([
+        {
+          'type': 'codeBlock',
+          'attrs': {'language': 'markdown'},
+          'content': [
+            {'type': 'text', 'text': body},
+          ],
+        },
+      ]),
+    );
+    final markdown = tiptapToMarkdown(doc);
+    expect(markdown, '``````markdown\n$body\n``````');
+    final parsed = MarkdownToTiptap.convert(markdown)!;
+    expect(
+      TiptapContent.parse(parsed).document,
+      TiptapContent.parse(doc).document,
+    );
+  });
+
   group('escaping', () {
     test('plain text body escapes literal Markdown', () {
       final diary = makeDiary(

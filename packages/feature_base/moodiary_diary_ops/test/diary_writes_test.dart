@@ -188,6 +188,97 @@ void main() {
       ),
     );
 
+    test('create and update reject unsafe media sources', () async {
+      final created = await writes.create(title: 'Keep', content: 'old body');
+      for (final type in ['image', 'audio', 'video', 'attachment']) {
+        for (final src in [
+          '../database/moodiary.db',
+          r'..\database\moodiary.db',
+          '/database/moodiary.db',
+          '.',
+          '..',
+          '',
+          if (type != 'image') 'https://example.com/media',
+        ]) {
+          final content = jsonEncode(
+            TiptapContent.newDoc([
+              {
+                'type': 'blockquote',
+                'content': [
+                  {
+                    'type': type,
+                    'attrs': {'src': src},
+                  },
+                ],
+              },
+            ]),
+          );
+          await expectLater(
+            writes.create(
+              title: 'Unsafe',
+              content: content,
+              format: DiaryContentFormat.document,
+              enforceOwnMedia: true,
+            ),
+            foreignMedia(),
+            reason: '$type: $src',
+          );
+          await expectLater(
+            writes.update(
+              id: created.id,
+              patch: DiaryPatch(content: content),
+              format: DiaryContentFormat.document,
+              enforceOwnMedia: true,
+            ),
+            foreignMedia(),
+            reason: '$type: $src',
+          );
+        }
+      }
+      const markdown = '![image](../database/moodiary.db)';
+      await expectLater(
+        writes.create(
+          title: 'Unsafe',
+          content: markdown,
+          enforceOwnMedia: true,
+        ),
+        foreignMedia(),
+      );
+      await expectLater(
+        writes.update(
+          id: created.id,
+          patch: const DiaryPatch(content: markdown),
+          enforceOwnMedia: true,
+        ),
+        foreignMedia(),
+      );
+      expect(await diaries.getAllDiaries(), hasLength(1));
+      expect(
+        (await diaries.getDiaryByBusinessId(created.id))!.content,
+        created.content,
+      );
+
+      for (final src in [
+        'http://example.com/image.png',
+        'https://example.com/image.png',
+        'data:image/png;base64,AA==',
+      ]) {
+        final content = imageDoc(src);
+        await writes.create(
+          title: 'Remote',
+          content: content,
+          format: DiaryContentFormat.document,
+          enforceOwnMedia: true,
+        );
+        await writes.update(
+          id: created.id,
+          patch: DiaryPatch(content: content),
+          format: DiaryContentFormat.document,
+          enforceOwnMedia: true,
+        );
+      }
+    });
+
     test('create refuses any media reference it cannot own', () async {
       // A new diary owns no media, so any media reference is somebody else's.
       final derived = await writes.create(

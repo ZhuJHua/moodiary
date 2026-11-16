@@ -98,8 +98,8 @@ class DiaryWrites {
       requireKnown: requireKnownCategory,
     );
     final converted = _convert(content, format);
-    if (enforceOwnMedia && _mediaRefs(converted.content).isNotEmpty) {
-      throw const DiaryOpsException(DiaryOpsFailure.foreignMedia);
+    if (enforceOwnMedia) {
+      _rejectForeignMedia(null, converted.content, const {});
     }
     var diary = Diary.create(
       categoryId: resolved,
@@ -205,26 +205,45 @@ class DiaryWrites {
 
   /// Refuses a body that reaches for media [existing] does not own.
   void _rejectForeignMedia(
-    Diary existing,
+    Diary? existing,
     String content,
     Set<String> extraAllowedMedia,
   ) {
     final allowed = {
-      ...existing.imageName,
-      ...existing.audioName,
-      ...existing.videoName,
-      ...existing.fileName,
+      ...?existing?.imageName,
+      ...?existing?.audioName,
+      ...?existing?.videoName,
+      ...?existing?.fileName,
       ...extraAllowedMedia,
     };
     if (_mediaRefs(content).any((name) => !allowed.contains(name))) {
-      throw DiaryOpsException(DiaryOpsFailure.foreignMedia, id: existing.id);
+      throw DiaryOpsException(DiaryOpsFailure.foreignMedia, id: existing?.id);
     }
   }
 
-  /// Every media name [content] references, in the four stored kinds.
+  /// Every local media `src` [content] references, paths included, so a
+  /// traversal `src` cannot slip past the ownership check.
   static Set<String> _mediaRefs(String content) {
-    final media = TiptapContent.parse(content).media;
-    return {...media.images, ...media.audios, ...media.videos, ...media.files};
+    final document = TiptapContent.parse(content).document;
+    final refs = <String>{};
+    void walk(Object? node) {
+      if (node is! Map) return;
+      final type = node['type'];
+      if (const {'image', 'audio', 'video', 'attachment'}.contains(type)) {
+        final attrs = node['attrs'];
+        final src = attrs is Map ? attrs['src'] : null;
+        if (type != 'image' ||
+            src is! String ||
+            !(isNetworkMedia(src) || src.startsWith('data:image/'))) {
+          refs.add(src is String ? src : '');
+        }
+      }
+      final children = node['content'];
+      if (children is List) children.forEach(walk);
+    }
+
+    walk(document);
+    return refs;
   }
 
   _Converted _convert(String text, DiaryContentFormat format) {

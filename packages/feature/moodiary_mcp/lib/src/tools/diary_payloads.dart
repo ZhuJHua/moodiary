@@ -235,7 +235,15 @@ String? _block(Map<dynamic, dynamic> node, DiaryLinkStyle style) {
       final language = attrs is Map && attrs['language'] is String
           ? attrs['language'] as String
           : '';
-      return '```$language\n${_plainInline(node['content'])}\n```';
+      final body = _plainInline(node['content']);
+      var fenceLength = 3;
+      for (final match in _backticks.allMatches(body)) {
+        if (match.group(0)!.length >= fenceLength) {
+          fenceLength = match.group(0)!.length + 1;
+        }
+      }
+      final fence = '`' * fenceLength;
+      return '$fence$language\n$body\n$fence';
     case 'blockquote':
       final inner = StringBuffer();
       _blocks(node['content'], inner, style);

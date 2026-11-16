@@ -51,7 +51,7 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
-    unawaited(_refreshLanHost());
+    _onStateChanged();
     unawaited(_refreshPermissions());
   }
 
@@ -327,7 +327,7 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
       state.endpoints.firstOrNull ?? _endpoint('127.0.0.1', _port(state));
 
   Uri? _lanUri(McpServerState state) {
-    if (state.endpoints.skip(1).firstOrNull case final running?) return running;
+    if (state.running) return state.endpoints.skip(1).firstOrNull;
     final host = _lanHost;
     return host == null ? null : _endpoint(host, _port(state));
   }
