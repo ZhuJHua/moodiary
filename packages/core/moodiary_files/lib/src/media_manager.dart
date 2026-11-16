@@ -64,8 +64,10 @@ class MediaManager {
   static final RegExp _safeExtension = RegExp(r'^\.[a-z0-9]{1,10}$');
 
   static Future<({String name, String fileName, String? mime, int size})?>
-  saveAttachment(XFile file) async {
-    final fileName = file.name.isNotEmpty ? file.name : basename(file.path);
+  saveAttachment(XFile file, {String? originalFileName}) async {
+    final fileName =
+        originalFileName ??
+        (file.name.isNotEmpty ? file.name : basename(file.path));
     final ext = extension(fileName).toLowerCase();
     final name =
         'file-${uuidV7()}${_safeExtension.hasMatch(ext) ? ext : '.bin'}';

@@ -1,1 +1,19 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 常驻通知需要通知权限（33 起是运行时权限），前台服务本身需要下面两个权限 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+    <application>
+        <!-- specialUse keeps the user-enabled local MCP server reachable. -->
+        <service
+            android:name="cn.yooss.moodiary_native.McpKeepAliveService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="true">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="local MCP server reachable for external AI clients" />
+        </service>
+    </application>
+</manifest>

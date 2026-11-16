@@ -599,6 +599,147 @@ class Translations$app$zh {
 
 	/// zh: '返回首页'
 	String get routeErrorBackHome => '返回首页';
+
+	/// zh: 'MCP 服务'
+	String get mcpPageTitle => 'MCP 服务';
+
+	/// zh: '已关闭'
+	String get mcpStatusStopped => '已关闭';
+
+	/// zh: '启动中…'
+	String get mcpStatusStarting => '启动中…';
+
+	/// zh: '运行中'
+	String get mcpStatusRunning => '运行中';
+
+	/// zh: '地址已复制'
+	String get mcpEndpointCopied => '地址已复制';
+
+	/// zh: '令牌'
+	String get mcpTokenTitle => '令牌';
+
+	/// zh: '复制'
+	String get mcpCopy => '复制';
+
+	/// zh: '令牌已复制'
+	String get mcpTokenCopied => '令牌已复制';
+
+	/// zh: '重新生成令牌'
+	String get mcpTokenRegenerate => '重新生成令牌';
+
+	/// zh: '重新生成访问令牌？'
+	String get mcpTokenRegenerateTitle => '重新生成访问令牌？';
+
+	/// zh: '旧令牌会立即失效，已连接的客户端需要换用新令牌。'
+	String get mcpTokenRegenerateMessage => '旧令牌会立即失效，已连接的客户端需要换用新令牌。';
+
+	/// zh: '重新生成'
+	String get mcpTokenRegenerateConfirm => '重新生成';
+
+	/// zh: '已生成新令牌'
+	String get mcpTokenRegenerated => '已生成新令牌';
+
+	/// zh: '持有令牌即可读写你的日记'
+	String get mcpSecurityHint => '持有令牌即可读写你的日记';
+
+	/// zh: '局域网访问'
+	String get mcpLanTitle => '局域网访问';
+
+	/// zh: '开启局域网访问？'
+	String get mcpLanConfirmTitle => '开启局域网访问？';
+
+	/// zh: '同一网络中的其他人可能看到传输内容，包括令牌和日记。请仅在可信网络中开启。'
+	String get mcpLanConfirmMessage => '同一网络中的其他人可能看到传输内容，包括令牌和日记。请仅在可信网络中开启。';
+
+	/// zh: '开启'
+	String get mcpLanConfirm => '开启';
+
+	/// zh: '端口'
+	String get mcpPortTitle => '端口';
+
+	/// zh: '端口 {port} 已被占用'
+	String mcpPortInUse({required Object port}) => '端口 ${port} 已被占用';
+
+	/// zh: '请输入 1024–65535 之间的数字'
+	String get mcpPortInvalid => '请输入 1024–65535 之间的数字';
+
+	/// zh: 'MCP 服务运行中'
+	String get mcpKeepAliveNotificationText => 'MCP 服务运行中';
+
+	/// zh: '停止'
+	String get mcpKeepAliveStop => '停止';
+
+	/// zh: '后台运行'
+	String get mcpKeepAlivePermissionTitle => '后台运行';
+
+	/// zh: '{granted}/{total}'
+	String mcpKeepAlivePermissionSummary({required Object granted, required Object total}) => '${granted}/${total}';
+
+	/// zh: '已就绪'
+	String get mcpKeepAlivePermissionReady => '已就绪';
+
+	/// zh: '电池优化'
+	String get mcpKeepAliveBatteryTitle => '电池优化';
+
+	/// zh: '通知'
+	String get mcpKeepAliveNotificationPermissionTitle => '通知';
+
+	/// zh: '应用设置'
+	String get mcpKeepAliveOpenSettings => '应用设置';
+
+	/// zh: '完成'
+	String get mcpKeepAliveDone => '完成';
+
+	/// zh: '无法打开系统设置，请前往应用信息手动开启'
+	String get mcpKeepAliveRequestFailed => '无法打开系统设置，请前往应用信息手动开启';
+
+	/// zh: '启动失败'
+	String get mcpStatusFailedTitle => '启动失败';
+
+	/// zh: '仅本机'
+	String get mcpMicroLocal => '仅本机';
+
+	/// zh: '端口 {port}'
+	String mcpMicroPort({required Object port}) => '端口 ${port}';
+
+	/// zh: '本机'
+	String get mcpAddressLocal => '本机';
+
+	/// zh: '局域网'
+	String get mcpAddressLan => '局域网';
+
+	/// zh: '未开启'
+	String get mcpLanOff => '未开启';
+
+	/// zh: '未连接 Wi-Fi'
+	String get mcpNoWifi => '未连接 Wi-Fi';
+
+	/// zh: '复制地址'
+	String get mcpCopyAddress => '复制地址';
+
+	/// zh: '复制客户端配置'
+	String get mcpCopyConfig => '复制客户端配置';
+
+	/// zh: '配置已复制'
+	String get mcpConfigCopied => '配置已复制';
+
+	/// zh: '复制哪个地址的配置'
+	String get mcpConfigPickTitle => '复制哪个地址的配置';
+
+	/// zh: '设置'
+	String get mcpGroupSettings => '设置';
+
+	/// zh: '已关闭'
+	String get mcpKeepAliveBatteryOff => '已关闭';
+
+	/// zh: '去关闭'
+	String get mcpKeepAliveBatteryTurnOff => '去关闭';
+
+	/// zh: '已开启'
+	String get mcpKeepAliveNotificationsOn => '已开启';
+
+	/// zh: '去开启'
+	String get mcpKeepAliveNotificationsTurnOn => '去开启';
 }
 
 // Path: assistant

@@ -2,6 +2,7 @@ import 'package:moodiary_mobile/app/settings/presentation/about_page.dart';
 import 'package:moodiary_mobile/app/settings/presentation/accent_page.dart';
 import 'package:moodiary_mobile/app/settings/presentation/diary_setting_page.dart';
 import 'package:moodiary_mobile/app/settings/presentation/font_page.dart';
+import 'package:moodiary_mobile/app/settings/presentation/mcp_page.dart';
 import 'package:moodiary_mobile/app/settings/presentation/services_page.dart';
 import 'package:moodiary_mobile/app/settings/presentation/setting_page.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_page.dart';
@@ -42,6 +43,12 @@ class DiarySettingRoute extends MoodiaryRouteBase {
   const DiarySettingRoute() : super(path);
 }
 
+class McpRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/mcp';
+
+  const McpRoute() : super(path);
+}
+
 List<RouteBase> settingRoutes() => [
   GoRoute(path: StorageRoute.path, builder: (_, _) => const StoragePage()),
   GoRoute(path: SettingRoute.path, builder: (_, _) => const SettingPage()),
@@ -49,6 +56,7 @@ List<RouteBase> settingRoutes() => [
     path: DiarySettingRoute.path,
     builder: (_, _) => const DiarySettingPage(),
   ),
+  GoRoute(path: McpRoute.path, builder: (_, _) => const McpPage()),
   GoRoute(path: FontRoute.path, builder: (_, _) => const FontPage()),
   GoRoute(path: AccentRoute.path, builder: (_, _) => const AccentPage()),
   GoRoute(path: ServicesRoute.path, builder: (_, _) => const ServicesPage()),

@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
+import 'package:flutter/widgets.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_mcp/moodiary_mcp.dart' show McpKeepAlive, McpService;
 import 'package:moodiary_migration/moodiary_migration.dart'
     show EngineMigrationService;
 import 'package:moodiary_ml/moodiary_ml.dart' show EmbeddingModelManager;
@@ -26,6 +29,11 @@ Future<void> bootstrapPlatform() async {
 }
 
 void runStartupMaintenance() {
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    if (!Platform.isAndroid) return;
+    await getIt<McpKeepAlive>().restore();
+    await getIt<McpService>().restore();
+  });
   unawaited(purgeExpiredTombstones());
   unawaited(purgeSyncMediaTemp());
   unawaited(getIt<EmbedIndexService>().drain());

@@ -19,6 +19,7 @@ import 'package:moodiary_editor/injectable.module.dart' as _i565;
 import 'package:moodiary_files/moodiary_files.dart' as _i800;
 import 'package:moodiary_http/injectable.module.dart' as _i545;
 import 'package:moodiary_http/moodiary_http.dart' as _i765;
+import 'package:moodiary_mcp/injectable.module.dart' as _i563;
 import 'package:moodiary_ml/injectable.module.dart' as _i591;
 import 'package:moodiary_mobile/app/di/app_module.dart' as _i461;
 import 'package:moodiary_mobile/app/media/mobile_heif_decoder.dart' as _i845;
@@ -41,6 +42,7 @@ extension GetItInjectableX on _i174.GetIt {
     await _i591.MoodiaryMlPackageModule().init(gh);
     await _i860.MoodiaryDataPackageModule().init(gh);
     await _i578.MoodiaryAssistantPackageModule().init(gh);
+    await _i563.MoodiaryMcpPackageModule().init(gh);
     await _i412.MoodiarySyncPackageModule().init(gh);
     await _i565.MoodiaryEditorPackageModule().init(gh);
     await _i608.MoodiaryThemePackageModule().init(gh);

@@ -1,3 +1,4 @@
+export 'src/background_keep_alive.g.dart';
 export 'src/html_clipboard.g.dart';
 export 'src/image_transfer.g.dart';
 export 'src/keyboard_height.g.dart';

@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
+import 'package:moodiary_mcp/moodiary_mcp.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/accent_sheet.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/data_repair_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/image_optimize_tile.dart';
@@ -74,8 +78,46 @@ class _FeatureSection extends StatelessWidget {
           trailing: _chevron(context),
           onTap: () => _openSetting(context, const AssistantSettingRoute()),
         ),
+        if (Platform.isAndroid) const _McpTile(),
       ],
     );
+  }
+}
+
+class _McpTile extends StatelessWidget {
+  const _McpTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: MoodiaryKVs.mcpEnabled.getNotifier(),
+      builder: (context, enabled, _) => ValueListenableBuilder<McpServerState>(
+        valueListenable: getIt<McpService>().state,
+        builder: (context, state, _) => SettingListTile(
+          title: context.l10n.app.mcpPageTitle,
+          subtitle: _summary(context, state, enabled: enabled),
+          leading: _lead(context, LucideIcons.server),
+          trailing: _chevron(context),
+          onTap: () => _openSetting(context, const McpRoute()),
+        ),
+      ),
+    );
+  }
+
+  String _summary(
+    BuildContext context,
+    McpServerState state, {
+    required bool enabled,
+  }) {
+    final l10n = context.l10n.app;
+    if (!enabled) return l10n.mcpStatusStopped;
+    return switch (state.status) {
+      .running =>
+        state.endpoints.firstOrNull?.toString() ?? l10n.mcpStatusRunning,
+      .starting => l10n.mcpStatusStarting,
+      .failed => l10n.mcpStatusFailedTitle,
+      .stopped => l10n.mcpStatusStopped,
+    };
   }
 }
 

@@ -23,6 +23,9 @@ class _Repository implements MoodInsightsRepository {
       : rows.map((e) => e.time).reduce((a, b) => a.isBefore(b) ? a : b);
 
   @override
+  Future<List<MoodInsightEntry>> allVisibleEntries() async => rows;
+
+  @override
   Future<bool> hasRecordedMood() async => rows.any((e) => e.mood != null);
 }
 

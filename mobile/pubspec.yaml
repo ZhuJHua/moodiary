@@ -35,6 +35,7 @@ dependencies:
   moodiary_theme: 0.0.1
   mui: 0.0.1
   moodiary_data: 0.0.1
+  moodiary_mcp: 0.0.1
   moodiary_ml: 0.0.1
   moodiary_migration: 0.0.1
   moodiary_preferences: 0.0.1

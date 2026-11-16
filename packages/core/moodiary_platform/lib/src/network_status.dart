@@ -4,7 +4,10 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 
 class NetworkStatus {
-  static Stream<bool> get onlineChanges => Connectivity().onConnectivityChanged
+  static Stream<List<ConnectivityResult>> get changes =>
+      Connectivity().onConnectivityChanged;
+
+  static Stream<bool> get onlineChanges => changes
       .map((r) => r.isNotEmpty && !r.contains(ConnectivityResult.none))
       .distinct();
 
