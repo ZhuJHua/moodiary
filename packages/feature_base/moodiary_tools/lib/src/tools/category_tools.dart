@@ -7,6 +7,7 @@ import 'package:json_schema_builder/json_schema_builder.dart';
 import '../ops/category_ops.dart';
 import '../ops/diary_writes.dart';
 import 'arguments.dart';
+import 'batch.dart';
 import 'category_queries.dart';
 import 'diary_payloads.dart';
 import 'diary_references.dart';
@@ -24,7 +25,7 @@ final List<ToolDefinition> categoryTools = [
     description: (_) =>
         'Lists every diary category with id, name, ARGB colour, colour hex '
         'and its visible diary count. total is the number of categories.',
-    input: (_) => Schema.fromMap({'type': 'object', 'properties': {}}),
+    input: (_) => S.object(properties: {}),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
@@ -40,19 +41,25 @@ final List<ToolDefinition> categoryTools = [
     references: (result) => diaryReferences('create_category', result.data),
     title: 'Create a category',
     description: (_) =>
-        'Creates one diary category. color accepts a 32 bit ARGB integer '
+        'Pass every item in one call. Each result has ok and an error on failure; '
+        'do not repeat items that already succeeded. '
+        'Creates each diary in the batch category. color accepts a 32 bit ARGB integer '
         'or a #RRGGBB / #AARRGGBB string.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'name': categoryNameSchema, 'color': colorSchema},
-      'required': ['name'],
-    }),
+    input: (_) => batchItemsSchema(
+      S.object(
+        properties: {'name': categoryNameSchema, 'color': colorSchema},
+        required: ['name'],
+      ),
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: false,
     output: toolOutputSchema('create_category'),
-    parse: _parseCreateCategory,
-    run: (input, ctx) => _createCategory(input, ctx),
+    parse: toolBatchItems,
+    run: (items, ctx) => runToolBatch(
+      items,
+      (item) => _createCategory(_parseCreateCategory(item), ctx),
+    ),
     toJson: (result) => result.data,
     media: (result) => result.media,
   ),
@@ -62,27 +69,30 @@ final List<ToolDefinition> categoryTools = [
     references: (result) => diaryReferences('update_category', result.data),
     title: 'Update a category',
     description: (_) =>
-        'Renames or recolours one category, leaving omitted fields unchanged. '
+        'Pass every item in one call. Each result has ok and an error on failure; '
+        'do not repeat items that already succeeded. '
+        'Renames or recolours categories in items (1–20), leaving omitted fields unchanged. '
         'Send null (or an empty string) for color to clear it. Requires at '
         'least one of name and color.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
-        'id': {
-          'type': 'string',
-          'description': 'Category id as list_categories returns it.',
+    input: (_) => batchItemsSchema(
+      S.object(
+        properties: {
+          'id': requiredCategoryIdSchema,
+          'name': categoryNameSchema,
+          'color': colorSchema,
         },
-        'name': categoryNameSchema,
-        'color': colorSchema,
-      },
-      'required': ['id'],
-    }),
+        required: ['id'],
+      ),
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: true,
     output: toolOutputSchema('update_category'),
-    parse: _parseUpdateCategory,
-    run: (input, ctx) => _updateCategory(input, ctx),
+    parse: toolBatchItems,
+    run: (items, ctx) => runToolBatch(
+      items,
+      (item) => _updateCategory(_parseUpdateCategory(item), ctx),
+    ),
     toJson: (result) => result.data,
     media: (result) => result.media,
   ),
@@ -92,24 +102,23 @@ final List<ToolDefinition> categoryTools = [
     references: (result) => diaryReferences('delete_category', result.data),
     title: 'Delete a category',
     description: (_) =>
-        'Deletes one empty category. Refuses categories holding diaries, '
+        'Pass every item in one call. Each result has ok and an error on failure; '
+        'do not repeat items that already succeeded. '
+        'Deletes empty categories in ids (1–20). Refuses categories holding diaries, '
         'including those in the recycle bin, and reports the reason.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
-        'id': {
-          'type': 'string',
-          'description': 'Category id as list_categories returns it.',
-        },
-      },
-      'required': ['id'],
-    }),
+    input: (_) => S.object(
+      properties: {'ids': toolIdsSchema(requiredCategoryIdSchema)},
+      required: ['ids'],
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.destructive,
     idempotent: true,
     output: toolOutputSchema('delete_category'),
-    parse: _parseDeleteCategory,
-    run: (input, ctx) => _deleteCategory(input, ctx),
+    parse: toolBatchIds,
+    run: (items, ctx) => runToolBatch(
+      items,
+      (item) => _deleteCategory(_parseDeleteCategory(item), ctx),
+    ),
     toJson: (result) => result.data,
     media: (result) => result.media,
   ),

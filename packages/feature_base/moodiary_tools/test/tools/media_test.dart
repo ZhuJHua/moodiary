@@ -148,18 +148,39 @@ void main() {
     );
     await diaries.insertADiary(makeDiary('delete-me', 'delete sample'));
     final inputs = <String, Map<String, Object?>>{
-      'list_diaries': {},
-      'get_diary': {'id': 'sample'},
-      'create_diary': {'content': 'Created by a shared tool'},
-      'update_diary': {'id': 'sample', 'title': 'Updated'},
-      'delete_diary': {'id': 'delete-me'},
+      'get_diary': {
+        'ids': ['sample'],
+      },
+      'create_diary': {
+        'items': [
+          {'content': 'Created by a shared tool'},
+        ],
+      },
+      'update_diary': {
+        'items': [
+          {'id': 'sample', 'title': 'Updated'},
+        ],
+      },
+      'delete_diary': {
+        'ids': ['delete-me'],
+      },
       'search_diaries': {'query': 'sample'},
       'get_diary_links': {'id': 'sample'},
       'list_tags': {},
       'list_categories': {},
-      'create_category': {'name': 'Created'},
-      'update_category': {'id': category.id, 'name': 'Renamed'},
-      'delete_category': {'id': category.id},
+      'create_category': {
+        'items': [
+          {'name': 'Created'},
+        ],
+      },
+      'update_category': {
+        'items': [
+          {'id': category.id, 'name': 'Renamed'},
+        ],
+      },
+      'delete_category': {
+        'ids': [category.id],
+      },
       'list_diary_media': {'id': 'sample'},
       'read_diary_media': {'id': 'sample', 'name': 'sample.png'},
       'add_diary_image': {'id': 'sample', 'data': base64Encode(pngBytes)},
@@ -172,15 +193,24 @@ void main() {
     };
     expect(inputs.keys.toSet(), moodiaryTools.map((tool) => tool.name).toSet());
     for (final tool in moodiaryTools) {
-      final result = await tool.call(inputs[tool.name]!, client.context);
-      expect(
-        await tool.output.validate(result.data),
-        isEmpty,
-        reason: tool.name,
-      );
-      if (tool.name == 'read_diary_media') {
-        expect(result.media.single.bytes, pngBytes);
-        expect(result.diaries.single.id, 'sample');
+      for (final surface in tool.surfaces) {
+        final context = ToolContext(
+          diaries: diaries,
+          categories: categories,
+          insights: MoodInsightsRepository(db),
+          surface: surface,
+          mediaStore: client.context.mediaStore,
+        );
+        final result = await tool.call(inputs[tool.name]!, context);
+        expect(
+          await tool.output.validate(result.data),
+          isEmpty,
+          reason: tool.name,
+        );
+        if (tool.name == 'read_diary_media') {
+          expect(result.media.single.bytes, pngBytes);
+          expect(result.diaries.single.id, 'sample');
+        }
       }
     }
   });

@@ -133,9 +133,9 @@ String _dailyReviewInstructions(DateTime day) {
   final date = TimeFormat.isoDate(day);
   return 'Review my diary entries for $date.\n'
       '\n'
-      '1. Call list_diaries with startDate="$date" and endDate="$date" to get that '
+      '1. Call search_diaries with startDate="$date" and endDate="$date" to get that '
       "day's entries and their ids.\n"
-      '2. Call get_diary with contentFormat="markdown" for every id; add '
+      '2. Call get_diary with ids (at most 10) and contentFormat="markdown"; add '
       'get_diary_links when an entry mentions another diary.\n'
       '3. Summarise the day: the overall mood, two or three highlights, what I '
       'wrote about people, plans or worries, and one detail I might have '
@@ -151,8 +151,8 @@ String _summarizePeriodInstructions(DateTime start, DateTime end) {
   final to = TimeFormat.isoDate(end);
   return 'Summarise my diaries from $from to $to.\n'
       '\n'
-      '1. Call list_diaries with startDate="$from", endDate="$to" and limit=100; page '
-      'with offset while hasMore is true, and call get_diary with contentFormat="markdown" '
+      '1. Call search_diaries with startDate="$from", endDate="$to" and limit=100; page '
+      'with offset while hasMore is true, and call get_diary with ids (at most 10) and contentFormat="markdown" '
       'for the entries you quote.\n'
       '2. Call search_diaries for anything that looks recurring, and '
       'get_stats if the mood trend matters.\n'
@@ -175,12 +175,12 @@ String _findConnectionsInstructions({
       '${TimeFormat.isoDate(time.toLocal())} ${_formatClock(time.toLocal())}';
   return 'Find what connects to my diary $shown, written $written.\n'
       '\n'
-      '1. Call get_diary with id="$id" and contentFormat="markdown" to read it.\n'
+      '1. Call get_diary with ids=["$id"] and contentFormat="markdown" to read it.\n'
       '2. Call get_diary_links with id="$id" for its forward links and '
       'backlinks.\n'
       '3. Call search_diaries with two or three distinctive phrases from the '
       'body.\n'
-      '4. Call list_diaries with startDate and endDate around the same weeks to catch '
+      '4. Call search_diaries with startDate and endDate around the same weeks to catch '
       'entries the search misses.\n'
       '\n'
       'Report the related diaries with their ids, dates and the reason you '

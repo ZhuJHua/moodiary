@@ -1,34 +1,41 @@
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_tools/moodiary_tools.dart';
+
+import 'assistant_tool_definitions.dart';
 
 enum AssistantTool {
-  searchDiaries('searchDiaries'),
+  searchDiaries('search_diaries'),
 
-  getDiary('getDiary'),
+  getDiary('get_diary'),
 
-  diaryOverview('diaryOverview'),
+  getStats('get_stats'),
 
-  createDiary('createDiary'),
+  getDiaryLinks('get_diary_links'),
 
-  updateDiary('updateDiary'),
+  listTags('list_tags'),
 
-  deleteDiary('deleteDiary'),
+  createDiary('create_diary'),
 
-  listCategories('listCategories'),
+  updateDiary('update_diary'),
 
-  createCategory('createCategory'),
+  deleteDiary('delete_diary'),
 
-  updateCategory('updateCategory'),
+  listCategories('list_categories'),
 
-  deleteCategory('deleteCategory'),
+  createCategory('create_category'),
 
-  recallMemory('recallMemory'),
+  updateCategory('update_category'),
 
-  rememberFact('rememberFact'),
+  deleteCategory('delete_category'),
 
-  forgetFact('forgetFact'),
+  recallMemory('recall_memory'),
 
-  runJavascript('runJavascript');
+  rememberFact('remember_fact'),
+
+  forgetFact('forget_fact'),
+
+  runJavascript('run_javascript');
 
   final String id;
 
@@ -55,24 +62,22 @@ enum AssistantToolTier { read, write, destructive }
 AssistantToolTier assistantToolTier(
   AssistantTool tool,
   Map<String, dynamic> args,
-) => switch (tool) {
-  .searchDiaries ||
-  .getDiary ||
-  .diaryOverview ||
-  .listCategories ||
-  .recallMemory ||
-  .runJavascript => .read,
-  .updateDiary => _rewritesContent(args) ? .destructive : .write,
-  .createDiary ||
-  .createCategory ||
-  .updateCategory ||
-  .rememberFact ||
-  .deleteDiary => .write,
-  .deleteCategory || .forgetFact => .destructive,
-};
+) {
+  if (tool == AssistantTool.updateDiary && _rewritesContent(args)) {
+    return .destructive;
+  }
+  final effect = assistantToolDefinitions
+      .firstWhere((definition) => definition.name == tool.id)
+      .effect;
+  return switch (effect) {
+    ToolEffect.read => .read,
+    ToolEffect.write => .write,
+    ToolEffect.destructive => .destructive,
+  };
+}
 
 bool _rewritesContent(Map<String, dynamic> args) =>
-    assistantToolItems(args).any((e) => e['content'] != null);
+    assistantToolItems(args).any((item) => item.containsKey('content'));
 
 List<Map<String, dynamic>> assistantToolItems(Map<String, dynamic> input) {
   final raw = input['items'];
@@ -231,11 +236,27 @@ int _budgetFor(String level, ReasoningControl control, int maxTokens) {
 }
 
 const Map<String, String> renamedAssistantToolIds = {
-  'queryDiaries': 'searchDiaries',
-  'semanticSearchDiaries': 'searchDiaries',
-  'listMemories': 'recallMemory',
-  'updateMemory': 'rememberFact',
+  'queryDiaries': 'search_diaries',
+  'semanticSearchDiaries': 'search_diaries',
+  'listMemories': 'recall_memory',
+  'updateMemory': 'remember_fact',
+  'searchDiaries': 'search_diaries',
+  'getDiary': 'get_diary',
+  'diaryOverview': 'get_stats',
+  'createDiary': 'create_diary',
+  'updateDiary': 'update_diary',
+  'deleteDiary': 'delete_diary',
+  'listCategories': 'list_categories',
+  'createCategory': 'create_category',
+  'updateCategory': 'update_category',
+  'deleteCategory': 'delete_category',
+  'recallMemory': 'recall_memory',
+  'rememberFact': 'remember_fact',
+  'forgetFact': 'forget_fact',
+  'runJavascript': 'run_javascript',
 };
+
+String normalizeAssistantToolId(String id) => renamedAssistantToolIds[id] ?? id;
 
 const int assistantUserNotesMaxChars = 2000;
 
@@ -347,9 +368,9 @@ Refer to entries by date and title, never by id — ids exist only for tool call
 
 const String _retrievalPolicyWithMemory = '''
 Memory and retrieval policy:
-- Between conversations you remember nothing by yourself; saved facts come back only through recallMemory.
+- Between conversations you remember nothing by yourself; saved facts come back only through recall_memory.
 - Before talking about the user's past entries or moods, search them — you cannot see them otherwise. Never retrieve for greetings, thanks or small talk.
-- Call recallMemory when the user refers to an earlier conversation, asks what you remember, or when advice depends on what you know. One recall per question; if it is empty, say so.
+- Call recall_memory when the user refers to an earlier conversation, asks what you remember, or when advice depends on what you know. One recall per question; if it is empty, say so.
 - Retrieving is not surfacing. Mention a recalled fact or an entry only when it answers the question; never open a reply with what you remember.
 - Save a fact only when the user says something durable about themselves or asks you to. Never mine an entry or a tool result. Never save health, beliefs, legal or financial details, whatever the notes say.''';
 
@@ -363,7 +384,7 @@ const String _toolCatalogLayer = '''
 Each tool's description is the contract for that tool. The rules below span tools.
 
 Tool guidelines:
-- Every tool takes a batch. When several entries, categories or facts are involved, pass them all in one call. A batch reports one line per item, so a partial failure still tells you exactly which items went through; do not re-run the ones that already did.
+- Diary reads and writes, category writes and fact writes take batches. When several entries, categories or facts are involved, pass them all in one call. A batch reports one JSON result per item, so a partial failure still tells you exactly which items went through; do not re-run the ones that already did.
 - Your earlier turns may start with a "[tools already run]" block. That is a record of the tools you already ran in that turn, with their arguments and a one-line result summary, not something the user wrote. Use it to avoid repeating a lookup you already did; when you need the details again, call the tool again.
 - Never delete anything the user did not ask you to delete. "Tidy up" is not an instruction to delete: propose what you would remove and wait for a clear yes.''';
 

@@ -13,6 +13,7 @@ import '../ops/diary_display.dart';
 import '../ops/diary_queries.dart';
 import '../ops/diary_writes.dart';
 import 'arguments.dart';
+import 'batch.dart';
 import 'diary_payloads.dart';
 import 'diary_queries.dart';
 import 'diary_references.dart';
@@ -24,92 +25,46 @@ import 'tool_def.dart';
 @internal
 final List<ToolDefinition> diaryTools = [
   ToolDef(
-    name: 'list_diaries',
-    validateArguments: validateToolArguments,
-    references: (result) => diaryReferences('list_diaries', result.data),
-    title: 'List diaries',
-    description: (_) =>
-        'Lists diary summaries, newest first by default: id, title, time in '
-        'UTC and local time, last modification, category, mood, tags, a '
-        'preview and whether the diary is visible. Bodies are not included; '
-        'call get_diary for those. Page with limit and offset, hasMore says '
-        'whether another page exists. tag is an exact tag match; the search '
-        'index has no tag index, so a tag filter reads every visible diary '
-        'and pages in memory, which is slower than the other filters. '
-        'excerpt picks the preview: plain (default) is one line of plain '
-        'text, markdown keeps headings and lists, none drops it.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
-        'categoryId': categoryIdSchema,
-        'tag': {
-          'type': 'string',
-          'description':
-              'Exact tag to filter by, as list_tags spells it '
-              '(case-sensitive).',
-        },
-        'startDate': startDateSchema,
-        'endDate': endDateSchema,
-        'sort': diarySortSchema,
-        'limit': limitSchema,
-        'offset': offsetSchema,
-        'excerpt': excerptSchema,
-      },
-    }),
-    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
-    effect: ToolEffect.read,
-    idempotent: true,
-    output: toolOutputSchema('list_diaries'),
-    parse: _parseListDiaries,
-    run: (input, ctx) => _listDiaries(
-      ctx,
-      input,
-      diaries: ctx.diaries,
-      categories: ctx.categories,
-    ),
-    toJson: (result) => result.data,
-    media: (result) => result.media,
-  ),
-  ToolDef(
     name: 'get_diary',
     validateArguments: validateToolArguments,
     references: (result) => diaryReferences('get_diary', result.data),
-    title: 'Read one diary',
-    description: (_) =>
-        'Reads one diary with its metadata. contentFormat=markdown (default) '
-        'renders the stored document as Markdown; text returns the plain body '
-        '(no syntax, media as [image: name] placeholders); document returns '
-        'the raw stored Tiptap document as a JSON object and is subject to '
-        'the $mcpResultChars character result limit. linkStyle=uri (default) '
-        'renders a diary mention as [label](moodiary://diary/<id>), label '
-        'keeps only the label. includeLinks=false omits the links graph '
-        '(forward links, backlinks and dangling ids). The result also carries '
-        'the summary fields, type, media file names, the recorded place and '
-        'weather, and the moodiary:// URI. Attach media with add_diary_image '
-        'or add_diary_attachment; read it with list_diary_media.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
-        'id': diaryIdSchema,
-        'contentFormat': readContentFormatSchema,
-        'linkStyle': linkStyleSchema,
-        'includeLinks': {
-          'type': 'boolean',
-          'default': true,
-          'description':
-              'false omits links, the graph of forward links, backlinks and '
-              'dangling diary ids of this diary.',
+    title: 'Read diaries',
+    description: (surface) =>
+        'Read diary bodies and metadata by ids (max 10). Pass every id you '
+        'need in one call, using ids from search_diaries. Unknown or recycled '
+        'ids are reported in missing. Markdown preserves media as ![name](src); '
+        'keep these references when rewriting content. '
+        '${surface == ToolSurface.assistant ? 'Bodies are Markdown, capped at 4000 characters; truncated and fullLength report any cap. Never rewrite from a truncated body.' : 'contentFormat selects markdown (default), text or the raw Tiptap document JSON. document is subject to the $mcpResultChars character result limit. linkStyle=uri preserves diary mention targets; label keeps only labels. includeLinks=false omits the graph. Attach files with add_diary_image or add_diary_attachment and inspect them with list_diary_media.'}',
+    input: (surface) => S.object(
+      properties: {
+        'ids': toolIdsSchema(diaryIdSchema, max: maxBatchRead),
+        if (surface == ToolSurface.mcp) ...{
+          'contentFormat': readContentFormatSchema,
+          'linkStyle': linkStyleSchema,
+          'includeLinks': schemaWithDefault(
+            S.boolean(
+              description:
+                  'false omits links, the graph of forward links, backlinks and '
+                  'dangling diary ids of this diary.',
+            ),
+            true,
+          ),
         },
       },
-      'required': ['id'],
-    }),
+      additionalProperties: false,
+      required: ['ids'],
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
     output: toolOutputSchema('get_diary'),
     parse: _parseGetDiary,
-    run: (input, ctx) =>
-        _getDiary(input, diaries: ctx.diaries, categories: ctx.categories),
+    run: (input, ctx) => _getDiaries(
+      input,
+      ctx,
+      diaries: ctx.diaries,
+      categories: ctx.categories,
+    ),
     toJson: (result) => result.data,
     media: (result) => result.media,
   ),
@@ -119,7 +74,11 @@ final List<ToolDefinition> diaryTools = [
     references: (result) => diaryReferences('create_diary', result.data),
     title: 'Create a diary',
     description: (_) =>
-        'Creates one diary and returns its summary. content is required; '
+        'Pass every item in one call. Each result has ok and an error on failure; '
+        'do not repeat items that already succeeded. '
+        'Save content as new diaries in items (1–20) and return their summaries. '
+        'Call this when the user asks you to write something down or keep an entry. '
+        'content is required; '
         'contentFormat=markdown (default) parses it as Markdown and stores '
         'the editor document so headings, lists and emphasis survive, text '
         'stores literal paragraphs so Markdown syntax stays visible, and '
@@ -129,38 +88,36 @@ final List<ToolDefinition> diaryTools = [
         'media: a body with media nodes is invalid params, because media has '
         'to be added to an existing diary with add_diary_image or '
         'add_diary_attachment (which also creates its media index row).',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
-        'title': {
-          'type': 'string',
-          'description': 'Diary title; may be empty.',
+    input: (_) => batchItemsSchema(
+      S.object(
+        properties: {
+          'title': S.string(description: 'Diary title; may be empty.'),
+          'content': S.string(
+            description:
+                'Diary body; required. Interpreted according to contentFormat.',
+          ),
+          'contentFormat': writeContentFormatSchema,
+          'time': diaryTimeSchema,
+          'categoryId': categoryIdSchema,
+          'mood': moodSchema,
+          'tags': tagsSchema,
         },
-        'content': {
-          'type': 'string',
-          'description':
-              'Diary body; required. Interpreted according to contentFormat.',
-        },
-        'contentFormat': writeContentFormatSchema,
-        'time': {
-          'type': 'string',
-          'description':
-              'ISO-8601 instant the diary is about. A bare yyyy-MM-dd means '
-              'local midnight. Defaults to now.',
-        },
-        'categoryId': categoryIdSchema,
-        'mood': moodSchema,
-        'tags': tagsSchema,
-      },
-      'required': ['content'],
-    }),
+        required: ['content'],
+      ),
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: false,
     output: toolOutputSchema('create_diary'),
-    parse: _parseCreateDiary,
-    run: (input, ctx) =>
-        _createDiary(input, diaries: ctx.diaries, categories: ctx.categories),
+    parse: toolBatchItems,
+    run: (items, ctx) => runToolBatch(
+      items,
+      (item) => _createDiary(
+        _parseCreateDiary(item),
+        diaries: ctx.diaries,
+        categories: ctx.categories,
+      ),
+    ),
     toJson: (result) => result.data,
     media: (result) => result.media,
   ),
@@ -170,7 +127,9 @@ final List<ToolDefinition> diaryTools = [
     references: (result) => diaryReferences('update_diary', result.data),
     title: 'Update a diary',
     description: (_) =>
-        'Updates the given fields of one diary and leaves every omitted field '
+        'Pass every item in one call. Each result has ok and an error on failure; '
+        'do not repeat items that already succeeded. '
+        'Updates the given fields of each diary in the batch and leaves every omitted field '
         'unchanged; lastModified is bumped. Send null to clear a nullable '
         'field: categoryId, mood and tags (null or an empty array); '
         'title is cleared with an empty string. content and time are '
@@ -181,41 +140,41 @@ final List<ToolDefinition> diaryTools = [
         'files this diary already owns (add new files with add_diary_image '
         'or add_diary_attachment); another diary\'s media name is invalid '
         'params. Recycled diaries are not found. An unknown category id is '
-        'invalid params; an unknown diary id is a tool error.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
-        'id': diaryIdSchema,
-        'title': {
-          'type': 'string',
-          'description': 'New title; an empty string clears it.',
+        'an item error; an unknown diary id also fails only that item.',
+    input: (_) => batchItemsSchema(
+      S.object(
+        properties: {
+          'id': diaryIdSchema,
+          'title': S.string(
+            description: 'New title; an empty string clears it.',
+          ),
+          'content': S.string(
+            description:
+                'New body; replaces the old one. Interpreted according to '
+                'contentFormat.',
+          ),
+          'contentFormat': writeContentFormatSchema,
+          'time': diaryTimeSchema,
+          'categoryId': categoryIdSchema,
+          'mood': moodSchema,
+          'tags': tagsSchema,
         },
-        'content': {
-          'type': 'string',
-          'description':
-              'New body; replaces the old one. Interpreted according to '
-              'contentFormat.',
-        },
-        'contentFormat': writeContentFormatSchema,
-        'time': {
-          'type': 'string',
-          'description':
-              'New ISO-8601 instant. A bare yyyy-MM-dd means local midnight. '
-              'An explicit null is ignored.',
-        },
-        'categoryId': categoryIdSchema,
-        'mood': moodSchema,
-        'tags': tagsSchema,
-      },
-      'required': ['id'],
-    }),
+        required: ['id'],
+      ),
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
-    effect: ToolEffect.destructive,
+    effect: ToolEffect.write,
     idempotent: true,
     output: toolOutputSchema('update_diary'),
-    parse: _parseUpdateDiary,
-    run: (input, ctx) =>
-        _updateDiary(input, diaries: ctx.diaries, categories: ctx.categories),
+    parse: toolBatchItems,
+    run: (items, ctx) => runToolBatch(
+      items,
+      (item) => _updateDiary(
+        _parseUpdateDiary(item),
+        diaries: ctx.diaries,
+        categories: ctx.categories,
+      ),
+    ),
     toJson: (result) => result.data,
     media: (result) => result.media,
   ),
@@ -225,22 +184,29 @@ final List<ToolDefinition> diaryTools = [
     references: (result) => diaryReferences('delete_diary', result.data),
     title: 'Delete a diary',
     description: (_) =>
-        'Moves one diary to the recycle bin (show=false). This can be undone '
+        'Pass every item in one call. Each result has ok and an error on failure; '
+        'do not repeat items that already succeeded. '
+        'Moves each diary in the batch to the recycle bin (show=false). This can be undone '
         'in the app. Permanent deletion is only available in the app. title '
         'is the stored title, empty when the diary had none. An unknown id '
-        'is a tool error.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'id': diaryIdSchema},
-      'required': ['id'],
-    }),
+        'fails only that item.',
+    input: (_) => S.object(
+      properties: {'ids': toolIdsSchema(diaryIdSchema)},
+      required: ['ids'],
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
-    effect: ToolEffect.destructive,
+    effect: ToolEffect.write,
     idempotent: true,
     output: toolOutputSchema('delete_diary'),
-    parse: _parseDeleteDiary,
-    run: (input, ctx) =>
-        _deleteDiary(input, diaries: ctx.diaries, categories: ctx.categories),
+    parse: toolBatchIds,
+    run: (items, ctx) => runToolBatch(
+      items,
+      (item) => _deleteDiary(
+        _parseDeleteDiary(item),
+        diaries: ctx.diaries,
+        categories: ctx.categories,
+      ),
+    ),
     toJson: (result) => result.data,
     media: (result) => result.media,
   ),
@@ -249,33 +215,34 @@ final List<ToolDefinition> diaryTools = [
     validateArguments: validateToolArguments,
     references: (result) => diaryReferences('search_diaries', result.data),
     title: 'Search diaries',
-    description: (_) =>
-        'Full text search over diary titles and bodies; Chinese words, '
-        'pinyin and Latin text all match. There is no '
-        'tag filter here, use list_diaries tag instead. Returns the total hit '
-        'count and one page of hits. Each hit carries the search '
-        'highlighted titleHighlight and excerpt, where matches are wrapped in '
-        '**double asterisks**, plus a preview: the excerpt projection, which '
-        'is omitted with excerpt=none while the highlighted excerpt stays. '
-        'sort=relevance (default) ranks by match score; newest and oldest '
-        'order by diary time.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
-        'query': {
-          'type': 'string',
-          'description': 'Words to search for; required.',
-        },
+    description: (surface) =>
+        'Search or browse visible diaries. Omit query to browse by date, category '
+        'or exact tag. Keyword terms combine with AND; prefer one or two specific '
+        'words. Chinese text, pinyin and Latin text match. Results contain ids, '
+        'titles, times, moods, categories, tags and excerpts; use get_diary for '
+        'the full Markdown body before editing. Page with limit and offset. '
+        'If total exceeds returned rows or totalIsLowerBound is true, say so '
+        'instead of presenting the rows as the complete set. '
+        '${surface == ToolSurface.assistant ? 'mode=auto fuses keyword and local semantic search when enabled; keyword and meaning force a path. Each hit reports via and similarity.' : 'Search is keyword-only.'} '
+        'Mood is awful, bad, okay, good or great; null means not recorded.',
+    input: (surface) => S.object(
+      properties: {
+        'query': S.string(
+          description: 'Keywords or a sentence; omit to browse.',
+        ),
+        if (surface == ToolSurface.assistant)
+          'mode': S.string(enumValues: diarySearchModeValues),
+        'tag': S.string(),
         'categoryId': categoryIdSchema,
         'startDate': startDateSchema,
         'endDate': endDateSchema,
-        'sort': searchSortSchema,
+        'sort': diarySearchSortSchema,
         'limit': limitSchema,
         'offset': offsetSchema,
         'excerpt': excerptSchema,
       },
-      'required': ['query'],
-    }),
+      additionalProperties: false,
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
@@ -301,11 +268,7 @@ final List<ToolDefinition> diaryTools = [
         '(dangling), each with id, title and time. A dangling id is a '
         'moodiary://diary/<id> link to a diary that was deleted or never '
         'synced to this device.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'id': diaryIdSchema},
-      'required': ['id'],
-    }),
+    input: (_) => S.object(properties: {'id': diaryIdSchema}, required: ['id']),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
@@ -324,10 +287,7 @@ final List<ToolDefinition> diaryTools = [
         'Lists the tags used by visible diaries with their usage counts, '
         'most used first. The database has no tag index, so this aggregates '
         'over every visible diary and is linear in the number of diaries.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'limit': tagLimitSchema},
-    }),
+    input: (_) => S.object(properties: {'limit': tagLimitSchema}),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
@@ -375,27 +335,6 @@ _PageArgs _pageArgs(ToolArguments args) {
     limit: args.optionalInt('limit', fallback: 20, min: 1, max: 100),
     offset: args.optionalInt('offset', fallback: 0, min: 0, max: 1000000),
   );
-}
-
-/// Tag filtering scans all visible diaries because tags have no index.
-List<Diary> _tagPage(
-  List<Diary> visible, {
-  required String tag,
-  required String? categoryId,
-  required DateTime? start,
-  required DateTime? end,
-  required int offset,
-  required int limit,
-}) {
-  final matched = [
-    for (final diary in visible)
-      if (diary.tags.contains(tag) &&
-          (categoryId == null || diary.categoryId == categoryId) &&
-          (start == null || !diary.time.isBefore(start)) &&
-          (end == null || !diary.time.isAfter(end)))
-        diary,
-  ];
-  return matched.skip(offset).take(limit).toList();
 }
 
 Map<String, dynamic> _summary(
@@ -457,66 +396,31 @@ ToolResult _writeFailure(String subject, DiaryOpsException e, String id) =>
       ),
     };
 
-Future<ToolResult> _listDiaries(
-  ToolContext call,
-  _ListDiariesInput input, {
+Future<ToolResult> _getDiaries(
+  _GetDiaryInput input,
+  ToolContext ctx, {
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
-  final (:paging, :tag, :sort, :excerpt) = input;
-  await _categoryFilter(paging.categoryId, 'list_diaries', categories);
-  final List<Diary> page;
-  if (tag == null) {
-    page = await DiaryToolQueries(diaries: diaries).page(
-      categoryId: paging.categoryId,
-      start: paging.start,
-      end: paging.end,
-      sort: sort,
-      offset: paging.offset,
-      limit: paging.limit + 1,
-    );
-  } else {
-    page = _tagPage(
-      await diaries.getDiaryByCategory(sort: sort),
-      tag: tag,
-      categoryId: paging.categoryId,
-      start: paging.start,
-      end: paging.end,
-      offset: paging.offset,
-      limit: paging.limit + 1,
-    );
+  final read = await DiaryQueries(diaries: diaries).read(input.ids);
+  final results = <Map<String, Object?>>[];
+  for (final diary in read.found) {
+    results.add(await _getDiaryPayload(diary, input, ctx, diaries, categories));
   }
-  final names = await categoryNames(categories);
-  final rows = page.take(paging.limit).toList();
-  call.progress?.call(rows.length, message: 'list_diaries');
-  return ToolResult({
-    'diaries': [
-      for (final diary in rows)
-        _summary(
-          diary,
-          categoryName: names[diary.categoryId],
-          excerpt: excerpt,
-        ),
-    ],
-    'count': rows.length,
-    'offset': paging.offset,
-    'limit': paging.limit,
-    'hasMore': page.length > paging.limit,
-  });
+  return ToolResult({'diaries': results, 'missing': read.missing});
 }
 
-Future<ToolResult> _getDiary(
-  _GetDiaryInput input, {
-  required DiaryRepository diaries,
-  required CategoryRepository categories,
-}) async {
-  final (:id, :contentFormat, :linkStyle, :includeLinks) = input;
-  final diary = await diaries.getDiaryByBusinessId(id);
-  if (diary == null || !diary.show) {
-    return _failure('get_diary: no diary with id="$id".');
-  }
+Future<Map<String, Object?>> _getDiaryPayload(
+  Diary diary,
+  _GetDiaryInput input,
+  ToolContext ctx,
+  DiaryRepository diaries,
+  CategoryRepository categories,
+) async {
+  final id = diary.id;
+  final (:contentFormat, :linkStyle, :includeLinks, ids: _) = input;
   if (contentFormat == 'document' && diary.content.length > mcpResultChars) {
-    return _failure(
+    _failure(
       'get_diary: the stored document of id="$id" is '
       '${diary.content.length} characters, more than the $mcpResultChars '
       'character result limit; read it as text (contentFormat="text") or as '
@@ -535,18 +439,27 @@ Future<ToolResult> _getDiary(
         truncated: false,
       );
     case 'text':
-      projection = _capped(diaryToText(diary, linkStyle: style));
+      projection = _capped(diaryToText(diary, linkStyle: style), ctx.surface);
     default:
-      projection = _capped(diaryToMarkdown(diary, linkStyle: style));
+      projection = _capped(
+        diaryToMarkdown(diary, linkStyle: style),
+        ctx.surface,
+      );
   }
 
   final names = await categoryNames(categories);
-  return ToolResult({
+  return {
     ..._summary(diary, categoryName: names[diary.categoryId], excerpt: 'plain'),
     'type': diary.type,
     'contentFormat': contentFormat,
     'content': projection.content,
     'contentTruncated': projection.truncated,
+    'truncated': projection.truncated,
+    'fullLength': contentFormat == 'text'
+        ? diaryToText(diary, linkStyle: style).length
+        : contentFormat == 'document'
+        ? diary.content.length
+        : diaryToMarkdown(diary, linkStyle: style).length,
     'placeId': diary.placeId,
     if (diary.weather case final weather?)
       'weather': {
@@ -558,11 +471,19 @@ Future<ToolResult> _getDiary(
     if (includeLinks)
       'links': await DiaryToolQueries(diaries: diaries).linkSummary(diary),
     'uri': '$diaryUriPrefix${diary.id}',
-  });
+  };
 }
 
-({Object? content, bool truncated}) _capped(String text) {
-  final capped = truncate(text);
+({Object? content, bool truncated}) _capped(String text, ToolSurface surface) {
+  if (surface == ToolSurface.assistant && text.length > 4000) {
+    var end = 3999;
+    if (text.codeUnitAt(end - 1) >= 0xD800 &&
+        text.codeUnitAt(end - 1) <= 0xDBFF) {
+      end--;
+    }
+    return (content: '${text.substring(0, end)}…', truncated: true);
+  }
+  final capped = surface == ToolSurface.assistant ? text : truncate(text);
   return (content: capped, truncated: capped != text);
 }
 
@@ -645,52 +566,72 @@ Future<ToolResult> _searchDiaries(
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
-  final (:query, :paging, :sort, :excerpt, :endExclusive) = input;
+  final (:query, :mode, :tag, :paging, :sort, :excerpt) = input;
   await _categoryFilter(paging.categoryId, 'search_diaries', categories);
-  final total = await diaries.countSearchDiaries(
-    query: query,
-    categoryId: paging.categoryId,
-    start: paging.start,
-    end: endExclusive,
-  );
-  final hits = await diaries.searchDiaries(
-    query: query,
-    categoryId: paging.categoryId,
-    start: paging.start,
-    end: endExclusive,
-    sort: sort,
-    limit: paging.limit,
-    offset: paging.offset,
-  );
+  final result =
+      await DiaryQueries(
+        diaries: diaries,
+        semantic: call.surface == ToolSurface.assistant ? call.semantic : null,
+      ).search(
+        query: query,
+        mode: call.surface == ToolSurface.assistant ? mode : 'keyword',
+        tag: tag,
+        categoryId: paging.categoryId,
+        start: paging.start,
+        endExclusive: paging.end?.add(const Duration(microseconds: 1)),
+        sort: sort,
+        limit: paging.limit,
+        offset: paging.offset,
+      );
   final names = await categoryNames(categories);
-  call.progress?.call(hits.length, total: total, message: 'search_diaries');
+  call.progress?.call(
+    result.rows.length,
+    total: result.total,
+    message: 'search_diaries',
+  );
   return ToolResult({
     'query': query,
-    'total': total,
+    'total': result.total,
+    'totalIsLowerBound': result.totalIsLowerBound,
     'offset': paging.offset,
     'limit': paging.limit,
-    'hasMore': paging.offset + hits.length < total,
+    'hasMore':
+        paging.offset + result.rows.length < result.total ||
+        result.totalIsLowerBound,
+    if (call.surface == ToolSurface.assistant) ...{
+      'meaningRan': result.meaningRan,
+      'semanticAvailable': result.semanticAvailable,
+    },
     'hits': [
-      for (final hit in hits)
+      for (final row in result.rows)
         {
           ..._summary(
-            hit.diary,
-            categoryName: names[hit.diary.categoryId],
-            excerpt: 'plain',
+            row.diary,
+            categoryName: names[row.diary.categoryId],
+            excerpt: excerpt,
           ),
-          'titleHighlight': _markHighlight(hit.titleHighlight),
-          'excerpt': _markHighlight(hit.excerpt),
-          if (excerpt != 'none')
+          if (result.keywordHits[row.diary.id] case final hit?) ...{
+            'titleHighlight': _markHighlight(hit.titleHighlight),
+            'excerpt': _markHighlight(hit.excerpt),
+          },
+          if (query.isNotEmpty && excerpt != 'none')
             'preview': excerptOf(
-              hit.diary,
+              row.diary,
               renderMarkdown: excerpt == 'markdown',
             ),
+          if (call.surface == ToolSurface.assistant) ...{
+            'via': row.keyword && row.meaning
+                ? 'keyword+meaning'
+                : row.meaning
+                ? 'meaning'
+                : 'keyword',
+            'similarity': row.score,
+          },
         },
     ],
   });
 }
 
-/// Convert the search index sentinels to Markdown emphasis.
 String _markHighlight(String text) =>
     text.replaceAll(searchHitStart, '**').replaceAll(searchHitEnd, '**');
 
@@ -733,25 +674,8 @@ Future<ToolResult> _listTags(
   });
 }
 
-typedef _ListDiariesInput = ({
-  _PageArgs paging,
-  String? tag,
-  DiarySort sort,
-  String excerpt,
-});
-
-_ListDiariesInput _parseListDiaries(Map<String, Object?> raw) {
-  final args = ToolArguments('list_diaries', raw);
-  final paging = _pageArgs(args);
-  final tag = args.optionalText('tag');
-  final sort = parseDiarySort(args.optionalEnum('sort', diarySortValues));
-  final excerpt = args.optionalEnum('excerpt', excerptValues) ?? 'plain';
-
-  return (paging: paging, tag: tag, sort: sort, excerpt: excerpt);
-}
-
 typedef _GetDiaryInput = ({
-  String id,
+  List<String> ids,
   String contentFormat,
   String linkStyle,
   bool includeLinks,
@@ -759,14 +683,14 @@ typedef _GetDiaryInput = ({
 
 _GetDiaryInput _parseGetDiary(Map<String, Object?> raw) {
   final args = ToolArguments('get_diary', raw);
-  final id = args.requireText('id');
+  final ids = (raw['ids']! as List).cast<String>();
   final contentFormat =
       args.optionalEnum('contentFormat', contentFormatValues) ?? 'markdown';
   final linkStyle = args.optionalEnum('linkStyle', linkStyleValues) ?? 'uri';
   final includeLinks = args.optionalBool('includeLinks') ?? true;
 
   return (
-    id: id,
+    ids: ids,
     contentFormat: contentFormat,
     linkStyle: linkStyle,
     includeLinks: includeLinks,
@@ -852,30 +776,22 @@ _DeleteDiaryInput _parseDeleteDiary(Map<String, Object?> raw) {
 
 typedef _SearchDiariesInput = ({
   String query,
+  String mode,
+  String? tag,
   _PageArgs paging,
-  SearchSort sort,
+  String? sort,
   String excerpt,
-  DateTime? endExclusive,
 });
 
 _SearchDiariesInput _parseSearchDiaries(Map<String, Object?> raw) {
   final args = ToolArguments('search_diaries', raw);
-  final query = args.requireText('query');
-  final paging = _pageArgs(args);
-  final sort = switch (args.optionalEnum('sort', searchSortValues)) {
-    'newest' => SearchSort.timeDesc,
-    'oldest' => SearchSort.timeAsc,
-    _ => SearchSort.relevance,
-  };
-  final excerpt = args.optionalEnum('excerpt', excerptValues) ?? 'plain';
-  final endExclusive = paging.end?.add(const Duration(microseconds: 1));
-
   return (
-    query: query,
-    paging: paging,
-    sort: sort,
-    excerpt: excerpt,
-    endExclusive: endExclusive,
+    query: args.optionalText('query') ?? '',
+    mode: args.optionalEnum('mode', diarySearchModeValues) ?? 'auto',
+    tag: args.optionalText('tag'),
+    paging: _pageArgs(args),
+    sort: args.optionalEnum('sort', diarySearchSortValues),
+    excerpt: args.optionalEnum('excerpt', excerptValues) ?? 'plain',
   );
 }
 

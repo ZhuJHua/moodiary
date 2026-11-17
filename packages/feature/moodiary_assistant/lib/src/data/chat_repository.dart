@@ -87,7 +87,7 @@ class ChatRepository {
   static AssistantToolCall _toToolCall(AssistantToolCallRow r) =>
       AssistantToolCall(
         callId: r.callId,
-        name: renamedAssistantToolIds[r.name] ?? r.name,
+        name: normalizeAssistantToolId(r.name),
         argsJson: r.argsJson,
         result: r.result,
         done: r.done != 0,

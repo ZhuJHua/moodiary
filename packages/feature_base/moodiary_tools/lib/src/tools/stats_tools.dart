@@ -22,15 +22,14 @@ final List<ToolDefinition> statsTools = [
         'Reports the diary totals (all rows, visible, recycle bin, '
         'uncategorized), the diary count per local calendar month for the '
         'last months, the count per category, the mood distribution of '
-        'visible diaries and the oldest diary time. monthsWindow names the '
+        'visible diaries (including not-recorded moods), and the first and last '
+        'visible diary times. Prefer this over counting search rows for how many, '
+        'which category, since when or mood-trend questions. monthsWindow names the '
         'months the bucket list covers; olderDiaries and futureDiaries count '
         'the visible diaries outside that window, so '
         'sum(months.diaries) + olderDiaries + futureDiaries == '
         'visibleDiaries always holds and no diary is missing from the sum.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'months': statsMonthsSchema},
-    }),
+    input: (_) => S.object(properties: {'months': statsMonthsSchema}),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,

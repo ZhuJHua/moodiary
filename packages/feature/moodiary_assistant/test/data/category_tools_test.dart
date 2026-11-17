@@ -17,6 +17,7 @@ void main() {
     diaries = DiaryRepository(db);
     getIt.registerSingleton<CategoryRepository>(categories);
     getIt.registerSingleton<DiaryRepository>(diaries);
+    getIt.registerSingleton<MoodInsightsRepository>(MoodInsightsRepository(db));
   });
 
   tearDown(() async {
@@ -37,7 +38,9 @@ void main() {
       final items = (properties['items'] as Map)['items'] as Map;
       expect(
         (items['properties'] as Map).keys,
-        tool == AssistantTool.createCategory ? ['name'] : ['id', 'name'],
+        tool == AssistantTool.createCategory
+            ? ['name', 'color']
+            : ['id', 'name', 'color'],
       );
     }
   });
@@ -49,7 +52,7 @@ void main() {
       ],
     });
     final category = (await categories.getAllCategories()).single;
-    expect(created, contains('Created category "Work"'));
+    expect(created, contains('Work'));
     expect(category.parentId, isNull);
 
     final renamed = await run(.updateCategory, {
@@ -57,7 +60,7 @@ void main() {
         {'id': category.id, 'name': 'Projects'},
       ],
     });
-    expect(renamed, contains('Renamed the category to "Projects"'));
+    expect(renamed, contains('Projects'));
     expect(
       (await categories.getCategoryById(category.id))!.categoryName,
       'Projects',
@@ -66,7 +69,7 @@ void main() {
     final deleted = await run(.deleteCategory, {
       'ids': [category.id],
     });
-    expect(deleted, contains('Deleted the category'));
+    expect(deleted, contains('"deleted":true'));
     expect(await categories.getCategoryById(category.id), isNull);
   });
 
@@ -90,7 +93,7 @@ void main() {
     final deleted = await run(.deleteCategory, {
       'ids': [category.id],
     });
-    expect(deleted, contains('Deleted the category'));
+    expect(deleted, contains('"deleted":true'));
     expect(await categories.getCategoryById(category.id), isNull);
     expect(await categories.getCategoryById(child.id), renamed);
   });

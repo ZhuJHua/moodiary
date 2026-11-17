@@ -541,6 +541,16 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String toolBatchDiaries({required Object count}) => '${count} entries';
 	@override String toolBatchItems({required Object count}) => '${count} items';
 	@override String get toolDeleted => 'Deleted';
+	@override String get toolLinksTitle => 'Diary links';
+	@override String get toolLinksDes => 'Read linked diaries and backlinks';
+	@override String get toolTagsTitle => 'Tags';
+	@override String get toolTagsDes => 'List tags and diary counts';
+	@override String toolBatchOutcome({required Object succeeded, required Object failed}) => '${succeeded} succeeded · ${failed} failed';
+	@override String get approvalFieldMood => 'Mood';
+	@override String get approvalFieldTags => 'Tags';
+	@override String get approvalFieldTime => 'Time';
+	@override String get approvalFieldColor => 'Color';
+	@override String get approvalCleared => 'Cleared';
 }
 
 // Path: common

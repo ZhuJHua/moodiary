@@ -177,8 +177,14 @@ class ToolArguments {
   DateTime? optionalDate(String name, {bool endOfDay = false}) {
     final text = optionalText(name);
     if (text == null) return null;
+    final date = text.length >= 10 ? text.substring(0, 10) : '';
+    final day = DateTime.tryParse(date);
+    final validDay =
+        _bareDate.hasMatch(date) &&
+        day != null &&
+        day.toIso8601String().startsWith(date);
     final parsed = DateTime.tryParse(text);
-    if (parsed == null) {
+    if (!validDay || parsed == null) {
       _invalid(name, 'must be an ISO-8601 date or timestamp');
     }
     if (endOfDay && _bareDate.hasMatch(text)) {
@@ -205,26 +211,43 @@ Future<List<ValidationError>> validateToolArguments(
   Schema schema,
 ) => _validationSchema(schema).validate(_validationData(raw, schema));
 
-Schema _validationSchema(Schema schema) {
-  final json = Map<String, Object?>.from(schema.value);
-  final properties = (json['properties'] as Map?)?.cast<String, Object?>();
-  if (properties == null) return schema;
-  json['properties'] = {
-    for (final entry in properties.entries)
-      entry.key: switch (entry.key) {
-        'limit' || 'offset' || 'months' || 'widthPercent' =>
-          Map<String, Object?>.from(entry.value! as Map)
-            ..remove('minimum')
-            ..remove('maximum'),
-        _ => entry.value,
-      },
-  };
-  return Schema.fromMap(json);
-}
+Schema _validationSchema(Schema schema) =>
+    Schema.fromMap(_normalizeSchema(schema.value));
 
-Map<String, Object?> _validationData(Map<String, Object?> raw, Schema schema) {
-  final required = (schema.value['required'] as List?) ?? const [];
-  final properties = (schema.value['properties'] as Map?) ?? const {};
+Map<String, Object?> _normalizeSchema(Map<String, Object?> schema) => {
+  for (final entry in schema.entries)
+    entry.key: switch (entry.key) {
+      'properties' => {
+        for (final property in (entry.value! as Map).entries)
+          property.key as String:
+              _normalizeSchema((property.value as Map).cast<String, Object?>())
+                ..removeWhere(
+                  (key, _) =>
+                      const {
+                        'limit',
+                        'offset',
+                        'months',
+                        'widthPercent',
+                      }.contains(property.key) &&
+                      (key == 'minimum' || key == 'maximum'),
+                ),
+      },
+      'items' => _normalizeSchema(
+        (entry.value! as Map).cast<String, Object?>(),
+      ),
+      _ => entry.value,
+    },
+};
+
+Map<String, Object?> _validationData(Map<String, Object?> raw, Schema schema) =>
+    _normalizeData(raw, schema.value);
+
+Map<String, Object?> _normalizeData(
+  Map<String, Object?> raw,
+  Map<String, Object?> schema,
+) {
+  final required = (schema['required'] as List?) ?? const [];
+  final properties = (schema['properties'] as Map?) ?? const {};
   return {
     for (final entry in raw.entries)
       if (entry.value != null || required.contains(entry.key))
@@ -232,13 +255,36 @@ Map<String, Object?> _validationData(Map<String, Object?> raw, Schema schema) {
             (entry.value! as String).trim().isEmpty &&
             !required.contains(entry.key) &&
             (properties[entry.key] as Map?)?['enum'] != null))
-          entry.key: entry.key == 'mood' && entry.value is String
-              ? _moodValue(entry.value! as String)
-              : entry.value is String &&
-                    (properties[entry.key] as Map?)?['enum'] != null
-              ? (entry.value! as String).trim()
-              : entry.value,
+          entry.key: _normalizeValue(
+            entry.key,
+            entry.value,
+            (properties[entry.key] as Map?)?.cast<String, Object?>() ??
+                const {},
+          ),
   };
+}
+
+Object? _normalizeValue(
+  String key,
+  Object? value,
+  Map<String, Object?> schema,
+) {
+  if (value is Map) {
+    return _normalizeData(value.cast<String, Object?>(), schema);
+  }
+  if (value is List && schema['items'] is Map) {
+    return [
+      for (final item in value)
+        _normalizeValue(
+          '',
+          item,
+          (schema['items']! as Map).cast<String, Object?>(),
+        ),
+    ];
+  }
+  if (key == 'mood' && value is String) return _moodValue(value);
+  if (value is String && schema['enum'] != null) return value.trim();
+  return value;
 }
 
 Object? _moodValue(String value) {

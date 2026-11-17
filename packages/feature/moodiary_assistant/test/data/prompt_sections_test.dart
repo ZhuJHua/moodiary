@@ -56,11 +56,11 @@ void main() {
       expect(prompt, contains('You are a warm, grounded companion'));
     });
 
-    test('记忆关闭时策略段告诉模型去哪开，且不提 recallMemory', () {
+    test('记忆关闭时策略段告诉模型去哪开，且不提 recall_memory', () {
       final off = build(memory: false);
       expect(off, contains('turned off in the app settings'));
-      expect(off.contains('recallMemory'), isFalse);
-      expect(build(memory: true), contains('recallMemory'));
+      expect(off.contains('recall_memory'), isFalse);
+      expect(build(memory: true), contains('recall_memory'));
     });
 
     test('toolsEnabled=false 时没有检索策略和工具目录', () {

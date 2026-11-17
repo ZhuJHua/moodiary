@@ -58,16 +58,16 @@ void main() {
       for (final mood in [...DiaryMood.values, null])
         Diary.empty(type: .tiptap).copyWith(mood: mood),
     ]);
-    final out = await run(.diaryOverview, {});
+    final out = await run(.getStats, {});
     for (final name in [
       'awful',
       'bad',
       'okay',
       'good',
       'great',
-      'not recorded',
+      'diariesWithoutMood',
     ]) {
-      expect(out, contains('$name=1'));
+      expect(out, contains('"$name":1'));
     }
     expect(out, isNot(contains('neutral')));
   });

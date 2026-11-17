@@ -1,31 +1,23 @@
 import 'package:flutter/foundation.dart' show internal;
 import 'package:json_schema_builder/json_schema_builder.dart';
 
-const _string = {'type': 'string'};
-const _integer = {'type': 'integer'};
-const _boolean = {'type': 'boolean'};
-const _nullableString = {
-  'type': ['string', 'null'],
-};
-const _nullableInteger = {
-  'type': ['integer', 'null'],
-};
+final _string = S.string();
+final _integer = S.integer();
+final _boolean = S.boolean();
+final _nullableString = S.combined(type: [JsonType.string, JsonType.nil]);
+final _nullableInteger = S.combined(type: [JsonType.int, JsonType.nil]);
 
-Map<String, Object?> _list(Map<String, Object?> item) => {
-  'type': 'array',
-  'items': item,
-};
-Map<String, Object?> _object(
-  Map<String, Object?> properties, {
+Schema _list(Schema item) => S.list(items: item);
+ObjectSchema _object(
+  Map<String, Schema> properties, {
   List<String> optional = const [],
-}) => {
-  'type': 'object',
-  'properties': properties,
-  'required': properties.keys.where((key) => !optional.contains(key)).toList(),
-  'additionalProperties': false,
-};
+}) => ObjectSchema(
+  properties: properties,
+  required: properties.keys.where((key) => !optional.contains(key)).toList(),
+  additionalProperties: false,
+);
 
-final _summaryFields = <String, Object?>{
+final _summaryFields = <String, Schema>{
   'id': _string,
   'title': _string,
   'time': _string,
@@ -69,65 +61,83 @@ final _mediaEntry = _object({
 });
 
 @internal
-Schema toolOutputSchema(String name) => Schema.fromMap(switch (name) {
-  'list_diaries' => _object({
-    'diaries': _list(_summary),
-    'count': _integer,
-    'offset': _integer,
-    'limit': _integer,
-    'hasMore': _boolean,
-  }),
-  'get_diary' => _object(
-    {
-      ..._summaryFields,
-      'type': _string,
-      'contentFormat': _string,
-      'content': {
-        'type': ['string', 'object'],
-      },
-      'contentTruncated': _boolean,
-      'placeId': _nullableString,
-      'weather': _object({
-        'icon': _string,
-        'temp': _nullableString,
-        'text': _string,
-      }),
-      'media': _mediaLists,
-      'links': _links,
-      'uri': _string,
-    },
-    optional: ['excerpt', 'weather', 'links'],
-  ),
-  'create_diary' => _object({'created': _boolean, 'diary': _summary}),
-  'update_diary' => _object({'updated': _boolean, 'diary': _summary}),
-  'delete_diary' => _object(
-    {
-      'deleted': _boolean,
-      'id': _string,
-      'title': _string,
-      'alreadyRecycled': _boolean,
-    },
-    optional: ['alreadyRecycled'],
-  ),
-  'search_diaries' => _object({
-    'query': _string,
-    'total': _integer,
-    'offset': _integer,
-    'limit': _integer,
-    'hasMore': _boolean,
-    'hits': _list(
+Schema toolOutputSchema(String name) => switch (name) {
+  'get_diary' => _object({
+    'diaries': _list(
       _object(
-        {..._summaryFields, 'titleHighlight': _string, 'preview': _string},
-        optional: ['preview'],
+        {
+          ..._summaryFields,
+          'type': _string,
+          'contentFormat': _string,
+          'content': S.combined(type: [JsonType.string, JsonType.object]),
+          'contentTruncated': _boolean,
+          'truncated': _boolean,
+          'fullLength': _integer,
+          'placeId': _nullableString,
+          'weather': _object({
+            'icon': _string,
+            'temp': _nullableString,
+            'text': _string,
+          }),
+          'media': _mediaLists,
+          'links': _links,
+          'uri': _string,
+        },
+        optional: ['excerpt', 'weather', 'links'],
       ),
     ),
+    'missing': _list(_string),
   }),
+  'create_diary' => _batch(_object({'created': _boolean, 'diary': _summary})),
+  'update_diary' => _batch(_object({'updated': _boolean, 'diary': _summary})),
+  'delete_diary' => _batch(
+    _object(
+      {
+        'deleted': _boolean,
+        'id': _string,
+        'title': _string,
+        'alreadyRecycled': _boolean,
+      },
+      optional: ['alreadyRecycled'],
+    ),
+  ),
+  'search_diaries' => _object(
+    {
+      'query': _string,
+      'total': _integer,
+      'totalIsLowerBound': _boolean,
+      'offset': _integer,
+      'limit': _integer,
+      'hasMore': _boolean,
+      'meaningRan': _boolean,
+      'semanticAvailable': _boolean,
+      'hits': _list(
+        _object(
+          {
+            ..._summaryFields,
+            'titleHighlight': _string,
+            'preview': _string,
+            'via': _string,
+            'similarity': S.combined(type: [JsonType.num, JsonType.nil]),
+          },
+          optional: [
+            'excerpt',
+            'titleHighlight',
+            'preview',
+            'via',
+            'similarity',
+          ],
+        ),
+      ),
+    },
+    optional: ['meaningRan', 'semanticAvailable'],
+  ),
   'get_diary_links' => _object({
     'id': _string,
     'title': _string,
     'time': _string,
     'timeLocal': _string,
-    ...(_links['properties']! as Map<String, Object?>),
+    ..._links.properties!,
   }),
   'list_tags' => _object({
     'tags': _list(_object({'tag': _string, 'diaries': _integer})),
@@ -140,11 +150,17 @@ Schema toolOutputSchema(String name) => Schema.fromMap(switch (name) {
     'categories': _list(_category),
     'total': _integer,
   }),
-  'create_category' => _object({'created': _boolean, 'category': _category}),
-  'update_category' => _object({'updated': _boolean, 'category': _category}),
-  'delete_category' => _object(
-    {'deleted': _boolean, 'id': _string, 'name': _string, 'reason': _string},
-    optional: ['reason'],
+  'create_category' => _batch(
+    _object({'created': _boolean, 'category': _category}),
+  ),
+  'update_category' => _batch(
+    _object({'updated': _boolean, 'category': _category}),
+  ),
+  'delete_category' => _batch(
+    _object(
+      {'deleted': _boolean, 'id': _string, 'name': _string, 'reason': _string},
+      optional: ['reason'],
+    ),
   ),
   'list_diary_media' => _object({
     'id': _string,
@@ -182,6 +198,7 @@ Schema toolOutputSchema(String name) => Schema.fromMap(switch (name) {
     ])
       key: _integer,
     'firstDiaryTime': _nullableString,
+    'lastDiaryTime': _nullableString,
     'months': _list(_object({'month': _string, 'diaries': _integer})),
     'monthsWindow': _object({'from': _string, 'to': _string}),
     'categories': _list(
@@ -198,12 +215,41 @@ Schema toolOutputSchema(String name) => Schema.fromMap(switch (name) {
       }),
       'recordedDiaries': _integer,
       'diariesWithoutMood': _integer,
-      'averageScore': {
-        'type': ['number', 'null'],
-      },
+      'averageScore': S.combined(type: [JsonType.num, JsonType.nil]),
       'recordedDays': _integer,
     }),
     'generatedAt': _string,
   }),
   _ => throw ArgumentError.value(name, 'name', 'Unknown tool'),
-});
+};
+
+Schema _batch(ObjectSchema payload) {
+  final fields = payload.properties!;
+  final required = payload.required!;
+  return _object({
+    'results': _list(
+      S.combined(
+        oneOf: [
+          _object(
+            {'ok': S.combined(constValue: true), 'id': _string, ...fields},
+            optional: [
+              'id',
+              ...fields.keys.where((key) => !required.contains(key)),
+            ],
+          ),
+          _object(
+            {
+              'ok': S.combined(constValue: false),
+              'error': _string,
+              'id': _string,
+              ...fields,
+            },
+            optional: ['id', ...fields.keys],
+          ),
+        ],
+      ),
+    ),
+    'processed': _integer,
+    'requested': _integer,
+  });
+}

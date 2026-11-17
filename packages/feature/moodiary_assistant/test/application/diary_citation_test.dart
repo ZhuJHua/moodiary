@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
@@ -17,6 +19,62 @@ AssistantToolCall _call(String name, String result, {bool done = true}) =>
     );
 
 void main() {
+  test('stored JSON alone supplies citations and ignores failed ids', () {
+    final calls = [
+      AssistantToolCall(
+        callId: 'read',
+        name: 'get_diary',
+        done: true,
+        result: jsonEncode({
+          'diaries': [
+            {'id': 'read-id'},
+          ],
+          'missing': ['missing'],
+        }),
+      ),
+      AssistantToolCall(
+        callId: 'write',
+        name: 'update_diary',
+        done: true,
+        result: jsonEncode({
+          'results': [
+            {
+              'id': 'updated-id',
+              'ok': true,
+              'diary': {'id': 'updated-id'},
+            },
+            {'id': 'failed-id', 'ok': false},
+          ],
+        }),
+      ),
+      AssistantToolCall(
+        callId: 'links',
+        name: 'get_diary_links',
+        done: true,
+        result: jsonEncode({
+          'id': 'root',
+          'forward': [
+            {'id': 'linked'},
+          ],
+          'backlinks': [
+            {'id': 'back'},
+          ],
+          'dangling': ['ghost'],
+        }),
+      ),
+    ];
+    final citations = diaryCitationsOf(calls);
+    expect(citations.map((citation) => citation.id), [
+      'read-id',
+      'updated-id',
+      'root',
+      'linked',
+      'back',
+    ]);
+    expect(citations[1].kind, DiaryCitationKind.updated);
+    expect(citesDiaries(calls.first), true);
+  });
+
   group('从真实工具输出里抠日记引用', () {
     late MoodiaryDatabase db;
     late DiaryRepository repo;
@@ -40,6 +98,9 @@ void main() {
       db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
       repo = DiaryRepository(db);
       getIt.registerSingleton<DiaryRepository>(repo);
+      getIt.registerSingleton<MoodInsightsRepository>(
+        MoodInsightsRepository(db),
+      );
       getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
       a = diary('搬家');
       b = diary('加班');
@@ -96,9 +157,7 @@ void main() {
         ],
       });
       final deleted = await run(AssistantTool.deleteDiary, {
-        'items': [
-          {'id': b.id},
-        ],
+        'ids': [b.id],
       });
       final query = await run(AssistantTool.searchDiaries, const {});
       final cited = diaryCitationsOf([
@@ -122,7 +181,7 @@ void main() {
       final full = await run(AssistantTool.getDiary, {
         'ids': ['nope'],
       });
-      expect(full, startsWith('Not found'));
+      expect(jsonDecode(full)['missing'], ['nope']);
       final query = await run(AssistantTool.searchDiaries, const {});
       expect(
         diaryCitationsOf([
@@ -174,7 +233,7 @@ void main() {
     test('给模型的版本把标记换成读日记的指令', () {
       final forModel = diaryCitationForModel(citeDiary('怎么样', 'd-1'));
       expect(forModel, contains('id=d-1'));
-      expect(forModel, contains('getDiary'));
+      expect(forModel, contains('get_diary'));
       expect(forModel, endsWith('怎么样'));
       expect(diaryCitationForModel('普通消息'), '普通消息');
     });

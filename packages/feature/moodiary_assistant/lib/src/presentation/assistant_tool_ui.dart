@@ -25,7 +25,17 @@ import 'package:mui/mui.dart';
       title: l10n.assistant.toolGetTitle,
       description: l10n.assistant.toolGetDes,
     ),
-    .diaryOverview => (
+    .getDiaryLinks => (
+      icon: LucideIcons.link,
+      title: l10n.assistant.toolLinksTitle,
+      description: l10n.assistant.toolLinksDes,
+    ),
+    .listTags => (
+      icon: LucideIcons.tags,
+      title: l10n.assistant.toolTagsTitle,
+      description: l10n.assistant.toolTagsDes,
+    ),
+    .getStats => (
       icon: LucideIcons.chartNoAxesCombined,
       title: l10n.assistant.toolOverviewTitle,
       description: l10n.assistant.toolOverviewDes,

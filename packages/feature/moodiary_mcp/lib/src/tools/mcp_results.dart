@@ -18,7 +18,12 @@ const String mcpServerInstructions =
     'read_diary_media for images only. delete_diary moves a diary to the '
     'recycle bin; permanent deletion is only available in the app. '
     'A bad argument is a JSON-RPC invalid params error, while '
-    'an unknown id is a normal tool result with isError. Diary bodies and '
+    'get_diary reports unknown ids in missing. Search or browse with '
+    'search_diaries (omit query to browse); search is keyword-only. get_diary '
+    'takes ids (1–10). create_diary, update_diary, create_category and '
+    'update_category take items (1–20); delete_diary and delete_category '
+    'take ids (1–20). Batch results contain results, processed and requested; '
+    'each item reports ok and error on failure. Retry only failed items. Diary bodies and '
     'titles are private user data: quote them only when the user asks about '
     'them.';
 

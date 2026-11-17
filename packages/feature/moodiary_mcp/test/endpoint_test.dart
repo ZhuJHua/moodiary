@@ -128,7 +128,7 @@ void main() {
       expect(capabilities.containsKey('resources'), isFalse);
       expect(capabilities, isNot(contains('logging')));
       final result = await client.callTool(
-        const CallToolRequest(name: 'list_diaries'),
+        const CallToolRequest(name: 'search_diaries'),
       );
       expect(diaryIds(result.structuredContent!), ['one']);
       expect(
@@ -219,11 +219,11 @@ void main() {
       );
       final result = await client.callTool(
         CallToolRequest(
-          name: 'list_diaries',
-          arguments: {'padding': 'a' * (22 * 1024 * 1024)},
+          name: 'search_diaries',
+          arguments: {'tag': 'a' * (22 * 1024 * 1024)},
         ),
       );
-      expect(diaryIds(result.structuredContent!), ['one']);
+      expect(diaryIds(result.structuredContent!), isEmpty);
     },
   );
 

@@ -246,5 +246,15 @@
   "toolTrashedCount": "{count} moved to recycle bin",
   "toolBatchDiaries": "{count} entries",
   "toolBatchItems": "{count} items",
-  "toolDeleted": "Deleted"
+  "toolDeleted": "Deleted",
+  "toolLinksTitle": "Diary links",
+  "toolLinksDes": "Read linked diaries and backlinks",
+  "toolTagsTitle": "Tags",
+  "toolTagsDes": "List tags and diary counts",
+  "toolBatchOutcome": "{succeeded} succeeded · {failed} failed",
+  "approvalFieldMood": "Mood",
+  "approvalFieldTags": "Tags",
+  "approvalFieldTime": "Time",
+  "approvalFieldColor": "Color",
+  "approvalCleared": "Cleared"
 }

@@ -1,6 +1,7 @@
 import 'package:moodiary_assistant/src/application/tool_approval.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/memory_repository.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -108,7 +109,7 @@ Future<ToolApprovalPreview> _updateDiary(
 ) async {
   final diaries = getIt<DiaryRepository>();
   final categories = getIt<CategoryRepository>();
-  final rewrites = items.any((i) => i['content'] != null);
+  final rewrites = items.any((item) => item.containsKey('content'));
   if (items.isEmpty) {
     return ToolApprovalPreview(
       subtitle: '',
@@ -135,7 +136,7 @@ Future<ToolApprovalPreview> _updateDiary(
             ' → ${_str(item['title'])}',
       ));
     }
-    if (item['categoryId'] != null) {
+    if (item.containsKey('categoryId')) {
       lines.add((
         label: l10n.assistant.approvalFieldCategory,
         value:
@@ -152,6 +153,30 @@ Future<ToolApprovalPreview> _updateDiary(
         ),
       ));
     }
+    for (final field in ['mood', 'tags', 'time']) {
+      if (!item.containsKey(field)) continue;
+      final label = switch (field) {
+        'mood' => l10n.assistant.approvalFieldMood,
+        'tags' => l10n.assistant.approvalFieldTags,
+        _ => l10n.assistant.approvalFieldTime,
+      };
+      final value = item[field];
+      final mood = field == 'mood'
+          ? value is int
+                ? DiaryMood.fromScore(value)
+                : DiaryMood.fromName(_str(value).toLowerCase())
+          : null;
+      lines.add((
+        label: label,
+        value: mood != null
+            ? mood.labelOf(l10n)
+            : value == null
+            ? l10n.assistant.approvalCleared
+            : value is List
+            ? value.join(', ')
+            : _str(value),
+      ));
+    }
     return ToolApprovalPreview(
       subtitle: diary == null ? _str(item['id']) : _diaryLabel(diary, l10n),
       lines: lines,
@@ -164,7 +189,8 @@ Future<ToolApprovalPreview> _updateDiary(
 
   final sameCategory = items.every(
     (i) =>
-        i['categoryId'] != null && i['categoryId'] == items.first['categoryId'],
+        i.containsKey('categoryId') &&
+        i['categoryId'] == items.first['categoryId'],
   );
   final subtitle = [
     l10n.assistant.approvalDiaryCount(count: items.length),
@@ -232,11 +258,20 @@ Future<ToolApprovalPreview> _updateCategory(
   final lines = <ToolApprovalLine>[];
   for (final item in items.take(_kPreviewRows)) {
     final current = await repo.getCategoryById(_str(item['id']));
-    lines.add((
-      label: l10n.assistant.approvalFieldName,
-      value:
-          '${current?.categoryName ?? _str(item['id'])} → ${_str(item['name'])}',
-    ));
+    if (item['name'] != null) {
+      lines.add((
+        label: l10n.assistant.approvalFieldName,
+        value:
+            '${current?.categoryName ?? _str(item['id'])} → ${_str(item['name'])}',
+      ));
+    }
+    if (item.containsKey('color')) {
+      lines.add((
+        label: l10n.assistant.approvalFieldColor,
+        value:
+            '${current?.categoryName ?? _str(item['id'])}: ${item['color'] == null ? l10n.assistant.approvalCleared : _str(item['color'])}',
+      ));
+    }
   }
   return ToolApprovalPreview(
     subtitle: l10n.assistant.approvalItemCount(count: items.length),
