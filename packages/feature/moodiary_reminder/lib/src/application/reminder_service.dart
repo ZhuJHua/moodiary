@@ -11,7 +11,7 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:synchronized/synchronized.dart';
 
-import 'reminder.dart';
+import '../data/reminder.dart';
 import 'reminder_scheduler.dart';
 
 enum ReminderTapAction { openApp, newDiary }

@@ -1,7 +1,7 @@
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
-import 'reminder_service.dart';
+import '../application/reminder_service.dart';
 
 Future<bool> ensureReminderPermission(
   BuildContext context,
