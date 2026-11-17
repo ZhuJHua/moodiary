@@ -14,6 +14,15 @@ import 'reminder_scheduler.dart';
 
 enum ReminderTapAction { openApp, newDiary }
 
+Future<void> cancelReminderNotifications(
+  LocalNotifications notifications,
+) async {
+  final pending = await notifications.pendingIds();
+  for (final id in pending.where(ReminderScheduler.ownsId)) {
+    await notifications.cancel(id);
+  }
+}
+
 @lazySingleton
 class ReminderService extends ChangeNotifier {
   ReminderService(this._notifications, this.permission);
@@ -25,6 +34,7 @@ class ReminderService extends ChangeNotifier {
   final _taps = StreamController<void>.broadcast();
   final _applied = <int, String>{};
   final _lock = Lock();
+  StreamSubscription<void>? _locale;
   List<Reminder>? _reminders;
   Future<void>? _initialization;
   AppLifecycleListener? _lifecycle;
@@ -76,6 +86,7 @@ class ReminderService extends ChangeNotifier {
     launchedFromNotification = await _notifications.launchedFrom(payload);
     MoodiaryKVs.reminders.getNotifier().addListener(_remindersChanged);
     MoodiaryKVs.reminderEnabled.getNotifier().addListener(_changed);
+    _locale = LocaleSettings.getLocaleStream().listen((_) => _refresh());
     _lifecycle = AppLifecycleListener(onResume: _refresh);
     _refresh();
   }
@@ -115,11 +126,8 @@ class ReminderService extends ChangeNotifier {
   Future<void> _reconcile() async {
     if (_disposed) return;
     if (!enabled) {
-      final pending = await _notifications.pendingIds();
-      for (final id in pending.where(ReminderScheduler.ownsId)) {
-        await _notifications.cancel(id);
-        _applied.remove(id);
-      }
+      await cancelReminderNotifications(_notifications);
+      _applied.clear();
       if (!_disposed) notifyListeners();
       return;
     }
@@ -149,7 +157,7 @@ class ReminderService extends ChangeNotifier {
       _applied.remove(notification.id);
       await _notifications.schedule(
         id: notification.id,
-        at: notification.at,
+        at: notification.template,
         weekly: true,
         channelId: content.channelId,
         channelName: content.channelName,
@@ -223,6 +231,7 @@ class ReminderService extends ChangeNotifier {
     _disposed = true;
     _debounce?.cancel();
     _lifecycle?.dispose();
+    unawaited(_locale?.cancel());
     MoodiaryKVs.reminders.getNotifier().removeListener(_remindersChanged);
     MoodiaryKVs.reminderEnabled.getNotifier().removeListener(_changed);
     unawaited(_taps.close());

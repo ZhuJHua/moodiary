@@ -1,9 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_platform/testing.dart';
 import 'package:moodiary_reminder/moodiary_reminder.dart';
 
 void main() {
+  setUpAll(initializeTimeZones);
+
   final now = TZDateTime(UTC, 2026, 11, 16, 20);
   final daily = Reminder(
     id: 1,
@@ -41,6 +44,29 @@ void main() {
   test('master and individual switches disable slots', () {
     expect(schedule(enabled: false), isEmpty);
     expect(schedule(reminders: [daily.withEnabled(false)]), isEmpty);
+  });
+
+  test('DST gaps preserve the configured weekly wall time in the template', () {
+    final location = getLocation('America/New_York');
+    final reminders = [
+      Reminder(id: 1, hour: 2, minute: 30, weekdays: {7}),
+    ];
+    final gap = schedule(
+      reminders: reminders,
+      at: TZDateTime(location, 2027, 3, 10, 12),
+    ).single;
+    expect(gap.at, TZDateTime(location, 2027, 3, 14, 3, 30));
+    expect(gap.template, TZDateTime(location, 2027, 3, 7, 2, 30));
+    expect(gap.signature, 'America/New_York:7:2:30');
+    for (final day in [3, 17]) {
+      final normal = schedule(
+        reminders: reminders,
+        at: TZDateTime(location, 2027, 3, day, 12),
+      ).single;
+      expect(normal.template, same(normal.at));
+      expect(normal.at, TZDateTime(location, 2027, 3, day + 4, 2, 30));
+      expect(normal.signature, gap.signature);
+    }
   });
 
   test('past and equal slots advance one week with the same weekly id', () {

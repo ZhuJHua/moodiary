@@ -8,15 +8,17 @@ class ReminderNotification {
   const ReminderNotification({
     required this.id,
     required this.at,
+    required this.template,
     required this.reminder,
   });
 
   final int id;
   final TZDateTime at;
+  final TZDateTime template;
   final Reminder reminder;
 
   String get signature =>
-      '${at.location.name}:${at.weekday}:${at.hour}:${at.minute}';
+      '${template.location.name}:${template.weekday}:${template.hour}:${template.minute}';
 }
 
 abstract final class ReminderScheduler {
@@ -52,10 +54,22 @@ abstract final class ReminderScheduler {
             reminder.minute,
           );
         }
+        final template =
+            at.hour == reminder.hour && at.minute == reminder.minute
+            ? at
+            : TZDateTime(
+                at.location,
+                at.year,
+                at.month,
+                at.day - 7,
+                reminder.hour,
+                reminder.minute,
+              );
         result.add(
           ReminderNotification(
             id: _fixedWeeklyBase + reminder.id * 8 + day,
             at: at,
+            template: template,
             reminder: reminder,
           ),
         );

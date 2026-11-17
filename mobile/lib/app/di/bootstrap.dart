@@ -52,8 +52,12 @@ Future<void> resetAllData() async {
     }
   }
 
-  await step('reminders.disable', () async {
-    await getIt.maybeGet<ReminderService>()?.setEnabled(false);
+  await step('reminders.cancel', () async {
+    await cancelReminderNotifications(
+      getIt.isRegistered<LocalNotifications>()
+          ? getIt<LocalNotifications>()
+          : DeviceLocalNotifications(),
+    );
   });
   var dbCleared = false;
   final db = getIt.maybeGet<MoodiaryDatabase>();

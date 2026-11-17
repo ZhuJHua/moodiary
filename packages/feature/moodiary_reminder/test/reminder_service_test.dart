@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_platform/testing.dart';
 import 'package:moodiary_reminder/moodiary_reminder.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
@@ -118,6 +119,7 @@ class _Notifications extends Fake implements LocalNotifications {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(initializeTimeZones);
   late _Notifications notifications;
   late _Permission permission;
   late ReminderService service;
@@ -140,6 +142,17 @@ void main() {
   tearDown(() async {
     service.dispose();
     await getIt.reset();
+  });
+
+  test('cancellation only removes owned ids without initialization', () async {
+    notifications.pending.addAll({100008, 100009, 100047, 100048});
+    await cancelReminderNotifications(notifications);
+    expect(notifications.pending, {777, 100048});
+    expect(notifications.cancelled, [100008, 100009, 100047]);
+    expect(notifications.pendingReads, 1);
+    expect(notifications.zoneUpdates, 0);
+    expect(notifications.channelChecks, 0);
+    expect(notifications.scheduled, 0);
   });
 
   test(
@@ -308,6 +321,30 @@ void main() {
       expect(notifications.scheduled, 4);
       expect(service.notificationsEnabled, isFalse);
       expect(permission.requests, 0);
+    },
+  );
+
+  test(
+    'gap weeks schedule the wall-time template without later rescheduling',
+    () async {
+      final location = getLocation('America/New_York');
+      notifications.current = TZDateTime(location, 2027, 3, 10, 12);
+      MoodiaryKVs.reminders.set(
+        Reminder.encode([
+          Reminder(id: 1, hour: 2, minute: 30, weekdays: {7}),
+        ]),
+      );
+      await initialize();
+      expect(service.next!.at, TZDateTime(location, 2027, 3, 14, 3, 30));
+      expect(
+        notifications.times[100015],
+        TZDateTime(location, 2027, 3, 7, 2, 30),
+      );
+      expect(notifications.scheduled, 1);
+      notifications.current = TZDateTime(location, 2027, 3, 17, 12);
+      await service.reconcile();
+      expect(service.next!.at, TZDateTime(location, 2027, 3, 21, 2, 30));
+      expect(notifications.scheduled, 1);
     },
   );
 

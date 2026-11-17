@@ -45,10 +45,20 @@ class _ReminderNavigationState extends State<ReminderNavigation> {
       }
       _pending = false;
       _service.launchedFromNotification = false;
-      if (newDiary) router.pushRoute(const NewDiaryRoute());
+      if (newDiary && !_hasNewDiary(routes.matches)) {
+        router.pushRoute(const NewDiaryRoute());
+      }
     });
     WidgetsBinding.instance.ensureVisualUpdate();
   }
+
+  bool _hasNewDiary(Iterable<RouteMatchBase> matches) => matches.any(
+    (match) =>
+        match.matchedLocation == NewDiaryRoute.path ||
+        (match is ImperativeRouteMatch &&
+            _hasNewDiary(match.matches.matches)) ||
+        (match is ShellRouteMatch && _hasNewDiary(match.matches)),
+  );
 
   @override
   void dispose() {

@@ -21,9 +21,7 @@ class _ReminderService extends Fake implements ReminderService {
 }
 
 void main() {
-  testWidgets('cold and warm taps honor the selected action', (tester) async {
-    final service = _ReminderService();
-    getIt.registerSingleton<ReminderService>(service);
+  setUpAll(() {
     router = GoRouter(
       initialLocation: LockRoute.path,
       routes: [
@@ -40,9 +38,18 @@ void main() {
           builder: (_, state) =>
               Scaffold(body: Text('new diary: ${state.params['edit']}')),
         ),
+        GoRoute(
+          path: '/details',
+          builder: (_, _) => const Scaffold(body: Text('details')),
+        ),
       ],
     );
-    addTearDown(router.dispose);
+  });
+  tearDownAll(() => router.dispose());
+
+  testWidgets('cold and warm taps honor the selected action', (tester) async {
+    final service = _ReminderService();
+    getIt.registerSingleton<ReminderService>(service);
     addTearDown(service.events.close);
     addTearDown(getIt.reset);
     await tester.pumpWidget(
@@ -97,6 +104,54 @@ void main() {
     router.pop();
     await tester.pumpAndSettle();
     expect(find.text('new diary: true'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('warm taps reuse an editor anywhere in the stack', (
+    tester,
+  ) async {
+    final service = _ReminderService()
+      ..launchedFromNotification = false
+      ..tapAction = ReminderTapAction.newDiary;
+    getIt.registerSingleton<ReminderService>(service);
+    addTearDown(service.events.close);
+    addTearDown(getIt.reset);
+    router.go('/');
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: router,
+        builder: (_, child) => ReminderNavigation(child: child!),
+      ),
+    );
+    await tester.pumpAndSettle();
+    unawaited(router.pushRoute(const NewDiaryRoute()));
+    await tester.pumpAndSettle();
+    for (final covered in [false, true]) {
+      if (covered) {
+        unawaited(router.push('/details'));
+        await tester.pumpAndSettle();
+      }
+      service.launchedFromNotification = true;
+      service.events.add(null);
+      await tester.pumpAndSettle();
+      expect(service.launchedFromNotification, isFalse);
+      expect(
+        router.routerDelegate.currentConfiguration.matches.where(
+          (match) => match.matchedLocation == NewDiaryRoute.path,
+        ),
+        hasLength(1),
+      );
+      expect(find.text('new diary: true', skipOffstage: false), findsOneWidget);
+      if (covered) {
+        expect(find.text('details'), findsOneWidget);
+        router.pop();
+        await tester.pumpAndSettle();
+      }
+    }
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('home'), findsOneWidget);
+    expect(service.launchedFromNotification, isFalse);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }
