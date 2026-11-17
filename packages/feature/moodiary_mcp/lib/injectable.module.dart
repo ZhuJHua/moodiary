@@ -20,6 +20,7 @@ class MoodiaryMcpPackageModule extends _i526.MicroPackageModule {
         gh<_i691.DiaryRepository>(),
         gh<_i691.CategoryRepository>(),
         gh<_i691.MoodInsightsRepository>(),
+        gh<_i691.EmbedIndexService>(),
       ),
     );
     gh.lazySingleton<_i833.McpKeepAlive>(

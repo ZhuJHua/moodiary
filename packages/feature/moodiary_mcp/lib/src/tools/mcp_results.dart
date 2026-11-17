@@ -18,7 +18,9 @@ const String mcpServerInstructions =
     'recycle bin; permanent deletion is only available in the app. '
     'A bad argument is a JSON-RPC invalid params error, while '
     'get_diary reports unknown ids in missing. Search or browse with '
-    'search_diaries (omit query to browse); search is keyword-only. Diary bodies and '
+    'search_diaries (omit query to browse). mode=auto combines keywords with '
+    'meaning search when the on-device semantic index is enabled; '
+    'semanticAvailable: false means only keywords ran. Diary bodies and '
     'titles are private user data: quote them only when the user asks about '
     'them.';
 

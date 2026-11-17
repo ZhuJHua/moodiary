@@ -73,6 +73,62 @@ void main() {
     for (final hit in data['hits'] as List) hit['id'] as String,
   ];
 
+  test(
+    'both surfaces default to 10 rows, clamp to 50 and retain SQL paging',
+    () async {
+      await diaries.insertDiaries([
+        for (var index = 0; index < 60; index++)
+          makeDiary('entry-$index', 'orchard'),
+      ]);
+      final definition = moodiaryTools.firstWhere(
+        (tool) => tool.name == 'search_diaries',
+      );
+      expect(
+        definition.description(ToolSurface.mcp),
+        definition.description(ToolSurface.assistant),
+      );
+      expect(
+        definition.input(ToolSurface.mcp).value,
+        definition.input(ToolSurface.assistant).value,
+      );
+      for (final surface in ToolSurface.values) {
+        final context = ToolContext(
+          diaries: diaries,
+          categories: categories,
+          insights: MoodInsightsRepository(db),
+          surface: surface,
+        );
+        final properties = definition.input(surface).value['properties'] as Map;
+        final limit =
+            ((properties['limit'] as Map)['anyOf'] as List).first as Map;
+        expect(limit['default'], 10);
+        expect(limit['description'], contains('1..50'));
+        for (final query in [null, 'orchard']) {
+          for (final requested in [null, 0, -1, 1000]) {
+            final result = (await definition.call({
+              'query': ?query,
+              'limit': ?requested,
+            }, context)).data;
+            final expected = requested == null
+                ? 10
+                : requested < 1
+                ? 1
+                : 50;
+            expect(result['limit'], expected);
+            expect(result['hits'], hasLength(expected));
+            expect(result['total'], 60);
+          }
+          final beyondWindow = (await definition.call({
+            'query': ?query,
+            'offset': 50,
+          }, context)).data;
+          expect(beyondWindow['hits'], hasLength(10));
+          expect(beyondWindow['totalIsLowerBound'], isFalse);
+        }
+      }
+    },
+  );
+
   test('a recycled diary is hidden from read and write tools', () async {
     await diaries.insertADiary(
       makeDiary('bin', 'hidden body', title: 'Hidden', show: false),
@@ -1011,23 +1067,20 @@ void main() {
     },
   );
 
-  test(
-    'search validates category, enum, range and surface-specific arguments',
-    () async {
-      for (final args in [
-        {'categoryId': 'missing'},
-        {'sort': 'random'},
-        {'excerpt': 'short'},
-        {'startDate': '2026-02-01', 'endDate': '2026-01-01'},
-        {'mode': 'meaning'},
-      ]) {
-        await expectLater(
-          client.toolCall('search_diaries', args),
-          throwsA(isA<ToolArgumentException>()),
-        );
-      }
-    },
-  );
+  test('search validates category, enum and range arguments', () async {
+    for (final args in [
+      {'categoryId': 'missing'},
+      {'sort': 'random'},
+      {'excerpt': 'short'},
+      {'startDate': '2026-02-01', 'endDate': '2026-01-01'},
+      {'mode': 'invalid'},
+    ]) {
+      await expectLater(
+        client.toolCall('search_diaries', args),
+        throwsA(isA<ToolArgumentException>()),
+      );
+    }
+  });
 
   test('search excerpt projections and modified ordering', () async {
     final rich = jsonEncode({

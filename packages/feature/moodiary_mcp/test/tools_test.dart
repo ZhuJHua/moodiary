@@ -13,6 +13,28 @@ import 'package:moodiary_tools/moodiary_tools.dart';
 
 import 'support.dart';
 
+class _SemanticIndex extends Fake implements EmbedIndexService {
+  _SemanticIndex({this.enabled = true});
+
+  @override
+  final bool enabled;
+  final queries = <String>[];
+  final limits = <int>[];
+
+  @override
+  Future<List<SemanticHit>> search(
+    String query, {
+    int limit = 5,
+    String? categoryId,
+    DateTime? start,
+    DateTime? endExclusive,
+  }) async {
+    queries.add(query);
+    limits.add(limit);
+    return [(diaryId: 'meaning', distance: 0.25, startOff: 0, len: 1)];
+  }
+}
+
 void main() {
   late MoodiaryDatabase db;
   late DiaryRepository diaries;
@@ -49,6 +71,80 @@ void main() {
     await client.close();
     await db.close();
     await mediaRoot.delete(recursive: true);
+  });
+
+  TestMcpClient withSemantic(EmbedIndexService index) {
+    final semanticClient = TestMcpClient(
+      server: buildMoodiaryServer(
+        diaries: diaries,
+        categories: categories,
+        insights: insights,
+        appVersion: 'test',
+        iconUri: Uri.parse('http://127.0.0.1/icon.png'),
+        semantic: index,
+      ),
+    );
+    addTearDown(semanticClient.close);
+    return semanticClient;
+  }
+
+  test(
+    'MCP auto and meaning modes use the semantic index and report provenance',
+    () async {
+      await diaries.insertDiaries([
+        makeDiary('keyword', 'orchard'),
+        makeDiary('meaning', 'trees'),
+      ]);
+      final index = _SemanticIndex();
+      final semanticClient = withSemantic(index);
+      for (final mode in ['meaning', 'auto']) {
+        final data = structuredOf(
+          await semanticClient.toolCall('search_diaries', {
+            'query': 'orchard',
+            'mode': mode,
+          }),
+        );
+        expect(data['semanticAvailable'], isTrue);
+        expect(data['meaningRan'], isTrue);
+        final hits = (data['hits'] as List).cast<Map>();
+        expect(
+          hits.map((hit) => hit['id']),
+          mode == 'meaning' ? ['meaning'] : ['keyword', 'meaning'],
+        );
+        final meaning = hits.singleWhere((hit) => hit['id'] == 'meaning');
+        expect(meaning['via'], 'meaning');
+        expect(meaning['similarity'], 0.75);
+        if (mode == 'auto') {
+          final keyword = hits.singleWhere((hit) => hit['id'] == 'keyword');
+          expect(keyword['via'], 'keyword');
+          expect(keyword['similarity'], isNull);
+        }
+      }
+      expect(index.queries, ['orchard', 'orchard']);
+      expect(index.limits, [50, 50]);
+    },
+  );
+
+  test('MCP auto and meaning modes fall back to keywords when semantic search is unavailable', () async {
+    await diaries.insertADiary(makeDiary('keyword', 'orchard'));
+    final disabled = _SemanticIndex(enabled: false);
+    for (final fallbackClient in [client, withSemantic(disabled)]) {
+      for (final mode in ['auto', 'meaning']) {
+        final data = structuredOf(
+          await fallbackClient.toolCall('search_diaries', {
+            'query': 'orchard',
+            'mode': mode,
+          }),
+        );
+        expect(data['semanticAvailable'], isFalse);
+        expect(data['meaningRan'], isFalse);
+        final hit = (data['hits'] as List).single as Map;
+        expect(hit['id'], 'keyword');
+        expect(hit['via'], 'keyword');
+        expect(hit['similarity'], isNull);
+      }
+    }
+    expect(disabled.queries, isEmpty);
   });
 
   test(
@@ -178,6 +274,7 @@ void main() {
         search.keys,
         unorderedEquals([
           'query',
+          'mode',
           'categoryId',
           'tag',
           'startDate',
@@ -188,7 +285,11 @@ void main() {
           'excerpt',
         ]),
       );
-      expect(search, isNot(contains('mode')));
+      expect(((search['mode'] as Map)['anyOf'] as List).first['enum'], [
+        'auto',
+        'keyword',
+        'meaning',
+      ]);
       expect(
         (propertiesOf(toolNamed(listed, 'get_diary'))['ids']
             as Map)['maxItems'],

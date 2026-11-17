@@ -15,6 +15,7 @@ McpServer buildMoodiaryServer({
   required String appVersion,
   required Uri iconUri,
   DiaryMediaStore? mediaStore,
+  EmbedIndexService? semantic,
 }) {
   final server = McpServer(
     Implementation(
@@ -41,6 +42,7 @@ McpServer buildMoodiaryServer({
     categories: categories,
     insights: insights,
     mediaStore: mediaStore,
+    semantic: semantic,
   );
   registerDiaryPrompts(server, diaries: diaries, insights: insights);
   return server;
@@ -52,6 +54,7 @@ void registerMoodiaryTools(
   required CategoryRepository categories,
   required MoodInsightsRepository insights,
   DiaryMediaStore? mediaStore,
+  EmbedIndexService? semantic,
 }) {
   for (final def in toolsFor(ToolSurface.mcp)) {
     server.registerTool(
@@ -76,6 +79,7 @@ void registerMoodiaryTools(
               insights: insights,
               surface: ToolSurface.mcp,
               mediaStore: mediaStore,
+              semantic: semantic,
             ),
           );
           final json = jsonToolResult(result.data);

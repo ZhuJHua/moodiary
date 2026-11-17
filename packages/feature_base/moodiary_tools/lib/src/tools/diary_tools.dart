@@ -230,7 +230,7 @@ final List<ToolDef> diaryTools = [
   ToolDef<_SearchDiariesInput>(
     name: 'search_diaries',
     title: 'Search diaries',
-    description: (surface) =>
+    description: (_) =>
         'Search or browse visible diaries. Omit query to browse by date, category '
         'or exact tag. Keyword terms combine with AND; prefer one or two specific '
         'words. Chinese text, pinyin and Latin text match. Results contain ids, '
@@ -239,19 +239,24 @@ final List<ToolDef> diaryTools = [
         'timeLocal gives the local date and time including hours and minutes. '
         'If total exceeds returned rows or totalIsLowerBound is true, say so '
         'instead of presenting the rows as the complete set. '
-        '${surface == ToolSurface.assistant ? 'mode=auto fuses keyword and local semantic search when enabled; keyword and meaning force a path. Each hit reports via and similarity.' : 'Search is keyword-only.'} '
+        'mode=auto fuses keyword and meaning search; keyword selects keywords, '
+        'and meaning selects meaning search. Meaning search depends on the '
+        'on-device semantic index; semanticAvailable: false means only keywords '
+        'ran. Each hit reports via and similarity. When meaning search runs, '
+        'each path uses a fixed window of 50 candidates; filters and sorting '
+        'apply within that window before paging. Offsets beyond the combined '
+        'results return no rows. '
         'Mood is ${toolMoodNames.join(', ')}; null means not recorded.',
-    input: (surface) => S.object(
+    input: (_) => S.object(
       properties: {
         'query': nullableSchema(
           S.string(description: 'Keywords or a sentence; omit to browse.'),
           JsonType.string,
         ),
-        if (surface == ToolSurface.assistant)
-          'mode': nullableSchema(
-            S.string(enumValues: diarySearchModeValues),
-            JsonType.string,
-          ),
+        'mode': nullableSchema(
+          S.string(enumValues: diarySearchModeValues),
+          JsonType.string,
+        ),
         'tag': nullableSchema(S.string(), JsonType.string),
         'categoryId': categoryIdSchema,
         'startDate': startDateSchema,

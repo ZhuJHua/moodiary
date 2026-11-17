@@ -26,6 +26,15 @@ The catalog includes:
 
 Categories are a flat list. Each category reports its own visible diary count.
 
+`search_diaries` supports `mode=auto` (keywords plus meaning), `keyword` and
+`meaning`. Meaning search depends on the on-device semantic index; when it is
+unavailable, search falls back to keywords and returns `semanticAvailable: false`.
+Each hit includes `via` and `similarity`. Pages default to 10 rows, capped at 50.
+When meaning search runs, each path retrieves a fixed 50 candidates, applies
+filters, fuses the results and optionally sorts them before paging. Offsets past
+the combined results return no rows. `totalIsLowerBound: true` means at least one
+path reached its candidate cap, so the results may be incomplete.
+
 For Google Play, declare `specialUse` as a user-enabled local MCP server and demonstrate its switch, notification and Stop action.
 
 Known limits: when MCP and an open in-app editor save the same diary, the later

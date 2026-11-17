@@ -2,7 +2,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 
 typedef ToolIntRange = ({int fallback, int min, int max});
 
-const pageLimit = (fallback: 20, min: 1, max: 100);
+const pageLimit = (fallback: 10, min: 1, max: 50);
 const pageOffset = (fallback: 0, min: 0, max: 1000000);
 const tagLimit = (fallback: 50, min: 1, max: 500);
 const statsMonths = (fallback: 12, min: 1, max: 120);

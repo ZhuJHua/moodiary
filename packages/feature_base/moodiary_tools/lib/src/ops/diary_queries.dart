@@ -7,6 +7,7 @@ typedef _KeywordSearch = ({
   List<Diary> results,
   int total,
   Map<String, DiarySearchHit> hits,
+  bool capped,
 });
 
 typedef DiarySearch = ({
@@ -29,6 +30,7 @@ typedef _FusedSearchRow = ({
 });
 
 const int maxBatchRead = 10;
+const int _searchCandidateLimit = 50;
 
 class DiaryQueries {
   DiaryQueries({required this.diaries, this.semantic});
@@ -48,27 +50,32 @@ class DiaryQueries {
     int offset = 0,
     String? tag,
   }) async {
-    final candidateLimit = limit + offset;
     final semanticAvailable = semantic?.enabled ?? false;
-    final keywordRan = query.isEmpty || mode != 'meaning';
     final meaningRan =
         mode != 'keyword' && query.isNotEmpty && semanticAvailable;
+    final keywordRan = !meaningRan || mode != 'meaning';
     final keywordResult = keywordRan
         ? await _keyword(
             query: query,
             categoryId: categoryId,
             start: start,
             endExclusive: endExclusive,
-            sort: sort,
-            limit: meaningRan ? candidateLimit : limit,
+            sort: meaningRan ? 'relevance' : sort,
+            limit: meaningRan ? _searchCandidateLimit : limit,
             offset: meaningRan ? 0 : offset,
             tag: tag,
+            fixedWindow: meaningRan,
           )
-        : (results: <Diary>[], total: 0, hits: <String, DiarySearchHit>{});
+        : (
+            results: <Diary>[],
+            total: 0,
+            hits: <String, DiarySearchHit>{},
+            capped: false,
+          );
     final candidates = meaningRan
         ? await _semanticHits(
             query: query,
-            limit: candidateLimit,
+            limit: _searchCandidateLimit,
             categoryId: categoryId,
             start: start,
             endExclusive: endExclusive,
@@ -106,8 +113,7 @@ class DiaryQueries {
     }
     final bounded =
         meaningRan &&
-        (candidates.length >= candidateLimit ||
-            keywordResult.total > keywordResult.results.length);
+        (candidates.length >= _searchCandidateLimit || keywordResult.capped);
     final observed =
         keywordResult.results.length +
         hits.length -
@@ -137,6 +143,7 @@ class DiaryQueries {
     required int limit,
     required int offset,
     String? tag,
+    bool fixedWindow = false,
   }) async {
     if (query.isNotEmpty) {
       final filterInDart = tag != null || sort == 'modified';
@@ -146,7 +153,7 @@ class DiaryQueries {
         start: start,
         end: endExclusive,
         sort: _parseSearchSort(sort),
-        limit: filterInDart ? -1 : limit,
+        limit: filterInDart && !fixedWindow ? -1 : limit,
         offset: filterInDart ? 0 : offset,
       );
       final total = filterInDart
@@ -170,6 +177,7 @@ class DiaryQueries {
         results: matched.skip(filterInDart ? offset : 0).take(limit).toList(),
         total: tag == null ? total : matched.length,
         hits: {for (final hit in hits) hit.diary.id: hit},
+        capped: fixedWindow && hits.length >= _searchCandidateLimit,
       );
     }
     if (tag == null && start == null && endExclusive == null) {
@@ -186,6 +194,7 @@ class DiaryQueries {
             ? counts.total
             : counts.byCategory[categoryId] ?? 0,
         hits: const <String, DiarySearchHit>{},
+        capped: false,
       );
     }
     final all = start != null || endExclusive != null
@@ -211,6 +220,7 @@ class DiaryQueries {
       results: matched.skip(offset).take(limit).toList(),
       total: matched.length,
       hits: const <String, DiarySearchHit>{},
+      capped: false,
     );
   }
 
