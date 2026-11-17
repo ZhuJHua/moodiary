@@ -94,7 +94,7 @@ class DeviceLocalNotifications implements LocalNotifications {
     tz_data.initializeTimeZones();
     await _plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('ic_stat_reminder'),
+        android: AndroidInitializationSettings('ic_notification'),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestSoundPermission: false,
@@ -156,7 +156,7 @@ class DeviceLocalNotifications implements LocalNotifications {
         android: AndroidNotificationDetails(
           channelId,
           channelName,
-          icon: 'ic_stat_reminder',
+          icon: 'ic_notification',
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
           channelShowBadge: false,
