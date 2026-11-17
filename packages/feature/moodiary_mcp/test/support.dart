@@ -1,11 +1,9 @@
-/// Shared MCP fixtures and JSON-RPC response readers.
 library;
 
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_mcp/src/transport/mcp_http_endpoint.dart';
@@ -18,19 +16,6 @@ MoodiaryDatabase openTestDatabase() => MoodiaryDatabase.forTesting(
   ),
 );
 
-/// A Tiptap document holding one paragraph with a single text run.
-String paragraphDoc(String text) => jsonEncode(
-  TiptapContent.newDoc([
-    {
-      'type': 'paragraph',
-      'content': [
-        {'type': 'text', 'text': text},
-      ],
-    },
-  ]),
-);
-
-/// A diary fixture with media derived from its document.
 Diary makeDiary(
   String id,
   String text, {
@@ -85,7 +70,6 @@ Diary makeDiary(
   );
 }
 
-/// Business tests use the SDK client and linked SDK stream transports.
 class TestMcpClient {
   TestMcpClient({required this.server});
 
@@ -147,15 +131,6 @@ class TestMcpClient {
     String name, [
     Map<String, dynamic> arguments = const {},
   ]) => call('tools/call', {'name': name, 'arguments': arguments});
-
-  /// Creates one category through the tool and returns its id.
-  Future<String> newCategory(String name, {Object? color}) async {
-    final created = structuredOf(
-      await toolCall('create_category', {'name': name, 'color': ?color}),
-    );
-    expect(created['created'], isTrue);
-    return (created['category'] as Map<String, dynamic>)['id'] as String;
-  }
 }
 
 Map<String, dynamic> resultOf(Map<String, dynamic> response) =>
@@ -175,9 +150,6 @@ String textOf(Map<String, dynamic> response) =>
 int errorCode(Map<String, dynamic> response) =>
     (response['error'] as Map)['code'] as int;
 
-String errorMessage(Map<String, dynamic> response) =>
-    (response['error'] as Map)['message'] as String;
-
 List<String> completionValues(Map<String, dynamic> response) {
   final completion = resultOf(response)['completion'] as Map;
   return (completion['values'] as List).cast<String>();
@@ -187,18 +159,6 @@ List<String> diaryIds(Map<String, dynamic> data) => [
   for (final diary in data['hits'] as List)
     (diary as Map<String, dynamic>)['id'] as String,
 ];
-
-Map<String, dynamic> singleSummary(Map<String, dynamic> data) =>
-    (data['hits'] as List).cast<Map<String, dynamic>>().single;
-
-Map<String, dynamic> singleHit(Map<String, dynamic> data) =>
-    (data['hits'] as List).cast<Map<String, dynamic>>().single;
-
-Map<String, dynamic> storedDoc(String content) =>
-    jsonDecode(content) as Map<String, dynamic>;
-
-List<Map<String, dynamic>> docBlocks(Map<String, dynamic> doc) =>
-    (doc['content'] as List).cast<Map<String, dynamic>>();
 
 Map<String, dynamic> toolNamed(Map<String, dynamic> listed, String name) =>
     (listed['tools'] as List).cast<Map<String, dynamic>>().firstWhere(

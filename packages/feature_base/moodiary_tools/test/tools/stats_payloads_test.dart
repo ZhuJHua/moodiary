@@ -3,7 +3,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_tools/src/tools/stats_payloads.dart';
 
-import 'support.dart';
+import '../support.dart';
 
 String monthKey(int year, int month) =>
     '${DateTime(year, month).year}-'
@@ -115,18 +115,13 @@ void main() {
     () async {
       final now = DateTime.now();
       await diaries.insertDiaries([
-        makeDiary(
-          'past',
-          'past',
-          time: DateTime(now.year, now.month, 2),
-          mood: DiaryMood.good,
-        ),
-        makeDiary(
-          'future',
-          'future',
-          time: DateTime(now.year, now.month + 1, 6),
-          mood: DiaryMood.great,
-        ),
+        for (final mood in DiaryMood.values)
+          makeDiary(
+            mood.name,
+            'mood',
+            mood: mood,
+            time: DateTime(now.year, now.month + 1, 6),
+          ),
         makeDiary('none', 'none', time: DateTime(now.year, now.month, 3)),
       ]);
 
@@ -134,10 +129,9 @@ void main() {
       final moods = payload['moods']! as Map<String, dynamic>;
       final distribution = moods['distribution']! as Map<String, dynamic>;
 
-      expect(payload['visibleDiaries'], 3);
-      expect(distribution['good'], 1);
-      expect(distribution['great'], 1);
-      expect(moods['recordedDiaries'], 2);
+      expect(payload['visibleDiaries'], 6);
+      expect(distribution.values, everyElement(1));
+      expect(moods['recordedDiaries'], 5);
       expect(moods['diariesWithoutMood'], 1);
       expect(
         (moods['recordedDiaries']! as int) +

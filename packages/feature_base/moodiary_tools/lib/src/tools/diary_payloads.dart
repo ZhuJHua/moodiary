@@ -4,7 +4,7 @@ library;
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show internal, visibleForTesting;
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
@@ -45,12 +45,38 @@ String isoLocal(DateTime time) {
   return '${local.toIso8601String()}$sign$hours:$minutes';
 }
 
-/// Cuts [text] to [chars] code points and marks the cut with an ellipsis.
+/// Cuts [text] without splitting surrogate pairs.
 String truncate(String text, [int chars = mcpResultChars]) {
   if (text.length <= chars) return text;
-  final runes = text.runes;
-  if (runes.length <= chars) return text;
-  return '${String.fromCharCodes(runes.take(chars))}…';
+  var end = chars - 1;
+  if (end > 0 &&
+      text.codeUnitAt(end - 1) >= 0xD800 &&
+      text.codeUnitAt(end - 1) <= 0xDBFF) {
+    end--;
+  }
+  return '${text.substring(0, end)}…';
+}
+
+@internal
+({Object? content, bool truncated, int fullLength}) readBody(
+  Diary diary,
+  int bodyChars,
+  String format, {
+  DiaryLinkStyle linkStyle = DiaryLinkStyle.uri,
+}) {
+  final text = switch (format) {
+    'document' => diary.content,
+    'text' => diaryToText(diary, linkStyle: linkStyle),
+    _ => diaryToMarkdown(diary, linkStyle: linkStyle),
+  };
+  final content = truncate(text, bodyChars);
+  return (
+    content: format == 'document' && content == text
+        ? TiptapContent.parse(text).document ?? text
+        : content,
+    truncated: content != text,
+    fullLength: text.length,
+  );
 }
 
 /// The plain body of [diary]: no Markdown syntax and media runs rendered as

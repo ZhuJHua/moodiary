@@ -11,6 +11,7 @@ import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
@@ -60,33 +61,14 @@ void main() {
       ),
       startsWith('Failed:'),
     );
-    final spec = AssistantToolSpec(
-      ToolDef<Map<String, Object?>, Map<String, Object?>>(
-        name: 'probe',
-        title: 'Probe',
-        surfaces: const {ToolSurface.assistant},
-        effect: ToolEffect.read,
-        idempotent: true,
-        description: (_) => 'Probe',
-        input: (_) => Schema.fromMap({'type': 'object'}),
-        output: Schema.fromMap({'type': 'object'}),
-        parse: (raw) => raw,
-        run: (_, _) async => throw const ToolFailure('unavailable'),
-        toJson: (raw) => raw,
-      ),
-    );
     expect(
-      await dispatchAssistantTool(
-        spec: spec,
-        toolName: 'probe',
-        argsJson: '{}',
-      ),
-      contains('Failed: probe threw unavailable'),
+      await dispatch('get_diary_links', {'id': 'missing'}),
+      startsWith('Failed:'),
     );
   });
 
   test(
-    'the assistant catalog shares definitions and normalizes stored allowlists',
+    'the assistant catalog shares definitions and filters current allowlists',
     () {
       final live = AssistantToolRegistry.specs.map((spec) => spec.id).toSet();
       expect(live, AssistantTool.values.map((tool) => tool.id).toSet());
@@ -100,17 +82,10 @@ void main() {
       }
       expect(live, isNot(contains('read_diary_media')));
       expect(
-        AssistantToolRegistry.specsFor(['getDiary', 'listCategories'])
+        AssistantToolRegistry.specsFor(['get_diary', 'list_categories'])
             .map((spec) => spec.id),
         ['get_diary', 'list_categories'],
       );
-      expect(
-        AssistantToolRegistry.byId('semanticSearchDiaries')!.id,
-        'search_diaries',
-      );
-      for (final entry in renamedAssistantToolIds.entries) {
-        expect(AssistantToolRegistry.byId(entry.key)!.id, entry.value);
-      }
       expect(
         toolIdsWithoutMemory().toSet().intersection({
           'recall_memory',
@@ -167,6 +142,34 @@ void main() {
       }),
       l10n.assistant.toolListed(count: 1),
     );
+  });
+
+  test('cached summaries follow language changes in stored records', () async {
+    final locale = LocaleSettings.currentLocale;
+    addTearDown(() => LocaleSettings.setLocale(locale));
+    final call = AssistantToolCall(
+      callId: 'read',
+      name: 'get_diary',
+      argsJson: '{}',
+      result: jsonEncode({
+        'diaries': [
+          {'id': 'entry'},
+        ],
+      }),
+      done: true,
+    );
+    for (final locale in [AppLocale.en, AppLocale.zh]) {
+      await LocaleSettings.setLocale(locale);
+      AssistantToolRegistry.prepare(call);
+      expect(
+        AssistantToolRegistry.summaryOf(call),
+        l10n.assistant.toolRead(count: 1),
+      );
+      expect(
+        AssistantToolRegistry.recordOf([call]),
+        contains(l10n.assistant.toolRead(count: 1)),
+      );
+    }
   });
 
   test(

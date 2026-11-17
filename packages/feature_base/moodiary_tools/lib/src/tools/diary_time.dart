@@ -8,13 +8,14 @@ DateTime resolveDiaryTime(
   Object? value, {
   required DateTime reference,
   required String subject,
+  String field = 'time',
 }) {
   if (value == null) return reference.toUtc();
-  final text = value is String ? value.trim() : '';
+  final text = (value as String).trim();
   final match = _diaryTimePattern.firstMatch(text);
   if (match == null) {
     throw ToolArgumentException(
-      '$subject: time must be an ISO-8601 date or timestamp',
+      '$subject: $field must be an ISO-8601 date or timestamp',
     );
   }
   int part(int index) => int.parse(match.group(index) ?? '0');
@@ -31,7 +32,7 @@ DateTime resolveDiaryTime(
       part(7) > 23 ||
       part(8) > 59) {
     throw ToolArgumentException(
-      '$subject: time must be an ISO-8601 date or timestamp',
+      '$subject: $field must be an ISO-8601 date or timestamp',
     );
   }
   if (match.group(4) == null) {

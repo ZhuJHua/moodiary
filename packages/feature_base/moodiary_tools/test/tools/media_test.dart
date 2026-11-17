@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:drift/native.dart';
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
@@ -14,7 +13,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 
-import 'support.dart';
+import '../support.dart';
 
 /// 8 byte PNG signature plus filler, enough for the magic number sniffer.
 final Uint8List pngBytes = Uint8List.fromList([
@@ -106,11 +105,7 @@ void main() {
       pathOf: (kind, name) =>
           name.isEmpty ? '${root.path}/$kind' : '${root.path}/$kind/$name',
     );
-    db = MoodiaryDatabase.forTesting(
-      NativeDatabase.memory(
-        setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
-      ),
-    );
+    db = openTestDatabase();
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
     buildServer();
@@ -193,24 +188,15 @@ void main() {
     };
     expect(inputs.keys.toSet(), moodiaryTools.map((tool) => tool.name).toSet());
     for (final tool in moodiaryTools) {
-      for (final surface in tool.surfaces) {
-        final context = ToolContext(
-          diaries: diaries,
-          categories: categories,
-          insights: MoodInsightsRepository(db),
-          surface: surface,
-          mediaStore: client.context.mediaStore,
-        );
-        final result = await tool.call(inputs[tool.name]!, context);
-        expect(
-          await tool.output.validate(result.data),
-          isEmpty,
-          reason: tool.name,
-        );
-        if (tool.name == 'read_diary_media') {
-          expect(result.media.single.bytes, pngBytes);
-          expect(result.diaries.single.id, 'sample');
-        }
+      final result = await tool.call(inputs[tool.name]!, client.context);
+      expect(
+        await tool.output.validate(result.data),
+        isEmpty,
+        reason: tool.name,
+      );
+      if (tool.name == 'read_diary_media') {
+        expect(result.media.single.bytes, pngBytes);
+        expect(diaryIdsIn(result.data), ['sample']);
       }
     }
   });
@@ -234,9 +220,9 @@ void main() {
         ),
       );
 
-      final data = structuredOf(
-        await client.toolCall('list_diary_media', {'id': 'diary-1'}),
-      );
+      final data = (await client.toolCall('list_diary_media', {
+        'id': 'diary-1',
+      })).data;
       expect(data['id'], 'diary-1');
       expect(data['title'], 'title-diary-1');
       expect(data['count'], 3);
@@ -269,9 +255,9 @@ void main() {
 
     test('a diary without media answers empty lists', () async {
       await diaries.insertADiary(makeDiary('diary-1', 'plain body'));
-      final data = structuredOf(
-        await client.toolCall('list_diary_media', {'id': 'diary-1'}),
-      );
+      final data = (await client.toolCall('list_diary_media', {
+        'id': 'diary-1',
+      })).data;
       expect(data['count'], 0);
       expect(data['media'], {
         'images': <Object>[],
@@ -282,11 +268,18 @@ void main() {
     });
 
     test('an unknown diary is a tool error', () async {
-      final response = await client.toolCall('list_diary_media', {
-        'id': 'missing',
-      });
-      expect(resultOf(response)['isError'], isTrue);
-      expect(textOf(response), contains('no diary with id="missing"'));
+      final response = client.toolCall('list_diary_media', {'id': 'missing'});
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('no diary with id="missing"'),
+          ),
+        ),
+      );
     });
   });
 
@@ -301,8 +294,8 @@ void main() {
           'name': 'cat.png',
           'widthPercent': 60,
         });
-        expect(resultOf(response)['isError'] ?? false, isFalse);
-        final data = structuredOf(response);
+
+        final data = (response).data;
         expect(data['added'], isTrue);
         expect(data['mimeType'], 'image/png');
         expect(data['bytes'], pngBytes.length);
@@ -344,13 +337,11 @@ void main() {
           ],
         ),
       );
-      final data = structuredOf(
-        await client.toolCall('add_diary_image', {
-          'id': 'diary-1',
-          'data': base64Encode(pngBytes),
-          'position': 'start',
-        }),
-      );
+      final data = (await client.toolCall('add_diary_image', {
+        'id': 'diary-1',
+        'data': base64Encode(pngBytes),
+        'position': 'start',
+      })).data;
       expect(data['mimeType'], 'image/png');
       final name = data['name'] as String;
       final stored = (await diaries.getDiaryByBusinessId('diary-1'))!;
@@ -373,13 +364,11 @@ void main() {
       for (var index = 0; index < cases.length; index++) {
         final id = 'diary-$index';
         await diaries.insertADiary(makeDiary(id, 'body'));
-        final data = structuredOf(
-          await client.toolCall('add_diary_image', {
-            'id': id,
-            'data': base64Encode(pngBytes),
-            ...cases[index],
-          }),
-        );
+        final data = (await client.toolCall('add_diary_image', {
+          'id': id,
+          'data': base64Encode(pngBytes),
+          ...cases[index],
+        })).data;
         final name = data['name'] as String;
         final stored = (await diaries.getDiaryByBusinessId(id))!;
         final blocks = (jsonDecode(stored.content) as Map)['content'] as List;
@@ -390,20 +379,20 @@ void main() {
 
     test('invalid base64 is invalid params', () async {
       await diaries.insertADiary(makeDiary('diary-1', 'body'));
-      final response = await client.toolCall('add_diary_image', {
+      final response = client.toolCall('add_diary_image', {
         'id': 'diary-1',
         'data': 'not base64!!',
       });
-      expect(errorCode(response), -32602);
+      await expectLater(response, throwsA(isA<ToolArgumentException>()));
     });
 
     test('an empty payload is invalid params', () async {
       await diaries.insertADiary(makeDiary('diary-1', 'body'));
-      final response = await client.toolCall('add_diary_image', {
+      final response = client.toolCall('add_diary_image', {
         'id': 'diary-1',
         'data': '',
       });
-      expect(errorCode(response), -32602);
+      await expectLater(response, throwsA(isA<ToolArgumentException>()));
     });
 
     for (final (mime, brand) in [
@@ -426,8 +415,8 @@ void main() {
             'data': base64Encode(bytes),
             if (explicitMime) 'mimeType': mime,
           });
-          expect(resultOf(response)['isError'] ?? false, isFalse);
-          final data = structuredOf(response);
+
+          final data = (response).data;
           final name = data['name'] as String;
           expect(name, matches(RegExp(r'^image-[0-9a-f-]{36}\.jpg$')));
           expect(data['mimeType'], 'image/jpeg');
@@ -453,13 +442,22 @@ void main() {
       () async {
         decoder.fail = true;
         await diaries.insertADiary(makeDiary('diary-1', 'body'));
-        final response = await client.toolCall('add_diary_image', {
+        final response = client.toolCall('add_diary_image', {
           'id': 'diary-1',
           'data': base64Encode(ascii.encode('unknown image header')),
           'mimeType': 'image/heic',
         });
-        expect(resultOf(response)['isError'], isTrue);
-        expect(textOf(response), contains('could not write'));
+
+        await expectLater(
+          response,
+          throwsA(
+            isA<ToolFailure>().having(
+              (error) => error.message,
+              'message',
+              contains('could not write'),
+            ),
+          ),
+        );
         expect(File(decoder.sourcePath!).existsSync(), isFalse);
         expect(
           (await diaries.getDiaryByBusinessId('diary-1'))!.imageName,
@@ -470,24 +468,42 @@ void main() {
 
     test('an unsupported image type is refused', () async {
       await diaries.insertADiary(makeDiary('diary-1', 'body'));
-      final response = await client.toolCall('add_diary_image', {
+      final response = client.toolCall('add_diary_image', {
         'id': 'diary-1',
         'data': base64Encode(pngBytes),
         'mimeType': 'image/tiff',
       });
-      expect(resultOf(response)['isError'], isTrue);
-      expect(textOf(response), contains('not supported'));
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('not supported'),
+          ),
+        ),
+      );
     });
 
     test('a mime type that contradicts the bytes is refused', () async {
       await diaries.insertADiary(makeDiary('diary-1', 'body'));
-      final response = await client.toolCall('add_diary_image', {
+      final response = client.toolCall('add_diary_image', {
         'id': 'diary-1',
         'data': base64Encode(pngBytes),
         'mimeType': 'image/jpeg',
       });
-      expect(resultOf(response)['isError'], isTrue);
-      expect(textOf(response), contains('looks like image/png'));
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('looks like image/png'),
+          ),
+        ),
+      );
     });
 
     test('a payload above the 16 MB cap is refused before decoding', () async {
@@ -495,21 +511,39 @@ void main() {
       // The estimate runs on the base64 length, so the payload only has to be
       // large enough; a 16 MB buffer encodes to ~21.3 MB of wire text.
       final oversized = base64Encode(Uint8List(16 * 1024 * 1024 + 1));
-      final response = await client.toolCall('add_diary_image', {
+      final response = client.toolCall('add_diary_image', {
         'id': 'diary-1',
         'data': oversized,
       });
-      expect(resultOf(response)['isError'], isTrue);
-      expect(textOf(response), contains('16.0 MB'));
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('16.0 MB'),
+          ),
+        ),
+      );
     });
 
     test('an unknown diary is a tool error and writes nothing', () async {
-      final response = await client.toolCall('add_diary_image', {
+      final response = client.toolCall('add_diary_image', {
         'id': 'missing',
         'data': base64Encode(pngBytes),
       });
-      expect(resultOf(response)['isError'], isTrue);
-      expect(textOf(response), contains('no diary with id="missing"'));
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('no diary with id="missing"'),
+          ),
+        ),
+      );
       expect(
         Directory('${root.path}/image').listSync().whereType<File>(),
         isEmpty,
@@ -520,13 +554,31 @@ void main() {
       await diaries.insertADiary(
         makeDiary('diary-1', 'legacy **body**', type: 'markdown'),
       );
-      final response = await client.toolCall('add_diary_image', {
+      final response = client.toolCall('add_diary_image', {
         'id': 'diary-1',
         'data': base64Encode(pngBytes),
       });
-      expect(resultOf(response)['isError'], isTrue);
-      expect(textOf(response), contains('Tiptap'));
-      expect(textOf(response), contains('contentFormat="document"'));
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('Tiptap'),
+          ),
+        ),
+      );
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('contentFormat="document"'),
+          ),
+        ),
+      );
     });
   });
 
@@ -542,10 +594,7 @@ void main() {
           }),
       ]);
 
-      for (final response in responses) {
-        expect(resultOf(response)['isError'] ?? false, isFalse);
-      }
-      final names = responses.map((response) => structuredOf(response)['name']);
+      final names = responses.map((response) => (response).data['name']);
       expect(names.toSet(), hasLength(2));
       final stored = (await diaries.getDiaryByBusinessId('diary-1'))!;
       expect(stored.fileName, unorderedEquals(names));
@@ -572,8 +621,8 @@ void main() {
         'data': base64Encode(pdfBytes),
         'fileName': 'report.pdf',
       });
-      expect(resultOf(response)['isError'] ?? false, isFalse);
-      final data = structuredOf(response);
+
+      final data = (response).data;
       expect(data['added'], isTrue);
       expect(data['mimeType'], 'application/pdf');
       expect(data['bytes'], pdfBytes.length);
@@ -599,13 +648,11 @@ void main() {
 
     test('an unusable extension becomes .bin and a path is stripped', () async {
       await diaries.insertADiary(makeDiary('diary-1', 'body'));
-      final data = structuredOf(
-        await client.toolCall('add_diary_attachment', {
-          'id': 'diary-1',
-          'data': base64Encode(pdfBytes),
-          'fileName': r'folder\notes.bad~ext',
-        }),
-      );
+      final data = (await client.toolCall('add_diary_attachment', {
+        'id': 'diary-1',
+        'data': base64Encode(pdfBytes),
+        'fileName': r'folder\notes.bad~ext',
+      })).data;
       expect(data['name'], endsWith('.bin'));
       final stored = (await diaries.getDiaryByBusinessId('diary-1'))!;
       final blocks = (jsonDecode(stored.content) as Map)['content'] as List;
@@ -619,13 +666,22 @@ void main() {
         await Directory('${root.path}/file').delete();
         await File('${root.path}/file').writeAsString('blocked');
         await diaries.insertADiary(makeDiary('diary-1', 'body'));
-        final response = await client.toolCall('add_diary_attachment', {
+        final response = client.toolCall('add_diary_attachment', {
           'id': 'diary-1',
           'data': base64Encode(pdfBytes),
           'fileName': 'report.pdf',
         });
-        expect(resultOf(response)['isError'], isTrue);
-        expect(textOf(response), contains('could not write'));
+
+        await expectLater(
+          response,
+          throwsA(
+            isA<ToolFailure>().having(
+              (error) => error.message,
+              'message',
+              contains('could not write'),
+            ),
+          ),
+        );
         expect(
           (await diaries.getDiaryByBusinessId('diary-1'))!.fileName,
           isEmpty,
@@ -641,8 +697,8 @@ void main() {
         'fileName': '..',
         'mimeType': 'application/x-custom',
       });
-      expect(resultOf(response)['isError'] ?? false, isFalse);
-      final data = structuredOf(response);
+
+      final data = (response).data;
       expect(data['name'], endsWith('.bin'));
       expect(data['mimeType'], 'application/x-custom');
       expect(
@@ -653,32 +709,32 @@ void main() {
 
     test('fileName is required and must not be blank', () async {
       await diaries.insertADiary(makeDiary('diary-1', 'body'));
-      final response = await client.toolCall('add_diary_attachment', {
+      final response = client.toolCall('add_diary_attachment', {
         'id': 'diary-1',
         'data': base64Encode(pdfBytes),
       });
-      expect(errorCode(response), -32602);
+      await expectLater(response, throwsA(isA<ToolArgumentException>()));
     });
 
     test('invalid base64 is invalid params', () async {
       await diaries.insertADiary(makeDiary('diary-1', 'body'));
-      final response = await client.toolCall('add_diary_attachment', {
+      final response = client.toolCall('add_diary_attachment', {
         'id': 'diary-1',
         'data': '%%%',
         'fileName': 'report.pdf',
       });
-      expect(errorCode(response), -32602);
+      await expectLater(response, throwsA(isA<ToolArgumentException>()));
     });
 
     test('a malformed mimeType is invalid params', () async {
       await diaries.insertADiary(makeDiary('diary-1', 'body'));
-      final response = await client.toolCall('add_diary_attachment', {
+      final response = client.toolCall('add_diary_attachment', {
         'id': 'diary-1',
         'data': base64Encode(pdfBytes),
         'fileName': 'report.pdf',
         'mimeType': 'not-a-mime',
       });
-      expect(errorCode(response), -32602);
+      await expectLater(response, throwsA(isA<ToolArgumentException>()));
     });
   });
 
@@ -698,14 +754,12 @@ void main() {
         'id': 'diary-1',
         'name': 'image-abc.png',
       });
-      expect(resultOf(response)['isError'] ?? false, isFalse);
-      final content = contentOf(response);
-      expect(content, hasLength(2));
-      expect(content.first['type'], 'image');
-      expect(content.first['mimeType'], 'image/png');
-      expect(base64Decode(content.first['data'] as String), pngBytes);
 
-      final metadata = structuredOf(response);
+      expect(response.media, hasLength(1));
+      expect(response.media.single.mimeType, 'image/png');
+      expect(response.media.single.bytes, pngBytes);
+
+      final metadata = (response).data;
       expect(metadata, {
         'id': 'diary-1',
         'title': 'A day',
@@ -715,7 +769,6 @@ void main() {
         'bytes': pngBytes.length,
         'exists': true,
       });
-      expect(content.last, {'type': 'text', 'text': jsonEncode(metadata)});
     });
 
     for (final kind in ['audio', 'video', 'file']) {
@@ -735,15 +788,21 @@ void main() {
         );
 
         for (final explicitKind in [false, true]) {
-          final response = await client.toolCall('read_diary_media', {
+          final response = client.toolCall('read_diary_media', {
             'id': 'diary-1',
             'name': name,
             if (explicitKind) 'kind': kind,
           });
-          expect(resultOf(response)['isError'], isTrue);
-          expect(
-            textOf(response),
-            'read_diary_media: only images can be read.',
+
+          await expectLater(
+            response,
+            throwsA(
+              isA<ToolFailure>().having(
+                (error) => error.message,
+                'message',
+                'read_diary_media: only images can be read.',
+              ),
+            ),
           );
         }
       });
@@ -755,30 +814,47 @@ void main() {
         makeDiary('diary-1', 'body', media: [imageNode('image-abc.png')]),
       );
 
-      final wrongKind = await client.toolCall('read_diary_media', {
+      final wrongKind = client.toolCall('read_diary_media', {
         'id': 'diary-1',
         'name': 'image-abc.png',
         'kind': 'file',
       });
-      expect(resultOf(wrongKind)['isError'], isTrue);
-      expect(textOf(wrongKind), contains('has no file media'));
 
-      final rightKind = await client.toolCall('read_diary_media', {
+      await expectLater(
+        wrongKind,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('has no file media'),
+          ),
+        ),
+      );
+
+      await client.toolCall('read_diary_media', {
         'id': 'diary-1',
         'name': 'image-abc.png',
         'kind': 'image',
       });
-      expect(resultOf(rightKind)['isError'] ?? false, isFalse);
     });
 
     test('a name the diary does not reference is refused', () async {
       await diaries.insertADiary(makeDiary('diary-1', 'body'));
-      final response = await client.toolCall('read_diary_media', {
+      final response = client.toolCall('read_diary_media', {
         'id': 'diary-1',
         'name': 'image-abc.png',
       });
-      expect(resultOf(response)['isError'], isTrue);
-      expect(textOf(response), contains('has no image media'));
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('has no image media'),
+          ),
+        ),
+      );
     });
 
     test(
@@ -786,16 +862,21 @@ void main() {
       () async {
         await diaries.insertADiary(makeDiary('diary-1', 'body'));
         for (final name in ['../secret.png', '/etc/passwd', r'..\secret.png']) {
-          final response = await client.toolCall('read_diary_media', {
+          final response = client.toolCall('read_diary_media', {
             'id': 'diary-1',
             'name': name,
           });
-          expect(
-            resultOf(response)['isError'],
-            isTrue,
-            reason: '$name must be refused',
+
+          await expectLater(
+            response,
+            throwsA(
+              isA<ToolFailure>().having(
+                (error) => error.message,
+                'message',
+                contains('has no image media'),
+              ),
+            ),
           );
-          expect(textOf(response), contains('has no image media'));
         }
       },
     );
@@ -804,12 +885,21 @@ void main() {
       await diaries.insertADiary(
         makeDiary('diary-1', 'body', media: [imageNode('image-gone.png')]),
       );
-      final response = await client.toolCall('read_diary_media', {
+      final response = client.toolCall('read_diary_media', {
         'id': 'diary-1',
         'name': 'image-gone.png',
       });
-      expect(resultOf(response)['isError'], isTrue);
-      expect(textOf(response), contains('missing from the image'));
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('missing from the image'),
+          ),
+        ),
+      );
     });
 
     test('an image above the inline cap is refused, not truncated', () async {
@@ -821,22 +911,40 @@ void main() {
       await diaries.insertADiary(
         makeDiary('diary-1', 'body', media: [imageNode('image-big.png')]),
       );
-      final response = await client.toolCall('read_diary_media', {
+      final response = client.toolCall('read_diary_media', {
         'id': 'diary-1',
         'name': 'image-big.png',
       });
-      expect(resultOf(response)['isError'], isTrue);
-      expect(textOf(response), contains('inline limit'));
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('inline limit'),
+          ),
+        ),
+      );
       expect(store.readCalled, isFalse);
     });
 
     test('an unknown diary is a tool error', () async {
-      final response = await client.toolCall('read_diary_media', {
+      final response = client.toolCall('read_diary_media', {
         'id': 'missing',
         'name': 'image-abc.png',
       });
-      expect(resultOf(response)['isError'], isTrue);
-      expect(textOf(response), contains('no diary with id="missing"'));
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('no diary with id="missing"'),
+          ),
+        ),
+      );
     });
   });
 
@@ -866,11 +974,17 @@ void main() {
         ),
       ];
       for (final (tool, arguments) in calls) {
-        final response = await client.toolCall(tool, arguments);
-        expect(resultOf(response)['isError'], isTrue, reason: tool);
-        expect(
-          textOf(response),
-          contains('no diary with id="bin"'),
+        final response = client.toolCall(tool, arguments);
+
+        await expectLater(
+          response,
+          throwsA(
+            isA<ToolFailure>().having(
+              (error) => error.message,
+              'message',
+              contains('no diary with id="bin"'),
+            ),
+          ),
           reason: tool,
         );
       }

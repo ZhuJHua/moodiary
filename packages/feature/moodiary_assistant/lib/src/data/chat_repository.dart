@@ -4,9 +4,10 @@ import 'dart:math';
 import 'package:drift/drift.dart';
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+
+import 'assistant_tools.dart';
 
 @lazySingleton
 class ChatRepository {
@@ -84,14 +85,17 @@ class ChatRepository {
         providerId: Value(m.providerId),
       );
 
-  static AssistantToolCall _toToolCall(AssistantToolCallRow r) =>
-      AssistantToolCall(
-        callId: r.callId,
-        name: normalizeAssistantToolId(r.name),
-        argsJson: r.argsJson,
-        result: r.result,
-        done: r.done != 0,
-      );
+  static AssistantToolCall _toToolCall(AssistantToolCallRow r) {
+    final call = AssistantToolCall(
+      callId: r.callId,
+      name: normalizeAssistantToolId(r.name),
+      argsJson: r.argsJson,
+      result: r.result,
+      done: r.done != 0,
+    );
+    AssistantToolRegistry.prepare(call);
+    return call;
+  }
 
   Future<List<ChatMessage>> _assemble(List<ChatMessageRow> rows) async {
     if (rows.isEmpty) return const [];

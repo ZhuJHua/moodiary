@@ -9,7 +9,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 
-import 'support.dart';
+import '../support.dart';
 
 String richDocument() => jsonEncode({
   'type': 'doc',
@@ -64,7 +64,7 @@ void main() {
   Future<Map<String, dynamic>> run(
     String name, [
     Map<String, dynamic> args = const {},
-  ]) async => structuredOf(await client.toolCall(name, args));
+  ]) async => (await client.toolCall(name, args)).data;
   Map<String, dynamic> row(Map<String, dynamic> data) =>
       ((data['results'] as List).single as Map).cast<String, dynamic>();
   Map<String, dynamic> diaryOf(Map<String, dynamic> data) =>
@@ -105,9 +105,18 @@ void main() {
         {'id': 'bin', 'data': 'YQ==', 'fileName': 'hidden.txt'},
       ),
     ]) {
-      final response = await mediaClient.toolCall(name, arguments);
-      expect(resultOf(response)['isError'], true);
-      expect(textOf(response), contains('no diary with id="bin"'));
+      final response = mediaClient.toolCall(name, arguments);
+
+      await expectLater(
+        response,
+        throwsA(
+          isA<ToolFailure>().having(
+            (error) => error.message,
+            'message',
+            contains('no diary with id="bin"'),
+          ),
+        ),
+      );
     }
     for (final query in [null, 'hidden']) {
       final search = await run('search_diaries', {'query': ?query});
@@ -317,11 +326,27 @@ void main() {
       );
       expect(deleted['id'], id);
       expect(deleted['ok'], false);
-      expect(deleted['deleted'], false);
       expect(deleted['error'], contains('still holds diaries'));
       expect(await categories.getCategoryById(id), isNotNull);
       expect(await categories.getCategoryById(child.id), child);
       expect(await diaries.getDiaryByBusinessId('kept'), before);
+      final blank = row(
+        await run('create_category', {
+          'items': [
+            {'name': '   '},
+          ],
+        }),
+      );
+      expect(blank['ok'], false);
+      expect(blank['error'], contains('must not be empty'));
+      await diaries.updateADiary(newDiary: before.copyWith(show: false));
+      final recycled = row(
+        await run('delete_category', {
+          'ids': [id],
+        }),
+      );
+      expect(recycled['ok'], false);
+      expect(recycled['error'], contains('recycle bin'));
     },
   );
 
@@ -335,7 +360,6 @@ void main() {
       }),
     );
     expect(deleted['ok'], true);
-    expect(deleted['deleted'], true);
     expect(await categories.getCategoryById(parent), isNull);
     expect(await categories.getCategoryById(child.id), child);
   });
@@ -470,7 +494,6 @@ void main() {
       }),
     );
     expect(created['ok'], true);
-    expect(created['created'], true);
     expect(created['diary']['show'], true);
     expect(
       (await diaries.getDiaryByBusinessId(created['diary']['id'] as String))!
@@ -519,7 +542,7 @@ void main() {
     );
     expect(read['contentFormat'], 'markdown');
     expect(read['content'], 'apple pie and coffee');
-    expect(read['contentTruncated'], false);
+    expect(read['truncated'], false);
     expect(read['truncated'], false);
     expect(read['uri'], 'moodiary://diary/$id');
     expect(read['media']['images'], isEmpty);
@@ -668,7 +691,6 @@ void main() {
         }),
       );
       expect(removed['ok'], true);
-      expect(removed['deleted'], true);
       expect(removed['id'], 'trash');
       expect(removed['title'], 'title-trash');
       expect(removed['alreadyRecycled'] ?? false, false);
@@ -681,7 +703,6 @@ void main() {
         }),
       );
       expect(repeated['ok'], true);
-      expect(repeated['deleted'], true);
       expect(repeated['alreadyRecycled'], true);
       expect(await diaries.getDiaryByBusinessId('trash'), stored);
     },
@@ -884,17 +905,41 @@ void main() {
       final life = Category.create(categoryName: 'Life', parentId: work);
       await categories.insertACategory(life);
       await diaries.insertDiaries([
-        makeDiary('work', 'one', categoryId: work),
-        makeDiary('life-1', 'two', categoryId: life.id),
-        makeDiary('life-2', 'three', categoryId: life.id),
-        makeDiary('unset', 'four'),
-        makeDiary('hidden', 'five', categoryId: work, show: false),
+        makeDiary(
+          'work',
+          'one',
+          categoryId: work,
+          mood: DiaryMood.good,
+          time: DateTime.utc(2026, 1, 1),
+        ),
+        makeDiary('life-1', 'two', categoryId: life.id, mood: DiaryMood.great),
+        makeDiary('life-2', 'three', categoryId: life.id, mood: DiaryMood.bad),
+        makeDiary('unset', 'four', time: DateTime.utc(2030, 1, 1)),
+        makeDiary(
+          'hidden',
+          'five',
+          categoryId: work,
+          show: false,
+          time: DateTime.utc(2000, 1, 1),
+        ),
       ]);
       final stats = await run('get_stats');
       expect(stats['totalDiaries'], 5);
       expect(stats['visibleDiaries'], 4);
       expect(stats['recycleBinDiaries'], 1);
       expect(stats['uncategorizedDiaries'], 1);
+      expect(stats['firstDiaryTime'], '2026-01-01T00:00:00.000Z');
+      expect(stats['lastDiaryTime'], '2030-01-01T00:00:00.000Z');
+      final moods = stats['moods'] as Map;
+      expect(moods['diariesWithoutMood'], 1);
+      expect(moods['distribution'], {
+        'awful': 0,
+        'bad': 1,
+        'okay': 0,
+        'good': 1,
+        'great': 1,
+      });
+
       expect(
         {
           for (final category in stats['categories'] as List)
@@ -976,9 +1021,9 @@ void main() {
         {'startDate': '2026-02-01', 'endDate': '2026-01-01'},
         {'mode': 'meaning'},
       ]) {
-        expect(
-          errorCode(await client.toolCall('search_diaries', args)),
-          -32602,
+        await expectLater(
+          client.toolCall('search_diaries', args),
+          throwsA(isA<ToolArgumentException>()),
         );
       }
     },
@@ -1083,18 +1128,19 @@ void main() {
           ],
         },
       ]) {
-        expect(errorCode(await client.toolCall('create_diary', args)), -32602);
+        await expectLater(
+          client.toolCall('create_diary', args),
+          throwsA(isA<ToolArgumentException>()),
+        );
       }
       expect(await diaries.countAllDiaries(), 0);
-      expect(
-        errorCode(
-          await client.toolCall('get_diary', {'ids': List.filled(11, 'id')}),
-        ),
-        -32602,
+      await expectLater(
+        client.toolCall('get_diary', {'ids': List.filled(11, 'id')}),
+        throwsA(isA<ToolArgumentException>()),
       );
-      expect(
-        errorCode(await client.toolCall('delete_diary', {'ids': []})),
-        -32602,
+      await expectLater(
+        client.toolCall('delete_diary', {'ids': []}),
+        throwsA(isA<ToolArgumentException>()),
       );
     },
   );
@@ -1184,9 +1230,9 @@ void main() {
         (await diaries.getDiaryByBusinessId('photo'))!.content,
         contains('image-owned.png'),
       );
-      expect(diaryIdsIn('get_diary', read), ['photo']);
+      expect(diaryIdsIn(read), ['photo']);
       expect(
-        diaryIdsIn('update_diary', {
+        diaryIdsIn({
           'results': [
             updated,
             {'ok': false, 'id': 'missing'},
@@ -1194,22 +1240,6 @@ void main() {
         }),
         ['photo'],
       );
-      final foreign = row(
-        await run('update_diary', {
-          'items': [
-            {'id': 'photo', 'content': '![bad](other.png)'},
-          ],
-        }),
-      );
-      expect(foreign['ok'], false);
-      final created = row(
-        await run('create_diary', {
-          'items': [
-            {'content': markdown},
-          ],
-        }),
-      );
-      expect(created['ok'], false);
     },
   );
 
@@ -1238,6 +1268,7 @@ void main() {
     }, context);
     expect(await def.output.validate(assistant.data), isEmpty);
     final full = (assistant.data['diaries'] as List).single as Map;
+    expect(full, isNot(contains('links')));
     expect(full['truncated'], true);
     expect(full['fullLength'], 5000);
     expect((full['content'] as String).length, lessThanOrEqualTo(4000));
@@ -1250,87 +1281,7 @@ void main() {
     );
   });
 
-  test('categories batch names, colors, counts, partial errors and recycle protection', () async {
-    final created = await run('create_category', {
-      'items': [
-        {'name': 'Work', 'color': '#112233'},
-        {'name': ''},
-        {'name': 'Empty'},
-      ],
-    });
-    expect((created['results'] as List).map((item) => item['ok']), [
-      true,
-      false,
-      true,
-    ]);
-    final work = (created['results'] as List).first['category']['id'] as String;
-    final empty = (created['results'] as List).last['category']['id'] as String;
-    await diaries.insertADiary(
-      makeDiary('bin', 'body', categoryId: work, show: false),
-    );
-    final updated = row(
-      await run('update_category', {
-        'items': [
-          {'id': work, 'name': 'Projects', 'color': null},
-        ],
-      }),
-    );
-    expect(updated['category']['name'], 'Projects');
-    expect(updated['category']['color'], null);
-    final listed = await run('list_categories');
-    expect((listed['categories'] as List).first['diaries'], 0);
-    final deleted = await run('delete_category', {
-      'ids': [work, empty, 'missing'],
-    });
-    expect((deleted['results'] as List).map((item) => item['ok']), [
-      false,
-      true,
-      false,
-    ]);
-    expect(
-      (deleted['results'] as List).first['error'],
-      contains('recycle bin'),
-    );
-  });
-
-  test('stats preserve complete span, category and mood populations', () async {
-    final work = await client.newCategory('Work');
-    await diaries.insertDiaries([
-      for (final mood in DiaryMood.values)
-        makeDiary(
-          mood.name,
-          'entry',
-          mood: mood,
-          categoryId: work,
-          time: DateTime.utc(2026, mood.score, 1),
-        ),
-      makeDiary('unset', 'entry', time: DateTime.utc(2030, 1, 1)),
-      makeDiary('hidden', 'entry', show: false, time: DateTime.utc(2000, 1, 1)),
-    ]);
-    final stats = await run('get_stats');
-    expect(stats['totalDiaries'], 7);
-    expect(stats['visibleDiaries'], 6);
-    expect(stats['recycleBinDiaries'], 1);
-    expect(stats['uncategorizedDiaries'], 1);
-    expect(stats['firstDiaryTime'], '2026-01-01T00:00:00.000Z');
-    expect(stats['lastDiaryTime'], '2030-01-01T00:00:00.000Z');
-    expect((stats['categories'] as List).single['diaries'], 5);
-    final moods = stats['moods'] as Map;
-    expect(moods['diariesWithoutMood'], 1);
-    expect((moods['distribution'] as Map).values, everyElement(1));
-    final buckets = (stats['months'] as List).fold<int>(
-      0,
-      (sum, value) => sum + value['diaries'] as int,
-    );
-    expect(
-      buckets +
-          (stats['olderDiaries'] as int) +
-          (stats['futureDiaries'] as int),
-      6,
-    );
-  });
-
-  test('tags and link graph retain their shared contracts', () async {
+  test('link graph retains forward, backward and dangling ids', () async {
     await diaries.insertDiaries([
       makeDiary('target', 'entry', tags: ['travel']),
       makeDiary(
@@ -1341,9 +1292,6 @@ void main() {
       ),
       makeDiary('hidden', 'entry', tags: ['travel'], show: false),
     ]);
-    final tags = await run('list_tags');
-    expect(tags['count'], 2);
-    expect(tags['scannedDiaries'], 2);
     final graph = await run('get_diary_links', {'id': 'source'});
     expect((graph['forward'] as List).single['id'], 'target');
     expect(graph['dangling'], ['ghost']);

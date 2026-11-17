@@ -1,5 +1,3 @@
-/// Reads diary media and attaches files using the editor's Tiptap nodes.
-/// Images are returned inline.
 library;
 
 import 'dart:convert';
@@ -17,34 +15,26 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import '../media/diary_media.dart';
 import '../ops/diary_writes.dart';
 import 'arguments.dart';
-import 'diary_references.dart';
 import 'diary_write_lock.dart';
 import 'output_schemas.dart';
 import 'schemas.dart';
 import 'tool_def.dart';
+import 'tool_values.dart';
 
-/// Validates a client supplied MIME type before storing it in a media node.
 final RegExp _mimeTypePattern = RegExp(
   r'^[a-z0-9][a-z0-9.+-]*/[a-z0-9][a-z0-9.+-]*$',
 );
 
-/// The two places a media node can go in the top-level content.
 const List<String> _positions = ['end', 'start'];
 
-/// Values of the `kind` argument of `read_diary_media`.
 const List<String> _mediaKinds = ['image', 'audio', 'video', 'file'];
 
-/// Decoded cap for one `data` payload. Base64 grows it by a third, and a model
-/// context does not need a bigger file; the editor is still the place for very
-/// large media.
 const int _maxPayloadBytes = 16 * 1024 * 1024;
 
 @internal
-final List<ToolDefinition> mediaTools = [
+final List<ToolDef> mediaTools = [
   ToolDef(
     name: 'list_diary_media',
-    validateArguments: validateToolArguments,
-    references: (result) => diaryReferences('list_diary_media', result.data),
     title: 'List the media of a diary',
     description: (_) =>
         'Lists every media file one diary references: images, audio, videos '
@@ -56,16 +46,12 @@ final List<ToolDefinition> mediaTools = [
     surfaces: const {ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
-    output: toolOutputSchema('list_diary_media'),
-    parse: _parseListDiaryMedia,
-    run: (input, ctx) => _listDiaryMedia(ctx.diaries, ctx.mediaStore, input),
-    toJson: (result) => result.data,
-    media: (result) => result.media,
+    output: _listDiaryMediaOutput,
+    parse: (raw) => ToolArguments('list_diary_media', raw).requireText('id'),
+    run: (input, ctx) => _listDiaryMedia(input, ctx),
   ),
   ToolDef(
     name: 'read_diary_media',
-    validateArguments: validateToolArguments,
-    references: (result) => diaryReferences('read_diary_media', result.data),
     title: 'Read one media file of a diary',
     description: (_) =>
         'Returns one image of one diary as an MCP '
@@ -78,11 +64,14 @@ final List<ToolDefinition> mediaTools = [
       properties: {
         'id': diaryIdSchema,
         'name': mediaNameSchema,
-        'kind': S.string(
-          enumValues: _mediaKinds,
-          description:
-              'Media kind, inferred from the diary references when omitted. '
-              'Only image can be read; other kinds return a tool error.',
+        'kind': nullableSchema(
+          S.string(
+            enumValues: _mediaKinds,
+            description:
+                'Media kind, inferred from the diary references when omitted. '
+                'Only image can be read; other kinds return a tool error.',
+          ),
+          JsonType.string,
         ),
       },
       required: ['id', 'name'],
@@ -90,16 +79,12 @@ final List<ToolDefinition> mediaTools = [
     surfaces: const {ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
-    output: toolOutputSchema('read_diary_media'),
+    output: _readDiaryMediaOutput,
     parse: _parseReadDiaryMedia,
-    run: (input, ctx) => _readDiaryMedia(ctx.diaries, ctx.mediaStore, input),
-    toJson: (result) => result.data,
-    media: (result) => result.media,
+    run: (input, ctx) => _readDiaryMedia(input, ctx),
   ),
   ToolDef(
     name: 'add_diary_image',
-    validateArguments: validateToolArguments,
-    references: (result) => diaryReferences('add_diary_image', result.data),
     title: 'Attach an image to a diary',
     description: (_) =>
         'Attaches one image to an existing diary: the bytes are written into '
@@ -124,33 +109,40 @@ final List<ToolDefinition> mediaTools = [
               'Base64 of the image file, no data: URL prefix. At most 16 MB '
               'decoded.',
         ),
-        'mimeType': S.string(
-          description:
-              'MIME type of the image: image/png, image/jpeg, image/webp, '
-              'image/gif, image/heic or image/heif. Omitted: sniffed from data.',
-        ),
-        'name': S.string(
-          description:
-              'Display name stored on the image node, usually the original '
-              'file name. Defaults to the stored file name.',
-        ),
-        'position': schemaWithDefault(
+        'mimeType': nullableSchema(
           S.string(
-            enumValues: _positions,
             description:
-                'Where in the top-level body the image node goes: end '
-                '(default) appends it after the last block, start puts it '
-                'before the first.',
+                'MIME type of the image: image/png, image/jpeg, image/webp, '
+                'image/gif, image/heic or image/heif. Omitted: sniffed from data.',
           ),
-          'end',
+          JsonType.string,
+        ),
+        'name': nullableSchema(
+          S.string(
+            description:
+                'Display name stored on the image node, usually the original '
+                'file name. Defaults to the stored file name.',
+          ),
+          JsonType.string,
+        ),
+        'position': nullableSchema(
+          schemaWithDefault(
+            S.string(
+              enumValues: _positions,
+              description:
+                  'Where in the top-level body the image node goes: end '
+                  '(default) appends it after the last block, start puts it '
+                  'before the first.',
+            ),
+            'end',
+          ),
+          JsonType.string,
         ),
         'widthPercent': nullableSchema(
           S.integer(
-            minimum: 10,
-            maximum: 100,
             description:
                 'Image width as a percentage of the content width, clamped '
-                'into 10..100. Omitted or null writes no width attribute, so '
+                'into ${imageWidth.min}..${imageWidth.max}. Omitted or null writes no width attribute, so '
                 'the document default applies. The document store keeps values '
                 'from 25 to 100, so 10..24 is raised to 25.',
           ),
@@ -162,18 +154,12 @@ final List<ToolDefinition> mediaTools = [
     surfaces: const {ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: false,
-    output: toolOutputSchema('add_diary_image'),
+    output: _addDiaryImageOutput,
     parse: _parseAddDiaryImage,
-    run: (input, ctx) =>
-        _addDiaryImage(ctx.diaries, ctx.categories, ctx.mediaStore, input),
-    toJson: (result) => result.data,
-    media: (result) => result.media,
+    run: (input, ctx) => _addDiaryImage(input, ctx),
   ),
   ToolDef(
     name: 'add_diary_attachment',
-    validateArguments: validateToolArguments,
-    references: (result) =>
-        diaryReferences('add_diary_attachment', result.data),
     title: 'Attach a file to a diary',
     description: (_) =>
         'Attaches one file to an existing diary: the bytes are written into '
@@ -198,10 +184,13 @@ final List<ToolDefinition> mediaTools = [
               'Original file name, e.g. "report.pdf"; used as the display '
               'name and for the stored extension.',
         ),
-        'mimeType': S.string(
-          description:
-              'MIME type of the file, e.g. application/pdf. Omitted: '
-              'sniffed from data and the file name.',
+        'mimeType': nullableSchema(
+          S.string(
+            description:
+                'MIME type of the file, e.g. application/pdf. Omitted: '
+                'sniffed from data and the file name.',
+          ),
+          JsonType.string,
         ),
       },
       required: ['id', 'data', 'fileName'],
@@ -209,24 +198,19 @@ final List<ToolDefinition> mediaTools = [
     surfaces: const {ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: false,
-    output: toolOutputSchema('add_diary_attachment'),
+    output: _addDiaryAttachmentOutput,
     parse: _parseAddDiaryAttachment,
-    run: (input, ctx) =>
-        _addDiaryAttachment(ctx.diaries, ctx.categories, ctx.mediaStore, input),
-    toJson: (result) => result.data,
-    media: (result) => result.media,
+    run: (input, ctx) => _addDiaryAttachment(input, ctx),
   ),
 ];
 
-Future<ToolResult> _listDiaryMedia(
-  DiaryRepository diaries,
-  DiaryMediaStore media,
-  _ListDiaryMediaInput input,
-) async {
-  final (:id) = input;
+Future<ToolResult> _listDiaryMedia(String id, ToolContext ctx) async {
+  final diaries = ctx.diaries;
+  final media = ctx.mediaStore;
+
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null || !diary.show) {
-    return _failure('list_diary_media: no diary with id="$id".');
+    return toolFailure('list_diary_media: no diary with id="$id".');
   }
   final entries = <String, List<Map<String, dynamic>>>{};
   final lists = mediaLists(diary);
@@ -248,14 +232,16 @@ Future<ToolResult> _listDiaryMedia(
 }
 
 Future<ToolResult> _readDiaryMedia(
-  DiaryRepository diaries,
-  DiaryMediaStore media,
   _ReadDiaryMediaInput input,
+  ToolContext ctx,
 ) async {
+  final diaries = ctx.diaries;
+  final media = ctx.mediaStore;
+
   final (:id, :name, :kindName) = input;
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null || !diary.show) {
-    return _failure('read_diary_media: no diary with id="$id".');
+    return toolFailure('read_diary_media: no diary with id="$id".');
   }
   final kind = kindName == null
       ? diary.mediaKindOf(name)
@@ -264,23 +250,23 @@ Future<ToolResult> _readDiaryMedia(
   if (!isSafeMediaName(name) ||
       kind == null ||
       !diary.mediaNamesOf(kind).contains(name)) {
-    return _failure(
+    return toolFailure(
       'read_diary_media: diary id="$id" has no ${kind?.value ?? 'image'} media named '
       '"$name"; list_diary_media shows the names and kinds that may be read.',
     );
   }
   if (kind != MediaType.image) {
-    return _failure('read_diary_media: only images can be read.');
+    return toolFailure('read_diary_media: only images can be read.');
   }
   final stat = await media.stat(kind, name);
   if (!stat.exists) {
-    return _failure(
+    return toolFailure(
       'read_diary_media: "$name" is listed in diary id="$id" but is missing '
       'from the ${kind.value} media directory on this device.',
     );
   }
   if (stat.bytes > _inlineBytes) {
-    return _failure(
+    return toolFailure(
       'read_diary_media: the image "$name" is ${_megabytes(stat.bytes)} '
       'MB, more than the ${_megabytes(_inlineBytes)} MB inline '
       'limit, so it is not returned. The file is still on the device; open the '
@@ -298,13 +284,13 @@ Future<ToolResult> _readDiaryMedia(
   };
   final bytes = await media.read(kind, name);
   if (bytes == null) {
-    return _failure(
+    return toolFailure(
       'read_diary_media: "$name" of diary id="$id" disappeared while it was '
       'being read; call list_diary_media and try again.',
     );
   }
   if (bytes.length > _inlineBytes) {
-    return _failure(
+    return toolFailure(
       'read_diary_media: the image "$name" is ${_megabytes(bytes.length)} '
       'MB, more than the ${_megabytes(_inlineBytes)} MB inline '
       'limit, so it is not returned. The file is still on the device; open the '
@@ -318,38 +304,35 @@ Future<ToolResult> _readDiaryMedia(
 }
 
 Future<ToolResult> _addDiaryImage(
-  DiaryRepository diaries,
-  CategoryRepository categories,
-  DiaryMediaStore media,
   _AddDiaryImageInput input,
+  ToolContext ctx,
 ) async {
+  final diaries = ctx.diaries;
+  final media = ctx.mediaStore;
+  final categories = ctx.categories;
+
   const subject = 'add_diary_image';
   final (:id, :data, :position, :requestedMime, :displayName, :widthPercent) =
       input;
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null || !diary.show) {
-    return _failure('$subject: no diary with id="$id".');
+    return toolFailure('$subject: no diary with id="$id".');
   }
-  if (_documentError(subject, diary) case final error?) return error;
-  final payload = _decodePayload(subject, data);
-  if (payload.error case final error?) return error;
-  final bytes = payload.bytes!;
+  _requireDocument(subject, diary);
+  final bytes = _decodePayload(subject, data);
 
-  final resolvedMime = _resolveImageMime(requestedMime, bytes);
-  if (resolvedMime.error case final error?) {
-    return _failure('$subject: $error');
-  }
+  final mime = _resolveImageMime(subject, requestedMime, bytes);
   final SavedDiaryMedia saved;
   try {
     saved = await _saveMedia(
       media,
       bytes,
       kind: MediaType.image,
-      fileName: 'upload.${resolvedMime.mime!.split('/').last}',
-      mimeType: resolvedMime.mime,
+      fileName: 'upload.${mime.split('/').last}',
+      mimeType: mime,
     );
   } on DiaryMediaException catch (e) {
-    return _failure('$subject: ${e.message}');
+    return toolFailure('$subject: ${e.message}');
   }
 
   final node = <String, dynamic>{
@@ -372,21 +355,21 @@ Future<ToolResult> _addDiaryImage(
 }
 
 Future<ToolResult> _addDiaryAttachment(
-  DiaryRepository diaries,
-  CategoryRepository categories,
-  DiaryMediaStore media,
   _AddDiaryAttachmentInput input,
+  ToolContext ctx,
 ) async {
+  final diaries = ctx.diaries;
+  final media = ctx.mediaStore;
+  final categories = ctx.categories;
+
   const subject = 'add_diary_attachment';
   final (:id, :data, :fileName, :requestedMime) = input;
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null || !diary.show) {
-    return _failure('$subject: no diary with id="$id".');
+    return toolFailure('$subject: no diary with id="$id".');
   }
-  if (_documentError(subject, diary) case final error?) return error;
-  final payload = _decodePayload(subject, data);
-  if (payload.error case final error?) return error;
-  final bytes = payload.bytes!;
+  _requireDocument(subject, diary);
+  final bytes = _decodePayload(subject, data);
 
   final SavedDiaryMedia saved;
   try {
@@ -398,7 +381,7 @@ Future<ToolResult> _addDiaryAttachment(
       mimeType: requestedMime,
     );
   } on DiaryMediaException catch (e) {
-    return _failure('$subject: ${e.message}');
+    return toolFailure('$subject: ${e.message}');
   }
 
   final node = TiptapContent.attachmentNode(
@@ -468,8 +451,6 @@ Future<SavedDiaryMedia> _saveMedia(
   );
 }
 
-/// Inserts [node] into the diary document and persists it, then answers with
-/// the stored file name and the updated media lists.
 Future<ToolResult> _persistNode(
   DiaryRepository diaries,
   CategoryRepository categories, {
@@ -490,9 +471,9 @@ Future<ToolResult> _persistNode(
       newMediaName: saved.name,
     );
   } on DiaryMediaException catch (e) {
-    return _failure('$subject: ${e.message}');
+    return toolFailure('$subject: ${e.message}');
   } on DiaryOpsException catch (e) {
-    return _failure('$subject: ${_opsFailureMessage(e, diary.id)}');
+    return toolFailure('$subject: ${_opsFailureMessage(e, diary.id)}');
   }
   return ToolResult({
     'added': true,
@@ -507,8 +488,6 @@ Future<ToolResult> _persistNode(
   });
 }
 
-/// Parses the stored document, inserts [node] and persists the body with the
-/// `document` write format so `DiaryWrites` re-derives the media lists.
 Future<Diary> _insertNode(
   DiaryRepository diaries,
   CategoryRepository categories, {
@@ -542,18 +521,17 @@ Future<Diary> _insertNode(
   );
 });
 
-/// The message for a diary whose body is not a Tiptap document, so it cannot
-/// carry a media node: the editor only shows nodes in a document body.
 String _noDocumentMessage(Diary diary) =>
     'diary id="${diary.id}" stores ${diary.type} content instead of a Tiptap '
     'document, so no media node can be inserted; rewrite the body with '
     'update_diary contentFormat="document" first.';
 
 /// Rejects legacy bodies before writing files to avoid orphan media.
-ToolResult? _documentError(String subject, Diary diary) =>
-    TiptapContent.parse(diary.content).isDoc
-    ? null
-    : _failure('$subject: ${_noDocumentMessage(diary)}');
+void _requireDocument(String subject, Diary diary) {
+  if (!TiptapContent.parse(diary.content).isDoc) {
+    toolFailure('$subject: ${_noDocumentMessage(diary)}');
+  }
+}
 
 String _opsFailureMessage(DiaryOpsException e, String id) =>
     switch (e.failure) {
@@ -582,24 +560,20 @@ Future<List<Map<String, dynamic>>> _mediaEntries(
   return entries;
 }
 
-/// Checks the size estimate before decoding. Malformed data is invalid
-/// params; exceeding the server's size cap is a tool error.
-({Uint8List? bytes, ToolResult? error}) _decodePayload(
-  String subject,
-  String data,
-) {
+/// Check the encoded size before allocating decoded bytes.
+Uint8List _decodePayload(String subject, String data) {
   final estimate = (data.length * 3) ~/ 4;
   if (estimate > _maxPayloadBytes) {
-    return (bytes: null, error: _tooLarge(subject, estimate));
+    _tooLarge(subject, estimate);
   }
   final bytes = _decodeBase64(subject, data);
   if (bytes.length > _maxPayloadBytes) {
-    return (bytes: null, error: _tooLarge(subject, bytes.length));
+    _tooLarge(subject, bytes.length);
   }
-  return (bytes: bytes, error: null);
+  return bytes;
 }
 
-ToolResult _tooLarge(String subject, int bytes) => _failure(
+Never _tooLarge(String subject, int bytes) => toolFailure(
   '$subject: data decodes to ${_megabytes(bytes)} MB, more than the '
   '${_megabytes(_maxPayloadBytes)} MB limit per file; send a smaller file '
   'or attach it in the app.',
@@ -619,37 +593,28 @@ Uint8List _decodeBase64(String subject, String data) {
 }
 
 /// Sniffs image headers first; trusts explicit MIME only for unknown headers.
-({String? mime, String? error}) _resolveImageMime(
-  String? requested,
-  Uint8List bytes,
-) {
+String _resolveImageMime(String subject, String? requested, Uint8List bytes) {
   final sniffed = _sniffMime(bytes);
   final mime = requested ?? sniffed;
   if (mime == null) {
-    return (
-      mime: null,
-      error:
-          'the image type could not be determined; send mimeType '
-          '(${DiaryMediaStore.supportedImageMimeTypes.join(', ')}).',
+    toolFailure(
+      '$subject: the image type could not be determined; send mimeType '
+      '(${DiaryMediaStore.supportedImageMimeTypes.join(', ')}).',
     );
   }
   if (!DiaryMediaStore.supportedImageMimeTypes.contains(mime)) {
-    return (
-      mime: null,
-      error:
-          'mimeType "$mime" is not supported; supported image types are '
-          '${DiaryMediaStore.supportedImageMimeTypes.join(', ')}.',
+    toolFailure(
+      '$subject: mimeType "$mime" is not supported; supported image types are '
+      '${DiaryMediaStore.supportedImageMimeTypes.join(', ')}.',
     );
   }
   if (sniffed != null && sniffed != mime) {
-    return (
-      mime: null,
-      error:
-          'data looks like $sniffed but mimeType is $mime; send the actual '
-          'image type or convert the image first.',
+    toolFailure(
+      '$subject: data looks like $sniffed but mimeType is $mime; send the actual '
+      'image type or convert the image first.',
     );
   }
-  return (mime: mime, error: null);
+  return mime;
 }
 
 String? _normalizeMime(String? value) {
@@ -667,21 +632,13 @@ String _displayFileName(String fileName) {
   return base.isEmpty ? 'attachment' : base;
 }
 
-typedef _ListDiaryMediaInput = ({String id});
-
-_ListDiaryMediaInput _parseListDiaryMedia(Map<String, Object?> raw) {
-  final args = ToolArguments('list_diary_media', raw);
-  final id = args.requireText('id');
-  return (id: id);
-}
-
 typedef _ReadDiaryMediaInput = ({String id, String name, String? kindName});
 
 _ReadDiaryMediaInput _parseReadDiaryMedia(Map<String, Object?> raw) {
   final args = ToolArguments('read_diary_media', raw);
   final id = args.requireText('id');
   final name = args.requireText('name');
-  final kindName = args.optionalEnum('kind', _mediaKinds);
+  final kindName = args.optionalText('kind');
   return (id: id, name: name, kindName: kindName);
 }
 
@@ -699,14 +656,11 @@ _AddDiaryImageInput _parseAddDiaryImage(Map<String, Object?> raw) {
   final args = ToolArguments(subject, raw);
   final id = args.requireText('id');
   final data = args.requireText('data');
-  final position = args.optionalEnum('position', _positions) ?? 'end';
+  final position = args.optionalText('position') ?? 'end';
   final requestedMime = _normalizeMime(args.optionalText('mimeType'));
   final displayName = args.optionalText('name');
-  // A null widthPercent is the same as omitting it: the node is written
-  // without a width attribute and the document default applies, so the
-  // present-with-a-value test is the right reader here rather than [has].
   final widthPercent = args.contains('widthPercent')
-      ? args.optionalInt('widthPercent', fallback: 100, min: 10, max: 100)
+      ? args.optionalInt('widthPercent', imageWidth)
       : null;
 
   return (
@@ -742,7 +696,49 @@ _AddDiaryAttachmentInput _parseAddDiaryAttachment(Map<String, Object?> raw) {
   return (id: id, data: data, fileName: fileName, requestedMime: requestedMime);
 }
 
-Never _failure(String message) => throw ToolFailure(message);
-
 const int _inlineBytes = 8 * 1024 * 1024;
 String _megabytes(int bytes) => (bytes / (1024 * 1024)).toStringAsFixed(1);
+
+final _listDiaryMediaOutput = objectSchema({
+  'id': stringOutputSchema,
+  'title': stringOutputSchema,
+  'media': objectSchema({
+    for (final key in ['images', 'audio', 'videos', 'files'])
+      key: listOutputSchema(mediaEntryOutputSchema),
+  }),
+  'count': integerOutputSchema,
+});
+
+final _readDiaryMediaOutput = objectSchema({
+  'id': stringOutputSchema,
+  'title': stringOutputSchema,
+  'name': stringOutputSchema,
+  'kind': stringOutputSchema,
+  'mimeType': stringOutputSchema,
+  'bytes': integerOutputSchema,
+  'exists': booleanOutputSchema,
+});
+
+final _addDiaryImageOutput = objectSchema({
+  'added': booleanOutputSchema,
+  'name': stringOutputSchema,
+  'mimeType': stringOutputSchema,
+  'bytes': integerOutputSchema,
+  'diary': objectSchema({
+    'id': stringOutputSchema,
+    'title': stringOutputSchema,
+    'media': mediaListsOutputSchema,
+  }),
+});
+
+final _addDiaryAttachmentOutput = objectSchema({
+  'added': booleanOutputSchema,
+  'name': stringOutputSchema,
+  'mimeType': stringOutputSchema,
+  'bytes': integerOutputSchema,
+  'diary': objectSchema({
+    'id': stringOutputSchema,
+    'title': stringOutputSchema,
+    'media': mediaListsOutputSchema,
+  }),
+});

@@ -7,10 +7,8 @@ import 'package:moodiary_tools/moodiary_tools.dart';
 import 'js_sandbox.dart';
 import 'memory_repository.dart';
 
-final List<ToolDefinition> assistantToolDefinitions = List.unmodifiable([
-  ...moodiaryTools.where(
-    (tool) => tool.surfaces.contains(ToolSurface.assistant),
-  ),
+final List<ToolDef> assistantToolDefinitions = List.unmodifiable([
+  ...toolsFor(ToolSurface.assistant),
   ...assistantOnlyTools,
 ]);
 
@@ -24,8 +22,8 @@ ToolContext assistantToolContext() => ToolContext(
       : null,
 );
 
-final List<ToolDefinition> assistantOnlyTools = [
-  ToolDef<Map<String, Object?>, Map<String, Object?>>(
+final List<ToolDef> assistantOnlyTools = [
+  ToolDef<Map<String, Object?>>(
     name: 'recall_memory',
     title: 'Recall memory',
     surfaces: const {ToolSurface.assistant},
@@ -38,32 +36,35 @@ final List<ToolDefinition> assistantOnlyTools = [
         'out for the most recent facts. Each row carries the id you need to '
         'revise or forget it. Do not call this for greetings or small talk.',
     input: (_) => S.object(
-      properties: {'query': S.string(), 'limit': S.integer()},
+      properties: {
+        'query': S.combined(type: [JsonType.string, JsonType.nil]),
+        'limit': S.combined(
+          type: [JsonType.int, JsonType.nil],
+          description:
+              'Result count, clamped to ${_memoryLimit.min}..${_memoryLimit.max}.',
+          defaultValue: _memoryLimit.fallback,
+        ),
+      },
       additionalProperties: false,
     ),
-    output: _object({
-      'facts': S.list(
-        items: _object({'id': _string, 'category': _string, 'text': _string}),
-      ),
-      'total': S.integer(),
-    }),
+    output: _recallMemoryOutput,
     parse: (raw) => raw,
     run: (raw, _) async {
       final repo = getIt<MemoryRepository>();
       final query = (raw['query'] as String? ?? '').trim();
-      final limit = (raw['limit'] as int? ?? 8).clamp(1, 8);
+      final limit = ((raw['limit'] as num?)?.toInt() ?? _memoryLimit.fallback)
+          .clamp(_memoryLimit.min, _memoryLimit.max);
       final hits = query.isEmpty
           ? await repo.getRecent(limit)
           : await repo.search(query, limit: limit);
-      return {
+      return ToolResult({
         'facts': [
           for (final fact in hits)
             {'id': fact.id, 'category': fact.category, 'text': fact.text},
         ],
         'total': await repo.count(),
-      };
+      });
     },
-    toJson: (data) => data,
   ),
   ToolDef(
     name: 'remember_fact',
@@ -77,16 +78,16 @@ final List<ToolDefinition> assistantOnlyTools = [
         'themselves or asks you to remember: never from a diary you read or '
         'any other tool result. Not passing details, one-off events, '
         'health, beliefs, legal or financial specifics, or anything they '
-        'asked you to keep private or not remember. Pass every fact in '
-        'one call. Pass an id to revise a fact instead of adding one. '
-        'Max 20 per call.',
+        'asked you to keep private or not remember. '
+        'Pass an id to revise a fact instead of adding one. '
+        '$toolBatchDescription Max 20 per call.',
     input: (_) => batchItemsSchema(
-      _object(
+      objectSchema(
         {
-          'id': _string,
-          'text': _string,
-          'category': S.string(),
-          'source': S.string(),
+          'id': nullableStringOutputSchema,
+          'text': stringOutputSchema,
+          'category': nullableStringOutputSchema,
+          'source': nullableStringOutputSchema,
         },
         optional: ['id', 'category', 'source'],
       ),
@@ -94,7 +95,6 @@ final List<ToolDefinition> assistantOnlyTools = [
     output: _factBatchOutput,
     parse: toolBatchItems,
     run: (items, _) => runToolBatch(items, _rememberFact),
-    toJson: (result) => result.data,
   ),
   ToolDef(
     name: 'forget_fact',
@@ -104,9 +104,9 @@ final List<ToolDefinition> assistantOnlyTools = [
     idempotent: true,
     description: (_) =>
         'Delete saved facts by id (from recall_memory). This is permanent — '
-        'there is no recycle bin for memories. Pass every id in one call. '
-        'Max 20 per call.',
-    input: (_) => _object({'ids': toolIdsSchema(_string)}),
+        'there is no recycle bin for memories. '
+        '$toolBatchDescription Max 20 per call.',
+    input: (_) => objectSchema({'ids': toolIdsSchema(stringOutputSchema)}),
     output: _factBatchOutput,
     parse: toolBatchIds,
     run: (items, _) => runToolBatch(items, (item) async {
@@ -114,14 +114,12 @@ final List<ToolDefinition> assistantOnlyTools = [
       if (!await getIt<MemoryRepository>().delete(id)) {
         throw ToolFailure('no memory with id=$id');
       }
-      return ToolResult({'id': id, 'deleted': true});
+      return ToolResult({'id': id});
     }),
-    toJson: (result) => result.data,
   ),
-  ToolDef<Map<String, Object?>, JsOutcome>(
+  ToolDef<Map<String, Object?>>(
     name: 'run_javascript',
     title: 'Run JavaScript',
-    openWorld: false,
     surfaces: const {ToolSurface.assistant},
     effect: ToolEffect.read,
     idempotent: false,
@@ -137,12 +135,8 @@ final List<ToolDefinition> assistantOnlyTools = [
         'literals in the code, having read it with the other tools first. '
         'Runs are capped at a couple of seconds and a few MB; an endless loop '
         'is killed, not waited for.',
-    input: (_) => _object({'code': _string}),
-    output: _object({
-      'value': _string,
-      'logs': S.list(items: _string),
-      'truncated': S.boolean(),
-    }),
+    input: (_) => objectSchema({'code': stringOutputSchema}),
+    output: _javascriptOutput,
     parse: (raw) {
       if ((raw['code']! as String).trim().isEmpty) {
         throw const ToolArgumentException(
@@ -151,42 +145,28 @@ final List<ToolDefinition> assistantOnlyTools = [
       }
       return raw;
     },
-    run: (raw, _) => JsSandbox.run(raw['code']! as String),
-    toJson: (result) => {
-      'value': result.value,
-      'logs': result.logs,
-      'truncated': result.truncated,
+    run: (raw, _) async {
+      final result = await JsSandbox.run(raw['code']! as String);
+      return ToolResult({
+        'value': result.value,
+        'logs': result.logs,
+        'truncated': result.truncated,
+      });
     },
   ),
 ];
 
-final _string = S.string();
-Schema _object(
-  Map<String, Schema> fields, {
-  List<String> optional = const [],
-}) => S.object(
-  properties: fields,
-  required: fields.keys.where((key) => !optional.contains(key)).toList(),
-  additionalProperties: false,
-);
-final _factBatchOutput = _object({
-  'results': S.list(
-    items: _object(
-      {
-        'ok': S.boolean(),
-        'id': _string,
-        'text': _string,
-        'category': _string,
-        'error': _string,
-        'deleted': S.boolean(),
-        'duplicate': S.boolean(),
-      },
-      optional: ['id', 'text', 'category', 'error', 'deleted', 'duplicate'],
-    ),
+final _factBatchOutput = batchOutputSchema(
+  objectSchema(
+    {
+      'id': stringOutputSchema,
+      'text': stringOutputSchema,
+      'category': stringOutputSchema,
+      'duplicate': S.boolean(),
+    },
+    optional: ['id', 'text', 'category', 'duplicate'],
   ),
-  'processed': S.integer(),
-  'requested': S.integer(),
-});
+);
 
 Future<ToolResult> _rememberFact(Map<String, Object?> raw) async {
   final text = (raw['text']! as String).trim();
@@ -227,3 +207,22 @@ Future<ToolResult> _rememberFact(Map<String, Object?> raw) async {
   await repo.put(fact);
   return ToolResult({'id': fact.id, 'text': text, 'category': category});
 }
+
+final _recallMemoryOutput = objectSchema({
+  'facts': S.list(
+    items: objectSchema({
+      'id': stringOutputSchema,
+      'category': stringOutputSchema,
+      'text': stringOutputSchema,
+    }),
+  ),
+  'total': S.integer(),
+});
+
+final _javascriptOutput = objectSchema({
+  'value': stringOutputSchema,
+  'logs': S.list(items: stringOutputSchema),
+  'truncated': S.boolean(),
+});
+
+const _memoryLimit = (fallback: 8, min: 1, max: 8);

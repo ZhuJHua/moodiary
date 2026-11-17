@@ -2,6 +2,10 @@ import 'package:json_schema_builder/json_schema_builder.dart';
 
 import 'tool_def.dart';
 
+const toolBatchDescription =
+    'Pass every item in one call. Each result has ok and an error on failure; '
+    'do not repeat items that already succeeded. ';
+
 Schema batchItemsSchema(Schema item) => S.object(
   properties: {'items': S.list(minItems: 1, maxItems: 20, items: item)},
   required: ['items'],
@@ -28,12 +32,10 @@ Future<ToolResult> runToolBatch(
   for (final item in items) {
     try {
       final result = await run(item);
-      final failed = result.data['deleted'] == false;
       results.add({
         if (item['id'] != null) 'id': item['id'],
-        'ok': !failed,
+        'ok': true,
         ...result.data,
-        if (failed) 'error': result.data['reason'],
       });
     } catch (error) {
       results.add({

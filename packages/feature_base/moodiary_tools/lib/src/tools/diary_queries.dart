@@ -8,35 +8,6 @@ class DiaryToolQueries {
 
   final DiaryRepository diaries;
 
-  /// One page of visible diaries. A time window is read in full and paged here
-  /// because the repository only pages by category.
-  Future<List<Diary>> page({
-    String? categoryId,
-    DateTime? start,
-    DateTime? end,
-    DiarySort sort = DiarySort.timeDesc,
-    int offset = 0,
-    int limit = 20,
-  }) async {
-    if (start == null && end == null) {
-      return diaries.getDiaryByCategory(
-        categoryId: categoryId,
-        offset: offset,
-        limit: limit,
-        sort: sort,
-      );
-    }
-    final all = await diaries.getDiariesByDateRange(
-      start ?? DateTime.utc(1970),
-      end ?? DateTime.utc(9000),
-    );
-    final filtered = [
-      for (final diary in all)
-        if (categoryId == null || diary.categoryId == categoryId) diary,
-    ]..sort(diarySortComparator(sort));
-    return filtered.skip(offset).take(limit).toList();
-  }
-
   /// Tag usage over visible diaries, most used first. The database has no tag
   /// index, so this aggregates over every visible diary.
   Future<
@@ -77,21 +48,17 @@ class DiaryToolQueries {
   Future<Map<String, dynamic>> linkSummary(Diary diary) async {
     final forward = await diaries.getForwardLinks(diary.id);
     final backlinks = await diaries.getBacklinks(diary.id);
-    Map<String, dynamic> entry(Diary linked) => {
-      'id': linked.id,
-      'title': linked.title,
-      'time': isoUtc(linked.time),
-      'timeLocal': isoLocal(linked.time),
-    };
     final referenced = DiaryContent.of(diary).links.toList()..sort();
-    final dangling = <String>[];
-    for (final id in referenced) {
-      if (dangling.length >= _danglingLimit) break;
-      if (await diaries.getDiaryByBusinessId(id) == null) dangling.add(id);
-    }
+    final existing = {
+      for (final linked in await diaries.getDiariesByIds(referenced)) linked.id,
+    };
+    final dangling = referenced
+        .where((id) => !existing.contains(id))
+        .take(_danglingLimit)
+        .toList();
     return {
-      'forward': [for (final linked in forward) entry(linked)],
-      'backlinks': [for (final linked in backlinks) entry(linked)],
+      'forward': [for (final linked in forward) linkRow(linked)],
+      'backlinks': [for (final linked in backlinks) linkRow(linked)],
       'dangling': dangling,
     };
   }
@@ -99,3 +66,10 @@ class DiaryToolQueries {
 
 /// Upper bound on `dangling`, so one document cannot flood a result with ids.
 const int _danglingLimit = 100;
+
+Map<String, dynamic> linkRow(Diary diary) => {
+  'id': diary.id,
+  'title': diary.title,
+  'time': isoUtc(diary.time),
+  'timeLocal': isoLocal(diary.time),
+};

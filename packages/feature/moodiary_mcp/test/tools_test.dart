@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -13,34 +12,6 @@ import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 
 import 'support.dart';
-
-/// A Tiptap document with a heading and one bold paragraph, used to show that a
-/// `contentFormat` really reaches the stored document.
-String richDocument() => jsonEncode({
-  'type': 'doc',
-  'attrs': {'v': 2},
-  'content': [
-    {
-      'type': 'heading',
-      'attrs': {'level': 1},
-      'content': [
-        {'type': 'text', 'text': 'Heading'},
-      ],
-    },
-    {
-      'type': 'paragraph',
-      'content': [
-        {
-          'type': 'text',
-          'text': 'bold words',
-          'marks': [
-            {'type': 'bold'},
-          ],
-        },
-      ],
-    },
-  ],
-});
 
 void main() {
   late MoodiaryDatabase db;
@@ -57,11 +28,7 @@ void main() {
 
   setUp(() {
     mediaRoot = Directory.systemTemp.createTempSync('mcp-protocol-');
-    db = MoodiaryDatabase.forTesting(
-      NativeDatabase.memory(
-        setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
-      ),
-    );
+    db = openTestDatabase();
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
     insights = MoodInsightsRepository(db);

@@ -1,13 +1,8 @@
-import 'dart:convert';
-
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
+import 'package:moodiary_assistant/src/data/tool_call_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_tools/moodiary_tools.dart';
 
 const String _citePrefix = '[diary:';
-
-// 工具结果里的日记 id 都是 uuid；lookbehind 挡掉 categoryId= 一类
-final RegExp _diaryId = RegExp(r'(?<![A-Za-z])id=([0-9a-fA-F-]{16,})');
 
 enum DiaryCitationKind { read, created, updated, deleted }
 
@@ -22,39 +17,20 @@ final Map<String, DiaryCitationKind> _kindByTool = {
   AssistantTool.deleteDiary.id: .deleted,
 };
 
-Iterable<String> _idsIn(String tool, String result) sync* {
-  try {
-    final data = jsonDecode(result);
-    if (data is Map) {
-      yield* diaryIdsIn(
-        normalizeAssistantToolId(tool),
-        data.cast<String, Object?>(),
-      );
-      return;
-    }
-  } catch (_) {}
-  for (final line in result.split('\n')) {
-    if (line.startsWith('Failed') || line.startsWith('Not found')) continue;
-    for (final m in _diaryId.allMatches(line)) {
-      yield m.group(1)!;
-    }
-  }
-}
-
 DiaryCitationKind? diaryCitationKindOf(String toolName) =>
-    _kindByTool[normalizeAssistantToolId(toolName)];
+    _kindByTool[toolName];
 
 bool citesDiaries(AssistantToolCall call) =>
     call.done &&
-    _kindByTool.containsKey(normalizeAssistantToolId(call.name)) &&
-    _idsIn(call.name, call.result).isNotEmpty;
+    _kindByTool.containsKey(call.name) &&
+    toolCallData(call).diaryIds.isNotEmpty;
 
 List<DiaryCitation> diaryCitationsOf(Iterable<AssistantToolCall> calls) {
   final byId = <String, DiaryCitationKind>{};
   for (final call in calls) {
-    final kind = _kindByTool[normalizeAssistantToolId(call.name)];
+    final kind = _kindByTool[call.name];
     if (kind == null || !call.done) continue;
-    for (final id in _idsIn(call.name, call.result)) {
+    for (final id in toolCallData(call).diaryIds) {
       final seen = byId[id];
       if (seen == null || kind.index > seen.index) byId[id] = kind;
     }

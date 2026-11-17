@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -18,6 +17,7 @@ import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
+import 'package:moodiary_assistant/src/data/tool_call_data.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
@@ -187,7 +187,7 @@ class _AssistantPageState extends State<AssistantPage> {
   Future<bool> _gateTool(String callId, String name, String argsJson) async {
     final spec = AssistantToolRegistry.byId(name);
     if (spec == null) return true;
-    final args = _decodeArgs(argsJson);
+    final args = decodeJsonMap(argsJson) ?? const <String, dynamic>{};
     final tier = assistantToolTier(spec.tool, args);
     if (!assistantToolNeedsConfirmation(_permissionMode, tier)) return true;
     if (!mounted) return false;
@@ -1171,6 +1171,7 @@ class _AssistantPageState extends State<AssistantPage> {
     if (index == -1) return;
     final updated = [...cur.toolCalls];
     updated[index] = updated[index].copyWith(result: result, done: true);
+    AssistantToolRegistry.prepare(updated[index]);
     final next = cur.copyWith(toolCalls: updated);
     _chat.updateStreaming(next);
     _streamingMessage = next;
@@ -2489,27 +2490,17 @@ Widget _toolNotice(
   if (!call.done) {
     return AssistantNotice(key: ValueKey(stateKey), kind: title);
   }
-  final input = _decodeArgs(call.argsJson);
+  final input = toolCallData(call).input;
   return AssistantNotice(
     key: ValueKey(stateKey),
     stateKey: stateKey,
     icon: display?.icon ?? LucideIcons.wrench,
     kind: title,
-    summary: spec?.summaryOf(input, call.result) ?? call.result,
+    summary: AssistantToolRegistry.summaryOf(call),
     detail: input.isEmpty && call.result.isEmpty
         ? null
         : (context) => AssistantToolDetail(args: input, result: call.result),
   );
-}
-
-Map<String, dynamic> _decodeArgs(String raw) {
-  if (raw.trim().isEmpty) return const {};
-  try {
-    final decoded = jsonDecode(raw);
-    return decoded is Map ? decoded.cast<String, dynamic>() : const {};
-  } catch (_) {
-    return const {};
-  }
 }
 
 Widget _fullWidth(Widget child) => SizedBox(width: .infinity, child: child);

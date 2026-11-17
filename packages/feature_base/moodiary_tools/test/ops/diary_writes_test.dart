@@ -6,7 +6,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
-import 'support.dart';
+import '../support.dart';
 
 /// A Tiptap document holding one image node named [name].
 String imageDoc(String name) => jsonEncode(

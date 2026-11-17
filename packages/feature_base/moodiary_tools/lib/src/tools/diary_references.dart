@@ -1,16 +1,4 @@
-import 'package:flutter/foundation.dart' show internal;
-
-import 'tool_def.dart';
-
-@internal
-List<DiaryRef> diaryReferences(String name, Map<String, Object?> data) => [
-  for (final id in diaryIdsIn(name, data)) DiaryRef(id),
-];
-
-List<String> diaryIdsIn(String name, Map<String, Object?> data) {
-  if (name.contains('categor') || name == 'get_stats' || name == 'list_tags') {
-    return const [];
-  }
+List<String> diaryIdsIn(Map data) {
   final ids = <String>{};
   void add(Object? value) {
     if (value is Map && value['id'] is String) ids.add(value['id'] as String);

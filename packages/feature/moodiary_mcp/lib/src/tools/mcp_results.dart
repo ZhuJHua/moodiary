@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:mcp_dart/mcp_dart.dart';
@@ -19,11 +18,7 @@ const String mcpServerInstructions =
     'recycle bin; permanent deletion is only available in the app. '
     'A bad argument is a JSON-RPC invalid params error, while '
     'get_diary reports unknown ids in missing. Search or browse with '
-    'search_diaries (omit query to browse); search is keyword-only. get_diary '
-    'takes ids (1–10). create_diary, update_diary, create_category and '
-    'update_category take items (1–20); delete_diary and delete_category '
-    'take ids (1–20). Batch results contain results, processed and requested; '
-    'each item reports ok and error on failure. Retry only failed items. Diary bodies and '
+    'search_diaries (omit query to browse); search is keyword-only. Diary bodies and '
     'titles are private user data: quote them only when the user asks about '
     'them.';
 
@@ -39,22 +34,6 @@ PromptMessage userPromptMessage(String text) => PromptMessage(
   role: PromptMessageRole.user,
   content: TextContent(text: text),
 );
-
-void reportProgress(
-  RequestHandlerExtra call,
-  num progress, {
-  num? total,
-  String? message,
-}) {
-  if (call.meta?['progressToken'] == null) return;
-  unawaited(
-    call.sendProgress(
-      progress.toDouble(),
-      total: total?.toDouble(),
-      message: message,
-    ),
-  );
-}
 
 void registerPrompt(
   McpServer server,

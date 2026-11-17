@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 
-import 'support.dart';
+import '../support.dart';
 
 class _SemanticIndex extends Fake implements EmbedIndexService {
   _SemanticIndex(this.ids, {this.enabled = true});
@@ -84,7 +84,6 @@ void main() {
       expect(result.totalIsLowerBound, isFalse);
       expect(result.meaningRan, isFalse);
       expect(result.semanticAvailable, isFalse);
-      expect(result.keywords, ['orchard']);
       expect(result.rows.every((row) => row.keyword && !row.meaning), isTrue);
 
       final full = await queries.search(query: 'orchard', limit: 10);
@@ -98,7 +97,7 @@ void main() {
         await diaries.insertDiaries([
           makeDiary('keyword-first', 'orchard', time: DateTime.utc(2026, 1, 1)),
           makeDiary('shared', 'orchard', time: DateTime.utc(2026, 1, 2)),
-          makeDiary('meaning-only', 'trees'),
+          makeDiary('meaning-only', 'trees', time: DateTime.utc(2026, 1, 3)),
         ]);
         final index = _SemanticIndex(['shared', 'meaning-only']);
         queries = DiaryQueries(diaries: diaries, semantic: index);
@@ -131,6 +130,25 @@ void main() {
         expect(full.rows.first.score, 0.75);
         expect(full.total, 3);
         expect(full.totalIsLowerBound, isFalse);
+        final page = await queries.search(
+          query: 'orchard',
+          offset: 1,
+          limit: 2,
+        );
+        expect(page.rows.map((row) => row.diary.id), [
+          'keyword-first',
+          'meaning-only',
+        ]);
+        final sorted = await queries.search(
+          query: 'orchard',
+          sort: 'oldest',
+          limit: 4,
+        );
+        expect(sorted.rows.map((row) => row.diary.id), [
+          'keyword-first',
+          'shared',
+          'meaning-only',
+        ]);
       },
     );
 
@@ -166,6 +184,30 @@ void main() {
         expect(keyword.semanticAvailable, isTrue);
         expect(keyword.meaningRan, isFalse);
         expect(index.requestedLimit, isNull);
+      },
+    );
+
+    test(
+      'semantic candidates exclude stale, hidden and tag mismatches',
+      () async {
+        await diaries.insertDiaries([
+          makeDiary('visible', 'trees', tags: ['travel']),
+          makeDiary('hidden', 'trees', show: false),
+          makeDiary('other', 'trees'),
+        ]);
+        final result = await DiaryQueries(
+          diaries: diaries,
+          semantic: _SemanticIndex(['hidden', 'unknown', 'other', 'visible']),
+        ).search(query: 'trip', mode: 'meaning', tag: 'travel', limit: 10);
+        expect(result.rows.single.diary.id, 'visible');
+        final empty = await DiaryQueries(
+          diaries: diaries,
+          semantic: _SemanticIndex([]),
+        ).search(query: 'missing', limit: 10);
+        expect(empty.rows, isEmpty);
+        expect(empty.total, 0);
+        expect(empty.meaningRan, true);
+        expect(empty.semanticAvailable, true);
       },
     );
 

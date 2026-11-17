@@ -53,9 +53,7 @@ void registerMoodiaryTools(
   required MoodInsightsRepository insights,
   DiaryMediaStore? mediaStore,
 }) {
-  for (final def in moodiaryTools.where(
-    (tool) => tool.surfaces.contains(ToolSurface.mcp),
-  )) {
+  for (final def in toolsFor(ToolSurface.mcp)) {
     server.registerTool(
       def.name,
       title: def.title,
@@ -66,7 +64,7 @@ void registerMoodiaryTools(
         readOnlyHint: def.effect == ToolEffect.read,
         destructiveHint: def.effect == ToolEffect.destructive,
         idempotentHint: def.idempotent,
-        openWorldHint: def.openWorld,
+        openWorldHint: false,
       ),
       callback: (arguments, call) async {
         try {
@@ -78,12 +76,6 @@ void registerMoodiaryTools(
               insights: insights,
               surface: ToolSurface.mcp,
               mediaStore: mediaStore,
-              progress: (progress, {total, message}) => reportProgress(
-                call,
-                progress,
-                total: total,
-                message: message,
-              ),
             ),
           );
           final json = jsonToolResult(result.data);

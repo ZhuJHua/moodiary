@@ -31,9 +31,3 @@ For Google Play, declare `specialUse` as a user-enabled local MCP server and dem
 Known limits: when MCP and an open in-app editor save the same diary, the later
 save wins. Tags are case-sensitive and are not included in full-text search;
 use the `search_diaries` tag filter instead.
-
-`search_diaries` browses when `query` is omitted and stays keyword-only on MCP.
-Read bodies with `get_diary` using `ids` (1–10); missing ids are listed separately.
-Creates/updates use `items` (1–20) and deletes use `ids` (1–20). Batch responses
-contain `results`, `processed` and `requested`; each result reports `ok` and an
-`error` when it failed. Retry failed items only.

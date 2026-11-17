@@ -2,7 +2,7 @@ import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 
-import 'assistant_tool_definitions.dart';
+import 'assistant_tools.dart';
 
 enum AssistantTool {
   searchDiaries('search_diaries'),
@@ -66,9 +66,7 @@ AssistantToolTier assistantToolTier(
   if (tool == AssistantTool.updateDiary && _rewritesContent(args)) {
     return .destructive;
   }
-  final effect = assistantToolDefinitions
-      .firstWhere((definition) => definition.name == tool.id)
-      .effect;
+  final effect = AssistantToolRegistry.byId(tool.id)!.definition.effect;
   return switch (effect) {
     ToolEffect.read => .read,
     ToolEffect.write => .write,

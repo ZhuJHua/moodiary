@@ -3,6 +3,7 @@ library;
 import 'package:json_schema_builder/json_schema_builder.dart';
 
 import '../ops/diary_display.dart';
+import 'tool_values.dart';
 
 const List<String> excerptValues = ['plain', 'markdown', 'none'];
 
@@ -36,81 +37,122 @@ final Schema categoryIdSchema = S.combined(
       'tools.',
 );
 
-final Schema startDateSchema = S.string(
-  description:
-      'Inclusive ISO-8601 lower bound on the diary time. A bare yyyy-MM-dd '
-      'means local midnight of that day.',
-);
-
-final Schema endDateSchema = S.string(
-  description:
-      'Inclusive ISO-8601 upper bound on the diary time. A bare yyyy-MM-dd '
-      'covers that whole local day.',
-);
-
-final Schema limitSchema = schemaWithDefault(
-  S.integer(minimum: 1, maximum: 100, description: 'Page size, capped at 100.'),
-  20,
-);
-
-final Schema offsetSchema = schemaWithDefault(
-  S.integer(minimum: 0, description: 'Number of matching diaries to skip.'),
-  0,
-);
-
-final Schema readContentFormatSchema = schemaWithDefault(
+final Schema startDateSchema = nullableSchema(
   S.string(
-    enumValues: contentFormatValues,
     description:
-        'Representation actually returned: markdown (converted from the stored '
-        'editor document), text (no syntax, media as [image: name] placeholders) '
-        'or document (the raw stored Tiptap JSON object, which counts against '
-        'the result size limit).',
+        'Inclusive ISO-8601 lower bound on the diary time. A bare yyyy-MM-dd '
+        'means local midnight of that day.',
   ),
-  'markdown',
+  JsonType.string,
 );
 
-final Schema writeContentFormatSchema = schemaWithDefault(
+final Schema endDateSchema = nullableSchema(
   S.string(
-    enumValues: contentFormatValues,
     description:
-        'How content is interpreted: markdown (default) parses it and stores the '
-        'editor document so formatting survives, text stores literal paragraphs '
-        'so Markdown syntax stays visible, document takes a Tiptap document JSON '
-        'object and rejects anything else. Applies to content only.',
+        'Inclusive ISO-8601 upper bound on the diary time. A bare yyyy-MM-dd '
+        'covers that whole local day.',
   ),
-  'markdown',
+  JsonType.string,
 );
 
-final Schema linkStyleSchema = schemaWithDefault(
-  S.string(
-    enumValues: linkStyleValues,
-    description:
-        'How a diary mention is rendered: uri (default) keeps the target as '
-        '[label](moodiary://diary/<id>) in Markdown and "label (uri)" in text, '
-        'label keeps only the label.',
+final Schema limitSchema = nullableSchema(
+  schemaWithDefault(
+    S.integer(
+      description: 'Page size, clamped to ${pageLimit.min}..${pageLimit.max}.',
+    ),
+    pageLimit.fallback,
   ),
-  'uri',
+  JsonType.int,
 );
 
-final Schema excerptSchema = schemaWithDefault(
-  S.string(
-    enumValues: excerptValues,
-    description:
-        'Preview of every entry: plain (default) is one line of plain text, '
-        'markdown is the Markdown body so headings and lists survive, and none '
-        'drops the preview. Both forms are cut to $excerptChars characters. '
-        'Keyword search keeps its highlighted excerpt regardless of this option.',
+final Schema offsetSchema = nullableSchema(
+  schemaWithDefault(
+    S.integer(
+      description:
+          'Number of matching diaries to skip, clamped to ${pageOffset.min}..${pageOffset.max}.',
+    ),
+    pageOffset.fallback,
   ),
-  'plain',
+  JsonType.int,
+);
+
+final Schema readContentFormatSchema = nullableSchema(
+  schemaWithDefault(
+    S.string(
+      enumValues: contentFormatValues,
+      description:
+          'Representation actually returned: markdown (converted from the stored '
+          'editor document), text (no syntax, media as [image: name] placeholders) '
+          'or document (the raw stored Tiptap JSON object, which counts against '
+          'the result size limit).',
+    ),
+    'markdown',
+  ),
+  JsonType.string,
+);
+
+final Schema writeContentFormatSchema = nullableSchema(
+  schemaWithDefault(
+    S.string(
+      enumValues: contentFormatValues,
+      description:
+          'How content is interpreted: markdown (default) parses it and stores the '
+          'editor document so formatting survives, text stores literal paragraphs '
+          'so Markdown syntax stays visible, document takes a Tiptap document JSON '
+          'object and rejects anything else. Applies to content only.',
+    ),
+    'markdown',
+  ),
+  JsonType.string,
+);
+
+final Schema linkStyleSchema = nullableSchema(
+  schemaWithDefault(
+    S.string(
+      enumValues: linkStyleValues,
+      description:
+          'How a diary mention is rendered: uri (default) keeps the target as '
+          '[label](moodiary://diary/<id>) in Markdown and "label (uri)" in text, '
+          'label keeps only the label.',
+    ),
+    'uri',
+  ),
+  JsonType.string,
+);
+
+final Schema excerptSchema = nullableSchema(
+  schemaWithDefault(
+    S.string(
+      enumValues: excerptValues,
+      description:
+          'Preview of every entry: plain (default) is one line of plain text, '
+          'markdown is the Markdown body so headings and lists survive, and none '
+          'drops the preview. Both forms are cut to $excerptChars characters. '
+          'Keyword search keeps its highlighted excerpt regardless of this option.',
+    ),
+    'plain',
+  ),
+  JsonType.string,
 );
 
 final Schema moodSchema = S.combined(
   description:
-      'Mood as awful, bad, okay, good or great, or as a score from 1 to 5. '
+      'Mood as ${toolMoodNames.join(', ')}, or as a score from 1 to 5. '
       'Send null (or an empty string) to clear it.',
   oneOf: [
-    S.string(enumValues: ['awful', 'bad', 'okay', 'good', 'great']),
+    S.string(
+      pattern:
+          r'^\s*(?:' +
+          toolMoodNames
+              .map(
+                (name) => name
+                    .split('')
+                    .map((letter) => '[$letter${letter.toUpperCase()}]')
+                    .join(),
+              )
+              .join('|') +
+          r'|[1-5])?\s*$',
+    ),
     S.integer(minimum: 1, maximum: 5),
     S.nil(),
   ],
@@ -141,24 +183,27 @@ final Schema categoryNameSchema = S.string(
   description: 'Category name; must not be empty.',
 );
 
-final Schema tagLimitSchema = schemaWithDefault(
-  S.integer(
-    minimum: 1,
-    maximum: 500,
-    description: 'Number of tags to return, capped at 500.',
+final Schema tagLimitSchema = nullableSchema(
+  schemaWithDefault(
+    S.integer(
+      description:
+          'Number of tags to return, clamped to ${tagLimit.min}..${tagLimit.max}.',
+    ),
+    tagLimit.fallback,
   ),
-  50,
+  JsonType.int,
 );
 
-final Schema statsMonthsSchema = schemaWithDefault(
-  S.integer(
-    minimum: 1,
-    maximum: 120,
-    description:
-        'How many local calendar months the per-month counts cover, including '
-        'the current month.',
+final Schema statsMonthsSchema = nullableSchema(
+  schemaWithDefault(
+    S.integer(
+      description:
+          'How many local calendar months the per-month counts cover, including '
+          'the current month, clamped to ${statsMonths.min}..${statsMonths.max}.',
+    ),
+    statsMonths.fallback,
   ),
-  12,
+  JsonType.int,
 );
 
 final Schema mediaNameSchema = S.string(
@@ -167,18 +212,24 @@ final Schema mediaNameSchema = S.string(
       '"image-018f...png". Paths are rejected.',
 );
 
-final Schema diarySearchSortSchema = S.string(
-  enumValues: diarySearchSortValues,
-  description: 'Defaults to relevance with query, newest when browsing. modified orders by last modification.',
+final Schema diarySearchSortSchema = nullableSchema(
+  S.string(
+    enumValues: diarySearchSortValues,
+    description: 'Defaults to relevance with query, newest when browsing. modified orders by last modification.',
+  ),
+  JsonType.string,
 );
 
-final Schema diaryTimeSchema = S.string(
-  description:
-      'YYYY-MM-DD uses the current local time of day on create and keeps the '
-      'existing local time of day on update; ISO-8601 datetimes without an '
-      'offset are local, while an offset or Z is converted to local time. '
-      'Omit or send null for now on create or to keep the time on update; '
-      'future dates are allowed.',
+final Schema diaryTimeSchema = nullableSchema(
+  S.string(
+    description:
+        'YYYY-MM-DD uses the current local time of day on create and keeps the '
+        'existing local time of day on update; ISO-8601 datetimes without an '
+        'offset are local, while an offset or Z is converted to local time. '
+        'Omit or send null for now on create or to keep the time on update; '
+        'future dates are allowed.',
+  ),
+  JsonType.string,
 );
 
 Schema schemaWithDefault(Schema schema, Object value) {
@@ -187,6 +238,19 @@ Schema schemaWithDefault(Schema schema, Object value) {
 }
 
 Schema nullableSchema(Schema schema, JsonType type) {
-  schema.value.addAll(S.combined(type: [type, JsonType.nil]).value);
-  return schema;
+  final values = schema.value['enum'] as List?;
+  return S.combined(
+    type: [type, JsonType.nil],
+    anyOf: [
+      schema,
+      if (values != null)
+        S.string(
+          pattern:
+              r'^\s*(?:' +
+              values.map((value) => RegExp.escape(value as String)).join('|') +
+              r')?\s*$',
+        ),
+      S.nil(),
+    ],
+  );
 }

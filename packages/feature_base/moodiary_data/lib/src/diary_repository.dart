@@ -600,7 +600,6 @@ class DiaryRepository {
     return _assemble(rows);
   }
 
-  @internal
   Future<List<Diary>> getDiariesByIds(List<String> ids) async {
     if (ids.isEmpty) return const [];
     final rows = await (_db.select(
