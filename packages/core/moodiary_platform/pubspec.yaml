@@ -24,7 +24,7 @@ dependencies:
   path_provider: 2.1.6
   flutter_local_notifications: 23.0.2
   timezone: 0.11.2
-  moodiary_native: 0.0.1
+  flutter_timezone: 5.1.1
 
 dev_dependencies:
   flutter_test:
