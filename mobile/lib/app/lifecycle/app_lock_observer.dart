@@ -43,8 +43,9 @@ class _AppLockObserverState extends State<AppLockObserver>
     if (!AppLockPin.enabled.value || MoodiaryKVs.lockNow.get() != true) {
       return;
     }
-    final location = router.routerDelegate.currentConfiguration.uri.path;
-    if (_skip.contains(location)) return;
+    final routes = router.routerDelegate.currentConfiguration;
+    final path = routes.lastOrNull?.matchedLocation ?? routes.uri.path;
+    if (_skip.contains(path)) return;
 
     _locking = true;
     router
