@@ -34,7 +34,7 @@ final List<ToolDefinition> diaryTools = [
         'need in one call, using ids from search_diaries. Unknown or recycled '
         'ids are reported in missing. Markdown preserves media as ![name](src); '
         'keep these references when rewriting content. '
-        '${surface == ToolSurface.assistant ? 'Bodies are Markdown, capped at 4000 characters; truncated and fullLength report any cap. Never rewrite from a truncated body.' : 'contentFormat selects markdown (default), text or the raw Tiptap document JSON. document is subject to the $mcpResultChars character result limit. linkStyle=uri preserves diary mention targets; label keeps only labels. includeLinks=false omits the graph. Attach files with add_diary_image or add_diary_attachment and inspect them with list_diary_media.'}',
+        '${surface == ToolSurface.assistant ? 'Bodies are Markdown, capped at $assistantBodyChars characters; truncated and fullLength report any cap. Never rewrite from a truncated body; use append/prepend for additions.' : 'contentFormat selects markdown (default), text or the raw Tiptap document JSON. document is subject to the $mcpResultChars character result limit. linkStyle=uri preserves diary mention targets; label keeps only labels. includeLinks=false omits the graph. Attach files with add_diary_image or add_diary_attachment and inspect them with list_diary_media.'}',
     input: (surface) => S.object(
       properties: {
         'ids': toolIdsSchema(diaryIdSchema, max: maxBatchRead),
@@ -133,13 +133,23 @@ final List<ToolDefinition> diaryTools = [
         'unchanged; lastModified is bumped. Send null to clear a nullable '
         'field: categoryId, mood and tags (null or an empty array); '
         'title is cleared with an empty string. content and time are '
-        'not nullable, so an explicit null for them is ignored. content '
+        'not nullable, so an explicit null for them is ignored. Prefer append '
+        'and/or prepend (Markdown) for additions: they insert blocks and preserve '
+        'the existing body and media. Legacy Markdown diaries keep Markdown; '
+        'legacy rich-text diaries do not support append/prepend. Use content '
+        'only for an intentional full rewrite; it cannot be combined with '
+        'append or prepend. content '
         'replaces the whole body and contentFormat selects how it is '
         'interpreted (markdown default, text, or document for a Tiptap '
         'document JSON object). Media nodes in the body may only reference '
         'files this diary already owns (add new files with add_diary_image '
         'or add_diary_attachment); another diary\'s media name is invalid '
-        'params. Recycled diaries are not found. An unknown category id is '
+        'params. Rewrites must preserve every owned media reference from '
+        'get_diary as ![name](src), unless its stored file name is explicitly '
+        'listed in removeMedia. Unknown removeMedia names fail the item; '
+        'removeMedia requires content. Bodies longer than the surface read cap '
+        'cannot be rewritten; use append/prepend. '
+        'Recycled diaries are not found. An unknown category id is '
         'an item error; an unknown diary id also fails only that item.',
     input: (_) => batchItemsSchema(
       S.object(
@@ -150,8 +160,19 @@ final List<ToolDefinition> diaryTools = [
           ),
           'content': S.string(
             description:
-                'New body; replaces the old one. Interpreted according to '
-                'contentFormat.',
+                'Full body replacement only; prefer append/prepend for additions. '
+                'Interpreted according to contentFormat. Preserve owned media '
+                'as ![name](src), or explicitly allow dropping it in removeMedia.',
+          ),
+          'append': S.string(
+            description: 'Markdown blocks to add after the existing body. Cannot be combined with content.',
+          ),
+          'prepend': S.string(
+            description: 'Markdown blocks to add before the existing body. Cannot be combined with content.',
+          ),
+          'removeMedia': S.list(
+            items: S.string(),
+            description: 'Owned media file names explicitly allowed to disappear in a content rewrite. Requires content; unknown names fail.',
           ),
           'contentFormat': writeContentFormatSchema,
           'time': diaryTimeSchema,
@@ -164,13 +185,14 @@ final List<ToolDefinition> diaryTools = [
     ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
-    idempotent: true,
+    idempotent: false,
     output: toolOutputSchema('update_diary'),
     parse: toolBatchItems,
     run: (items, ctx) => runToolBatch(
       items,
       (item) => _updateDiary(
         _parseUpdateDiary(item),
+        surface: ctx.surface,
         diaries: ctx.diaries,
         categories: ctx.categories,
       ),
@@ -373,28 +395,52 @@ DiaryContentFormat _writeFormat(String? value) => switch (value) {
   _ => DiaryContentFormat.markdown,
 };
 
-ToolResult _writeFailure(String subject, DiaryOpsException e, String id) =>
-    switch (e.failure) {
-      DiaryOpsFailure.invalidCategory => throw ToolArgumentException(
-        '$subject: categoryId "${e.categoryId}" is not a known category; call '
-        'list_categories first',
-      ),
-      DiaryOpsFailure.invalidDocument => throw ToolArgumentException(
-        '$subject: content is not a Tiptap document; contentFormat="document" '
-        'expects a JSON object with type "doc"',
-      ),
-      DiaryOpsFailure.emptyContent => throw ToolArgumentException(
-        '$subject: content must not be empty',
-      ),
-      DiaryOpsFailure.notFound => _failure('$subject: no diary with id="$id".'),
-      DiaryOpsFailure.foreignMedia => throw ToolArgumentException(
-        '$subject: content references media this diary does not own; add new '
-        'files with add_diary_image or add_diary_attachment first',
-      ),
-      final failure => _failure(
-        '$subject: the diary could not be written (${failure.name}).',
-      ),
-    };
+ToolResult _writeFailure(
+  String subject,
+  DiaryOpsException e,
+  String id,
+) => switch (e.failure) {
+  DiaryOpsFailure.invalidCategory => throw ToolArgumentException(
+    '$subject: categoryId "${e.categoryId}" is not a known category; call '
+    'list_categories first',
+  ),
+  DiaryOpsFailure.invalidDocument => throw ToolArgumentException(
+    '$subject: content is not a Tiptap document; contentFormat="document" '
+    'expects a JSON object with type "doc"',
+  ),
+  DiaryOpsFailure.emptyContent => throw ToolArgumentException(
+    '$subject: content must not be empty',
+  ),
+  DiaryOpsFailure.notFound => _failure('$subject: no diary with id="$id".'),
+  DiaryOpsFailure.foreignMedia => throw ToolArgumentException(
+    '$subject: content references media this diary does not own; add new '
+    'files with add_diary_image or add_diary_attachment first',
+  ),
+  DiaryOpsFailure.conflictingBodyEdits => throw ToolArgumentException(
+    '$subject: content cannot be combined with append or prepend; use '
+    'append/prepend for additions or content for a full rewrite',
+  ),
+  DiaryOpsFailure.unsupportedBodyAddition => throw ToolArgumentException(
+    '$subject: append/prepend is not supported for legacy rich-text diaries; '
+    'edit this diary in the app',
+  ),
+  DiaryOpsFailure.missingMedia => throw ToolArgumentException(
+    '$subject: content would drop owned media: ${e.mediaNames.join(', ')}. '
+    'Keep their ![name](src) references from get_diary, or explicitly list '
+    'the file names in removeMedia to drop them on purpose',
+  ),
+  DiaryOpsFailure.unknownMediaRemoval => throw ToolArgumentException(
+    '$subject: removeMedia contains names this diary does not own: '
+    '${e.mediaNames.join(', ')}',
+  ),
+  DiaryOpsFailure.mediaRemovalRequiresContent => throw ToolArgumentException(
+    '$subject: removeMedia requires content; omit it for append/prepend '
+    'or metadata changes',
+  ),
+  final failure => _failure(
+    '$subject: the diary could not be written (${failure.name}).',
+  ),
+};
 
 Future<ToolResult> _getDiaries(
   _GetDiaryInput input,
@@ -475,8 +521,8 @@ Future<Map<String, Object?>> _getDiaryPayload(
 }
 
 ({Object? content, bool truncated}) _capped(String text, ToolSurface surface) {
-  if (surface == ToolSurface.assistant && text.length > 4000) {
-    var end = 3999;
+  if (surface == ToolSurface.assistant && text.length > assistantBodyChars) {
+    var end = assistantBodyChars - 1;
     if (text.codeUnitAt(end - 1) >= 0xD800 &&
         text.codeUnitAt(end - 1) <= 0xDBFF) {
       end--;
@@ -514,12 +560,28 @@ Future<ToolResult> _createDiary(
 
 Future<ToolResult> _updateDiary(
   _UpdateDiaryInput input, {
+  required ToolSurface surface,
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
   final (:id, :contentFormat, :patch) = input;
   try {
     return await withDiaryWriteLock(id, () async {
+      if (patch.content != null) {
+        final existing = await diaries.getDiaryByBusinessId(id);
+        final cap = surface == ToolSurface.assistant
+            ? assistantBodyChars
+            : mcpResultChars;
+        if (existing != null &&
+            existing.show &&
+            diaryToMarkdown(existing).length > cap) {
+          throw ToolArgumentException(
+            'update_diary: the current body of id="$id" exceeds the $cap '
+            'character read limit and may be truncated; it is too long to '
+            'rewrite in one go. Use append/prepend for additions',
+          );
+        }
+      }
       final next = await DiaryWrites(diaries: diaries, categories: categories)
           .update(
             id: id,
@@ -746,6 +808,9 @@ _UpdateDiaryInput _parseUpdateDiary(Map<String, Object?> raw) {
   final patch = DiaryPatch(
     title: args.contains('title') ? args.text('title') : null,
     content: args.contains('content') ? args.requireText('content') : null,
+    append: args.contains('append') ? args.requireText('append') : null,
+    prepend: args.contains('prepend') ? args.requireText('prepend') : null,
+    removeMedia: args.optionalStringList('removeMedia') ?? const [],
     mood: args.has('mood') ? args.optionalMood('mood') : null,
     moodSet: args.has('mood'),
     categoryId: args.has('categoryId')

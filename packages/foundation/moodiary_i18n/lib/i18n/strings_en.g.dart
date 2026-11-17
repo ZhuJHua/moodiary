@@ -511,6 +511,8 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get approvalFieldTitle => 'Title';
 	@override String get approvalFieldCategory => 'Category';
 	@override String get approvalFieldContent => 'Text';
+	@override String get approvalFieldAppend => 'Append';
+	@override String get approvalFieldPrepend => 'Prepend';
 	@override String get approvalFieldName => 'Name';
 	@override String get approvalNoCategory => 'Uncategorised';
 	@override String approvalContentNew({required Object count}) => 'about ${count} characters';

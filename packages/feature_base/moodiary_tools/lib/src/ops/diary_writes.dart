@@ -23,14 +23,25 @@ enum DiaryOpsFailure {
   /// The body references media the caller did not attach, so the write would
   /// let a diary of one client point at another client's media.
   foreignMedia,
+  conflictingBodyEdits,
+  unsupportedBodyAddition,
+  missingMedia,
+  unknownMediaRemoval,
+  mediaRemovalRequiresContent,
 }
 
 class DiaryOpsException implements Exception {
-  const DiaryOpsException(this.failure, {this.id, this.categoryId});
+  const DiaryOpsException(
+    this.failure, {
+    this.id,
+    this.categoryId,
+    this.mediaNames = const [],
+  });
 
   final DiaryOpsFailure failure;
   final String? id;
   final String? categoryId;
+  final List<String> mediaNames;
 
   @override
   String toString() => 'DiaryOpsException($failure)';
@@ -41,6 +52,9 @@ class DiaryPatch {
   const DiaryPatch({
     this.title,
     this.content,
+    this.append,
+    this.prepend,
+    this.removeMedia = const [],
     this.mood,
     this.moodSet = false,
     this.categoryId,
@@ -50,6 +64,9 @@ class DiaryPatch {
 
   final String? title;
   final String? content;
+  final String? append;
+  final String? prepend;
+  final List<String> removeMedia;
   final DiaryMood? mood;
 
   /// Whether the caller sent `mood` at all; a sent null clears it.
@@ -62,6 +79,9 @@ class DiaryPatch {
   bool get isEmpty =>
       title == null &&
       content == null &&
+      append == null &&
+      prepend == null &&
+      removeMedia.isEmpty &&
       !moodSet &&
       categoryId == null &&
       time == null &&
@@ -135,6 +155,30 @@ class DiaryWrites {
     if (existing == null || !existing.show) {
       throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
     }
+    if (patch.content != null &&
+        (patch.append != null || patch.prepend != null)) {
+      throw DiaryOpsException(DiaryOpsFailure.conflictingBodyEdits, id: id);
+    }
+    final ownedMedia = {
+      ...existing.imageName,
+      ...existing.audioName,
+      ...existing.videoName,
+      ...existing.fileName,
+    };
+    final unknown = patch.removeMedia.toSet().difference(ownedMedia);
+    if (unknown.isNotEmpty) {
+      throw DiaryOpsException(
+        DiaryOpsFailure.unknownMediaRemoval,
+        id: id,
+        mediaNames: unknown.toList(),
+      );
+    }
+    if (patch.removeMedia.isNotEmpty && patch.content == null) {
+      throw DiaryOpsException(
+        DiaryOpsFailure.mediaRemovalRequiresContent,
+        id: id,
+      );
+    }
 
     var next = existing;
     if (patch.title case final title?) {
@@ -145,13 +189,36 @@ class DiaryWrites {
       if (enforceOwnMedia) {
         _rejectForeignMedia(existing, converted.content, extraAllowedMedia);
       }
-      // A body change drops the media references the new document no longer
-      // contains, which is exactly what withDerivedMedia recomputes.
+      final missing = ownedMedia
+          .difference(_mediaRefs(converted.content))
+          .difference(patch.removeMedia.toSet());
+      if (missing.isNotEmpty) {
+        throw DiaryOpsException(
+          DiaryOpsFailure.missingMedia,
+          id: id,
+          mediaNames: missing.toList(),
+        );
+      }
       next = withDerivedMedia(
         next.copyWith(
           content: converted.content,
           contentText: converted.contentText,
           type: converted.type.value,
+        ),
+      );
+    }
+    if (patch.append != null || patch.prepend != null) {
+      final converted = _addBlocks(existing, patch);
+      if (enforceOwnMedia) {
+        final document = converted.type == DiaryType.markdown
+            ? _convert(converted.content, DiaryContentFormat.markdown).content
+            : converted.content;
+        _rejectForeignMedia(existing, document, extraAllowedMedia);
+      }
+      next = withDerivedMedia(
+        next.copyWith(
+          content: converted.content,
+          contentText: converted.contentText,
         ),
       );
     }
@@ -173,6 +240,62 @@ class DiaryWrites {
     next = touched(next);
     await diaries.updateADiary(newDiary: next, index: index);
     return next;
+  }
+
+  _Converted _addBlocks(Diary existing, DiaryPatch patch) {
+    switch (DiaryType.fromValue(existing.type)) {
+      case DiaryType.richText:
+        throw DiaryOpsException(
+          DiaryOpsFailure.unsupportedBodyAddition,
+          id: existing.id,
+        );
+      case DiaryType.markdown:
+        final content = [
+          ?patch.prepend,
+          existing.content,
+          ?patch.append,
+        ].join('\n\n');
+        return (
+          content: content,
+          contentText: DiaryContent.of(existing.copyWith(content: content))
+              .plainText,
+          type: DiaryType.markdown,
+        );
+      case DiaryType.tiptap:
+        final parsed = TiptapContent.parse(existing.content);
+        if (!parsed.isDoc) {
+          throw DiaryOpsException(
+            DiaryOpsFailure.invalidDocument,
+            id: existing.id,
+          );
+        }
+        List<dynamic> blocks(String? markdown) {
+          if (markdown == null) return const [];
+          final converted = _convert(markdown, DiaryContentFormat.markdown);
+          if (converted.type != DiaryType.tiptap) {
+            throw DiaryOpsException(
+              DiaryOpsFailure.invalidDocument,
+              id: existing.id,
+            );
+          }
+          return TiptapContent.parse(converted.content).document!['content']
+              as List;
+        }
+        final document = parsed.document!;
+        final content = TiptapContent.fromDocument({
+          ...document,
+          'content': [
+            ...blocks(patch.prepend),
+            ...?document['content'] as List?,
+            ...blocks(patch.append),
+          ],
+        }).normalized;
+        return (
+          content: content,
+          contentText: TiptapContent.parse(content).plainText,
+          type: DiaryType.tiptap,
+        );
+    }
   }
 
   Future<({DiaryDeleteOutcome outcome, Diary diary})> delete({

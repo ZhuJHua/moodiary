@@ -217,6 +217,8 @@
   "approvalFieldTitle": "标题",
   "approvalFieldCategory": "分类",
   "approvalFieldContent": "正文",
+  "approvalFieldAppend": "追加",
+  "approvalFieldPrepend": "前插",
   "approvalFieldName": "名称",
   "approvalNoCategory": "未分类",
   "approvalContentNew": "约 {count} 字",

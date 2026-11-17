@@ -1404,6 +1404,12 @@ class Translations$assistant$zh {
 	/// zh: '正文'
 	String get approvalFieldContent => '正文';
 
+	/// zh: '追加'
+	String get approvalFieldAppend => '追加';
+
+	/// zh: '前插'
+	String get approvalFieldPrepend => '前插';
+
 	/// zh: '名称'
 	String get approvalFieldName => '名称';
 

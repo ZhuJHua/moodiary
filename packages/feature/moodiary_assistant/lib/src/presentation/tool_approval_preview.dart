@@ -84,6 +84,16 @@ String _diaryLabel(Diary diary, Translations l10n) =>
     '${TimeFormat.monthDay(diary.time)} · '
     '${diary.title.trim().isEmpty ? l10n.common.untitled : diary.title.trim()}';
 
+List<ToolApprovalLine> _bodyAdditions(
+  Translations l10n,
+  Map<String, dynamic> item,
+) => [
+  if (item['prepend'] != null)
+    (label: l10n.assistant.approvalFieldPrepend, value: _str(item['prepend'])),
+  if (item['append'] != null)
+    (label: l10n.assistant.approvalFieldAppend, value: _str(item['append'])),
+];
+
 Future<ToolApprovalPreview> _createDiary(
   Translations l10n,
   List<Map<String, dynamic>> items,
@@ -153,6 +163,7 @@ Future<ToolApprovalPreview> _updateDiary(
         ),
       ));
     }
+    lines.addAll(_bodyAdditions(l10n, item));
     for (final field in ['mood', 'tags', 'time']) {
       if (!item.containsKey(field)) continue;
       final label = switch (field) {
@@ -206,6 +217,7 @@ Future<ToolApprovalPreview> _updateDiary(
       label: '',
       value: diary == null ? _str(item['id']) : _diaryLabel(diary, l10n),
     ));
+    lines.addAll(_bodyAdditions(l10n, item));
   }
   if (items.length > _kPreviewRows) {
     lines.add((

@@ -39,6 +39,147 @@ void main() {
 
   tearDown(() => db.close());
 
+  group('safe body additions', () {
+    for (final placement in ['append', 'prepend', 'both']) {
+      test('$placement preserves existing blocks and media bytes', () async {
+        final created = await writes.create(
+          title: 'Keep everything',
+          content: jsonEncode(
+            TiptapContent.newDoc([
+              {
+                'type': 'customBlock',
+                'attrs': {'unknown': 'preserved'},
+                'content': [
+                  {
+                    'type': 'text',
+                    'text': 'Original',
+                    'marks': [
+                      {'type': 'bold'},
+                    ],
+                  },
+                ],
+              },
+              for (final (type, name) in [
+                ('image', 'image-1.png'),
+                ('audio', 'audio-1.mp3'),
+                ('video', 'video-1.mp4'),
+                ('attachment', 'file-1.pdf'),
+              ])
+                {
+                  'type': type,
+                  'attrs': {'src': name, 'name': name, 'custom': 'keep'},
+                },
+            ]),
+          ),
+          format: DiaryContentFormat.document,
+        );
+        final before = jsonDecode(created.content) as Map;
+        final updated = await writes.update(
+          id: created.id,
+          patch: DiaryPatch(
+            append: placement != 'prepend' ? '**Translation**' : null,
+            prepend: placement != 'append' ? '# Introduction' : null,
+          ),
+          enforceOwnMedia: true,
+        );
+        final stored = (await diaries.getDiaryByBusinessId(created.id))!;
+        final after = jsonDecode(stored.content) as Map;
+        final blocks = after['content'] as List;
+        final original = before['content'] as List;
+        final start = placement == 'append' ? 0 : 1;
+        expect(
+          jsonEncode(blocks.sublist(start, start + original.length)),
+          jsonEncode(original),
+        );
+        expect(after['attrs'], before['attrs']);
+        expect(stored.imageName, created.imageName);
+        expect(stored.audioName, created.audioName);
+        expect(stored.videoName, created.videoName);
+        expect(stored.fileName, created.fileName);
+        expect(stored.contentText, contains('Original'));
+        if (placement != 'prepend') {
+          expect(blocks.last['content'].first['text'], 'Translation');
+          expect(updated.contentText, contains('Translation'));
+        }
+        if (placement != 'append') {
+          expect(blocks.first['type'], 'heading');
+          expect(updated.contentText, startsWith('Introduction'));
+        }
+      });
+    }
+
+    test(
+      'legacy Markdown additions retain the original Markdown bytes',
+      () async {
+        const original = '  **original**\n\n![pic](image-1.png)\n';
+        await diaries.insertADiary(
+          withDerivedMedia(
+            makeDiary('legacy', '', content: original, type: 'markdown'),
+          ),
+        );
+        final next = await writes.update(
+          id: 'legacy',
+          patch: const DiaryPatch(prepend: '# Start', append: 'End'),
+          enforceOwnMedia: true,
+        );
+        expect(next.type, 'markdown');
+        expect(next.content, '# Start\n\n$original\n\nEnd');
+        expect(next.contentText, contains('original'));
+        expect(next.imageName, ['image-1.png']);
+      },
+    );
+
+    test(
+      'legacy rich text rejects additions without changing metadata',
+      () async {
+        final original = makeDiary(
+          'legacy',
+          '',
+          content: '[{"insert":"old\\n"}]',
+          type: 'richText',
+        );
+        await diaries.insertADiary(original);
+        final before = await diaries.getDiaryByBusinessId(original.id);
+        for (final patch in [
+          const DiaryPatch(title: 'Changed', append: 'End'),
+          const DiaryPatch(prepend: 'Start'),
+        ]) {
+          await expectLater(
+            writes.update(id: original.id, patch: patch),
+            throwsA(
+              isA<DiaryOpsException>().having(
+                (error) => error.failure,
+                'failure',
+                DiaryOpsFailure.unsupportedBodyAddition,
+              ),
+            ),
+          );
+        }
+        expect(await diaries.getDiaryByBusinessId(original.id), before);
+      },
+    );
+
+    test('ops reject mixed replacement and additions', () async {
+      final original = await writes.create(title: 'Keep', content: 'Old');
+      for (final patch in [
+        const DiaryPatch(content: 'New', append: 'End'),
+        const DiaryPatch(content: 'New', prepend: 'Start'),
+      ]) {
+        await expectLater(
+          writes.update(id: original.id, patch: patch),
+          throwsA(
+            isA<DiaryOpsException>().having(
+              (error) => error.failure,
+              'failure',
+              DiaryOpsFailure.conflictingBodyEdits,
+            ),
+          ),
+        );
+      }
+      expect(await diaries.getDiaryByBusinessId(original.id), original);
+    });
+  });
+
   group('document format', () {
     test('stores and normalizes a raw Tiptap document', () async {
       final document = jsonEncode({
@@ -340,7 +481,10 @@ void main() {
 
       final attached = await writes.update(
         id: created.id,
-        patch: DiaryPatch(content: imageDoc('image-2.png')),
+        patch: DiaryPatch(
+          content: imageDoc('image-2.png'),
+          removeMedia: const ['image-1.png'],
+        ),
         format: DiaryContentFormat.document,
         enforceOwnMedia: true,
         extraAllowedMedia: const {'image-2.png'},

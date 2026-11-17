@@ -4,6 +4,29 @@ import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 void main() {
   group('工具档位按可逆性', () {
     test('updateDiary 只有带 content 才是不可逆', () {
+      for (final addition in [
+        {'append': 'Translation'},
+        {'prepend': 'Introduction'},
+        {'append': 'End', 'prepend': 'Start'},
+      ]) {
+        expect(
+          assistantToolTier(.updateDiary, {
+            'items': [
+              {'id': 'd', ...addition},
+            ],
+          }),
+          AssistantToolTier.write,
+        );
+        expect(
+          assistantToolTier(.updateDiary, {
+            'items': [
+              {'id': 'd', ...addition},
+              {'id': 'e', 'content': 'Rewrite'},
+            ],
+          }),
+          AssistantToolTier.destructive,
+        );
+      }
       expect(
         assistantToolTier(.updateDiary, {
           'items': [
