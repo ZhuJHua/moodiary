@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
-import 'reminder.dart';
+import '../data/reminder.dart';
 
 const _fixedWeeklyBase = 100000;
 const _fixedSkipBase = 200000;

@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 
-import 'reminder_scheduler.dart';
-import 'reminder_service.dart';
+import '../application/reminder_scheduler.dart';
+import '../application/reminder_service.dart';
 
 enum ReminderPreset {
   everyDay,

@@ -2,14 +2,14 @@ library;
 
 import 'package:moodiary_router/moodiary_router.dart';
 
-import 'src/reminder_page.dart';
+import 'src/presentation/reminder_page.dart';
 
-export 'src/reminder.dart' hide formatReminderTime;
-export 'src/reminder_edit_sheet.dart';
-export 'src/reminder_labels.dart';
-export 'src/reminder_page.dart';
-export 'src/reminder_scheduler.dart';
-export 'src/reminder_service.dart';
+export 'src/application/reminder_scheduler.dart';
+export 'src/application/reminder_service.dart';
+export 'src/data/reminder.dart' hide formatReminderTime;
+export 'src/presentation/reminder_edit_sheet.dart';
+export 'src/presentation/reminder_labels.dart';
+export 'src/presentation/reminder_page.dart';
 
 List<RouteBase> reminderRoutes() => [
   GoRoute(

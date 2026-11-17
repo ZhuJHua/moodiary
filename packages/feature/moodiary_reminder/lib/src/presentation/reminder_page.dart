@@ -4,11 +4,11 @@ import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
-import 'reminder.dart';
+import '../application/reminder_service.dart';
+import '../data/reminder.dart';
 import 'reminder_edit_sheet.dart';
 import 'reminder_labels.dart';
 import 'reminder_permission.dart';
-import 'reminder_service.dart';
 
 class ReminderPage extends StatefulWidget {
   const ReminderPage({super.key});

@@ -1,7 +1,7 @@
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
-import 'reminder.dart';
+import '../data/reminder.dart';
 import 'reminder_labels.dart';
 
 class ReminderEditResult {
