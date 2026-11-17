@@ -5,15 +5,14 @@ import 'dart:typed_data';
 import 'package:drift/native.dart';
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mcp_dart/mcp_dart.dart';
+import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
-import 'package:moodiary_mcp/src/media/diary_media.dart';
-import 'package:moodiary_mcp/src/tools/media_tools.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
+import 'package:moodiary_tools/moodiary_tools.dart';
 
 import 'support.dart';
 
@@ -66,8 +65,7 @@ void main() {
   late MoodiaryDatabase db;
   late DiaryRepository diaries;
   late CategoryRepository categories;
-  late McpServer server;
-  late TestMcpClient client;
+  late TestToolClient client;
   late _HeifDecoder decoder;
 
   setUpAll(() {
@@ -89,14 +87,15 @@ void main() {
   });
 
   void buildServer() {
-    server = McpServer(const Implementation(name: 'test', version: 'test'));
-    registerMediaTools(
-      server,
-      diaries: diaries,
-      categories: categories,
-      store: store,
+    client = TestToolClient(
+      ToolContext(
+        diaries: diaries,
+        categories: categories,
+        insights: MoodInsightsRepository(db),
+        surface: ToolSurface.mcp,
+        mediaStore: store,
+      ),
     );
-    client = TestMcpClient(server: server);
   }
 
   setUp(() async {
@@ -118,7 +117,6 @@ void main() {
   });
 
   tearDown(() async {
-    await client.close();
     await db.close();
     await getIt.unregister<IHeifDecoder>();
     final scratch = Directory(AppFiles.getCachePath('import/mcp'));
@@ -141,18 +139,50 @@ void main() {
     'attrs': {'src': src},
   };
 
-  test('media schemas require their upload arguments', () async {
-    final listed = resultOf(await client.call('tools/list'));
-    final tools = (listed['tools'] as List).cast<Map<String, dynamic>>();
-    final byName = {for (final tool in tools) tool['name']: tool};
-    expect((byName['add_diary_image']!['inputSchema'] as Map)['required'], [
-      'id',
-      'data',
-    ]);
-    expect(
-      (byName['add_diary_attachment']!['inputSchema'] as Map)['required'],
-      ['id', 'data', 'fileName'],
+  test('every shared tool returns data matching its output schema', () async {
+    final category = await CategoryOps(categories: categories)
+        .create(name: 'Empty');
+    writeMedia('image', 'sample.png', pngBytes);
+    await diaries.insertADiary(
+      makeDiary('sample', 'schema sample', media: [imageNode('sample.png')]),
     );
+    await diaries.insertADiary(makeDiary('delete-me', 'delete sample'));
+    final inputs = <String, Map<String, Object?>>{
+      'list_diaries': {},
+      'get_diary': {'id': 'sample'},
+      'create_diary': {'content': 'Created by a shared tool'},
+      'update_diary': {'id': 'sample', 'title': 'Updated'},
+      'delete_diary': {'id': 'delete-me'},
+      'search_diaries': {'query': 'sample'},
+      'get_diary_links': {'id': 'sample'},
+      'list_tags': {},
+      'list_categories': {},
+      'create_category': {'name': 'Created'},
+      'update_category': {'id': category.id, 'name': 'Renamed'},
+      'delete_category': {'id': category.id},
+      'list_diary_media': {'id': 'sample'},
+      'read_diary_media': {'id': 'sample', 'name': 'sample.png'},
+      'add_diary_image': {'id': 'sample', 'data': base64Encode(pngBytes)},
+      'add_diary_attachment': {
+        'id': 'sample',
+        'data': base64Encode(pdfBytes),
+        'fileName': 'report.pdf',
+      },
+      'get_stats': {},
+    };
+    expect(inputs.keys.toSet(), moodiaryTools.map((tool) => tool.name).toSet());
+    for (final tool in moodiaryTools) {
+      final result = await tool.call(inputs[tool.name]!, client.context);
+      expect(
+        await tool.output.validate(result.data),
+        isEmpty,
+        reason: tool.name,
+      );
+      if (tool.name == 'read_diary_media') {
+        expect(result.media.single.bytes, pngBytes);
+        expect(result.diaries.single.id, 'sample');
+      }
+    }
   });
 
   group('list_diary_media', () {
@@ -334,7 +364,7 @@ void main() {
         'id': 'diary-1',
         'data': 'not base64!!',
       });
-      expect(errorCode(response), ErrorCode.invalidParams.value);
+      expect(errorCode(response), -32602);
     });
 
     test('an empty payload is invalid params', () async {
@@ -343,7 +373,7 @@ void main() {
         'id': 'diary-1',
         'data': '',
       });
-      expect(errorCode(response), ErrorCode.invalidParams.value);
+      expect(errorCode(response), -32602);
     });
 
     for (final (mime, brand) in [
@@ -597,7 +627,7 @@ void main() {
         'id': 'diary-1',
         'data': base64Encode(pdfBytes),
       });
-      expect(errorCode(response), ErrorCode.invalidParams.value);
+      expect(errorCode(response), -32602);
     });
 
     test('invalid base64 is invalid params', () async {
@@ -607,7 +637,7 @@ void main() {
         'data': '%%%',
         'fileName': 'report.pdf',
       });
-      expect(errorCode(response), ErrorCode.invalidParams.value);
+      expect(errorCode(response), -32602);
     });
 
     test('a malformed mimeType is invalid params', () async {
@@ -618,7 +648,7 @@ void main() {
         'fileName': 'report.pdf',
         'mimeType': 'not-a-mime',
       });
-      expect(errorCode(response), ErrorCode.invalidParams.value);
+      expect(errorCode(response), -32602);
     });
   });
 

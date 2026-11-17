@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_mcp/src/tools/category_queries.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_tools/src/tools/category_queries.dart';
 
 import 'support.dart';
 
@@ -9,13 +9,13 @@ void main() {
   late MoodiaryDatabase db;
   late CategoryRepository categories;
   late DiaryRepository diaries;
-  late McpCategoryQueries queries;
+  late CategoryToolQueries queries;
 
   setUp(() {
     db = openTestDatabase();
     categories = CategoryRepository(db);
     diaries = DiaryRepository(db);
-    queries = McpCategoryQueries(categories: categories, diaries: diaries);
+    queries = CategoryToolQueries(categories: categories, diaries: diaries);
   });
 
   tearDown(() => db.close());

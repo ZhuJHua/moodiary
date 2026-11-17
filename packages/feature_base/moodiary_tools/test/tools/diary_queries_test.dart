@@ -1,18 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_mcp/src/tools/diary_queries.dart';
+import 'package:moodiary_tools/src/tools/diary_queries.dart';
 
 import 'support.dart';
 
 void main() {
   late MoodiaryDatabase db;
   late DiaryRepository diaries;
-  late McpDiaryQueries queries;
+  late DiaryToolQueries queries;
 
   setUp(() {
     db = openTestDatabase();
     diaries = DiaryRepository(db);
-    queries = McpDiaryQueries(diaries: diaries);
+    queries = DiaryToolQueries(diaries: diaries);
   });
 
   tearDown(() => db.close());

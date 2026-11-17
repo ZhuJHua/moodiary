@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
+import 'package:moodiary_tools/moodiary_tools.dart';
 
 import 'support.dart';
 

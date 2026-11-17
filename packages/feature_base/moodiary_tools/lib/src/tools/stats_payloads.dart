@@ -1,11 +1,11 @@
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
+import '../ops/diary_display.dart';
 import 'diary_payloads.dart';
 
-class McpStatsPayloads {
-  McpStatsPayloads({
+class DiaryStatsPayloads {
+  DiaryStatsPayloads({
     required this.diaries,
     required this.categories,
     required this.insights,

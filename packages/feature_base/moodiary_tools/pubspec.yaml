@@ -1,0 +1,31 @@
+name: moodiary_tools
+description: "Diary tools and use cases shared by the in-app assistant and the local MCP server."
+version: 0.0.1
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  moodiary_data: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_utils: 0.0.1
+  moodiary_files: 0.0.1
+  moodiary_logging: 0.0.1
+  json_schema_builder: 0.1.7
+  mime: 2.1.0
+  synchronized: 3.4.1+2
+
+dev_dependencies:
+  fast_image: 0.0.1
+  moodiary_di: 0.0.1
+  moodiary_platform: 0.0.1
+  moodiary_storage: 0.0.1
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  drift: 2.35.0
