@@ -792,24 +792,60 @@ void main() {
         makeDiary('target', 'target body'),
         makeDiary('source', 'see ', linkTo: ['target']),
       ]);
-      for (final format in ['markdown', 'text']) {
-        final linked = diaryOf(
-          await run('get_diary', {
-            'ids': ['source'],
-            'contentFormat': format,
-          }),
+      for (final surface in ToolSurface.values) {
+        final definition = moodiaryTools.firstWhere(
+          (tool) => tool.name == 'get_diary',
         );
-        expect(linked['content'], contains('moodiary://diary/target'));
-        expect((linked['links']['forward'] as List).single['id'], 'target');
-        final labels = diaryOf(
-          await run('get_diary', {
-            'ids': ['source'],
-            'contentFormat': format,
-            'linkStyle': 'label',
-          }),
+        final context = ToolContext(
+          diaries: diaries,
+          categories: categories,
+          insights: MoodInsightsRepository(db),
+          surface: surface,
         );
-        expect(labels['content'], 'see L');
-        expect(labels['content'], isNot(contains('moodiary://diary/')));
+        for (final format in ['markdown', 'text', 'document']) {
+          final linked =
+              (await definition.call({
+                    'ids': ['source'],
+                    'contentFormat': format,
+                    'includeLinks': true,
+                  }, context)).data['diaries']
+                  as List;
+          expect(
+            (linked.single['links']['forward'] as List).single['id'],
+            'target',
+          );
+          if (format == 'document') {
+            expect(linked.single['content'], isA<Map>());
+          } else {
+            expect(
+              linked.single['content'],
+              contains('moodiary://diary/target'),
+            );
+            final labels =
+                (await definition.call({
+                      'ids': ['source'],
+                      'contentFormat': format,
+                      'linkStyle': 'label',
+                    }, context)).data['diaries']
+                    as List;
+            expect(labels.single['content'], 'see L');
+            expect(labels.single, isNot(contains('links')));
+          }
+        }
+        for (final options in [
+          const {},
+          {'includeLinks': null},
+          {'includeLinks': false},
+        ]) {
+          final result = await definition.call({
+            'ids': ['source'],
+            ...options,
+          }, context);
+          expect(
+            (result.data['diaries'] as List).single,
+            isNot(contains('links')),
+          );
+        }
       }
     },
   );
@@ -1298,7 +1334,8 @@ void main() {
 
   test('get_diary surface formats, missing ids and body cap', () async {
     await diaries.insertDiaries([
-      makeDiary('long', 'x' * 5000),
+      makeDiary('long', 'x' * 25000),
+      makeDiary('medium', 'x' * 5000),
       makeDiary('hidden', 'secret', show: false),
     ]);
     final read = await run('get_diary', {
@@ -1323,15 +1360,22 @@ void main() {
     final full = (assistant.data['diaries'] as List).single as Map;
     expect(full, isNot(contains('links')));
     expect(full['truncated'], true);
-    expect(full['fullLength'], 5000);
-    expect((full['content'] as String).length, lessThanOrEqualTo(4000));
-    await expectLater(
-      def.call({
-        'ids': ['long'],
-        'contentFormat': 'text',
-      }, context),
-      throwsA(isA<ToolArgumentException>()),
+    expect(context.bodyChars, 20000);
+    expect(full['fullLength'], 25000);
+    expect((full['content'] as String).length, 20000);
+    final plain = await def.call({
+      'ids': ['long'],
+      'contentFormat': 'text',
+    }, context);
+    expect(
+      diaryOf(plain.data.cast<String, dynamic>())['contentFormat'],
+      'text',
     );
+    final medium = await def.call({
+      'ids': ['medium'],
+    }, context);
+    expect((medium.data['diaries'] as List).single['truncated'], false);
+    expect((medium.data['diaries'] as List).single['content'], 'x' * 5000);
   });
 
   test('link graph retains forward, backward and dangling ids', () async {

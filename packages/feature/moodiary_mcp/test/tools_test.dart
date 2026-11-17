@@ -229,11 +229,37 @@ void main() {
 
       final listed = resultOf(await client.call('tools/list'));
       final tools = (listed['tools'] as List).cast<Map<String, dynamic>>();
-      expect(
-        (toolNamed(listed, 'update_diary')['annotations']
-            as Map)['destructiveHint'],
-        isFalse,
-      );
+      const annotations = {
+        'get_diary': (read: true, destructive: false, idempotent: true),
+        'create_diary': (read: false, destructive: false, idempotent: false),
+        'update_diary': (read: false, destructive: true, idempotent: false),
+        'delete_diary': (read: false, destructive: true, idempotent: true),
+        'search_diaries': (read: true, destructive: false, idempotent: true),
+        'get_diary_links': (read: true, destructive: false, idempotent: true),
+        'list_tags': (read: true, destructive: false, idempotent: true),
+        'list_categories': (read: true, destructive: false, idempotent: true),
+        'create_category': (read: false, destructive: false, idempotent: false),
+        'update_category': (read: false, destructive: false, idempotent: true),
+        'delete_category': (read: false, destructive: true, idempotent: true),
+        'get_stats': (read: true, destructive: false, idempotent: true),
+        'list_diary_media': (read: true, destructive: false, idempotent: true),
+        'read_diary_media': (read: true, destructive: false, idempotent: true),
+        'add_diary_image': (read: false, destructive: false, idempotent: false),
+        'add_diary_attachment': (
+          read: false,
+          destructive: false,
+          idempotent: false,
+        ),
+      };
+      for (final tool in tools) {
+        final expected = annotations[tool['name']]!;
+        expect(tool['annotations'], {
+          'readOnlyHint': expected.read,
+          'destructiveHint': expected.destructive,
+          'idempotentHint': expected.idempotent,
+          'openWorldHint': false,
+        }, reason: '${tool['name']} annotations');
+      }
       expect(
         {for (final tool in tools) tool['name']},
         {

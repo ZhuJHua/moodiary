@@ -25,31 +25,38 @@ final List<ToolDef> diaryTools = [
   ToolDef<_GetDiaryInput>(
     name: 'get_diary',
     title: 'Read diaries',
-    description: (surface) =>
+    description: (_) =>
         'Read diary bodies and metadata by ids (max 10). Pass every id you '
         'need in one call, using ids from search_diaries. Unknown or recycled '
         'ids are reported in missing. Markdown preserves media as ![name](src); '
         'keep these references when rewriting content. '
         'timeLocal gives the local date and time including hours and minutes. '
-        '${surface == ToolSurface.assistant ? 'Bodies are Markdown, capped at $assistantBodyChars characters; truncated and fullLength report any cap. Never rewrite from a truncated body; use append/prepend for additions.' : 'contentFormat selects markdown (default), text or the raw Tiptap document JSON. document is subject to the $mcpResultChars character result limit. linkStyle=uri preserves diary mention targets; label keeps only labels. includeLinks=false omits the graph. Attach files with add_diary_image or add_diary_attachment and inspect them with list_diary_media.'}',
-    input: (surface) => S.object(
+        'contentFormat selects markdown (default), text or the raw Tiptap '
+        'document JSON. Bodies are capped at $assistantBodyChars characters '
+        'in the assistant and $mcpResultChars in MCP; truncated and fullLength '
+        'report any cap. document is subject to the same cap. Never rewrite '
+        'from a truncated body; use append/prepend for additions. '
+        'linkStyle=uri (default) preserves diary mention targets; label keeps '
+        'only labels. includeLinks=true includes the graph of forward links, '
+        'backlinks and dangling diary ids; it defaults to false. '
+        'Attach files with add_diary_image or add_diary_attachment and inspect '
+        'them with list_diary_media.',
+    input: (_) => S.object(
       properties: {
         'ids': toolIdsSchema(diaryIdSchema, max: maxBatchRead),
-        if (surface == ToolSurface.mcp) ...{
-          'contentFormat': readContentFormatSchema,
-          'linkStyle': linkStyleSchema,
-          'includeLinks': nullableSchema(
-            schemaWithDefault(
-              S.boolean(
-                description:
-                    'false omits links, the graph of forward links, backlinks and '
-                    'dangling diary ids of this diary.',
-              ),
-              true,
+        'contentFormat': readContentFormatSchema,
+        'linkStyle': linkStyleSchema,
+        'includeLinks': nullableSchema(
+          schemaWithDefault(
+            S.boolean(
+              description:
+                  'true includes links, the graph of forward links, backlinks and '
+                  'dangling diary ids of this diary.',
             ),
-            JsonType.boolean,
+            false,
           ),
-        },
+          JsonType.boolean,
+        ),
       },
       additionalProperties: false,
       required: ['ids'],
@@ -185,7 +192,8 @@ final List<ToolDef> diaryTools = [
       ),
     ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
-    effect: ToolEffect.write,
+    effect: ToolEffect.destructive,
+    tierOf: _updateDiaryTier,
     idempotent: false,
     output: _updateDiaryOutput,
     parse: toolBatchItems,
@@ -215,7 +223,8 @@ final List<ToolDef> diaryTools = [
       required: ['ids'],
     ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
-    effect: ToolEffect.write,
+    effect: ToolEffect.destructive,
+    tierOf: (_) => ToolEffect.write,
     idempotent: true,
     output: _deleteDiaryOutput,
     parse: toolBatchIds,
@@ -309,6 +318,16 @@ final List<ToolDef> diaryTools = [
     run: _listTags,
   ),
 ];
+
+ToolEffect _updateDiaryTier(Map<String, Object?> args) {
+  final items = args['items'];
+  final rewrites = switch (items) {
+    List() => items.any((item) => item is Map && item.containsKey('content')),
+    Map() => items.containsKey('content'),
+    _ => args.containsKey('content'),
+  };
+  return rewrites ? ToolEffect.destructive : ToolEffect.write;
+}
 
 Future<void> _categoryFilter(
   String? id,

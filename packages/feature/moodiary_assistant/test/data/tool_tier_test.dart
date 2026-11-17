@@ -3,6 +3,31 @@ import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 
 void main() {
   group('工具档位按可逆性', () {
+    test('the full catalog keeps its approval tiers', () {
+      const tiers = {
+        AssistantTool.searchDiaries: AssistantToolTier.read,
+        AssistantTool.getDiary: AssistantToolTier.read,
+        AssistantTool.getStats: AssistantToolTier.read,
+        AssistantTool.getDiaryLinks: AssistantToolTier.read,
+        AssistantTool.listTags: AssistantToolTier.read,
+        AssistantTool.createDiary: AssistantToolTier.write,
+        AssistantTool.updateDiary: AssistantToolTier.write,
+        AssistantTool.deleteDiary: AssistantToolTier.write,
+        AssistantTool.listCategories: AssistantToolTier.read,
+        AssistantTool.createCategory: AssistantToolTier.write,
+        AssistantTool.updateCategory: AssistantToolTier.write,
+        AssistantTool.deleteCategory: AssistantToolTier.destructive,
+        AssistantTool.recallMemory: AssistantToolTier.read,
+        AssistantTool.rememberFact: AssistantToolTier.write,
+        AssistantTool.forgetFact: AssistantToolTier.destructive,
+        AssistantTool.runJavascript: AssistantToolTier.read,
+      };
+      expect(tiers.keys, unorderedEquals(AssistantTool.values));
+      for (final tool in AssistantTool.values) {
+        expect(assistantToolTier(tool, const {}), tiers[tool], reason: tool.id);
+      }
+    });
+
     test('updateDiary 只有带 content 才是不可逆', () {
       for (final addition in [
         {'append': 'Translation'},
@@ -39,6 +64,14 @@ void main() {
         assistantToolTier(.updateDiary, {
           'items': [
             {'id': 'd', 'content': '重写'},
+          ],
+        }),
+        AssistantToolTier.destructive,
+      );
+      expect(
+        assistantToolTier(.updateDiary, {
+          'items': [
+            {'id': 'd', 'content': null},
           ],
         }),
         AssistantToolTier.destructive,

@@ -44,12 +44,12 @@ class ToolContext {
     required this.categories,
     required this.insights,
     required this.surface,
+    this.includeLinks = false,
     DiaryMediaStore? mediaStore,
     int? bodyChars,
     this.semantic,
     DateTime Function()? now,
-  }) : includeLinks = surface == ToolSurface.mcp,
-       bodyChars =
+  }) : bodyChars =
            bodyChars ??
            (surface == ToolSurface.assistant
                ? assistantBodyChars
@@ -74,18 +74,21 @@ class ToolDef<I> {
     required this.title,
     required this.surfaces,
     required this.effect,
+    ToolEffect Function(Map<String, Object?> args)? tierOf,
     required this.idempotent,
     required this.description,
     required Schema Function(ToolSurface) input,
     required this.output,
     required this.parse,
     required this.run,
-  }) : input = _cachedInput(input);
+  }) : tierOf = tierOf ?? ((_) => effect),
+       input = _cachedInput(input);
 
   final String name;
   final String title;
   final Set<ToolSurface> surfaces;
   final ToolEffect effect;
+  final ToolEffect Function(Map<String, Object?> args) tierOf;
   final bool idempotent;
   final String Function(ToolSurface) description;
   final Schema Function(ToolSurface) input;

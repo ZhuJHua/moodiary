@@ -251,7 +251,9 @@ void main() {
         ],
       });
       expect((mcp['results'] as List).single['ok'], true);
-      await diaries.insertADiary(makeDiary('escaped', '* ' * 1500));
+      await diaries.insertADiary(
+        makeDiary('escaped', '* ' * (assistantBodyChars ~/ 2)),
+      );
       final escaped = await call(ToolSurface.assistant, 'update_diary', {
         'items': [
           {'id': 'escaped', 'content': 'Must fail'},

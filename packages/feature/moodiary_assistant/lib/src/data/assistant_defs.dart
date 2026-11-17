@@ -63,19 +63,13 @@ AssistantToolTier assistantToolTier(
   AssistantTool tool,
   Map<String, dynamic> args,
 ) {
-  if (tool == AssistantTool.updateDiary && _rewritesContent(args)) {
-    return .destructive;
-  }
-  final effect = AssistantToolRegistry.byId(tool.id)!.definition.effect;
+  final effect = AssistantToolRegistry.byId(tool.id)!.definition.tierOf(args);
   return switch (effect) {
     ToolEffect.read => .read,
     ToolEffect.write => .write,
     ToolEffect.destructive => .destructive,
   };
 }
-
-bool _rewritesContent(Map<String, dynamic> args) =>
-    assistantToolItems(args).any((item) => item.containsKey('content'));
 
 List<Map<String, dynamic>> assistantToolItems(Map<String, dynamic> input) {
   final raw = input['items'];

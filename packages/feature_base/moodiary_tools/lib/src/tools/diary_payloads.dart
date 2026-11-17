@@ -22,7 +22,7 @@ Map<String, dynamic>? _decodeDoc(String content) =>
 /// Maximum characters in one tool payload.
 const int mcpResultChars = 100000;
 
-const int assistantBodyChars = 4000;
+const int assistantBodyChars = 20000;
 
 /// URI prefix for diary links.
 const String diaryUriPrefix = 'moodiary://diary/';
