@@ -111,7 +111,7 @@ class _MTimeWheelState extends State<MTimeWheel> {
         return false;
       },
       child: SizedBox(
-        height: 220,
+        height: 176,
         child: Stack(
           alignment: .center,
           children: [

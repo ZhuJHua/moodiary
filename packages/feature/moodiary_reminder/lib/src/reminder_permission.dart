@@ -10,37 +10,26 @@ Future<bool> ensureReminderPermission(
   if (await service.checkPermission()) return true;
   if (!context.mounted) return false;
 
-  Future<bool?> notice({
-    required String title,
-    required String message,
-    required IconData icon,
-    required String action,
-  }) => MAlert.show<bool>(
+  final proceed = await MAlert.confirm(
     context,
-    title: title,
-    message: message,
-    icon: icon,
-    actions: [
-      MAction(label: context.l10n.reminder.notNow, value: false),
-      MAction(label: action, value: true, isPrimary: true),
-    ],
-  );
-  final proceed = await notice(
     title: context.l10n.reminder.primerTitle,
     message: context.l10n.reminder.primerMessage,
     icon: LucideIcons.bell,
-    action: context.l10n.reminder.continueAction,
+    confirmLabel: context.l10n.reminder.continueAction,
+    cancelLabel: context.l10n.reminder.notNow,
   );
-  if (proceed != true) return false;
+  if (!proceed) return false;
   await service.permission.request();
   if (await service.checkPermission()) return true;
   if (!context.mounted) return false;
-  final settings = await notice(
+  final settings = await MAlert.confirm(
+    context,
     title: context.l10n.reminder.notificationsOff,
     message: context.l10n.reminder.settingsMessage,
     icon: LucideIcons.bellOff,
-    action: context.l10n.reminder.openSettings,
+    confirmLabel: context.l10n.reminder.openSettings,
+    cancelLabel: context.l10n.reminder.notNow,
   );
-  if (settings == true) await service.permission.openSettings();
+  if (settings) await service.permission.openSettings();
   return false;
 }

@@ -103,17 +103,10 @@ void main() {
 
   test('next labels cover today, tomorrow, weekday and Sunday wrap', () async {
     await LocaleSettings.setLocale(AppLocale.zh);
-    expect(
-      nextReminderLabel(l10n, ReminderScheduler.next(schedule()), now),
-      '下次 今天 21:30',
-    );
+    expect(nextReminderLabel(l10n, schedule().firstOrNull, now), '下次 今天 21:30');
     final after = TZDateTime(UTC, 2026, 11, 16, 22);
     expect(
-      nextReminderLabel(
-        l10n,
-        ReminderScheduler.next(schedule(at: after)),
-        after,
-      ),
+      nextReminderLabel(l10n, schedule(at: after).firstOrNull, after),
       '下次 明天 21:30',
     );
     final friday = schedule(
@@ -121,10 +114,7 @@ void main() {
         Reminder(id: 2, hour: 8, minute: 30, weekdays: {5}),
       ],
     );
-    expect(
-      nextReminderLabel(l10n, ReminderScheduler.next(friday), now),
-      '下次 周五 08:30',
-    );
+    expect(nextReminderLabel(l10n, friday.firstOrNull, now), '下次 周五 08:30');
     final sunday = TZDateTime(UTC, 2026, 11, 22, 22);
     final monday = schedule(
       reminders: [
@@ -132,11 +122,7 @@ void main() {
       ],
       at: sunday,
     );
-    expect(
-      nextReminderLabel(l10n, ReminderScheduler.next(monday), sunday),
-      '下次 明天 08:30',
-    );
-    expect(ReminderScheduler.next([]), isNull);
+    expect(nextReminderLabel(l10n, monday.firstOrNull, sunday), '下次 明天 08:30');
   });
 
   final window = Reminder(
@@ -303,7 +289,7 @@ void main() {
       expect(
         nextReminderLabel(
           l10n,
-          ReminderScheduler.next(schedule(reminders: [window], at: sunday)),
+          schedule(reminders: [window], at: sunday).firstOrNull,
           sunday,
         ),
         '下次 明天 19:00–22:00',

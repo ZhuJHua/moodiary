@@ -89,6 +89,17 @@ Future<void> _initSystem() async {
   }();
 
   await localeFuture;
+  final reminderFuture = () async {
+    try {
+      await getIt<ReminderService>().initialize();
+    } catch (error, stack) {
+      logger.e(
+        'Reminder initialization failed',
+        error: error,
+        stackTrace: stack,
+      );
+    }
+  }();
   await getIt<MoodiaryDatabase>().applyLegacyMoodScenes(
     (scene) => scene.labelOf(l10n),
   );
@@ -99,12 +110,12 @@ Future<void> _initSystem() async {
   getIt<AutoSyncWatcher>().start();
   DiaryShare.register(showDiaryShareSheet);
   runStartupMaintenance();
-  await Future.wait([themeFuture, localeFuture, migrationGateFuture]);
-  try {
-    await getIt<ReminderService>().initialize();
-  } catch (error, stack) {
-    logger.e('Reminder initialization failed', error: error, stackTrace: stack);
-  }
+  await Future.wait([
+    themeFuture,
+    localeFuture,
+    migrationGateFuture,
+    reminderFuture,
+  ]);
   final upgradedFrom = getIt<MoodiaryDatabase>().upgradedFrom;
   if (upgradedFrom != null &&
       upgradedFrom < 3 &&

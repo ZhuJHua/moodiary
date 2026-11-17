@@ -38,7 +38,8 @@ class _ReminderNavigationState extends State<ReminderNavigation> {
       _scheduled = false;
       if (!mounted || !_pending) return;
       final newDiary = _service.tapAction == ReminderTapAction.newDiary;
-      final path = router.routerDelegate.currentConfiguration.uri.path;
+      final routes = router.routerDelegate.currentConfiguration;
+      final path = routes.lastOrNull?.matchedLocation ?? routes.uri.path;
       if (newDiary && isGateRoute(path)) {
         return;
       }

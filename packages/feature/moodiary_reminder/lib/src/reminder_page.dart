@@ -54,7 +54,6 @@ class _ReminderPageState extends State<ReminderPage> {
 
   Future<void> _edit([Reminder? reminder]) async {
     final items = _service.reminders;
-    if (reminder == null && items.length >= Reminder.maxCount) return;
     final id =
         reminder?.id ??
         List.generate(
@@ -82,11 +81,10 @@ class _ReminderPageState extends State<ReminderPage> {
     final theme = context.theme;
     final items = _service.reminders;
     final canAdd = items.length < Reminder.maxCount;
-    final summary = items.isEmpty
-        ? l10n.reminder.addFirst
-        : !_service.enabled
-        ? l10n.reminder.off
-        : nextReminderLabel(l10n, _service.next, _service.now);
+    final addColor = canAdd
+        ? theme.colors.primary
+        : theme.colors.onSurfaceVariant;
+    final summary = reminderStatusLabel(l10n, _service);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.reminder.title)),
       body: Padding(
@@ -138,6 +136,7 @@ class _ReminderPageState extends State<ReminderPage> {
               title: l10n.reminder.times,
               children: [
                 ...items.map((reminder) {
+                  final days = reminderDaysLabel(l10n, reminder.weekdays);
                   final color = _service.enabled && reminder.enabled
                       ? theme.colors.onSurface
                       : theme.colors.onSurfaceVariant;
@@ -155,8 +154,8 @@ class _ReminderPageState extends State<ReminderPage> {
                           .tabular,
                     ),
                     subtitle: reminder.isRandom
-                        ? '${reminderDaysLabel(l10n, reminder.weekdays)} · ${l10n.reminder.random}'
-                        : reminderDaysLabel(l10n, reminder.weekdays),
+                        ? '$days · ${l10n.reminder.random}'
+                        : days,
                     trailing: Switch(
                       value: reminder.enabled,
                       onChanged: (enabled) => _run(
@@ -169,18 +168,9 @@ class _ReminderPageState extends State<ReminderPage> {
                 SettingListTile(
                   title: Text(
                     l10n.reminder.add,
-                    style: theme.typography.bodyLarge.withColor(
-                      canAdd
-                          ? theme.colors.primary
-                          : theme.colors.onSurfaceVariant,
-                    ),
+                    style: theme.typography.bodyLarge.withColor(addColor),
                   ),
-                  leading: Icon(
-                    LucideIcons.plus,
-                    color: canAdd
-                        ? theme.colors.primary
-                        : theme.colors.onSurfaceVariant,
-                  ),
+                  leading: Icon(LucideIcons.plus, color: addColor),
                   onTap: canAdd ? () => _run(_edit) : null,
                 ),
               ],

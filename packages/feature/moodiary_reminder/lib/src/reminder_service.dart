@@ -9,6 +9,7 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:synchronized/synchronized.dart';
 
 import 'reminder.dart';
 import 'reminder_scheduler.dart';
@@ -26,20 +27,22 @@ class ReminderService extends ChangeNotifier {
   final DiaryRepository _diaries;
   final _taps = StreamController<void>.broadcast();
   final _applied = <int, String>{};
-  Future<void> _queue = Future.value();
+  final _lock = Lock();
+  List<Reminder>? _reminders;
+  List<ReminderNotification> _desired = const [];
   Future<void>? _initialization;
   StreamSubscription<dynamic>? _diarySubscription;
   AppLifecycleListener? _lifecycle;
   Timer? _debounce;
   Timer? _midnight;
-  String? _zone;
-  bool _writtenToday = false;
   bool _disposed = false;
   bool launchedFromNotification = false;
-  bool notificationsEnabled = true;
+  bool _notificationsEnabled = true;
 
   Stream<void> get taps => _taps.stream;
-  List<Reminder> get reminders => Reminder.decode(MoodiaryKVs.reminders.get()!);
+  List<Reminder> get reminders =>
+      _reminders ??= Reminder.decode(MoodiaryKVs.reminders.get()!);
+  bool get notificationsEnabled => _notificationsEnabled;
   bool get enabled => MoodiaryKVs.reminderEnabled.get()!;
   bool get skipIfWritten => MoodiaryKVs.reminderSkipIfWritten.get()!;
   ReminderTapAction get tapAction =>
@@ -55,15 +58,21 @@ class ReminderService extends ChangeNotifier {
     return salt;
   }
 
-  ReminderNotification? get next => ReminderScheduler.next(
-    ReminderScheduler.desired(
-      reminders: reminders,
-      enabled: enabled,
-      skipIfWritten: skipIfWritten,
-      writtenToday: _writtenToday,
-      now: now,
-      salt: _salt,
-    ),
+  ReminderNotification? get next => _desired.firstOrNull;
+
+  ({
+    String channelId,
+    String channelName,
+    String title,
+    String body,
+    String payload,
+  })
+  get _content => (
+    channelId: channelId,
+    channelName: l10n.reminder.title,
+    title: l10n.reminder.notificationTitle,
+    body: l10n.reminder.notificationBody,
+    payload: payload,
   );
 
   Future<void> initialize() => _initialization ??= _initialize();
@@ -76,17 +85,29 @@ class ReminderService extends ChangeNotifier {
       }
     });
     launchedFromNotification = await _notifications.launchedFrom(payload);
-    _diarySubscription = _diaries.diaryEvents.listen((_) => _changed());
-    MoodiaryKVs.reminders.getNotifier().addListener(_changed);
+    _diarySubscription = _diaries.diaryEvents.listen((_) {
+      if (enabled && skipIfWritten) _scheduleRefresh();
+    });
+    MoodiaryKVs.reminders.getNotifier().addListener(_remindersChanged);
     MoodiaryKVs.reminderEnabled.getNotifier().addListener(_changed);
     MoodiaryKVs.reminderSkipIfWritten.getNotifier().addListener(_changed);
     _lifecycle = AppLifecycleListener(onResume: _refresh);
     _refresh();
   }
 
+  void _remindersChanged() {
+    _reminders = null;
+    _changed();
+  }
+
   void _changed() {
     if (_disposed) return;
     notifyListeners();
+    _scheduleRefresh();
+  }
+
+  void _scheduleRefresh() {
+    if (_disposed) return;
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), _refresh);
   }
@@ -104,43 +125,46 @@ class ReminderService extends ChangeNotifier {
     );
   }
 
-  Future<void> reconcile() {
-    final operation = _queue.then((_) => _reconcile());
-    _queue = operation.catchError((Object _) {});
-    return operation;
-  }
+  Future<void> reconcile() => _lock.synchronized(_reconcile);
 
   Future<void> _reconcile() async {
     if (_disposed) return;
-    final zone = await _notifications.updateTimeZone();
-    if (_zone != zone) {
-      _zone = zone;
-      _applied.clear();
+    if (!enabled) {
+      _desired = const [];
+      _midnight?.cancel();
+      final pending = await _notifications.pendingIds();
+      for (final id in pending.where(ReminderScheduler.ownsId)) {
+        await _notifications.cancel(id);
+        _applied.remove(id);
+      }
+      if (!_disposed) notifyListeners();
+      return;
     }
+    await _notifications.updateTimeZone();
     final current = now;
-    _writtenToday = await _diaries.hasDiaryOnDate(current);
+    final writtenToday =
+        skipIfWritten && await _diaries.hasDiaryOnDate(current);
     await checkPermission();
-    final desired = ReminderScheduler.desired(
+    _desired = ReminderScheduler.desired(
       reminders: reminders,
       enabled: enabled,
       skipIfWritten: skipIfWritten,
-      writtenToday: _writtenToday,
+      writtenToday: writtenToday,
       now: current,
       salt: _salt,
     );
     final pending = await _notifications.pendingIds();
-    final desiredIds = desired.map((notification) => notification.id).toSet();
+    final desiredIds = _desired.map((notification) => notification.id).toSet();
     for (final id in pending.where(ReminderScheduler.ownsId)) {
       if (!desiredIds.contains(id)) {
         await _notifications.cancel(id);
         _applied.remove(id);
       }
     }
-    final text =
-        '${l10n.reminder.notificationTitle}:${l10n.reminder.notificationBody}:${l10n.reminder.title}';
-    for (final notification in desired) {
-      final signature =
-          '${notification.weekly}:${notification.signature}:$text';
+    final content = _content;
+    final text = '${content.title}:${content.body}:${content.channelName}';
+    for (final notification in _desired) {
+      final signature = '${notification.signature}:$text';
       if (pending.contains(notification.id) &&
           _applied[notification.id] == signature) {
         continue;
@@ -150,11 +174,11 @@ class ReminderService extends ChangeNotifier {
         id: notification.id,
         at: notification.at,
         weekly: notification.weekly,
-        channelId: channelId,
-        channelName: l10n.reminder.title,
-        title: l10n.reminder.notificationTitle,
-        body: l10n.reminder.notificationBody,
-        payload: payload,
+        channelId: content.channelId,
+        channelName: content.channelName,
+        title: content.title,
+        body: content.body,
+        payload: content.payload,
       );
       _applied[notification.id] = signature;
     }
@@ -204,21 +228,27 @@ class ReminderService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> sendTest() => _notifications.show(
-    id: 300000,
-    channelId: channelId,
-    channelName: l10n.reminder.title,
-    title: l10n.reminder.notificationTitle,
-    body: l10n.reminder.notificationBody,
-    payload: payload,
-  );
+  Future<void> sendTest() {
+    final content = _content;
+    return _notifications.show(
+      id: 300000,
+      channelId: content.channelId,
+      channelName: content.channelName,
+      title: content.title,
+      body: content.body,
+      payload: content.payload,
+    );
+  }
 
   Future<bool> checkPermission() async {
-    notificationsEnabled =
+    final enabled =
         await permission.isEnabled() &&
         await _notifications.isChannelEnabled(channelId);
-    if (!_disposed) notifyListeners();
-    return notificationsEnabled;
+    if (_notificationsEnabled != enabled) {
+      _notificationsEnabled = enabled;
+      if (!_disposed) notifyListeners();
+    }
+    return enabled;
   }
 
   @disposeMethod
@@ -229,7 +259,7 @@ class ReminderService extends ChangeNotifier {
     _midnight?.cancel();
     _lifecycle?.dispose();
     unawaited(_diarySubscription?.cancel());
-    MoodiaryKVs.reminders.getNotifier().removeListener(_changed);
+    MoodiaryKVs.reminders.getNotifier().removeListener(_remindersChanged);
     MoodiaryKVs.reminderEnabled.getNotifier().removeListener(_changed);
     MoodiaryKVs.reminderSkipIfWritten.getNotifier().removeListener(_changed);
     unawaited(_taps.close());

@@ -28,13 +28,13 @@ class ReminderNotification {
 }
 
 abstract final class ReminderScheduler {
-  static bool ownsId(int id) =>
-      (id >= _fixedWeeklyBase + 8 &&
-          id < _fixedWeeklyBase + (Reminder.maxCount + 1) * 8) ||
-      (id >= _fixedSkipBase + 8 &&
-          id < _fixedSkipBase + (Reminder.maxCount + 1) * 8) ||
-      (id >= _randomBase + 64 &&
-          id < _randomBase + (Reminder.maxCount + 1) * 64);
+  static bool ownsId(int id) {
+    bool inRange(int base, int stride) =>
+        id >= base + stride && id < base + (Reminder.maxCount + 1) * stride;
+    return inRange(_fixedWeeklyBase, 8) ||
+        inRange(_fixedSkipBase, 8) ||
+        inRange(_randomBase, 64);
+  }
 
   static List<ReminderNotification> desired({
     required List<Reminder> reminders,
@@ -85,15 +85,18 @@ abstract final class ReminderScheduler {
     final random = active.where((reminder) => reminder.isRandom).toList();
     final count = random.isEmpty
         ? 0
-        : min(14, (60 - result.length) ~/ random.length);
+        : min(
+            14,
+            (LocalNotifications.maxPending - result.length) ~/ random.length,
+          );
     for (final reminder in random) {
+      final start = reminder.hour * 60 + reminder.minute;
+      final window = reminder.endHour! * 60 + reminder.endMinute! - start;
       var added = 0;
       for (var offset = 0; added < count; offset++) {
         final date = DateTime.utc(now.year, now.month, now.day + offset);
         if (!reminder.weekdays.contains(date.weekday)) continue;
         if (offset == 0 && skipIfWritten && writtenToday) continue;
-        final start = reminder.hour * 60 + reminder.minute;
-        final window = reminder.endHour! * 60 + reminder.endMinute! - start;
         final hash = fastHash(
           '$salt:${reminder.id}:${date.year}-${date.month}-${date.day}',
         );
@@ -126,7 +129,4 @@ abstract final class ReminderScheduler {
     });
     return result;
   }
-
-  static ReminderNotification? next(List<ReminderNotification> notifications) =>
-      notifications.isEmpty ? null : notifications.first;
 }

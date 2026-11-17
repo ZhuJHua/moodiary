@@ -38,12 +38,13 @@ class DiaryRepository {
   Future<bool> hasDiaryOnDate(DateTime date) async {
     final start = DateTime(date.year, date.month, date.day);
     final end = DateTime(date.year, date.month, date.day + 1);
-    final query = _db.select(_db.diaries)
+    final diaries = _db.diaries;
+    final query = _db.selectOnly(diaries)
+      ..addColumns([diaries.id])
       ..where(
-        (diary) =>
-            diary.show.equals(1) &
-            diary.time.isBiggerOrEqualValue(dbTime(start)) &
-            diary.time.isSmallerThanValue(dbTime(end)),
+        diaries.show.equals(1) &
+            diaries.time.isBiggerOrEqualValue(dbTime(start)) &
+            diaries.time.isSmallerThanValue(dbTime(end)),
       )
       ..limit(1);
     return await query.getSingleOrNull() != null;
