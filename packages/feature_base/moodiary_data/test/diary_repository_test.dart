@@ -805,6 +805,47 @@ void main() {
   group('列表与统计', () {
     oneDatabaseForGroup();
 
+    test(
+      'written today uses diary date, local midnight and excludes recycle bin',
+      () async {
+        final day = DateTime(2026, 11, 16);
+        await repo.insertDiaries([
+          makeDiary(
+            'yesterday',
+            'before',
+            time: day.subtract(const Duration(microseconds: 1)),
+          ),
+          makeDiary('tomorrow', 'after', time: DateTime(2026, 11, 17)),
+          makeDiary('recycled', 'deleted', time: day, show: false),
+        ]);
+        expect(await repo.hasDiaryOnDate(day), isFalse);
+        await repo.insertADiary(makeDiary('today', 'today', time: day.toUtc()));
+        expect(
+          await repo.hasDiaryOnDate(DateTime(2026, 11, 16, 23, 59)),
+          isTrue,
+        );
+        await repo.setVisibility(
+          (await repo.getDiaryByBusinessId('today'))!,
+          show: false,
+        );
+        expect(await repo.hasDiaryOnDate(day), isFalse);
+        await repo.insertADiary(
+          makeDiary(
+            'end',
+            'end',
+            time: DateTime(
+              2026,
+              11,
+              17,
+            ).subtract(const Duration(microseconds: 1)),
+          ),
+        );
+        expect(await repo.hasDiaryOnDate(day), isTrue);
+        await repo.deleteADiary('end');
+        expect(await repo.hasDiaryOnDate(day), isFalse);
+      },
+    );
+
     test('分页顺序与 diarySortComparator 逐字段一致（同 time 按 id 兜底）', () async {
       final t = DateTime.utc(2026, 1, 1);
       final diaries = [

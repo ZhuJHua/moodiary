@@ -20,6 +20,9 @@ import 'package:moodiary_mcp/injectable.module.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart' show McpService;
 import 'package:moodiary_ml/injectable.module.dart';
 import 'package:moodiary_mobile/app/di/di.config.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_reminder/injectable.module.dart';
+import 'package:moodiary_reminder/moodiary_reminder.dart';
 import 'package:moodiary_storage/injectable.module.dart';
 import 'package:moodiary_storage/moodiary_storage.dart'
     show IKVStorage, ISecureKVStorage;
@@ -37,6 +40,7 @@ import 'package:moodiary_theme/injectable.module.dart';
     ExternalModule(MoodiaryDataPackageModule),
     ExternalModule(MoodiaryAssistantPackageModule),
     ExternalModule(MoodiaryMcpPackageModule),
+    ExternalModule(MoodiaryReminderPackageModule),
     ExternalModule(MoodiarySyncPackageModule),
     ExternalModule(MoodiaryEditorPackageModule),
     ExternalModule(MoodiaryThemePackageModule),
@@ -64,6 +68,9 @@ void _assertRequiredBindings() {
     if (!getIt.isRegistered<SyncLogger>()) 'SyncLogger',
     if (!getIt.isRegistered<AutoSyncWatcher>()) 'AutoSyncWatcher',
     if (!getIt.isRegistered<McpService>()) 'McpService',
+    if (!getIt.isRegistered<ReminderService>()) 'ReminderService',
+    if (!getIt.isRegistered<LocalNotifications>()) 'LocalNotifications',
+    if (!getIt.isRegistered<NotificationPermission>()) 'NotificationPermission',
     for (final t in SyncProviderType.values)
       if (!getIt.isRegistered<IRemoteSyncBackend>(instanceName: t.value))
         'IRemoteSyncBackend(${t.value})',

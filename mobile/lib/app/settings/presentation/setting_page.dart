@@ -15,6 +15,7 @@ import 'package:moodiary_mobile/app/settings/presentation/widget/mood_palette_sh
 import 'package:moodiary_mobile/app/settings/presentation/widget/theme_mode_dialog.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
+import 'package:moodiary_reminder/moodiary_reminder.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
@@ -63,6 +64,7 @@ class _FeatureSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final service = getIt<ReminderService>();
     return MSliverSettingGroup(
       title: context.l10n.app.sectionFeature,
       children: [
@@ -83,6 +85,20 @@ class _FeatureSection extends StatelessWidget {
           ),
         ),
         if (Platform.isAndroid) const _McpTile(),
+        ListenableBuilder(
+          listenable: service,
+          builder: (context, _) {
+            return SettingListTile(
+              title: context.l10n.reminder.title,
+              subtitle: service.enabled
+                  ? nextReminderLabel(context.l10n, service.next, service.now)
+                  : context.l10n.reminder.off,
+              leading: _lead(context, LucideIcons.bell),
+              trailing: _chevron(context),
+              onTap: () => _openSetting(context, const ReminderRoute()),
+            );
+          },
+        ),
       ],
     );
   }

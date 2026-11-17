@@ -18,11 +18,6 @@ abstract class BackgroundKeepAliveApi {
 
   void requestExemption();
 
-  // 通知权限只决定常驻通知能否显示，没有它前台服务照样在跑
-  bool isNotificationsEnabled();
-
-  void requestNotifications();
-
   // 通知文案由 Dart l10n 传入。
   void setKeepAlive(bool enabled, String notificationText, String stopLabel);
 
