@@ -550,7 +550,7 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String toolBatchOutcome({required Object succeeded, required Object failed}) => '${succeeded} succeeded · ${failed} failed';
 	@override String get approvalFieldMood => 'Mood';
 	@override String get approvalFieldTags => 'Tags';
-	@override String get approvalFieldTime => 'Time';
+	@override String get approvalFieldTime => 'Date and time';
 	@override String get approvalFieldColor => 'Color';
 	@override String get approvalCleared => 'Cleared';
 }

@@ -17,6 +17,7 @@ import 'batch.dart';
 import 'diary_payloads.dart';
 import 'diary_queries.dart';
 import 'diary_references.dart';
+import 'diary_time.dart';
 import 'diary_write_lock.dart';
 import 'output_schemas.dart';
 import 'schemas.dart';
@@ -34,6 +35,7 @@ final List<ToolDefinition> diaryTools = [
         'need in one call, using ids from search_diaries. Unknown or recycled '
         'ids are reported in missing. Markdown preserves media as ![name](src); '
         'keep these references when rewriting content. '
+        'timeLocal gives the local date and time including hours and minutes. '
         '${surface == ToolSurface.assistant ? 'Bodies are Markdown, capped at $assistantBodyChars characters; truncated and fullLength report any cap. Never rewrite from a truncated body; use append/prepend for additions.' : 'contentFormat selects markdown (default), text or the raw Tiptap document JSON. document is subject to the $mcpResultChars character result limit. linkStyle=uri preserves diary mention targets; label keeps only labels. includeLinks=false omits the graph. Attach files with add_diary_image or add_diary_attachment and inspect them with list_diary_media.'}',
     input: (surface) => S.object(
       properties: {
@@ -113,7 +115,7 @@ final List<ToolDefinition> diaryTools = [
     run: (items, ctx) => runToolBatch(
       items,
       (item) => _createDiary(
-        _parseCreateDiary(item),
+        _parseCreateDiary(item, now: ctx.now()),
         diaries: ctx.diaries,
         categories: ctx.categories,
       ),
@@ -191,7 +193,8 @@ final List<ToolDefinition> diaryTools = [
     run: (items, ctx) => runToolBatch(
       items,
       (item) => _updateDiary(
-        _parseUpdateDiary(item),
+        item,
+        now: ctx.now,
         surface: ctx.surface,
         diaries: ctx.diaries,
         categories: ctx.categories,
@@ -243,6 +246,7 @@ final List<ToolDefinition> diaryTools = [
         'words. Chinese text, pinyin and Latin text match. Results contain ids, '
         'titles, times, moods, categories, tags and excerpts; use get_diary for '
         'the full Markdown body before editing. Page with limit and offset. '
+        'timeLocal gives the local date and time including hours and minutes. '
         'If total exceeds returned rows or totalIsLowerBound is true, say so '
         'instead of presenting the rows as the complete set. '
         '${surface == ToolSurface.assistant ? 'mode=auto fuses keyword and local semantic search when enabled; keyword and meaning force a path. Each hit reports via and similarity.' : 'Search is keyword-only.'} '
@@ -559,16 +563,21 @@ Future<ToolResult> _createDiary(
 }
 
 Future<ToolResult> _updateDiary(
-  _UpdateDiaryInput input, {
+  Map<String, Object?> raw, {
+  required DateTime Function() now,
   required ToolSurface surface,
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
-  final (:id, :contentFormat, :patch) = input;
+  final id = ToolArguments('update_diary', raw).requireText('id');
   try {
     return await withDiaryWriteLock(id, () async {
+      final existing = await diaries.getDiaryByBusinessId(id);
+      final (:contentFormat, :patch, id: _) = _parseUpdateDiary(
+        raw,
+        referenceTime: existing?.time ?? now(),
+      );
       if (patch.content != null) {
-        final existing = await diaries.getDiaryByBusinessId(id);
         final cap = surface == ToolSurface.assistant
             ? assistantBodyChars
             : mcpResultChars;
@@ -769,14 +778,21 @@ typedef _CreateDiaryInput = ({
   String? categoryId,
 });
 
-_CreateDiaryInput _parseCreateDiary(Map<String, Object?> raw) {
+_CreateDiaryInput _parseCreateDiary(
+  Map<String, Object?> raw, {
+  required DateTime now,
+}) {
   final args = ToolArguments('create_diary', raw);
   final content = args.requireText('content');
   final contentFormat = _writeFormat(
     args.optionalEnum('contentFormat', contentFormatValues),
   );
   final title = args.optionalText('title') ?? '';
-  final time = args.optionalDate('time');
+  final time = resolveDiaryTime(
+    raw['time'],
+    reference: now,
+    subject: 'create_diary',
+  );
   final mood = args.optionalMood('mood');
   final tags = args.optionalStringList('tags') ?? const <String>[];
   final categoryId = args.optionalText('categoryId');
@@ -798,7 +814,10 @@ typedef _UpdateDiaryInput = ({
   DiaryPatch patch,
 });
 
-_UpdateDiaryInput _parseUpdateDiary(Map<String, Object?> raw) {
+_UpdateDiaryInput _parseUpdateDiary(
+  Map<String, Object?> raw, {
+  required DateTime referenceTime,
+}) {
   final args = ToolArguments('update_diary', raw);
   final id = args.requireText('id');
   final contentFormat = _writeFormat(
@@ -816,7 +835,13 @@ _UpdateDiaryInput _parseUpdateDiary(Map<String, Object?> raw) {
     categoryId: args.has('categoryId')
         ? (args.optionalText('categoryId') ?? '')
         : null,
-    time: args.contains('time') ? args.optionalDate('time') : null,
+    time: args.contains('time')
+        ? resolveDiaryTime(
+            raw['time'],
+            reference: referenceTime,
+            subject: 'update_diary',
+          )
+        : null,
     tags: args.has('tags')
         ? (args.optionalStringList('tags') ?? const <String>[])
         : null,

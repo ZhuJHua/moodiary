@@ -437,6 +437,7 @@ String buildTurnContext({
     ..write("(Context for this turn — not part of the user's message.)\n")
     ..write('Current local time: ')
     ..write(_formatLocal(nowLocal))
+    ..write(' (${_weekdays[nowLocal.weekday - 1]})')
     ..write('.');
   if (factCount != null) {
     buffer
@@ -453,3 +454,13 @@ String _formatLocal(DateTime t) {
   String two(int n) => n.toString().padLeft(2, '0');
   return '${t.year}-${two(t.month)}-${two(t.day)} ${two(t.hour)}:${two(t.minute)}';
 }
+
+const _weekdays = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];

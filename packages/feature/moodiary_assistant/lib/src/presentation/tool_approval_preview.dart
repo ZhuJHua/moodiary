@@ -6,6 +6,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_tools/moodiary_tools.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 const int _kPreviewRows = 3;
@@ -28,12 +29,13 @@ class ToolApprovalPreview {
 
 Future<ToolApprovalPreview> buildToolApprovalPreview(
   ToolApprovalRequest request,
-  Translations l10n,
-) {
+  Translations l10n, {
+  DateTime Function()? now,
+}) {
   final items = assistantToolItems(request.args);
   final ids = assistantToolIds(request.args);
   return switch (request.tool) {
-    .createDiary => _createDiary(l10n, items),
+    .createDiary => _createDiary(l10n, items, now: (now ?? DateTime.now)()),
     .updateDiary => _updateDiary(l10n, items),
     .deleteDiary => _diaries(
       l10n,
@@ -96,21 +98,50 @@ List<ToolApprovalLine> _bodyAdditions(
 
 Future<ToolApprovalPreview> _createDiary(
   Translations l10n,
-  List<Map<String, dynamic>> items,
-) async {
+  List<Map<String, dynamic>> items, {
+  required DateTime now,
+}) async {
   return ToolApprovalPreview(
     subtitle: l10n.assistant.approvalDiaryCount(count: items.length),
     lines: [
-      for (final item in items.take(_kPreviewRows))
+      for (final item in items.take(_kPreviewRows)) ...[
         (
           label: '',
           value:
               '${_str(item['title']).isEmpty ? l10n.common.untitled : _str(item['title'])}'
               ' · ${l10n.assistant.approvalContentNew(count: _chars(_str(item['content'])))}',
         ),
+        (
+          label: l10n.assistant.approvalFieldTime,
+          value: TimeFormat.listDateTime(
+            resolveDiaryTime(
+              item['time'],
+              reference: now,
+              subject: 'create_diary',
+            ),
+          ),
+        ),
+      ],
     ],
     confirmLabel: l10n.assistant.approvalConfirmCreate,
   );
+}
+
+List<ToolApprovalLine> _timeChange(
+  Translations l10n,
+  Map<String, dynamic> item,
+  Diary? diary,
+) {
+  if (item['time'] == null) return const [];
+  return [
+    (
+      label: l10n.assistant.approvalFieldTime,
+      value: diary == null
+          ? _str(item['time'])
+          : '${TimeFormat.listDateTime(diary.time)} → '
+                '${TimeFormat.listDateTime(resolveDiaryTime(item['time'], reference: diary.time, subject: 'update_diary'))}',
+    ),
+  ];
 }
 
 Future<ToolApprovalPreview> _updateDiary(
@@ -164,12 +195,12 @@ Future<ToolApprovalPreview> _updateDiary(
       ));
     }
     lines.addAll(_bodyAdditions(l10n, item));
-    for (final field in ['mood', 'tags', 'time']) {
+    lines.addAll(_timeChange(l10n, item, diary));
+    for (final field in ['mood', 'tags']) {
       if (!item.containsKey(field)) continue;
       final label = switch (field) {
         'mood' => l10n.assistant.approvalFieldMood,
-        'tags' => l10n.assistant.approvalFieldTags,
-        _ => l10n.assistant.approvalFieldTime,
+        _ => l10n.assistant.approvalFieldTags,
       };
       final value = item[field];
       final mood = field == 'mood'
@@ -218,6 +249,7 @@ Future<ToolApprovalPreview> _updateDiary(
       value: diary == null ? _str(item['id']) : _diaryLabel(diary, l10n),
     ));
     lines.addAll(_bodyAdditions(l10n, item));
+    lines.addAll(_timeChange(l10n, item, diary));
   }
   if (items.length > _kPreviewRows) {
     lines.add((

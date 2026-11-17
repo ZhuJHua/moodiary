@@ -11,6 +11,7 @@ export 'src/tools/category_queries.dart';
 export 'src/tools/diary_payloads.dart';
 export 'src/tools/diary_queries.dart';
 export 'src/tools/diary_references.dart' hide diaryReferences;
+export 'src/tools/diary_time.dart';
 export 'src/tools/moodiary_tools.dart';
 export 'src/tools/stats_payloads.dart';
 export 'src/tools/tool_def.dart';
