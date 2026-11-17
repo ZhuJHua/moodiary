@@ -6,7 +6,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 
 import 'diary_display.dart';
 
-/// The numbers the assistant's `diaryOverview` tool prints.
+/// The numbers the assistant's `get_stats` tool prints.
 typedef AssistantOverview = ({
   int total,
   DateTime? oldest,

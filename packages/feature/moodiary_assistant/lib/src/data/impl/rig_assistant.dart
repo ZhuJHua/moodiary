@@ -199,7 +199,11 @@ class RigAssistantService implements AssistantService {
     String argsJson,
   ) {
     final allowed = request.allowedTools;
-    final spec = allowed != null && !allowed.contains(name)
+    final spec =
+        allowed != null &&
+            !allowed
+                .map(normalizeAssistantToolId)
+                .contains(normalizeAssistantToolId(name))
         ? null
         : AssistantToolRegistry.byId(name);
     return dispatchAssistantTool(

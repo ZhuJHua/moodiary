@@ -104,7 +104,7 @@ void main() {
         queries = DiaryQueries(diaries: diaries, semantic: index);
         final result = await queries.search(
           query: 'orchard',
-          sort: 'oldest',
+          sort: 'relevance',
           limit: 2,
         );
 
@@ -118,7 +118,7 @@ void main() {
         expect(result.meaningRan, isTrue);
         final full = await queries.search(
           query: 'orchard',
-          sort: 'oldest',
+          sort: 'relevance',
           limit: 4,
         );
         expect(full.rows.map((row) => row.diary.id), [
@@ -137,7 +137,9 @@ void main() {
     test(
       'meaning mode passes filters and keyword mode skips the index',
       () async {
-        await diaries.insertADiary(makeDiary('meaning', 'trees'));
+        await diaries.insertADiary(
+          makeDiary('meaning', 'trees', categoryId: 'work'),
+        );
         final index = _SemanticIndex(['meaning']);
         queries = DiaryQueries(diaries: diaries, semantic: index);
         final start = DateTime.utc(2026, 1, 1);

@@ -22,7 +22,6 @@ class DiaryStatsPayloads {
     final byCategory = await diaries.diaryCountByCategory();
     final names = await categoryNames(categories);
     final monthly = await diaries.diaryCountByMonth(sort: DiarySort.timeDesc);
-    final earliest = await insights.earliestEntry();
 
     // A non-positive window would make the invariant meaningless, so one month
     // is the floor; the tool layer already clamps its own range.
@@ -71,7 +70,20 @@ class DiaryStatsPayloads {
       // The recycle bin is exactly the hidden rows, so no second query is needed.
       'recycleBinDiaries': total - byCategory.total,
       'uncategorizedDiaries': byCategory.total - categorised,
-      'firstDiaryTime': earliest == null ? null : isoUtc(earliest),
+      'firstDiaryTime': entries.isEmpty
+          ? null
+          : isoUtc(
+              entries
+                  .map((entry) => entry.time)
+                  .reduce((first, next) => first.isBefore(next) ? first : next),
+            ),
+      'lastDiaryTime': entries.isEmpty
+          ? null
+          : isoUtc(
+              entries
+                  .map((entry) => entry.time)
+                  .reduce((first, next) => first.isAfter(next) ? first : next),
+            ),
       'months': monthRows,
       'monthsWindow': {
         'from': _monthKey(windowStart),

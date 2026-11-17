@@ -92,21 +92,31 @@ void main() {
         expect(toolNamed(listed, def.name)['outputSchema'], def.output.value);
       }
       final created = await client.toolCall('create_diary', {
-        'content': 'Protocol sample',
+        'items': [
+          {'content': 'Protocol sample'},
+        ],
       });
       final data = structuredOf(created);
       expect(jsonDecode(textOf(created)), data);
-      final id = (data['diary'] as Map)['id'];
+      final id = (data['results'] as List).single['diary']['id'];
       expect(
-        structuredOf(await client.toolCall('get_diary', {'id': id}))['id'],
+        (structuredOf(
+                  await client.toolCall('get_diary', {
+                    'ids': [id],
+                  }),
+                )['diaries']
+                as List)
+            .single['id'],
         id,
       );
       expect(
         errorCode(await client.toolCall('get_diary', {})),
         ErrorCode.invalidParams.value,
       );
-      final unknown = await client.toolCall('get_diary', {'id': 'unknown'});
-      expect(resultOf(unknown)['isError'], isTrue);
+      final unknown = await client.toolCall('get_diary', {
+        'ids': ['unknown'],
+      });
+      expect(structuredOf(unknown)['missing'], ['unknown']);
       expect(unknown.containsKey('error'), isFalse);
     },
   );
@@ -139,9 +149,14 @@ void main() {
     expect(base64Decode(content.first['data'] as String), bytes);
     expect(jsonDecode(content.last['text'] as String), structuredOf(response));
     final diary = structuredOf(
-      await client.toolCall('get_diary', {'id': 'image-diary'}),
+      await client.toolCall('get_diary', {
+        'ids': ['image-diary'],
+      }),
     );
-    expect((diary['weather'] as Map)['temp'], isNull);
+    expect(
+      ((diary['diaries'] as List).single['weather'] as Map)['temp'],
+      isNull,
+    );
   });
 
   group('catalog', () {
@@ -154,12 +169,11 @@ void main() {
       expect(
         (toolNamed(listed, 'update_diary')['annotations']
             as Map)['destructiveHint'],
-        isTrue,
+        isFalse,
       );
       expect(
         {for (final tool in tools) tool['name']},
         {
-          'list_diaries',
           'get_diary',
           'create_diary',
           'update_diary',
@@ -192,92 +206,32 @@ void main() {
     test('every tool composes the shared argument schemas', () async {
       final listed = resultOf(await client.call('tools/list'));
 
-      expect(propertiesOf(toolNamed(listed, 'list_diaries')).keys, [
-        'categoryId',
-        'tag',
-        'startDate',
-        'endDate',
-        'sort',
-        'limit',
-        'offset',
-        'excerpt',
-      ]);
-      final listSort = propertiesOf(toolNamed(listed, 'list_diaries'))['sort'];
-      expect((listSort as Map)['enum'], ['newest', 'oldest', 'modified']);
-      expect(listSort['default'], 'newest');
-      final excerpt = propertiesOf(
-        toolNamed(listed, 'list_diaries'),
-      )['excerpt'];
-      expect((excerpt as Map)['enum'], ['plain', 'markdown', 'none']);
-
-      expect(propertiesOf(toolNamed(listed, 'get_diary')).keys, [
-        'id',
-        'contentFormat',
-        'linkStyle',
-        'includeLinks',
-      ]);
-      final readFormat = propertiesOf(
-        toolNamed(listed, 'get_diary'),
-      )['contentFormat'];
-      expect((readFormat as Map)['enum'], ['markdown', 'text', 'document']);
-      expect(readFormat['default'], 'markdown');
-      final linkStyle = propertiesOf(
-        toolNamed(listed, 'get_diary'),
-      )['linkStyle'];
-      expect((linkStyle as Map)['enum'], ['uri', 'label']);
-      expect(linkStyle['default'], 'uri');
-
-      expect(propertiesOf(toolNamed(listed, 'create_diary')).keys, [
-        'title',
-        'content',
-        'contentFormat',
-        'time',
-        'categoryId',
-        'mood',
-        'tags',
-      ]);
-      expect(propertiesOf(toolNamed(listed, 'update_diary')).keys, [
-        'id',
-        'title',
-        'content',
-        'contentFormat',
-        'time',
-        'categoryId',
-        'mood',
-        'tags',
-      ]);
-      final writeFormat = propertiesOf(
-        toolNamed(listed, 'create_diary'),
-      )['contentFormat'];
-      expect((writeFormat as Map)['enum'], ['markdown', 'text', 'document']);
-
-      expect(propertiesOf(toolNamed(listed, 'delete_diary')).keys, ['id']);
-
-      expect(propertiesOf(toolNamed(listed, 'search_diaries')).keys, [
-        'query',
-        'categoryId',
-        'startDate',
-        'endDate',
-        'sort',
-        'limit',
-        'offset',
-        'excerpt',
-      ]);
-      final searchSort = propertiesOf(
-        toolNamed(listed, 'search_diaries'),
-      )['sort'];
-      expect((searchSort as Map)['enum'], ['relevance', 'newest', 'oldest']);
-      expect(searchSort['default'], 'relevance');
-
-      expect(propertiesOf(toolNamed(listed, 'update_category')).keys, [
-        'id',
-        'name',
-        'color',
-      ]);
-      expect(propertiesOf(toolNamed(listed, 'create_category')).keys, [
-        'name',
-        'color',
-      ]);
+      final search = propertiesOf(toolNamed(listed, 'search_diaries'));
+      expect(
+        search.keys,
+        unorderedEquals([
+          'query',
+          'categoryId',
+          'tag',
+          'startDate',
+          'endDate',
+          'sort',
+          'limit',
+          'offset',
+          'excerpt',
+        ]),
+      );
+      expect(search, isNot(contains('mode')));
+      expect(
+        (propertiesOf(toolNamed(listed, 'get_diary'))['ids']
+            as Map)['maxItems'],
+        10,
+      );
+      expect(
+        (propertiesOf(toolNamed(listed, 'create_diary'))['items']
+            as Map)['maxItems'],
+        20,
+      );
     });
 
     test('the tool descriptions explain the clearing rule', () async {
@@ -285,9 +239,9 @@ void main() {
       final update = toolNamed(listed, 'update_diary')['description'] as String;
       expect(update, contains('Send null'));
       expect(update, contains('unchanged'));
-      final colour = propertiesOf(
-        toolNamed(listed, 'create_category'),
-      )['color'];
+      final items =
+          propertiesOf(toolNamed(listed, 'create_category'))['items'] as Map;
+      final colour = ((items['items'] as Map)['properties'] as Map)['color'];
       expect((colour as Map)['description'] as String, contains('#AARRGGBB'));
     });
   });

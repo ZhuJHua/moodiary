@@ -184,12 +184,12 @@ List<String> completionValues(Map<String, dynamic> response) {
 }
 
 List<String> diaryIds(Map<String, dynamic> data) => [
-  for (final diary in data['diaries'] as List)
+  for (final diary in data['hits'] as List)
     (diary as Map<String, dynamic>)['id'] as String,
 ];
 
 Map<String, dynamic> singleSummary(Map<String, dynamic> data) =>
-    (data['diaries'] as List).cast<Map<String, dynamic>>().single;
+    (data['hits'] as List).cast<Map<String, dynamic>>().single;
 
 Map<String, dynamic> singleHit(Map<String, dynamic> data) =>
     (data['hits'] as List).cast<Map<String, dynamic>>().single;

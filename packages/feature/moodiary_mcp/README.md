@@ -15,7 +15,7 @@ process is alive; while it runs, an Android foreground service with an ongoing n
 
 The catalog includes:
 
-- Diary tools: `list_diaries`, `get_diary`, `create_diary`, `update_diary`, `delete_diary`, `search_diaries`, `get_diary_links`, `list_tags`.
+- Diary tools: `get_diary`, `create_diary`, `update_diary`, `delete_diary`, `search_diaries`, `get_diary_links`, `list_tags`.
 - Category tools: `list_categories`, `create_category`, `update_category`, `delete_category`.
 - Statistics tools: `get_stats`.
 - Media tools: `list_diary_media`, `read_diary_media`, `add_diary_image`, `add_diary_attachment`.
@@ -30,4 +30,10 @@ For Google Play, declare `specialUse` as a user-enabled local MCP server and dem
 
 Known limits: when MCP and an open in-app editor save the same diary, the later
 save wins. Tags are case-sensitive and are not included in full-text search;
-use the `list_diaries` tag filter instead.
+use the `search_diaries` tag filter instead.
+
+`search_diaries` browses when `query` is omitted and stays keyword-only on MCP.
+Read bodies with `get_diary` using `ids` (1–10); missing ids are listed separately.
+Creates/updates use `items` (1–20) and deletes use `ids` (1–20). Batch responses
+contain `results`, `processed` and `requested`; each result reports `ok` and an
+`error` when it failed. Retry failed items only.

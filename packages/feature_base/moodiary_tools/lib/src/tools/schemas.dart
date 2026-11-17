@@ -4,9 +4,14 @@ import '../ops/diary_display.dart';
 
 const List<String> excerptValues = ['plain', 'markdown', 'none'];
 
-const List<String> diarySortValues = ['newest', 'oldest', 'modified'];
+const List<String> diarySearchSortValues = [
+  'relevance',
+  'newest',
+  'oldest',
+  'modified',
+];
 
-const List<String> searchSortValues = ['relevance', 'newest', 'oldest'];
+const List<String> diarySearchModeValues = ['auto', 'keyword', 'meaning'];
 
 const List<String> contentFormatValues = ['markdown', 'text', 'document'];
 
@@ -14,15 +19,24 @@ const List<String> linkStyleValues = ['uri', 'label'];
 
 const Map<String, dynamic> diaryIdSchema = {
   'type': 'string',
-  'description': 'Diary id (uuid v7) as returned by the list tools.',
+  'description':
+      'Diary id (uuid v7) as returned by search_diaries or get_diary.',
+};
+
+const Map<String, dynamic> requiredCategoryIdSchema = {
+  'type': 'string',
+  'description': 'Category id as returned by list_categories.',
 };
 
 const Map<String, dynamic> categoryIdSchema = {
-  'type': ['string', 'null'],
+  'anyOf': [
+    requiredCategoryIdSchema,
+    {'type': 'null'},
+  ],
   'description':
-      'Category id as list_categories returns it. An unknown id is an invalid '
-      'params error, so call list_categories first. null means no category: no '
-      'filter in the list and search tools, an uncategorized diary in the write '
+      'Category id as list_categories returns it. Unknown ids fail the item '
+      'on writes or the call on search; call list_categories first. null means '
+      'no search filter, or an uncategorized diary in the write '
       'tools.',
 };
 
@@ -53,24 +67,6 @@ const Map<String, dynamic> offsetSchema = {
   'minimum': 0,
   'default': 0,
   'description': 'Number of matching diaries to skip.',
-};
-
-const Map<String, dynamic> diarySortSchema = {
-  'type': 'string',
-  'enum': diarySortValues,
-  'default': 'newest',
-  'description':
-      'newest orders by diary time descending (default), oldest ascending, '
-      'modified by last modification descending.',
-};
-
-const Map<String, dynamic> searchSortSchema = {
-  'type': 'string',
-  'enum': searchSortValues,
-  'default': 'relevance',
-  'description':
-      'relevance ranks by full text match score (default); newest and oldest '
-      'order by diary time instead.',
 };
 
 const Map<String, dynamic> readContentFormatSchema = {
@@ -112,7 +108,8 @@ const Map<String, dynamic> excerptSchema = {
   'description':
       'Preview of every entry: plain (default) is one line of plain text, '
       'markdown is the Markdown body so headings and lists survive, and none '
-      'drops the preview. Both forms are cut to $excerptChars characters.',
+      'drops the preview. Both forms are cut to $excerptChars characters. '
+      'Keyword search keeps its highlighted excerpt regardless of this option.',
 };
 
 const Map<String, dynamic> moodSchema = {
@@ -179,4 +176,15 @@ const Map<String, dynamic> mediaNameSchema = {
   'description':
       'Media file name exactly as list_diary_media shows it, e.g. '
       '"image-018f...png". Paths are rejected.',
+};
+
+const Map<String, dynamic> diarySearchSortSchema = {
+  'type': 'string',
+  'enum': diarySearchSortValues,
+  'description': 'Defaults to relevance with query, newest when browsing. modified orders by last modification.',
+};
+
+const Map<String, dynamic> diaryTimeSchema = {
+  'type': 'string',
+  'description': 'ISO-8601 diary time, or YYYY-MM-DD for local midnight. Defaults to now on create. Omit or send null to keep it on update.',
 };

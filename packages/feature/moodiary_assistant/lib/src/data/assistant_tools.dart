@@ -1,481 +1,137 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_assistant/src/data/js_sandbox.dart';
-import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
-typedef AssistantToolRun = Future<String> Function(Map<String, dynamic> input);
-
-const String _failurePrefix = 'Failed:';
-
-typedef AssistantToolSummarize = String Function(
-  AssistantTool tool,
-  Map<String, dynamic> input,
-  String output,
-);
+import 'assistant_defs.dart';
+import 'assistant_tool_definitions.dart';
 
 class AssistantToolSpec {
-  final AssistantTool tool;
-  final String description;
-  final Map<String, dynamic> jsonSchema;
-  final AssistantToolRun run;
-
-  final AssistantToolSummarize? summarize;
-
-  final bool replayResult;
-
-  const AssistantToolSpec({
-    required this.tool,
-    required this.description,
-    required this.jsonSchema,
-    required this.run,
-    this.summarize,
-    this.replayResult = false,
-  });
+  const AssistantToolSpec(this.definition);
+  final ToolDefinition definition;
+  String get id => definition.name;
+  AssistantTool get tool =>
+      AssistantTool.values.firstWhere((tool) => tool.id == id);
+  String get description => definition.description(ToolSurface.assistant);
+  Map<String, dynamic> get jsonSchema =>
+      definition.input(ToolSurface.assistant).value;
+  bool get replayResult => tool == AssistantTool.recallMemory;
+  Future<String> run(Map<String, dynamic> input) async =>
+      jsonEncode((await definition.call(input, assistantToolContext())).data);
 
   String summaryOf(Map<String, dynamic> input, String output) {
-    if (output.startsWith(_failurePrefix)) return l10n.assistant.toolFailed;
+    if (output.startsWith('Failed:')) return l10n.assistant.toolFailed;
     if (output.startsWith(assistantToolSkippedPrefix)) {
       return l10n.assistant.toolSkipped;
     }
-    final custom = summarize?.call(tool, input, output);
-    if (custom != null && custom.trim().isNotEmpty) return custom.trim();
-    return l10n.assistant.toolDone;
+    Map<String, dynamic>? data;
+    try {
+      final raw = jsonDecode(output);
+      if (raw is Map) data = raw.cast<String, dynamic>();
+    } catch (_) {}
+    if (data != null) return _jsonSummary(data, input);
+    return switch (tool) {
+      .searchDiaries => AssistantToolRegistry._summarizeQuery(
+        tool,
+        input,
+        output,
+      ),
+      .getDiary => AssistantToolRegistry._summarizeGet(tool, input, output),
+      .getStats => AssistantToolRegistry._summarizeStats(tool, input, output),
+      .listCategories || .recallMemory || .listTags || .getDiaryLinks =>
+        AssistantToolRegistry._summarizeList(tool, input, output),
+      .deleteDiary => AssistantToolRegistry._summarizeDelete(
+        tool,
+        input,
+        output,
+      ),
+      .runJavascript => AssistantToolRegistry._summarizeJavascript(
+        tool,
+        input,
+        output,
+      ),
+      _ => AssistantToolRegistry._summarizeWrite(tool, input, output),
+    };
   }
 
-  String get id => tool.id;
+  String _jsonSummary(Map<String, dynamic> data, Map<String, dynamic> input) {
+    final results = (data['results'] as List?)?.cast<Map>();
+    if (results != null) {
+      final succeeded = results.where((row) => row['ok'] == true).toList();
+      final failed = results.length - succeeded.length;
+      if (failed > 0) {
+        return l10n.assistant.toolBatchOutcome(
+          succeeded: succeeded.length,
+          failed: failed,
+        );
+      }
+      if (tool == AssistantTool.deleteDiary) {
+        return succeeded.length <= 1
+            ? l10n.assistant.toolTrashed
+            : l10n.assistant.toolTrashedCount(count: succeeded.length);
+      }
+      if (succeeded.length > 1) {
+        return tool == AssistantTool.createDiary ||
+                tool == AssistantTool.updateDiary
+            ? l10n.assistant.toolBatchDiaries(count: succeeded.length)
+            : l10n.assistant.toolBatchItems(count: succeeded.length);
+      }
+      if (succeeded.isEmpty) return l10n.assistant.toolNoMatch;
+      final row = succeeded.single;
+      return switch (tool) {
+        .createDiary =>
+          AssistantToolRegistry._trimToNull((row['diary'] as Map?)?['title']) ??
+              l10n.assistant.toolUntitled,
+        .createCategory || .updateCategory =>
+          AssistantToolRegistry._trimToNull(
+                (row['category'] as Map?)?['name'],
+              ) ??
+              l10n.assistant.toolDone,
+        .rememberFact =>
+          AssistantToolRegistry._trimToNull(row['text']) ??
+              l10n.assistant.toolDone,
+        .deleteCategory || .forgetFact => l10n.assistant.toolDeleted,
+        _ => l10n.assistant.toolUpdated,
+      };
+    }
+    final int count = switch (tool) {
+      .searchDiaries => data['total'] as int? ?? 0,
+      .getDiary => (data['diaries'] as List?)?.length ?? 0,
+      .getStats => data['visibleDiaries'] as int? ?? 0,
+      .listCategories => (data['categories'] as List?)?.length ?? 0,
+      .listTags => (data['tags'] as List?)?.length ?? 0,
+      .getDiaryLinks =>
+        ((data['forward'] as List?)?.length ?? 0) +
+            ((data['backlinks'] as List?)?.length ?? 0),
+      .recallMemory => (data['facts'] as List?)?.length ?? 0,
+      _ => 0,
+    };
+    if (tool == AssistantTool.runJavascript) {
+      return AssistantToolRegistry._trimToNull(data['value']) ??
+          l10n.assistant.toolJsEmpty;
+    }
+    if (tool == AssistantTool.getDiary) {
+      return l10n.assistant.toolRead(count: count);
+    }
+    if (tool == AssistantTool.searchDiaries) {
+      return AssistantToolRegistry._querySummary(count, input);
+    }
+    if (tool == AssistantTool.getStats) {
+      return l10n.assistant.toolMatched(count: count);
+    }
+    return count == 0
+        ? l10n.assistant.toolNoMatch
+        : l10n.assistant.toolListed(count: count);
+  }
 }
 
 abstract final class AssistantToolRegistry {
-  static const _defaultQueryLimit = 8;
-
-  static const _maxQueryLimit = 20;
-
-  static const _defaultRecallLimit = 8;
-
-  static const _maxRecallLimit = 8;
-
-  static const _maxFullContentLength = 4000;
-
-  static const _maxBatchWrite = _maxQueryLimit;
-
   static final List<AssistantToolSpec> specs = [
-    const AssistantToolSpec(
-      tool: .searchDiaries,
-      description:
-          'Search or browse the diaries stored on this device. Every argument '
-          'is an optional filter. Give a query to search and it runs both the '
-          'keyword path and, where the local semantic index is on, a '
-          'meaning-based one, merged into a single ranking; leave it out to '
-          'browse by date and/or category. Each row says how it was found '
-          '(via=keyword, meaning, or both). '
-          'Results carry id, date, mood and a short excerpt — not the full '
-          'text (use getDiary for that) — and state the total number of '
-          'matches, which may exceed what is returned; when it does, say so '
-          'instead of presenting the rows as the complete set. '
-          'Mood has five levels: awful, bad, okay, good, great. '
-          'Null means not recorded. '
-          'Call this whenever the user asks about what they wrote, and to get '
-          'ids before editing or deleting entries.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'query': {
-            'type': 'string',
-            'description':
-                'What to look for: keywords, or a sentence describing the '
-                'entry. Keyword terms combine with AND — every term must '
-                'appear, so prefer one or two specific words over a list of '
-                'synonyms. Pinyin and initials match Chinese text. Omit to '
-                'browse by the filters below.',
-          },
-          'categoryId': {
-            'type': 'string',
-            'description': 'Restrict to one category (id from listCategories).',
-          },
-          'startDate': {
-            'type': 'string',
-            'description':
-                'Inclusive start, YYYY-MM-DD in the user local time.',
-          },
-          'endDate': {
-            'type': 'string',
-            'description': 'Inclusive end, YYYY-MM-DD in the user local time.',
-          },
-          'sort': {
-            'type': 'string',
-            'enum': ['newest', 'oldest', 'modified', 'relevance'],
-            'description':
-                'Defaults to relevance with a query, newest without one. '
-                'relevance needs a query; modified applies only without one.',
-          },
-          'mode': {
-            'type': 'string',
-            'enum': ['auto', 'keyword', 'meaning'],
-            'description':
-                'Defaults to auto. Force one path only when you have a reason.',
-          },
-          'limit': {
-            'type': 'integer',
-            'description': 'How many entries to return. Default 8, max 20.',
-            'minimum': 1,
-            'maximum': 20,
-          },
-        },
-      },
-      run: _searchDiaries,
-      summarize: _summarizeQuery,
-    ),
-    const AssistantToolSpec(
-      tool: .getDiary,
-      description:
-          'Read the full text of diaries by id (searchDiaries returns excerpts only). '
-          'Pass every id you need in one call. Max $maxBatchRead per call.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'ids': {
-            'type': 'array',
-            'items': {'type': 'string'},
-            'description': 'Diary ids from searchDiaries. Max $maxBatchRead.',
-          },
-        },
-        'required': ['ids'],
-      },
-      run: _getDiary,
-      summarize: _summarizeGet,
-    ),
-    const AssistantToolSpec(
-      tool: .diaryOverview,
-      description:
-          'Aggregate stats: total entries, per-category counts, the date span, and '
-          'the mood distribution. Prefer this over counting query results yourself '
-          'for "how many", "which category", "since when" or mood-trend questions.',
-      jsonSchema: {'type': 'object', 'properties': {}},
-      run: _diaryOverview,
-      summarize: _summarizeOverview,
-    ),
-    AssistantToolSpec(
-      tool: .createDiary,
-      description:
-          'Save content as new diaries. Call this when the user asks you to '
-          'write something down or to keep it as an entry. Bodies are Markdown.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'items': {
-            'type': 'array',
-            'description':
-                'One object per diary. Pass them all in one call. '
-                'Max $_maxBatchWrite per call.',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'title': {'type': 'string', 'description': 'Optional title.'},
-                'content': {'type': 'string', 'description': 'Body, Markdown.'},
-                'mood': {
-                  'type': ['string', 'null'],
-                  'enum': [for (final m in DiaryMood.values) m.name, null],
-                  'description':
-                      'Mood: awful, bad, okay, good or great. Null means not '
-                      'recorded. Omit unless the user conveyed one.',
-                },
-                'categoryId': {
-                  'type': 'string',
-                  'description': 'Optional category id from listCategories.',
-                },
-              },
-              'required': ['content'],
-            },
-          },
-        },
-        'required': ['items'],
-      },
-      run: _createDiary,
-      summarize: _summarizeWrite,
-    ),
-    AssistantToolSpec(
-      tool: .updateDiary,
-      description:
-          'Edit diaries by id. Within an item, only the fields you pass change; '
-          'the rest are left alone. Pass every edit in one call. Get the ids '
-          'from searchDiaries first.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'items': {
-            'type': 'array',
-            'description':
-                'One object per diary to edit. Max $_maxBatchWrite per call.',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'id': {
-                  'type': 'string',
-                  'description': 'Diary id from searchDiaries.',
-                },
-                'title': {'type': 'string', 'description': 'New title.'},
-                'content': {
-                  'type': 'string',
-                  'description': 'New body, Markdown.',
-                },
-                'mood': {
-                  'type': ['string', 'null'],
-                  'enum': [for (final m in DiaryMood.values) m.name, null],
-                  'description': 'New mood: awful, bad, okay, good or great. Null means not recorded; omit to keep it unchanged.',
-                },
-                'categoryId': {
-                  'type': 'string',
-                  'description': 'New category id.',
-                },
-              },
-              'required': ['id'],
-            },
-          },
-        },
-        'required': ['items'],
-      },
-      run: _updateDiary,
-      summarize: _summarizeWrite,
-    ),
-    const AssistantToolSpec(
-      tool: .deleteDiary,
-      description:
-          'Move diaries to the recycle bin by id, where the user can restore '
-          'them. Pass every id in one call. Get the ids from searchDiaries '
-          'first. Max $_maxBatchWrite per call.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'ids': {
-            'type': 'array',
-            'items': {'type': 'string'},
-            'description': 'Diary ids from searchDiaries. Max $_maxBatchWrite.',
-          },
-        },
-        'required': ['ids'],
-      },
-      run: _deleteDiary,
-      summarize: _summarizeDelete,
-    ),
-    const AssistantToolSpec(
-      tool: .listCategories,
-      description:
-          'List every diary category with its id. Call this to get an id before '
-          'filing, renaming or deleting a category.',
-      jsonSchema: {'type': 'object', 'properties': {}},
-      run: _listCategories,
-      summarize: _summarizeList,
-    ),
-    const AssistantToolSpec(
-      tool: .createCategory,
-      description:
-          'Add diary categories. Pass every name in one call. '
-          'Max $_maxBatchWrite per call.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'items': {
-            'type': 'array',
-            'description': 'One object per category to add.',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'name': {'type': 'string', 'description': 'Category name.'},
-              },
-              'required': ['name'],
-            },
-          },
-        },
-        'required': ['items'],
-      },
-      run: _createCategory,
-      summarize: _summarizeWrite,
-    ),
-    const AssistantToolSpec(
-      tool: .updateCategory,
-      description:
-          'Rename categories by id (from listCategories). Pass every rename in '
-          'one call. Max $_maxBatchWrite per call.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'items': {
-            'type': 'array',
-            'description': 'One object per category to rename.',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'id': {
-                  'type': 'string',
-                  'description': 'Category id from listCategories.',
-                },
-                'name': {'type': 'string', 'description': 'New name.'},
-              },
-              'required': ['id', 'name'],
-            },
-          },
-        },
-        'required': ['items'],
-      },
-      run: _updateCategory,
-      summarize: _summarizeWrite,
-    ),
-    const AssistantToolSpec(
-      tool: .deleteCategory,
-      description:
-          'Delete categories by id. A category only goes while it holds no '
-          'diaries — refile them first. Pass every id in one call. '
-          'Max $_maxBatchWrite per call.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'ids': {
-            'type': 'array',
-            'items': {'type': 'string'},
-            'description': 'Category ids from listCategories.',
-          },
-        },
-        'required': ['ids'],
-      },
-      run: _deleteCategory,
-      summarize: _summarizeWrite,
-    ),
-    const AssistantToolSpec(
-      tool: .recallMemory,
-      description:
-          'Look up what you saved about the user in earlier conversations. '
-          'You are not given those facts otherwise. Pass a query describing '
-          'what you need; leave it '
-          'out for the most recent facts. Each row carries the id you need to '
-          'revise or forget it. Do not call this for greetings or small talk.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'query': {
-            'type': 'string',
-            'description':
-                'What you are looking for. Omit for the most recent facts.',
-          },
-          'limit': {
-            'type': 'integer',
-            'description': 'Max facts to return, $_maxRecallLimit at most.',
-          },
-        },
-      },
-      run: _recallMemory,
-      summarize: _summarizeList,
-      replayResult: true,
-    ),
-    const AssistantToolSpec(
-      tool: .rememberFact,
-      description:
-          'Save durable facts about the user — lasting preferences, recurring '
-          'themes, ongoing goals. Only from what the user says about '
-          'themselves or asks you to remember: never from a diary you read or '
-          'any other tool result. Not passing details, one-off events, '
-          'health, beliefs, legal or financial specifics, or anything they '
-          'asked you to keep private or not remember. Pass every fact in '
-          'one call. Pass an id to revise a fact instead of adding one. '
-          'Max $_maxBatchWrite per call.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'items': {
-            'type': 'array',
-            'description': 'One object per fact to save or revise.',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'category': {
-                  'type': 'string',
-                  'enum': ['preference', 'theme', 'goal', 'fact'],
-                  'description': 'Which kind of fact this is.',
-                },
-                'text': {
-                  'type': 'string',
-                  'description': 'The fact, stated in one plain sentence.',
-                },
-                'id': {
-                  'type': 'string',
-                  'description':
-                      'Only when revising a fact you got from recallMemory. '
-                      'Leave it out to save a new one.',
-                },
-                'source': {
-                  'type': 'string',
-                  'enum': ['user_said', 'user_asked'],
-                  'description':
-                      'user_asked when they told you to remember it, '
-                      'user_said when they simply stated it.',
-                },
-              },
-              'required': ['category', 'text'],
-            },
-          },
-        },
-        'required': ['items'],
-      },
-      run: _rememberFact,
-      summarize: _summarizeWrite,
-    ),
-    const AssistantToolSpec(
-      tool: .forgetFact,
-      description:
-          'Delete saved facts by id (from recallMemory). This is permanent — '
-          'there is no recycle bin for memories. Pass every id in one call. '
-          'Max $_maxBatchWrite per call.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'ids': {
-            'type': 'array',
-            'items': {'type': 'string'},
-            'description': 'Memory ids from recallMemory.',
-          },
-        },
-        'required': ['ids'],
-      },
-      run: _forgetFact,
-      summarize: _summarizeWrite,
-    ),
-    const AssistantToolSpec(
-      tool: .runJavascript,
-      description:
-          'Run JavaScript (ES2023) to compute something — arithmetic across '
-          'many numbers, date math, grouping, sorting. The result is the value '
-          'of the LAST expression, so end with the value you want; you do not '
-          'need `return`. `console.log/info/warn/error` is captured separately. '
-          'Put all of it in one script: each call gets a fresh sandbox that '
-          'remembers nothing from the last one.\n'
-          'The sandbox is bare: no network, no filesystem, no timers, no '
-          'require, and NO access to the diaries — pass any data you need in as '
-          'literals in the code, having read it with the other tools first. '
-          'Runs are capped at a couple of seconds and a few MB; an endless loop '
-          'is killed, not waited for.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'code': {
-            'type': 'string',
-            'description':
-                'The script. Ends with the expression whose value you want.',
-          },
-        },
-        'required': ['code'],
-      },
-      run: _runJavascript,
-      summarize: _summarizeJavascript,
-    ),
+    for (final def in assistantToolDefinitions) AssistantToolSpec(def),
   ];
-
   static const _maxReplayChars = 600;
 
   static bool get semanticAvailable =>
@@ -492,13 +148,15 @@ abstract final class AssistantToolRegistry {
         final body = call.result.length > _maxReplayChars
             ? '${call.result.substring(0, _maxReplayChars)}…'
             : call.result;
-        lines.add('- ${call.name}($args) →\n$body');
+        lines.add('- ${normalizeAssistantToolId(call.name)}($args) →\n$body');
         continue;
       }
       final summary = spec == null
           ? ''
           : spec.summaryOf(_decodeArgs(call.argsJson), call.result);
-      lines.add('- ${call.name}($args)${summary.isEmpty ? '' : ' → $summary'}');
+      lines.add(
+        '- ${normalizeAssistantToolId(call.name)}($args)${summary.isEmpty ? '' : ' → $summary'}',
+      );
     }
     return lines.isEmpty ? '' : '[tools already run]\n${lines.join('\n')}';
   }
@@ -515,7 +173,7 @@ abstract final class AssistantToolRegistry {
 
   static AssistantToolSpec? byId(String id) {
     for (final spec in specs) {
-      if (spec.id == id) return spec;
+      if (spec.id == normalizeAssistantToolId(id)) return spec;
     }
     return null;
   }
@@ -524,7 +182,7 @@ abstract final class AssistantToolRegistry {
     if (allowed == null) return specs;
     return [
       for (final spec in specs)
-        if (allowed.contains(spec.id)) spec,
+        if (allowed.map(normalizeAssistantToolId).contains(spec.id)) spec,
     ];
   }
 
@@ -536,6 +194,11 @@ abstract final class AssistantToolRegistry {
     final hit = RegExp(r'^(\d+) matches').firstMatch(output);
     if (hit == null) return l10n.assistant.toolNoMatch;
     final count = int.tryParse(hit.group(1) ?? '') ?? 0;
+    return _querySummary(count, input);
+  }
+
+  static String _querySummary(int count, Map<String, dynamic> input) {
+    if (count == 0) return l10n.assistant.toolNoMatch;
     final parts = <String>[
       l10n.assistant.toolMatched(count: count),
       ?_trimToNull(input['query']),
@@ -551,7 +214,7 @@ abstract final class AssistantToolRegistry {
     String _,
   ) => l10n.assistant.toolRead(count: assistantToolIds(input).length);
 
-  static String _summarizeOverview(
+  static String _summarizeStats(
     AssistantTool _,
     Map<String, dynamic> _,
     String output,
@@ -607,494 +270,6 @@ abstract final class AssistantToolRegistry {
     };
   }
 
-  static DiaryQueries _queries() => DiaryQueries(
-    diaries: getIt<DiaryRepository>(),
-    semantic: getIt.isRegistered<EmbedIndexService>()
-        ? getIt<EmbedIndexService>()
-        : null,
-  );
-
-  static DiaryWrites _writes() => DiaryWrites(
-    diaries: getIt<DiaryRepository>(),
-    categories: getIt<CategoryRepository>(),
-  );
-
-  static CategoryOps _categoryOps() =>
-      CategoryOps(categories: getIt<CategoryRepository>());
-
-  static DiaryStatsOps _stats() => DiaryStatsOps(
-    diaries: getIt<DiaryRepository>(),
-    categories: getIt<CategoryRepository>(),
-    insights: getIt<MoodInsightsRepository>(),
-  );
-
-  static Future<String> _searchDiaries(Map<String, dynamic> input) async {
-    final mode = (input['mode'] as String?)?.trim() ?? 'auto';
-    final limit = _parseLimit(input['limit']);
-    final hasQuery = ((input['query'] as String?) ?? '').trim().isNotEmpty;
-    final queries = _queries();
-    final query = ((input['query'] as String?) ?? '').trim();
-    final categoryId = _trimToNull(input['categoryId']);
-    final start = _parseDate(input['startDate']);
-    final endExclusive = _parseDate(input['endDate'])
-        ?.add(const Duration(days: 1));
-
-    final result = await queries.search(
-      mode: mode,
-      query: query,
-      categoryId: categoryId,
-      start: start,
-      endExclusive: endExclusive,
-      sort: (input['sort'] as String?)?.trim(),
-      limit: limit,
-    );
-    if (result.total == 0) {
-      final base = await _emptyQueryMessage(
-        result.keywords,
-        categoryId,
-        start,
-        endExclusive,
-      );
-      final how = !hasQuery
-          ? ''
-          : result.meaningRan
-          ? ' Both the keyword and the meaning path ran.'
-          : result.semanticAvailable
-          ? ' Only the keyword path ran.'
-          : ' Only the keyword path ran; the semantic index is off.';
-      return '$base$how';
-    }
-    return _formatSearchRows(
-      result.rows,
-      total: result.total,
-      atLeast: result.totalIsLowerBound,
-    );
-  }
-
-  static String _formatSearchRows(
-    List<SearchRow> rows, {
-    required int total,
-    bool atLeast = false,
-  }) {
-    final count = atLeast ? 'at least $total' : '$total';
-    final buffer = StringBuffer()
-      ..writeln(
-        rows.length < total || atLeast
-            ? '$count matches; the first ${rows.length} follow. Raise limit or '
-                  'narrow the filters for more.'
-            : '$total matches:',
-      );
-    for (final row in rows) {
-      final diary = row.diary;
-      final title = diary.title.trim().isEmpty
-          ? 'Untitled'
-          : diary.title.trim();
-      final cat = diary.categoryId;
-      final catPart = (cat != null && cat.isNotEmpty) ? ' categoryId=$cat' : '';
-      final via = row.keyword && row.meaning
-          ? 'keyword+meaning'
-          : row.meaning
-          ? 'meaning'
-          : 'keyword';
-      final sim = row.meaning && row.score != null
-          ? ' similarity=${row.score!.toStringAsFixed(2)}'
-          : '';
-      buffer.writeln(
-        'id=${diary.id} 【${TimeFormat.isoDate(diary.time)}】$title '
-        'mood=${diary.mood?.name ?? 'not recorded'} via=$via$sim$catPart',
-      );
-      final text = MediaMarkup.forModel(diary.contentText).trim();
-      if (text.isNotEmpty) {
-        buffer.writeln(
-          text.length > excerptChars
-              ? '${text.substring(0, excerptChars)}… (excerpt; full text via getDiary)'
-              : text,
-        );
-      }
-      buffer.writeln();
-    }
-    return buffer.toString().trim();
-  }
-
-  static Future<String> _getDiary(Map<String, dynamic> input) async {
-    final ids = assistantToolIds(input);
-    if (ids.isEmpty) {
-      return 'Failed: no diary id given. Get ids from searchDiaries first.';
-    }
-
-    final read = await _queries().read(ids);
-    final chunks = [for (final diary in read.found) _formatDiaryFull(diary)];
-    final missing = read.missing;
-
-    final buffer = StringBuffer();
-    if (missing.isNotEmpty) {
-      buffer.writeln(
-        'Not found (deleted, or the id is wrong — recheck with searchDiaries): '
-        '${missing.join(', ')}',
-      );
-      if (chunks.isNotEmpty) buffer.writeln();
-    }
-    if (ids.length > maxBatchRead) {
-      buffer.writeln(
-        '(Only the first $maxBatchRead were read; call again for the rest.)',
-      );
-    }
-    buffer.write(chunks.join('\n\n---\n\n'));
-    final out = buffer.toString().trim();
-    return out.isEmpty ? 'Failed: none of those ids match a diary.' : out;
-  }
-
-  static String _formatDiaryFull(Diary diary) {
-    final title = diary.title.trim().isEmpty ? 'Untitled' : diary.title.trim();
-    final buffer = StringBuffer()
-      ..writeln('id=${diary.id}')
-      ..writeln('date=${TimeFormat.isoDate(diary.time)}')
-      ..writeln('title=$title')
-      ..writeln('mood=${diary.mood?.name ?? 'not recorded'}');
-    if (diary.categoryId != null && diary.categoryId!.isNotEmpty) {
-      buffer.writeln('categoryId=${diary.categoryId}');
-    }
-    if (diary.tags.isNotEmpty) {
-      buffer.writeln('tags=${diary.tags.join(', ')}');
-    }
-    final text = MediaMarkup.forModel(diary.contentText).trim();
-    buffer
-      ..writeln('body:')
-      ..writeln(
-        text.isEmpty
-            ? '(empty)'
-            : (text.length > _maxFullContentLength
-                  ? '${text.substring(0, _maxFullContentLength)}'
-                        '… (truncated, '
-                        '${text.length - _maxFullContentLength} more characters)'
-                  : text),
-      );
-    return buffer.toString().trim();
-  }
-
-  @visibleForTesting
-  static Future<String> runBatch(
-    Map<String, dynamic> input, {
-    required Future<String> Function(Map<String, dynamic> item) each,
-    int cap = _maxBatchWrite,
-  }) async {
-    final items = assistantToolItems(input);
-    if (items.isEmpty) return '$_failurePrefix no items given.';
-    final done = <String>[];
-    final failed = <String>[];
-    var index = 0;
-    for (final item in items.take(cap)) {
-      index++;
-      String line;
-      try {
-        line = await each(item);
-      } catch (e) {
-        final id = item['id'];
-        line =
-            '$_failurePrefix ${id == null ? 'item $index' : 'id=$id'} '
-            'threw $e.';
-      }
-      (line.startsWith(_failurePrefix) ? failed : done).add(line);
-    }
-    return _batchResult(
-      done: done,
-      failed: failed,
-      requested: items.length,
-      cap: cap,
-    );
-  }
-
-  static String _batchResult({
-    required List<String> done,
-    required List<String> failed,
-    required int requested,
-    required int cap,
-  }) {
-    final tail = requested > cap
-        ? '\n(Only the first $cap were processed; call again for the rest.)'
-        : '';
-    if (done.isEmpty) {
-      final reasons = failed.map(_stripFailure).where((e) => e.isNotEmpty);
-      return '$_failurePrefix ${reasons.join(' ')}'.trim() + tail;
-    }
-    final buffer = StringBuffer(done.join('\n'));
-    if (failed.isNotEmpty) buffer.write('\n${failed.join('\n')}');
-    buffer.write(tail);
-    return buffer.toString();
-  }
-
-  static String _stripFailure(String line) => line.startsWith(_failurePrefix)
-      ? line.substring(_failurePrefix.length).trim()
-      : line;
-
-  static Future<String> _diaryOverview(Map<String, dynamic> input) async {
-    final overview = await _stats().overviewForModel();
-    if (overview.total == 0) return 'No diaries yet.';
-
-    final buffer = StringBuffer()..writeln('Total entries=${overview.total}');
-    if (overview.oldest != null && overview.newest != null) {
-      buffer.writeln(
-        'span=${TimeFormat.isoDate(overview.oldest!)} ~ '
-        '${TimeFormat.isoDate(overview.newest!)}',
-      );
-    }
-    buffer.writeln('by category:');
-    if (overview.categories.isEmpty) {
-      buffer.writeln('- (all uncategorised)');
-    } else {
-      for (final category in overview.categories) {
-        buffer.writeln(
-          '- ${category.name} (id=${category.id}): ${category.count}',
-        );
-      }
-    }
-    if (overview.uncategorized > 0) {
-      buffer.writeln('- uncategorised: ${overview.uncategorized}');
-    }
-
-    if (overview.moods.isNotEmpty) {
-      buffer
-        ..writeln('mood distribution (null means not recorded):')
-        ..writeln(
-          '- ${[
-            for (final mood in [...DiaryMood.values, null]) '${mood?.name ?? 'not recorded'}=${overview.moods[mood] ?? 0}',
-          ].join(', ')}',
-        );
-    }
-    return buffer.toString().trim();
-  }
-
-  static Future<String> _createDiary(Map<String, dynamic> input) =>
-      runBatch(input, each: _createOneDiary);
-
-  static Future<String> _createOneDiary(Map<String, dynamic> input) async {
-    final title = (input['title'] as String?)?.trim() ?? '';
-    final content = (input['content'] as String?)?.trim() ?? '';
-    if (content.isEmpty) return 'Failed: the body cannot be empty.';
-
-    final diary = await _writes().create(
-      title: title,
-      content: content,
-      mood: _parseMood(input['mood']),
-      categoryId: _trimToNull(input['categoryId']),
-      requireKnownCategory: false,
-    );
-    return 'Created "${title.isEmpty ? 'Untitled' : title}" '
-        '(${TimeFormat.isoDate(diary.time)}), id=${diary.id}.';
-  }
-
-  static Future<String> _updateDiary(Map<String, dynamic> input) =>
-      runBatch(input, each: _updateOneDiary);
-
-  static Future<String> _updateOneDiary(Map<String, dynamic> input) async {
-    final id = (input['id'] as String?)?.trim() ?? '';
-    if (id.isEmpty) return 'Failed: no diary id given.';
-
-    final title = input['title'] as String?;
-    final content = input['content'] as String?;
-    final mood = _parseMood(input['mood']);
-    final patch = DiaryPatch(
-      title: title?.trim(),
-      content: content,
-      mood: mood,
-      moodSet:
-          input.containsKey('mood') && (input['mood'] == null || mood != null),
-      categoryId: input.containsKey('categoryId')
-          ? (input['categoryId'] as String?)?.trim() ?? ''
-          : null,
-    );
-
-    try {
-      final updated = await _writes().update(
-        id: id,
-        patch: patch,
-        index: (title == null && content == null)
-            ? IndexMode.skip
-            : IndexMode.inline,
-      );
-      final shown = updated.title.trim().isEmpty
-          ? 'Untitled'
-          : updated.title.trim();
-      return 'Updated "$shown" (id=$id).';
-    } on DiaryOpsException catch (e) {
-      return switch (e.failure) {
-        DiaryOpsFailure.notFound => 'Failed: no diary with id=$id.',
-        DiaryOpsFailure.invalidCategory =>
-          'Failed: no category with id=${e.categoryId} (check listCategories).',
-        _ => 'Failed: could not update the diary.',
-      };
-    }
-  }
-
-  static Future<String> _deleteDiary(Map<String, dynamic> input) =>
-      runBatch(input, each: _deleteOneDiary);
-
-  static Future<String> _deleteOneDiary(Map<String, dynamic> input) async {
-    final id = (input['id'] as String?)?.trim() ?? '';
-    if (id.isEmpty) return 'Failed: no diary id given.';
-
-    try {
-      final result = await _writes().delete(id: id);
-      final title = result.diary.title.trim().isEmpty
-          ? 'Untitled'
-          : result.diary.title.trim();
-      return result.outcome == DiaryDeleteOutcome.alreadyRecycled
-          ? '"$title" (id=$id) is already in the recycle bin.'
-          : 'Moved "$title" (id=$id) to the recycle bin.';
-    } on DiaryOpsException {
-      return 'Failed: no diary with id=$id.';
-    }
-  }
-
-  static Future<String> _listCategories(Map<String, dynamic> input) async {
-    final cats = await getIt<CategoryRepository>().getAllCategories();
-    if (cats.isEmpty) return 'No categories yet.';
-    final buffer = StringBuffer();
-    for (final c in cats) {
-      buffer.writeln('id=${c.id} name=${c.categoryName}');
-    }
-    return buffer.toString().trim();
-  }
-
-  static Future<String> _createCategory(Map<String, dynamic> input) =>
-      runBatch(input, each: _createOneCategory);
-
-  static Future<String> _createOneCategory(Map<String, dynamic> input) async {
-    final name = (input['name'] as String?)?.trim() ?? '';
-    if (name.isEmpty) return 'Failed: the category name cannot be empty.';
-    try {
-      final category = await _categoryOps().create(name: name);
-      return 'Created category "$name", id=${category.id}.';
-    } catch (_) {
-      return 'Failed: could not create the category.';
-    }
-  }
-
-  static Future<String> _updateCategory(Map<String, dynamic> input) =>
-      runBatch(input, each: _updateOneCategory);
-
-  static Future<String> _updateOneCategory(Map<String, dynamic> input) async {
-    final id = (input['id'] as String?)?.trim() ?? '';
-    final name = (input['name'] as String?)?.trim() ?? '';
-    if (id.isEmpty || name.isEmpty) {
-      return 'Failed: category id and name are both required.';
-    }
-
-    try {
-      await _categoryOps().update(id: id, name: name);
-      return 'Renamed the category to "$name" (id=$id).';
-    } on DiaryOpsException {
-      return 'Failed: no category with id=$id.';
-    } catch (_) {
-      return 'Failed: could not rename the category.';
-    }
-  }
-
-  static Future<String> _deleteCategory(Map<String, dynamic> input) =>
-      runBatch(input, each: _deleteOneCategory);
-
-  static Future<String> _deleteOneCategory(Map<String, dynamic> input) async {
-    final id = (input['id'] as String?)?.trim() ?? '';
-    if (id.isEmpty) return 'Failed: no category id given.';
-    bool ok;
-    try {
-      ok = (await _categoryOps().delete(id)).deleted;
-    } catch (_) {
-      ok = false;
-    }
-    return ok
-        ? 'Deleted the category (id=$id).'
-        : 'Failed: the category does not exist, or it still holds diaries — refile them first.';
-  }
-
-  static const _validMemorySources = {'user_said', 'user_asked'};
-
-  static const _validMemoryCategories = {'preference', 'theme', 'goal', 'fact'};
-
-  static Future<String> _recallMemory(Map<String, dynamic> input) async {
-    final repo = getIt<MemoryRepository>();
-    final query = ((input['query'] as String?) ?? '').trim();
-    final limit = ((input['limit'] as num?)?.toInt() ?? _defaultRecallLimit)
-        .clamp(1, _maxRecallLimit);
-    final hits = query.isEmpty
-        ? await repo.getRecent(limit)
-        : await repo.search(query, limit: limit);
-    if (hits.isEmpty) {
-      final total = await repo.count();
-      return total == 0
-          ? 'No saved facts yet. Nothing was remembered about this user.'
-          : '0 matches among $total saved facts. Say plainly that you do not '
-                'have it rather than guessing.';
-    }
-    final buffer = StringBuffer();
-    for (final m in hits) {
-      buffer.writeln('id=${m.id} kind=${m.category} text=${m.text}');
-    }
-    return buffer.toString().trim();
-  }
-
-  static Future<String> _rememberFact(Map<String, dynamic> input) =>
-      runBatch(input, each: _rememberOneFact);
-
-  static Future<String> _rememberOneFact(Map<String, dynamic> input) async {
-    final text = (input['text'] as String?)?.trim() ?? '';
-    if (text.isEmpty) return 'Failed: the fact cannot be empty.';
-    final rawCat = (input['category'] as String?)?.trim() ?? 'fact';
-    final category = _validMemoryCategories.contains(rawCat) ? rawCat : 'fact';
-    final repo = getIt<MemoryRepository>();
-    final id = (input['id'] as String?)?.trim() ?? '';
-    if (id.isNotEmpty) {
-      final current = await repo.get(id);
-      if (current == null) return 'Failed: no memory with id=$id.';
-      await repo.put(
-        current.copyWith(
-          text: text,
-          category: category,
-          updatedAt: .timestamp(),
-        ),
-      );
-      return 'Revised the memory (id=$id): $text.';
-    }
-    final existing = await repo.findDuplicate(category, text);
-    if (existing != null) {
-      await repo.touch(existing.id);
-      return 'Already saved ($category): ${existing.text} (id=${existing.id}).';
-    }
-    final rawSource = (input['source'] as String?)?.trim();
-    final entry = MemoryEntry.create(
-      category: category,
-      text: text,
-      source: _validMemorySources.contains(rawSource) ? rawSource : 'user_said',
-    );
-    await repo.put(entry);
-    return 'Remembered ($category): $text (id=${entry.id}).';
-  }
-
-  static Future<String> _runJavascript(Map<String, dynamic> input) async {
-    final code = (input['code'] as String?)?.trim() ?? '';
-    if (code.isEmpty) return 'Failed: no code given.';
-    try {
-      final outcome = await JsSandbox.run(code);
-      final buffer = StringBuffer();
-      buffer.writeln(
-        outcome.value.isEmpty
-            ? 'Result: (no value)'
-            : 'Result: ${outcome.value}',
-      );
-      if (outcome.logs.isNotEmpty) {
-        buffer
-          ..writeln('Console:')
-          ..writeln(outcome.logs.join('\n'));
-      }
-      if (outcome.truncated) {
-        buffer.writeln('(output was truncated — print less)');
-      }
-      return buffer.toString().trim();
-    } catch (e) {
-      return 'Failed: $e';
-    }
-  }
-
   static String _summarizeJavascript(
     AssistantTool _,
     Map<String, dynamic> _,
@@ -1110,66 +285,8 @@ abstract final class AssistantToolRegistry {
     return value;
   }
 
-  static Future<String> _forgetFact(Map<String, dynamic> input) =>
-      runBatch(input, each: _forgetOneFact);
-
-  static Future<String> _forgetOneFact(Map<String, dynamic> input) async {
-    final id = (input['id'] as String?)?.trim() ?? '';
-    if (id.isEmpty) return 'Failed: no memory id given.';
-    final ok = await getIt<MemoryRepository>().delete(id);
-    return ok
-        ? 'Deleted the memory (id=$id).'
-        : 'Failed: no memory with id=$id.';
-  }
-
-  static DiaryMood? _parseMood(Object? raw) =>
-      raw is String ? DiaryMood.values.asNameMap()[raw] : null;
-
-  static Future<String?> _categoryNameOf(String id) async {
-    final cats = await getIt<CategoryRepository>().getAllCategories();
-    for (final c in cats) {
-      if (c.id == id) return c.categoryName;
-    }
-    return null;
-  }
-
   static String? _trimToNull(Object? raw) {
-    final s = (raw as String?)?.trim();
-    return (s == null || s.isEmpty) ? null : s;
-  }
-
-  static int _parseLimit(Object? raw) {
-    final n = raw is num ? raw.toInt() : int.tryParse('${raw ?? ''}'.trim());
-    if (n == null) return _defaultQueryLimit;
-    return n.clamp(1, _maxQueryLimit);
-  }
-
-  static DateTime? _parseDate(Object? raw) {
-    final s = (raw as String?)?.trim();
-    if (s == null || s.isEmpty) return null;
-    final parsed = DateTime.tryParse(s);
-    if (parsed == null) return null;
-    return DateTime(parsed.year, parsed.month, parsed.day);
-  }
-
-  static Future<String> _emptyQueryMessage(
-    List<String> keywords,
-    String? categoryId,
-    DateTime? start,
-    DateTime? endExclusive,
-  ) async {
-    final categoryName = categoryId == null
-        ? null
-        : await _categoryNameOf(categoryId);
-    final conds = <String>[
-      if (keywords.isNotEmpty) 'keywords "${keywords.join(' ')}"',
-      if (categoryName != null) 'category "$categoryName"',
-      if (start != null) 'from ${TimeFormat.isoDate(start)}',
-      if (endExclusive != null)
-        'to ${TimeFormat.isoDate(endExclusive.subtract(const Duration(days: 1)))}',
-    ];
-    return conds.isEmpty
-        ? 'No diaries yet.'
-        : 'No diaries match ${conds.join(', ')}.';
+    final text = (raw as String?)?.trim();
+    return text == null || text.isEmpty ? null : text;
   }
 }

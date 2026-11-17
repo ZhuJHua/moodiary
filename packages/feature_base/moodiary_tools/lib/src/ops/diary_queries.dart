@@ -10,6 +10,7 @@ typedef _KeywordSearch = ({
   List<Diary> results,
   int total,
   List<String> keywords,
+  Map<String, DiarySearchHit> hits,
 });
 
 typedef DiarySearch = ({
@@ -19,6 +20,7 @@ typedef DiarySearch = ({
   bool meaningRan,
   bool semanticAvailable,
   List<String> keywords,
+  Map<String, DiarySearchHit> keywordHits,
 });
 
 /// One fused row: a diary (when it could be loaded), how it was found and the
@@ -56,9 +58,12 @@ class DiaryQueries {
     DateTime? endExclusive,
     String? sort,
     required int limit,
+    int offset = 0,
+    String? tag,
   }) async {
+    final candidateLimit = limit + offset;
     final semanticAvailable = semantic?.enabled ?? false;
-    final keywordRan = mode != 'meaning';
+    final keywordRan = query.isEmpty || mode != 'meaning';
     final meaningRan =
         mode != 'keyword' && query.isNotEmpty && semanticAvailable;
     final keywordResult = keywordRan
@@ -68,30 +73,70 @@ class DiaryQueries {
             start: start,
             endExclusive: endExclusive,
             sort: sort,
-            limit: limit,
+            limit: candidateLimit,
+            tag: tag,
           )
-        : (results: <Diary>[], total: 0, keywords: <String>[]);
-    final hits = meaningRan
+        : (
+            results: <Diary>[],
+            total: 0,
+            keywords: <String>[],
+            hits: <String, DiarySearchHit>{},
+          );
+    final candidates = meaningRan
         ? await _semanticHits(
             query: query,
-            limit: limit,
+            limit: candidateLimit,
             categoryId: categoryId,
             start: start,
             endExclusive: endExclusive,
           )
         : const <SemanticHit>[];
-    final fused = _fuse(keywordResult.results, hits, limit: limit);
+    final hits = <SemanticHit>[];
+    for (final hit in candidates) {
+      final diary = await diaries.getDiaryByBusinessId(hit.diaryId);
+      if (diary == null ||
+          !diary.show ||
+          (categoryId != null && diary.categoryId != categoryId) ||
+          !_inRange(diary.time, start, endExclusive) ||
+          (tag != null && !diary.tags.contains(tag))) {
+        continue;
+      }
+      hits.add(hit);
+    }
+    final fused = _fuse(
+      keywordResult.results,
+      hits,
+      limit: keywordResult.results.length + hits.length,
+    );
     final rows = await _resolve(fused);
+    if (sort != null && sort != 'relevance') {
+      rows.sort(
+        (first, next) =>
+            diarySortComparator(parseDiarySort(sort))(first.diary, next.diary),
+      );
+    }
+    final bounded =
+        meaningRan &&
+        (candidates.length >= candidateLimit ||
+            keywordResult.total > keywordResult.results.length);
+    final observed =
+        keywordResult.results.length +
+        hits.length -
+        _overlap(keywordResult.results, hits);
     return (
-      rows: rows,
-      total:
-          keywordResult.total +
-          hits.length -
-          _overlap(keywordResult.results, hits),
-      totalIsLowerBound: meaningRan && hits.length >= limit,
+      rows: rows.skip(offset).take(limit).toList(),
+      total: meaningRan
+          ? (bounded
+                ? (keywordResult.total > observed
+                      ? keywordResult.total
+                      : observed)
+                : observed)
+          : keywordResult.total,
+      totalIsLowerBound: bounded,
       meaningRan: meaningRan,
       semanticAvailable: semanticAvailable,
       keywords: keywordResult.keywords,
+      keywordHits: keywordResult.hits,
     );
   }
 
@@ -104,56 +149,77 @@ class DiaryQueries {
     DateTime? endExclusive,
     String? sort,
     required int limit,
+    String? tag,
   }) async {
-    final keywordsForDisplay = query
+    final keywords = query
         .split(_whitespace)
-        .where((e) => e.isNotEmpty)
+        .where((word) => word.isNotEmpty)
         .toList();
-
-    List<Diary> results;
-    int? total;
     if (query.isNotEmpty) {
+      final total = await diaries.countSearchDiaries(
+        query: query,
+        categoryId: categoryId,
+        start: start,
+        end: endExclusive,
+      );
       final hits = await diaries.searchDiaries(
         query: query,
         categoryId: categoryId,
         start: start,
         end: endExclusive,
         sort: _parseSearchSort(sort),
-        limit: limit,
+        limit: tag == null && sort != 'modified'
+            ? limit
+            : total < 1
+            ? 1
+            : total,
       );
-      results = [for (final hit in hits) hit.diary];
-      if (results.length >= limit) {
-        total = await diaries.countSearchDiaries(
-          query: query,
-          categoryId: categoryId,
-          start: start,
-          end: endExclusive,
-        );
+      final matched = [
+        for (final hit in hits)
+          if (tag == null || hit.diary.tags.contains(tag)) hit.diary,
+      ];
+      if (sort == 'modified') {
+        matched.sort(diarySortComparator(DiarySort.lastModifiedDesc));
       }
-    } else if (start != null || endExclusive != null) {
-      final ranged = await diaries.getDiariesByDateRange(
-        start ?? DateTime.fromMillisecondsSinceEpoch(0),
-        endExclusive ?? DateTime.now().add(const Duration(days: 1)),
+      return (
+        results: matched.take(limit).toList(),
+        total: tag == null ? total : matched.length,
+        keywords: keywords,
+        hits: {for (final hit in hits) hit.diary.id: hit},
       );
-      results =
-          ranged
-              .where((d) => categoryId == null || d.categoryId == categoryId)
-              .where((d) => _inRange(d.time, start, endExclusive))
-              .toList()
-            ..sort(diarySortComparator(parseDiarySort(sort)));
-      total = results.length;
-    } else {
-      results = await diaries.getDiaryByCategory(
+    }
+    if (tag == null && start == null && endExclusive == null) {
+      final counts = await diaries.diaryCountByCategory();
+      final page = await diaries.getDiaryByCategory(
         categoryId: categoryId,
         sort: parseDiarySort(sort),
         limit: limit,
       );
+      return (
+        results: page,
+        total: categoryId == null
+            ? counts.total
+            : counts.byCategory[categoryId] ?? 0,
+        keywords: keywords,
+        hits: const <String, DiarySearchHit>{},
+      );
     }
-
+    final all = await diaries.getDiaryByCategory(
+      categoryId: categoryId,
+      sort: parseDiarySort(sort),
+    );
+    final matched = all
+        .where(
+          (diary) =>
+              _inRange(diary.time, start, endExclusive) &&
+              (tag == null || diary.tags.contains(tag)),
+        )
+        .toList();
     return (
-      results: results,
-      total: total ?? results.length,
-      keywords: keywordsForDisplay,
+      results: matched.take(limit).toList(),
+      total: matched.length,
+      keywords: keywords,
+      hits: const <String, DiarySearchHit>{},
     );
   }
 
@@ -229,7 +295,7 @@ class DiaryQueries {
         continue;
       }
       final diary = await diaries.getDiaryByBusinessId(row.id);
-      if (diary == null) continue;
+      if (diary == null || !diary.show) continue;
       resolved.add((
         diary: diary,
         keyword: row.keyword,

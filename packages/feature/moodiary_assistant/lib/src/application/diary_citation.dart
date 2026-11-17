@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_tools/moodiary_tools.dart';
 
 const String _citePrefix = '[diary:';
 
@@ -13,12 +16,23 @@ typedef DiaryCitation = ({String id, DiaryCitationKind kind});
 final Map<String, DiaryCitationKind> _kindByTool = {
   AssistantTool.searchDiaries.id: .read,
   AssistantTool.getDiary.id: .read,
+  AssistantTool.getDiaryLinks.id: .read,
   AssistantTool.createDiary.id: .created,
   AssistantTool.updateDiary.id: .updated,
   AssistantTool.deleteDiary.id: .deleted,
 };
 
-Iterable<String> _idsIn(String result) sync* {
+Iterable<String> _idsIn(String tool, String result) sync* {
+  try {
+    final data = jsonDecode(result);
+    if (data is Map) {
+      yield* diaryIdsIn(
+        normalizeAssistantToolId(tool),
+        data.cast<String, Object?>(),
+      );
+      return;
+    }
+  } catch (_) {}
   for (final line in result.split('\n')) {
     if (line.startsWith('Failed') || line.startsWith('Not found')) continue;
     for (final m in _diaryId.allMatches(line)) {
@@ -28,19 +42,19 @@ Iterable<String> _idsIn(String result) sync* {
 }
 
 DiaryCitationKind? diaryCitationKindOf(String toolName) =>
-    _kindByTool[toolName];
+    _kindByTool[normalizeAssistantToolId(toolName)];
 
 bool citesDiaries(AssistantToolCall call) =>
     call.done &&
-    _kindByTool.containsKey(call.name) &&
-    _idsIn(call.result).isNotEmpty;
+    _kindByTool.containsKey(normalizeAssistantToolId(call.name)) &&
+    _idsIn(call.name, call.result).isNotEmpty;
 
 List<DiaryCitation> diaryCitationsOf(Iterable<AssistantToolCall> calls) {
   final byId = <String, DiaryCitationKind>{};
   for (final call in calls) {
-    final kind = _kindByTool[call.name];
+    final kind = _kindByTool[normalizeAssistantToolId(call.name)];
     if (kind == null || !call.done) continue;
-    for (final id in _idsIn(call.result)) {
+    for (final id in _idsIn(call.name, call.result)) {
       final seen = byId[id];
       if (seen == null || kind.index > seen.index) byId[id] = kind;
     }
@@ -65,5 +79,5 @@ String diaryCitationForModel(String text) {
   final (:diaryId, text: body) = splitDiaryCitation(text);
   if (diaryId == null) return text;
   return 'The user is asking about the diary with id=$diaryId. '
-      'Read it with getDiary before answering.\n\n$body';
+      'Read it with get_diary before answering.\n\n$body';
 }

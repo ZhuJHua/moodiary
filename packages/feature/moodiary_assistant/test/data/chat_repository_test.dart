@@ -42,8 +42,8 @@ void main() {
     );
     final messages = await repo.getMessages(session.id);
     expect(messages.single.toolCalls.map((c) => c.name), [
-      'searchDiaries',
-      'recallMemory',
+      'search_diaries',
+      'recall_memory',
     ]);
   });
 }

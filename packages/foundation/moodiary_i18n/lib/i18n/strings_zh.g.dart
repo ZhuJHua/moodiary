@@ -1493,6 +1493,36 @@ class Translations$assistant$zh {
 
 	/// zh: '已删除'
 	String get toolDeleted => '已删除';
+
+	/// zh: '日记链接'
+	String get toolLinksTitle => '日记链接';
+
+	/// zh: '查看日记链接和反向链接'
+	String get toolLinksDes => '查看日记链接和反向链接';
+
+	/// zh: '标签'
+	String get toolTagsTitle => '标签';
+
+	/// zh: '查看标签和日记数量'
+	String get toolTagsDes => '查看标签和日记数量';
+
+	/// zh: '{succeeded} 项成功 · {failed} 项失败'
+	String toolBatchOutcome({required Object succeeded, required Object failed}) => '${succeeded} 项成功 · ${failed} 项失败';
+
+	/// zh: '心情'
+	String get approvalFieldMood => '心情';
+
+	/// zh: '标签'
+	String get approvalFieldTags => '标签';
+
+	/// zh: '时间'
+	String get approvalFieldTime => '时间';
+
+	/// zh: '颜色'
+	String get approvalFieldColor => '颜色';
+
+	/// zh: '已清空'
+	String get approvalCleared => '已清空';
 }
 
 // Path: common

@@ -131,10 +131,16 @@ class TestToolClient {
 
   Future<String> newCategory(String name, {Object? color}) async {
     final created = structuredOf(
-      await toolCall('create_category', {'name': name, 'color': ?color}),
+      await toolCall('create_category', {
+        'items': [
+          {'name': name, 'color': ?color},
+        ],
+      }),
     );
-    expect(created['created'], isTrue);
-    return (created['category'] as Map<String, dynamic>)['id'] as String;
+    final row = (created['results'] as List).single as Map;
+    expect(row['ok'], isTrue);
+    expect(row['created'], isTrue);
+    return (row['category'] as Map<String, dynamic>)['id'] as String;
   }
 }
 
