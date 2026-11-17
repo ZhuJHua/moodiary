@@ -64,5 +64,5 @@ String nextReminderLabel(
     1 => l10n.reminder.tomorrow,
     _ => l10n.reminder.weekdays[at.weekday - 1],
   };
-  return l10n.reminder.next(day: day, time: next.reminder.label);
+  return l10n.reminder.next(day: day, time: next.reminder.time);
 }

@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:injectable/injectable.dart';
-import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -18,23 +16,19 @@ enum ReminderTapAction { openApp, newDiary }
 
 @lazySingleton
 class ReminderService extends ChangeNotifier {
-  ReminderService(this._notifications, this.permission, this._diaries);
+  ReminderService(this._notifications, this.permission);
 
   static const channelId = 'diary_reminder';
   static const payload = 'reminder';
   final LocalNotifications _notifications;
   final NotificationPermission permission;
-  final DiaryRepository _diaries;
   final _taps = StreamController<void>.broadcast();
   final _applied = <int, String>{};
   final _lock = Lock();
   List<Reminder>? _reminders;
-  List<ReminderNotification> _desired = const [];
   Future<void>? _initialization;
-  StreamSubscription<dynamic>? _diarySubscription;
   AppLifecycleListener? _lifecycle;
   Timer? _debounce;
-  Timer? _midnight;
   bool _disposed = false;
   bool launchedFromNotification = false;
   bool _notificationsEnabled = true;
@@ -44,21 +38,16 @@ class ReminderService extends ChangeNotifier {
       _reminders ??= Reminder.decode(MoodiaryKVs.reminders.get()!);
   bool get notificationsEnabled => _notificationsEnabled;
   bool get enabled => MoodiaryKVs.reminderEnabled.get()!;
-  bool get skipIfWritten => MoodiaryKVs.reminderSkipIfWritten.get()!;
   ReminderTapAction get tapAction =>
       MoodiaryKVs.reminderTapAction.get() == ReminderTapAction.newDiary.name
       ? ReminderTapAction.newDiary
       : ReminderTapAction.openApp;
   TZDateTime get now => _notifications.now();
-  int get _salt {
-    final stored = MoodiaryKVs.reminderSalt.get()!;
-    if (stored != 0) return stored;
-    final salt = Random.secure().nextInt(1 << 31) + 1;
-    MoodiaryKVs.reminderSalt.set(salt);
-    return salt;
-  }
-
-  ReminderNotification? get next => _desired.firstOrNull;
+  ReminderNotification? get next => ReminderScheduler.desired(
+    reminders: reminders,
+    enabled: enabled,
+    now: now,
+  ).firstOrNull;
 
   ({
     String channelId,
@@ -85,12 +74,8 @@ class ReminderService extends ChangeNotifier {
       }
     });
     launchedFromNotification = await _notifications.launchedFrom(payload);
-    _diarySubscription = _diaries.diaryEvents.listen((_) {
-      if (enabled && skipIfWritten) _scheduleRefresh();
-    });
     MoodiaryKVs.reminders.getNotifier().addListener(_remindersChanged);
     MoodiaryKVs.reminderEnabled.getNotifier().addListener(_changed);
-    MoodiaryKVs.reminderSkipIfWritten.getNotifier().addListener(_changed);
     _lifecycle = AppLifecycleListener(onResume: _refresh);
     _refresh();
   }
@@ -130,8 +115,6 @@ class ReminderService extends ChangeNotifier {
   Future<void> _reconcile() async {
     if (_disposed) return;
     if (!enabled) {
-      _desired = const [];
-      _midnight?.cancel();
       final pending = await _notifications.pendingIds();
       for (final id in pending.where(ReminderScheduler.ownsId)) {
         await _notifications.cancel(id);
@@ -141,20 +124,14 @@ class ReminderService extends ChangeNotifier {
       return;
     }
     await _notifications.updateTimeZone();
-    final current = now;
-    final writtenToday =
-        skipIfWritten && await _diaries.hasDiaryOnDate(current);
     await checkPermission();
-    _desired = ReminderScheduler.desired(
+    final desired = ReminderScheduler.desired(
       reminders: reminders,
       enabled: enabled,
-      skipIfWritten: skipIfWritten,
-      writtenToday: writtenToday,
-      now: current,
-      salt: _salt,
+      now: now,
     );
     final pending = await _notifications.pendingIds();
-    final desiredIds = _desired.map((notification) => notification.id).toSet();
+    final desiredIds = desired.map((notification) => notification.id).toSet();
     for (final id in pending.where(ReminderScheduler.ownsId)) {
       if (!desiredIds.contains(id)) {
         await _notifications.cancel(id);
@@ -163,7 +140,7 @@ class ReminderService extends ChangeNotifier {
     }
     final content = _content;
     final text = '${content.title}:${content.body}:${content.channelName}';
-    for (final notification in _desired) {
+    for (final notification in desired) {
       final signature = '${notification.signature}:$text';
       if (pending.contains(notification.id) &&
           _applied[notification.id] == signature) {
@@ -173,7 +150,7 @@ class ReminderService extends ChangeNotifier {
       await _notifications.schedule(
         id: notification.id,
         at: notification.at,
-        weekly: notification.weekly,
+        weekly: true,
         channelId: content.channelId,
         channelName: content.channelName,
         title: content.title,
@@ -182,14 +159,6 @@ class ReminderService extends ChangeNotifier {
       );
       _applied[notification.id] = signature;
     }
-    _midnight?.cancel();
-    final tomorrow = TZDateTime(
-      current.location,
-      current.year,
-      current.month,
-      current.day + 1,
-    );
-    _midnight = Timer(tomorrow.difference(current), _refresh);
     if (!_disposed) notifyListeners();
   }
 
@@ -210,9 +179,6 @@ class ReminderService extends ChangeNotifier {
 
   Future<void> setEnabled(bool value) =>
       _write(() => MoodiaryKVs.reminderEnabled.set(value));
-
-  Future<void> setSkipIfWritten(bool value) =>
-      _write(() => MoodiaryKVs.reminderSkipIfWritten.set(value));
 
   Future<void> _write(VoidCallback write) async {
     write();
@@ -256,12 +222,9 @@ class ReminderService extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _debounce?.cancel();
-    _midnight?.cancel();
     _lifecycle?.dispose();
-    unawaited(_diarySubscription?.cancel());
     MoodiaryKVs.reminders.getNotifier().removeListener(_remindersChanged);
     MoodiaryKVs.reminderEnabled.getNotifier().removeListener(_changed);
-    MoodiaryKVs.reminderSkipIfWritten.getNotifier().removeListener(_changed);
     unawaited(_taps.close());
     super.dispose();
   }

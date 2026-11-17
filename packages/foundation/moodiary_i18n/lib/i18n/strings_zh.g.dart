@@ -3149,21 +3149,6 @@ class Translations$reminder$zh {
 	/// zh: '提醒时间'
 	String get times => '提醒时间';
 
-	/// zh: '固定时间'
-	String get fixedTime => '固定时间';
-
-	/// zh: '时段内随机'
-	String get randomWindow => '时段内随机';
-
-	/// zh: '开始'
-	String get start => '开始';
-
-	/// zh: '结束'
-	String get end => '结束';
-
-	/// zh: '随机'
-	String get random => '随机';
-
 	/// zh: '添加时间'
 	String get add => '添加时间';
 
@@ -3197,9 +3182,6 @@ class Translations$reminder$zh {
 
 	/// zh: '、'
 	String get daySeparator => '、';
-
-	/// zh: '今天写过就不提醒'
-	String get skipIfWritten => '今天写过就不提醒';
 
 	/// zh: '通知'
 	String get notifications => '通知';

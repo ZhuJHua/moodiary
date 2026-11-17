@@ -59,8 +59,6 @@ class DeviceNotificationPermission implements NotificationPermission {
 }
 
 abstract interface class LocalNotifications {
-  static const maxPending = 60;
-
   Future<void> initialize(void Function(String?) onTap);
   Future<void> updateTimeZone();
   tz.TZDateTime now();

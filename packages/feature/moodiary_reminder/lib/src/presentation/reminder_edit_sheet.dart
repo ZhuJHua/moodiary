@@ -20,48 +20,18 @@ class ReminderEditSheet extends StatefulWidget {
 }
 
 class _ReminderEditSheetState extends State<ReminderEditSheet> {
-  late int _startMinutes =
-      (widget.reminder?.hour ?? 21) * 60 + (widget.reminder?.minute ?? 30);
-  late int _endMinutes =
-      (widget.reminder?.endHour ?? 23) * 60 +
-      (widget.reminder?.endMinute ?? 59);
-  late bool _isRandom = widget.reminder?.isRandom ?? false;
-  bool _editingEnd = false;
+  late int _hour = widget.reminder?.hour ?? 21;
+  late int _minute = widget.reminder?.minute ?? 30;
   late Set<int> _days = {
     ...(widget.reminder?.weekdays ?? ReminderPreset.everyDay.days),
   };
   late ReminderPreset _repeat = ReminderPreset.of(_days);
 
-  void _setKind(bool random) => setState(() {
-    if (random && !_isRandom) {
-      _startMinutes = _startMinutes.clamp(0, 1409);
-      _endMinutes = (_startMinutes + 180).clamp(_startMinutes + 30, 1439);
-    }
-    _isRandom = random;
-    _editingEnd = false;
-  });
-
-  void _setTime(int hour, int minute) => setState(() {
-    final value = hour * 60 + minute;
-    if (!_isRandom) {
-      _startMinutes = value;
-    } else if (_editingEnd) {
-      _endMinutes = value.clamp(30, 1439);
-      if (_startMinutes > _endMinutes - 30) _startMinutes = _endMinutes - 30;
-    } else {
-      _startMinutes = value.clamp(0, 1409);
-      if (_endMinutes < _startMinutes + 30) _endMinutes = _startMinutes + 30;
-    }
-  });
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = context.theme;
-    final start = formatReminderTime(_startMinutes ~/ 60, _startMinutes % 60);
-    final end = formatReminderTime(_endMinutes ~/ 60, _endMinutes % 60);
-    final time = _isRandom ? '$start–$end ${l10n.reminder.random}' : start;
-    final selectedTime = _isRandom && _editingEnd ? _endMinutes : _startMinutes;
+    final time = formatReminderTime(_hour, _minute);
     return MSheetScaffold<ReminderEditResult>(
       icon: LucideIcons.alarmClock,
       title: widget.reminder == null
@@ -78,10 +48,8 @@ class _ReminderEditSheetState extends State<ReminderEditSheet> {
             ReminderEditResult(
               reminder: Reminder(
                 id: widget.id,
-                hour: _startMinutes ~/ 60,
-                minute: _startMinutes % 60,
-                endHour: _isRandom ? _endMinutes ~/ 60 : null,
-                endMinute: _isRandom ? _endMinutes % 60 : null,
+                hour: _hour,
+                minute: _minute,
                 weekdays: _days,
                 enabled: widget.reminder?.enabled ?? true,
               ),
@@ -96,56 +64,13 @@ class _ReminderEditSheetState extends State<ReminderEditSheet> {
           crossAxisAlignment: .stretch,
           spacing: 8,
           children: [
-            MSegmentedControl<bool>(
-              height: 44,
-              selected: _isRandom,
-              options: [
-                MSegmentOption(value: false, label: l10n.reminder.fixedTime),
-                MSegmentOption(value: true, label: l10n.reminder.randomWindow),
-              ],
-              onChanged: _setKind,
-            ),
-            if (_isRandom)
-              MSegmentGroup(
-                height: 56,
-                children: [
-                  for (final (isEnd, label, value) in [
-                    (false, l10n.reminder.start, start),
-                    (true, l10n.reminder.end, end),
-                  ])
-                    MSegment(
-                      selected: _editingEnd == isEnd,
-                      semanticLabel: label,
-                      onTap: () => setState(() => _editingEnd = isEnd),
-                      child: Column(
-                        mainAxisAlignment: .center,
-                        spacing: 2,
-                        children: [
-                          Opacity(
-                            opacity: 0.7,
-                            child: MSegmentText(
-                              label,
-                              style: theme.typography.labelSmall.onSurface,
-                            ),
-                          ),
-                          MSegmentText(
-                            value,
-                            style: theme
-                                .typography
-                                .titleMedium
-                                .emphasized
-                                .onSurface
-                                .tabular,
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
             MTimeWheel(
-              hour: selectedTime ~/ 60,
-              minute: selectedTime % 60,
-              onChanged: _setTime,
+              hour: _hour,
+              minute: _minute,
+              onChanged: (hour, minute) => setState(() {
+                _hour = hour;
+                _minute = minute;
+              }),
             ),
             Column(
               crossAxisAlignment: .stretch,
