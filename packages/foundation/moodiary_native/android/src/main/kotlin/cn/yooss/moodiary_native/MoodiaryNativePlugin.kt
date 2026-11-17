@@ -16,6 +16,7 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
             McpKeepAliveService.events = it
         }
         HtmlClipboardApi.setUp(messenger, HtmlClipboard(binding.applicationContext))
+        LocalTimeZoneApi.setUp(messenger, LocalTimeZone())
         ImageTransferApi.setUp(messenger, ImageTransfer(binding.applicationContext))
         keyboard = KeyboardHeight().also { KeyboardHeightStreamHandler.register(messenger, it) }
         keepAlive = BackgroundKeepAlive(binding.applicationContext).also {
@@ -30,6 +31,7 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
         }
         keepAliveEvents = null
         HtmlClipboardApi.setUp(messenger, null)
+        LocalTimeZoneApi.setUp(messenger, null)
         ImageTransferApi.setUp(messenger, null)
         BackgroundKeepAliveApi.setUp(messenger, null)
         keyboard?.activity = null

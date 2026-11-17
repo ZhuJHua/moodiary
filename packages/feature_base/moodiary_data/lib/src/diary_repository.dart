@@ -35,6 +35,20 @@ class DiaryRepository {
 
   Stream<DiaryEvent> get diaryEvents => _events.stream;
 
+  Future<bool> hasDiaryOnDate(DateTime date) async {
+    final start = DateTime(date.year, date.month, date.day);
+    final end = DateTime(date.year, date.month, date.day + 1);
+    final query = _db.select(_db.diaries)
+      ..where(
+        (diary) =>
+            diary.show.equals(1) &
+            diary.time.isBiggerOrEqualValue(dbTime(start)) &
+            diary.time.isSmallerThanValue(dbTime(end)),
+      )
+      ..limit(1);
+    return await query.getSingleOrNull() != null;
+  }
+
   static Diary _toDiary(
     DiaryRow r, {
     required List<String> images,

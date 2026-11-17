@@ -161,6 +161,11 @@ class SettingRoute extends MoodiaryRouteBase {
   const SettingRoute() : super(path);
 }
 
+class ReminderRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/reminder';
+  const ReminderRoute() : super(path);
+}
+
 class EditorMigrationRoute extends MoodiaryRouteBase {
   static const String path = '/migration';
 
