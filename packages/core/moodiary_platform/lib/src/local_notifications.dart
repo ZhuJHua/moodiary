@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:moodiary_native/moodiary_native.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -107,7 +107,7 @@ class DeviceLocalNotifications implements LocalNotifications {
 
   @override
   Future<String> updateTimeZone() async {
-    final id = await LocalTimeZoneApi().localTimeZoneId();
+    final id = (await FlutterTimezone.getLocalTimezone()).identifier;
     tz.Location location;
     try {
       location = tz.getLocation(id);
