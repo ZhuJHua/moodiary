@@ -69,7 +69,7 @@ void main() {
     final deleted = await run(.deleteCategory, {
       'ids': [category.id],
     });
-    expect(deleted, contains('"deleted":true'));
+    expect(deleted, contains('"ok":true'));
     expect(await categories.getCategoryById(category.id), isNull);
   });
 
@@ -93,7 +93,7 @@ void main() {
     final deleted = await run(.deleteCategory, {
       'ids': [category.id],
     });
-    expect(deleted, contains('"deleted":true'));
+    expect(deleted, contains('"ok":true'));
     expect(await categories.getCategoryById(category.id), isNull);
     expect(await categories.getCategoryById(child.id), renamed);
   });

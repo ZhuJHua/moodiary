@@ -7,6 +7,7 @@ import 'package:meta/meta.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
+import 'package:moodiary_assistant/src/data/tool_call_data.dart';
 
 const String _gateRun = 'run';
 const String _gateSkip = 'skip:';
@@ -199,11 +200,7 @@ class RigAssistantService implements AssistantService {
     String argsJson,
   ) {
     final allowed = request.allowedTools;
-    final spec =
-        allowed != null &&
-            !allowed
-                .map(normalizeAssistantToolId)
-                .contains(normalizeAssistantToolId(name))
+    final spec = allowed != null && !allowed.contains(name)
         ? null
         : AssistantToolRegistry.byId(name);
     return dispatchAssistantTool(
@@ -225,7 +222,10 @@ Future<String> dispatchAssistantTool({
   try {
     final trimmed = argsJson.trim();
     final raw = (trimmed.isEmpty || trimmed == 'null') ? '{}' : trimmed;
-    final input = (jsonDecode(raw) as Map).cast<String, dynamic>();
+    final input = decodeJsonMap(raw);
+    if (input == null) {
+      throw const FormatException('tool arguments must be a JSON object');
+    }
     return await spec.run(input);
   } catch (e) {
     return 'Failed: $toolName threw $e. Check the arguments against the schema, '

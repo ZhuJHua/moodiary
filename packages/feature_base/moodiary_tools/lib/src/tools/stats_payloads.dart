@@ -3,6 +3,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 
 import '../ops/diary_display.dart';
 import 'diary_payloads.dart';
+import 'tool_values.dart';
 
 class DiaryStatsPayloads {
   DiaryStatsPayloads({
@@ -17,15 +18,16 @@ class DiaryStatsPayloads {
 
   /// Local-month buckets plus `olderDiaries` and `futureDiaries` always sum
   /// to `visibleDiaries`.
-  Future<Map<String, dynamic>> statsPayload({int months = 12}) async {
+  Future<Map<String, dynamic>> statsPayload({int? months}) async {
     final total = await diaries.countAllDiaries();
     final byCategory = await diaries.diaryCountByCategory();
     final names = await categoryNames(categories);
     final monthly = await diaries.diaryCountByMonth(sort: DiarySort.timeDesc);
 
-    // A non-positive window would make the invariant meaningless, so one month
-    // is the floor; the tool layer already clamps its own range.
-    final windowMonths = months < 1 ? 1 : months;
+    final requestedMonths = months ?? statsMonths.fallback;
+    final windowMonths = requestedMonths < statsMonths.min
+        ? statsMonths.min
+        : requestedMonths;
     final now = DateTime.now();
     final windowStart = DateTime(now.year, now.month - (windowMonths - 1));
     final windowEnd = DateTime(now.year, now.month);
@@ -44,9 +46,7 @@ class DiaryStatsPayloads {
       }
     }
 
-    // The mood counts describe the same population as the diary totals: every
-    // visible row, future-dated ones included, so `recordedDiaries +
-    // diariesWithoutMood` always equals `visibleDiaries`.
+    // Include future dates so mood counts reconcile with visibleDiaries.
     final entries = await insights.allVisibleEntries();
     final mood = summarizeMood(entries);
     final recorded = mood.distribution.values.fold(0, (sum, n) => sum + n);
@@ -67,7 +67,6 @@ class DiaryStatsPayloads {
     return {
       'totalDiaries': total,
       'visibleDiaries': byCategory.total,
-      // The recycle bin is exactly the hidden rows, so no second query is needed.
       'recycleBinDiaries': total - byCategory.total,
       'uncategorizedDiaries': byCategory.total - categorised,
       'firstDiaryTime': entries.isEmpty

@@ -1,15 +1,14 @@
-/// Shared diary writes. Body edits re-derive media references, user edits
-/// bump `lastModified`, and category ids are validated before storage.
 library;
 
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
-/// Input body format, converted to the editor's stored representation.
+import '../tools/diary_payloads.dart';
+import '../tools/diary_time.dart';
+
 enum DiaryContentFormat { markdown, plainText, document }
 
-/// What made a write fail. Callers turn this into their own error surface.
 enum DiaryOpsFailure {
   notFound,
   emptyContent,
@@ -17,17 +16,15 @@ enum DiaryOpsFailure {
   fieldRequired,
   noChanges,
 
-  /// A `DiaryContentFormat.document` body is not a Tiptap document object.
   invalidDocument,
 
-  /// The body references media the caller did not attach, so the write would
-  /// let a diary of one client point at another client's media.
   foreignMedia,
   conflictingBodyEdits,
   unsupportedBodyAddition,
   missingMedia,
   unknownMediaRemoval,
   mediaRemovalRequiresContent,
+  rewriteTooLong,
 }
 
 class DiaryOpsException implements Exception {
@@ -35,12 +32,14 @@ class DiaryOpsException implements Exception {
     this.failure, {
     this.id,
     this.categoryId,
+    this.maxRewriteChars,
     this.mediaNames = const [],
   });
 
   final DiaryOpsFailure failure;
   final String? id;
   final String? categoryId;
+  final int? maxRewriteChars;
   final List<String> mediaNames;
 
   @override
@@ -59,6 +58,8 @@ class DiaryPatch {
     this.moodSet = false,
     this.categoryId,
     this.time,
+    this.timeInput,
+    this.maxRewriteChars,
     this.tags,
   });
 
@@ -74,6 +75,8 @@ class DiaryPatch {
 
   final String? categoryId;
   final DateTime? time;
+  final String? timeInput;
+  final int? maxRewriteChars;
   final List<String>? tags;
 
   bool get isEmpty =>
@@ -85,6 +88,7 @@ class DiaryPatch {
       !moodSet &&
       categoryId == null &&
       time == null &&
+      timeInput == null &&
       tags == null;
 }
 
@@ -154,6 +158,15 @@ class DiaryWrites {
     final existing = await diaries.getDiaryByBusinessId(id);
     if (existing == null || !existing.show) {
       throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
+    }
+    if (patch.content != null && patch.maxRewriteChars != null) {
+      if (readBody(existing, patch.maxRewriteChars!, 'markdown').truncated) {
+        throw DiaryOpsException(
+          DiaryOpsFailure.rewriteTooLong,
+          id: id,
+          maxRewriteChars: patch.maxRewriteChars,
+        );
+      }
     }
     if (patch.content != null &&
         (patch.append != null || patch.prepend != null)) {
@@ -230,7 +243,14 @@ class DiaryWrites {
         categoryId: await _resolveCategory(categoryId, requireKnown: true),
       );
     }
-    if (patch.time case final time?) {
+    final time = patch.timeInput == null
+        ? patch.time
+        : resolveDiaryTime(
+            patch.timeInput,
+            reference: existing.time,
+            subject: 'update_diary',
+          );
+    if (time != null) {
       next = next.copyWith(time: time);
     }
     if (patch.tags case final tags?) {
@@ -326,7 +346,6 @@ class DiaryWrites {
     return null;
   }
 
-  /// Refuses a body that reaches for media [existing] does not own.
   void _rejectForeignMedia(
     Diary? existing,
     String content,

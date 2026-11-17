@@ -15,6 +15,7 @@ McpServer buildMoodiaryServer({
   required String appVersion,
   required Uri iconUri,
   DiaryMediaStore? mediaStore,
+  EmbedIndexService? semantic,
 }) {
   final server = McpServer(
     Implementation(
@@ -41,6 +42,7 @@ McpServer buildMoodiaryServer({
     categories: categories,
     insights: insights,
     mediaStore: mediaStore,
+    semantic: semantic,
   );
   registerDiaryPrompts(server, diaries: diaries, insights: insights);
   return server;
@@ -52,10 +54,9 @@ void registerMoodiaryTools(
   required CategoryRepository categories,
   required MoodInsightsRepository insights,
   DiaryMediaStore? mediaStore,
+  EmbedIndexService? semantic,
 }) {
-  for (final def in moodiaryTools.where(
-    (tool) => tool.surfaces.contains(ToolSurface.mcp),
-  )) {
+  for (final def in toolsFor(ToolSurface.mcp)) {
     server.registerTool(
       def.name,
       title: def.title,
@@ -66,7 +67,7 @@ void registerMoodiaryTools(
         readOnlyHint: def.effect == ToolEffect.read,
         destructiveHint: def.effect == ToolEffect.destructive,
         idempotentHint: def.idempotent,
-        openWorldHint: def.openWorld,
+        openWorldHint: false,
       ),
       callback: (arguments, call) async {
         try {
@@ -78,12 +79,7 @@ void registerMoodiaryTools(
               insights: insights,
               surface: ToolSurface.mcp,
               mediaStore: mediaStore,
-              progress: (progress, {total, message}) => reportProgress(
-                call,
-                progress,
-                total: total,
-                message: message,
-              ),
+              semantic: semantic,
             ),
           );
           final json = jsonToolResult(result.data);

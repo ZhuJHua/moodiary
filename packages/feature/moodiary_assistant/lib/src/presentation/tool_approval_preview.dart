@@ -203,11 +203,7 @@ Future<ToolApprovalPreview> _updateDiary(
         _ => l10n.assistant.approvalFieldTags,
       };
       final value = item[field];
-      final mood = field == 'mood'
-          ? value is int
-                ? DiaryMood.fromScore(value)
-                : DiaryMood.fromName(_str(value).toLowerCase())
-          : null;
+      final mood = field == 'mood' ? toolMood(value) : null;
       lines.add((
         label: label,
         value: mood != null

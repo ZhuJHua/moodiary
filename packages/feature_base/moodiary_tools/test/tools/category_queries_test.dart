@@ -3,7 +3,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_tools/src/tools/category_queries.dart';
 
-import 'support.dart';
+import '../support.dart';
 
 void main() {
   late MoodiaryDatabase db;

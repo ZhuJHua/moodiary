@@ -1,4 +1,3 @@
-/// Category writes reject deletion of non-empty categories.
 library;
 
 import 'package:moodiary_data/moodiary_data.dart';

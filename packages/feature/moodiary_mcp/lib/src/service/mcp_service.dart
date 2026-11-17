@@ -49,7 +49,7 @@ class McpServerState {
 /// Owns the local MCP endpoint, tool catalog and bearer token.
 @lazySingleton
 class McpService {
-  McpService(this._diaries, this._categories, this._insights)
+  McpService(this._diaries, this._categories, this._insights, [this._semantic])
     : _endpointFactory = null,
       _networkChanges = null;
 
@@ -60,11 +60,12 @@ class McpService {
     this._insights,
     this._endpointFactory,
     this._networkChanges,
-  );
+  ) : _semantic = null;
 
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
   final MoodInsightsRepository _insights;
+  final EmbedIndexService? _semantic;
   final McpHttpEndpoint Function()? _endpointFactory;
   final Stream<Object?>? _networkChanges;
   final Lock _lock = Lock();
@@ -140,6 +141,7 @@ class McpService {
               diaries: _diaries,
               categories: _categories,
               insights: _insights,
+              semantic: _semantic,
               appVersion: version,
               iconUri: iconUri,
             ),

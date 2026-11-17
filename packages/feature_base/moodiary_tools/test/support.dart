@@ -1,4 +1,3 @@
-/// Shared diary tool fixtures and result readers.
 library;
 
 import 'dart:convert';
@@ -17,7 +16,6 @@ MoodiaryDatabase openTestDatabase() => MoodiaryDatabase.forTesting(
   ),
 );
 
-/// A Tiptap document holding one paragraph with a single text run.
 String paragraphDoc(String text) => jsonEncode(
   TiptapContent.newDoc([
     {
@@ -29,7 +27,6 @@ String paragraphDoc(String text) => jsonEncode(
   ]),
 );
 
-/// A diary fixture with media derived from its document.
 Diary makeDiary(
   String id,
   String text, {
@@ -87,86 +84,30 @@ Diary makeDiary(
 class TestToolClient {
   TestToolClient(this.context);
   final ToolContext context;
-  Future<Map<String, dynamic>> toolCall(
+  Future<ToolResult> toolCall(
     String name, [
     Map<String, dynamic> arguments = const {},
   ]) async {
     final def = moodiaryTools.firstWhere((tool) => tool.name == name);
-    try {
-      final result = await def.call(arguments, context);
-      expect(
-        await def.output.validate(result.data),
-        isEmpty,
-        reason: '$name output',
-      );
-      return {
-        'result': {
-          'structuredContent': result.data,
-          'content': [
-            for (final media in result.media)
-              {
-                'type': 'image',
-                'data': base64Encode(media.bytes),
-                'mimeType': media.mimeType,
-              },
-            {'type': 'text', 'text': jsonEncode(result.data)},
-          ],
-        },
-      };
-    } on ToolArgumentException catch (error) {
-      return {
-        'error': {'code': -32602, 'message': error.message},
-      };
-    } on ToolFailure catch (error) {
-      return {
-        'result': {
-          'isError': true,
-          'content': [
-            {'type': 'text', 'text': error.message},
-          ],
-        },
-      };
-    }
+    final result = await def.call(arguments, context);
+    expect(
+      await def.output.validate(result.data),
+      isEmpty,
+      reason: '$name output',
+    );
+    return result;
   }
 
   Future<String> newCategory(String name, {Object? color}) async {
-    final created = structuredOf(
-      await toolCall('create_category', {
-        'items': [
-          {'name': name, 'color': ?color},
-        ],
-      }),
-    );
+    final created = (await toolCall('create_category', {
+      'items': [
+        {'name': name, 'color': ?color},
+      ],
+    })).data;
     final row = (created['results'] as List).single as Map;
     expect(row['ok'], isTrue);
-    expect(row['created'], isTrue);
     return (row['category'] as Map<String, dynamic>)['id'] as String;
   }
-}
-
-Map<String, dynamic> resultOf(Map<String, dynamic> response) =>
-    response['result'] as Map<String, dynamic>;
-
-Map<String, dynamic> structuredOf(Map<String, dynamic> response) =>
-    resultOf(response)['structuredContent'] as Map<String, dynamic>;
-
-List<Map<String, dynamic>> contentOf(Map<String, dynamic> response) => [
-  for (final item in resultOf(response)['content'] as List)
-    (item as Map).cast<String, dynamic>(),
-];
-
-String textOf(Map<String, dynamic> response) =>
-    contentOf(response).single['text'] as String;
-
-int errorCode(Map<String, dynamic> response) =>
-    (response['error'] as Map)['code'] as int;
-
-String errorMessage(Map<String, dynamic> response) =>
-    (response['error'] as Map)['message'] as String;
-
-List<String> completionValues(Map<String, dynamic> response) {
-  final completion = resultOf(response)['completion'] as Map;
-  return (completion['values'] as List).cast<String>();
 }
 
 List<String> diaryIds(Map<String, dynamic> data) => [
@@ -185,12 +126,3 @@ Map<String, dynamic> storedDoc(String content) =>
 
 List<Map<String, dynamic>> docBlocks(Map<String, dynamic> doc) =>
     (doc['content'] as List).cast<Map<String, dynamic>>();
-
-Map<String, dynamic> toolNamed(Map<String, dynamic> listed, String name) =>
-    (listed['tools'] as List).cast<Map<String, dynamic>>().firstWhere(
-      (tool) => tool['name'] == name,
-    );
-
-Map<String, dynamic> propertiesOf(Map<String, dynamic> tool) =>
-    (tool['inputSchema'] as Map<String, dynamic>)['properties']
-        as Map<String, dynamic>;

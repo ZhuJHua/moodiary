@@ -1,22 +1,19 @@
-/// Diary statistics tools.
 library;
 
 import 'package:flutter/foundation.dart' show internal;
 import 'package:json_schema_builder/json_schema_builder.dart';
 
 import 'arguments.dart';
-import 'diary_references.dart';
 import 'output_schemas.dart';
 import 'schemas.dart';
 import 'stats_payloads.dart';
 import 'tool_def.dart';
+import 'tool_values.dart';
 
 @internal
-final List<ToolDefinition> statsTools = [
+final List<ToolDef> statsTools = [
   ToolDef(
     name: 'get_stats',
-    validateArguments: validateToolArguments,
-    references: (result) => diaryReferences('get_stats', result.data),
     title: 'Diary statistics',
     description: (_) =>
         'Reports the diary totals (all rows, visible, recycle bin, '
@@ -33,29 +30,53 @@ final List<ToolDefinition> statsTools = [
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
-    output: toolOutputSchema('get_stats'),
-    parse: _parseGetStats,
-    run: (input, ctx) => _getStats(input, ctx),
-    toJson: (result) => result.data,
-    media: (result) => result.media,
+    output: _getStatsOutput,
+    parse: (raw) =>
+        ToolArguments('get_stats', raw).optionalInt('months', statsMonths),
+    run: (months, ctx) async => ToolResult(
+      await DiaryStatsPayloads(
+        diaries: ctx.diaries,
+        categories: ctx.categories,
+        insights: ctx.insights,
+      ).statsPayload(months: months),
+    ),
   ),
 ];
 
-Future<ToolResult> _getStats(_GetStatsInput input, ToolContext ctx) async {
-  final (:months) = input;
-  return ToolResult(
-    await DiaryStatsPayloads(
-      diaries: ctx.diaries,
-      categories: ctx.categories,
-      insights: ctx.insights,
-    ).statsPayload(months: months),
-  );
-}
-
-typedef _GetStatsInput = ({int months});
-
-_GetStatsInput _parseGetStats(Map<String, Object?> raw) {
-  final args = ToolArguments('get_stats', raw);
-  final months = args.optionalInt('months', fallback: 12, min: 1, max: 120);
-  return (months: months);
-}
+final _getStatsOutput = objectSchema({
+  for (final key in [
+    'totalDiaries',
+    'visibleDiaries',
+    'recycleBinDiaries',
+    'uncategorizedDiaries',
+    'olderDiaries',
+    'futureDiaries',
+  ])
+    key: integerOutputSchema,
+  'firstDiaryTime': nullableStringOutputSchema,
+  'lastDiaryTime': nullableStringOutputSchema,
+  'months': listOutputSchema(
+    objectSchema({'month': stringOutputSchema, 'diaries': integerOutputSchema}),
+  ),
+  'monthsWindow': objectSchema({
+    'from': stringOutputSchema,
+    'to': stringOutputSchema,
+  }),
+  'categories': listOutputSchema(
+    objectSchema({
+      'categoryId': stringOutputSchema,
+      'categoryName': nullableStringOutputSchema,
+      'diaries': integerOutputSchema,
+    }),
+  ),
+  'moods': objectSchema({
+    'distribution': objectSchema({
+      for (final mood in toolMoodNames) mood: integerOutputSchema,
+    }),
+    'recordedDiaries': integerOutputSchema,
+    'diariesWithoutMood': integerOutputSchema,
+    'averageScore': S.combined(type: [JsonType.num, JsonType.nil]),
+    'recordedDays': integerOutputSchema,
+  }),
+  'generatedAt': stringOutputSchema,
+});

@@ -1,4 +1,3 @@
-/// Category tools: list, create, update and delete.
 library;
 
 import 'package:flutter/foundation.dart' show internal;
@@ -10,17 +9,14 @@ import 'arguments.dart';
 import 'batch.dart';
 import 'category_queries.dart';
 import 'diary_payloads.dart';
-import 'diary_references.dart';
 import 'output_schemas.dart';
 import 'schemas.dart';
 import 'tool_def.dart';
 
 @internal
-final List<ToolDefinition> categoryTools = [
+final List<ToolDef> categoryTools = [
   ToolDef(
     name: 'list_categories',
-    validateArguments: validateToolArguments,
-    references: (result) => diaryReferences('list_categories', result.data),
     title: 'List categories',
     description: (_) =>
         'Lists every diary category with id, name, ARGB colour, colour hex '
@@ -29,21 +25,16 @@ final List<ToolDefinition> categoryTools = [
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
-    output: toolOutputSchema('list_categories'),
-    parse: _parseListCategories,
-    run: (input, ctx) => _listCategories(input, ctx),
-    toJson: (result) => result.data,
-    media: (result) => result.media,
+    output: _listCategoriesOutput,
+    parse: (raw) => raw,
+    run: (_, ctx) => _listCategories(ctx),
   ),
   ToolDef(
     name: 'create_category',
-    validateArguments: validateToolArguments,
-    references: (result) => diaryReferences('create_category', result.data),
     title: 'Create a category',
     description: (_) =>
-        'Pass every item in one call. Each result has ok and an error on failure; '
-        'do not repeat items that already succeeded. '
-        'Creates each diary in the batch category. color accepts a 32 bit ARGB integer '
+        '$toolBatchDescription'
+        'Creates categories in the batch. color accepts a 32 bit ARGB integer '
         'or a #RRGGBB / #AARRGGBB string.',
     input: (_) => batchItemsSchema(
       S.object(
@@ -54,23 +45,18 @@ final List<ToolDefinition> categoryTools = [
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: false,
-    output: toolOutputSchema('create_category'),
+    output: _createCategoryOutput,
     parse: toolBatchItems,
     run: (items, ctx) => runToolBatch(
       items,
       (item) => _createCategory(_parseCreateCategory(item), ctx),
     ),
-    toJson: (result) => result.data,
-    media: (result) => result.media,
   ),
   ToolDef(
     name: 'update_category',
-    validateArguments: validateToolArguments,
-    references: (result) => diaryReferences('update_category', result.data),
     title: 'Update a category',
     description: (_) =>
-        'Pass every item in one call. Each result has ok and an error on failure; '
-        'do not repeat items that already succeeded. '
+        '$toolBatchDescription'
         'Renames or recolours categories in items (1–20), leaving omitted fields unchanged. '
         'Send null (or an empty string) for color to clear it. Requires at '
         'least one of name and color.',
@@ -78,7 +64,7 @@ final List<ToolDefinition> categoryTools = [
       S.object(
         properties: {
           'id': requiredCategoryIdSchema,
-          'name': categoryNameSchema,
+          'name': nullableSchema(categoryNameSchema, JsonType.string),
           'color': colorSchema,
         },
         required: ['id'],
@@ -87,23 +73,18 @@ final List<ToolDefinition> categoryTools = [
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: true,
-    output: toolOutputSchema('update_category'),
+    output: _updateCategoryOutput,
     parse: toolBatchItems,
     run: (items, ctx) => runToolBatch(
       items,
       (item) => _updateCategory(_parseUpdateCategory(item), ctx),
     ),
-    toJson: (result) => result.data,
-    media: (result) => result.media,
   ),
   ToolDef(
     name: 'delete_category',
-    validateArguments: validateToolArguments,
-    references: (result) => diaryReferences('delete_category', result.data),
     title: 'Delete a category',
     description: (_) =>
-        'Pass every item in one call. Each result has ok and an error on failure; '
-        'do not repeat items that already succeeded. '
+        '$toolBatchDescription'
         'Deletes empty categories in ids (1–20). Refuses categories holding diaries, '
         'including those in the recycle bin, and reports the reason.',
     input: (_) => S.object(
@@ -113,18 +94,19 @@ final List<ToolDefinition> categoryTools = [
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.destructive,
     idempotent: true,
-    output: toolOutputSchema('delete_category'),
+    output: _deleteCategoryOutput,
     parse: toolBatchIds,
     run: (items, ctx) => runToolBatch(
       items,
-      (item) => _deleteCategory(_parseDeleteCategory(item), ctx),
+      (item) => _deleteCategory(
+        ToolArguments('delete_category', item).requireText('id'),
+        ctx,
+      ),
     ),
-    toJson: (result) => result.data,
-    media: (result) => result.media,
   ),
 ];
 
-Future<ToolResult> _listCategories(Object? input, ToolContext ctx) async {
+Future<ToolResult> _listCategories(ToolContext ctx) async {
   final categories = ctx.categories;
   final diaries = ctx.diaries;
   final listed = await CategoryToolQueries(
@@ -142,10 +124,7 @@ Future<ToolResult> _createCategory(
   final ops = CategoryOps(categories: categories);
   final (:name, :color) = input;
   final category = await ops.create(name: name, color: color);
-  return ToolResult({
-    'created': true,
-    'category': categoryInfo(category, diaryCount: 0),
-  });
+  return ToolResult({'category': categoryInfo(category, diaryCount: 0)});
 }
 
 Future<ToolResult> _updateCategory(
@@ -162,47 +141,35 @@ Future<ToolResult> _updateCategory(
       color: color,
       colorSet: colorSet,
     );
-    return ToolResult({'updated': true, 'category': categoryInfo(category)});
+    return ToolResult({'category': categoryInfo(category)});
   } on DiaryOpsException catch (e) {
     return switch (e.failure) {
-      DiaryOpsFailure.notFound => _failure(
+      DiaryOpsFailure.notFound => toolFailure(
         'update_category: no category with id="$id".',
       ),
       DiaryOpsFailure.noChanges => throw const ToolArgumentException(
         'update_category: provide at least one of name, color',
       ),
-      _ => _failure('update_category: could not update.'),
+      _ => toolFailure('update_category: could not update.'),
     };
   }
 }
 
-Future<ToolResult> _deleteCategory(
-  _DeleteCategoryInput input,
-  ToolContext ctx,
-) async {
+Future<ToolResult> _deleteCategory(String id, ToolContext ctx) async {
   final categories = ctx.categories;
   final ops = CategoryOps(categories: categories);
-  final (:id) = input;
   try {
     final result = await ops.delete(id);
     if (!result.deleted) {
-      return ToolResult({
-        'deleted': false,
-        'id': id,
-        'name': result.category.categoryName,
-        'reason':
-            'the app refuses to delete a category that still holds diaries, '
-            'including diaries in the recycle bin; move those diaries to '
-            'another category first',
-      });
+      throw const ToolFailure(
+        'the app refuses to delete a category that still holds diaries, '
+        'including diaries in the recycle bin; move those diaries to '
+        'another category first',
+      );
     }
-    return ToolResult({
-      'deleted': true,
-      'id': id,
-      'name': result.category.categoryName,
-    });
+    return ToolResult({'id': id, 'name': result.category.categoryName});
   } on DiaryOpsException {
-    return _failure('delete_category: no category with id="$id".');
+    return toolFailure('delete_category: no category with id="$id".');
   }
 }
 
@@ -231,14 +198,19 @@ _UpdateCategoryInput _parseUpdateCategory(Map<String, Object?> raw) {
   return (id: id, name: name, color: color, colorSet: colorSet);
 }
 
-typedef _DeleteCategoryInput = ({String id});
+final _listCategoriesOutput = objectSchema({
+  'categories': listOutputSchema(categoryOutputSchema),
+  'total': integerOutputSchema,
+});
 
-_DeleteCategoryInput _parseDeleteCategory(Map<String, Object?> raw) {
-  final args = ToolArguments('delete_category', raw);
-  final id = args.requireText('id');
-  return (id: id);
-}
+final _createCategoryOutput = batchOutputSchema(
+  objectSchema({'category': categoryOutputSchema}),
+);
 
-Object? _parseListCategories(Map<String, Object?> raw) => null;
+final _updateCategoryOutput = batchOutputSchema(
+  objectSchema({'category': categoryOutputSchema}),
+);
 
-Never _failure(String message) => throw ToolFailure(message);
+final _deleteCategoryOutput = batchOutputSchema(
+  objectSchema({'id': stringOutputSchema, 'name': stringOutputSchema}),
+);

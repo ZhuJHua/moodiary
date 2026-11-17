@@ -134,7 +134,7 @@ void main() {
     test('带上入参与一行摘要，不重放完整结果', () {
       final record = AssistantToolRegistry.recordOf([
         call(
-          'searchDiaries',
+          'search_diaries',
           '{"query":"搬家"}',
           '47 matches; the first 8 follow.\n'
               'id=a 【2026-08-11】搬家第一天\n（此处还有两千字）',
@@ -149,7 +149,7 @@ void main() {
 
     test('没跑完的调用不进记录', () {
       final record = AssistantToolRegistry.recordOf(const [
-        AssistantToolCall(callId: 'x', name: 'searchDiaries'),
+        AssistantToolCall(callId: 'x', name: 'search_diaries'),
       ]);
       expect(record, isEmpty);
     });
@@ -160,8 +160,8 @@ void main() {
 
     test('多次调用逐行列出', () {
       final record = AssistantToolRegistry.recordOf([
-        call('searchDiaries', '{}', '3 matches:'),
-        call('getDiary', '{"ids":["a","b"]}', 'id=a …'),
+        call('search_diaries', '{}', '3 matches:'),
+        call('get_diary', '{"ids":["a","b"]}', 'id=a …'),
       ]);
       expect(record.split('\n').length, 3);
       expect(record, contains('get_diary({"ids":["a","b"]}) → 2 篇全文'));

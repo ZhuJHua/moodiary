@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -14,33 +13,27 @@ import 'package:moodiary_tools/moodiary_tools.dart';
 
 import 'support.dart';
 
-/// A Tiptap document with a heading and one bold paragraph, used to show that a
-/// `contentFormat` really reaches the stored document.
-String richDocument() => jsonEncode({
-  'type': 'doc',
-  'attrs': {'v': 2},
-  'content': [
-    {
-      'type': 'heading',
-      'attrs': {'level': 1},
-      'content': [
-        {'type': 'text', 'text': 'Heading'},
-      ],
-    },
-    {
-      'type': 'paragraph',
-      'content': [
-        {
-          'type': 'text',
-          'text': 'bold words',
-          'marks': [
-            {'type': 'bold'},
-          ],
-        },
-      ],
-    },
-  ],
-});
+class _SemanticIndex extends Fake implements EmbedIndexService {
+  _SemanticIndex({this.enabled = true});
+
+  @override
+  final bool enabled;
+  final queries = <String>[];
+  final limits = <int>[];
+
+  @override
+  Future<List<SemanticHit>> search(
+    String query, {
+    int limit = 5,
+    String? categoryId,
+    DateTime? start,
+    DateTime? endExclusive,
+  }) async {
+    queries.add(query);
+    limits.add(limit);
+    return [(diaryId: 'meaning', distance: 0.25, startOff: 0, len: 1)];
+  }
+}
 
 void main() {
   late MoodiaryDatabase db;
@@ -57,11 +50,7 @@ void main() {
 
   setUp(() {
     mediaRoot = Directory.systemTemp.createTempSync('mcp-protocol-');
-    db = MoodiaryDatabase.forTesting(
-      NativeDatabase.memory(
-        setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
-      ),
-    );
+    db = openTestDatabase();
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
     insights = MoodInsightsRepository(db);
@@ -82,6 +71,80 @@ void main() {
     await client.close();
     await db.close();
     await mediaRoot.delete(recursive: true);
+  });
+
+  TestMcpClient withSemantic(EmbedIndexService index) {
+    final semanticClient = TestMcpClient(
+      server: buildMoodiaryServer(
+        diaries: diaries,
+        categories: categories,
+        insights: insights,
+        appVersion: 'test',
+        iconUri: Uri.parse('http://127.0.0.1/icon.png'),
+        semantic: index,
+      ),
+    );
+    addTearDown(semanticClient.close);
+    return semanticClient;
+  }
+
+  test(
+    'MCP auto and meaning modes use the semantic index and report provenance',
+    () async {
+      await diaries.insertDiaries([
+        makeDiary('keyword', 'orchard'),
+        makeDiary('meaning', 'trees'),
+      ]);
+      final index = _SemanticIndex();
+      final semanticClient = withSemantic(index);
+      for (final mode in ['meaning', 'auto']) {
+        final data = structuredOf(
+          await semanticClient.toolCall('search_diaries', {
+            'query': 'orchard',
+            'mode': mode,
+          }),
+        );
+        expect(data['semanticAvailable'], isTrue);
+        expect(data['meaningRan'], isTrue);
+        final hits = (data['hits'] as List).cast<Map>();
+        expect(
+          hits.map((hit) => hit['id']),
+          mode == 'meaning' ? ['meaning'] : ['keyword', 'meaning'],
+        );
+        final meaning = hits.singleWhere((hit) => hit['id'] == 'meaning');
+        expect(meaning['via'], 'meaning');
+        expect(meaning['similarity'], 0.75);
+        if (mode == 'auto') {
+          final keyword = hits.singleWhere((hit) => hit['id'] == 'keyword');
+          expect(keyword['via'], 'keyword');
+          expect(keyword['similarity'], isNull);
+        }
+      }
+      expect(index.queries, ['orchard', 'orchard']);
+      expect(index.limits, [50, 50]);
+    },
+  );
+
+  test('MCP auto and meaning modes fall back to keywords when semantic search is unavailable', () async {
+    await diaries.insertADiary(makeDiary('keyword', 'orchard'));
+    final disabled = _SemanticIndex(enabled: false);
+    for (final fallbackClient in [client, withSemantic(disabled)]) {
+      for (final mode in ['auto', 'meaning']) {
+        final data = structuredOf(
+          await fallbackClient.toolCall('search_diaries', {
+            'query': 'orchard',
+            'mode': mode,
+          }),
+        );
+        expect(data['semanticAvailable'], isFalse);
+        expect(data['meaningRan'], isFalse);
+        final hit = (data['hits'] as List).single as Map;
+        expect(hit['id'], 'keyword');
+        expect(hit['via'], 'keyword');
+        expect(hit['similarity'], isNull);
+      }
+    }
+    expect(disabled.queries, isEmpty);
   });
 
   test(
@@ -166,11 +229,37 @@ void main() {
 
       final listed = resultOf(await client.call('tools/list'));
       final tools = (listed['tools'] as List).cast<Map<String, dynamic>>();
-      expect(
-        (toolNamed(listed, 'update_diary')['annotations']
-            as Map)['destructiveHint'],
-        isFalse,
-      );
+      const annotations = {
+        'get_diary': (read: true, destructive: false, idempotent: true),
+        'create_diary': (read: false, destructive: false, idempotent: false),
+        'update_diary': (read: false, destructive: true, idempotent: false),
+        'delete_diary': (read: false, destructive: true, idempotent: true),
+        'search_diaries': (read: true, destructive: false, idempotent: true),
+        'get_diary_links': (read: true, destructive: false, idempotent: true),
+        'list_tags': (read: true, destructive: false, idempotent: true),
+        'list_categories': (read: true, destructive: false, idempotent: true),
+        'create_category': (read: false, destructive: false, idempotent: false),
+        'update_category': (read: false, destructive: false, idempotent: true),
+        'delete_category': (read: false, destructive: true, idempotent: true),
+        'get_stats': (read: true, destructive: false, idempotent: true),
+        'list_diary_media': (read: true, destructive: false, idempotent: true),
+        'read_diary_media': (read: true, destructive: false, idempotent: true),
+        'add_diary_image': (read: false, destructive: false, idempotent: false),
+        'add_diary_attachment': (
+          read: false,
+          destructive: false,
+          idempotent: false,
+        ),
+      };
+      for (final tool in tools) {
+        final expected = annotations[tool['name']]!;
+        expect(tool['annotations'], {
+          'readOnlyHint': expected.read,
+          'destructiveHint': expected.destructive,
+          'idempotentHint': expected.idempotent,
+          'openWorldHint': false,
+        }, reason: '${tool['name']} annotations');
+      }
       expect(
         {for (final tool in tools) tool['name']},
         {
@@ -211,6 +300,7 @@ void main() {
         search.keys,
         unorderedEquals([
           'query',
+          'mode',
           'categoryId',
           'tag',
           'startDate',
@@ -221,7 +311,11 @@ void main() {
           'excerpt',
         ]),
       );
-      expect(search, isNot(contains('mode')));
+      expect(((search['mode'] as Map)['anyOf'] as List).first['enum'], [
+        'auto',
+        'keyword',
+        'meaning',
+      ]);
       expect(
         (propertiesOf(toolNamed(listed, 'get_diary'))['ids']
             as Map)['maxItems'],
