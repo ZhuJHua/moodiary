@@ -30,13 +30,7 @@ class _ReminderEditSheetState extends State<ReminderEditSheet> {
   late Set<int> _days = {
     ...(widget.reminder?.weekdays ?? ReminderPreset.everyDay.days),
   };
-  late ReminderPreset _repeat = ReminderPreset.values.firstWhere(
-    (mode) =>
-        mode != ReminderPreset.custom &&
-        _days.length == mode.days.length &&
-        _days.containsAll(mode.days),
-    orElse: () => ReminderPreset.custom,
-  );
+  late ReminderPreset _repeat = ReminderPreset.of(_days);
 
   void _setKind(bool random) => setState(() {
     if (random && !_isRandom) {
@@ -96,11 +90,11 @@ class _ReminderEditSheetState extends State<ReminderEditSheet> {
         ),
       ],
       child: Padding(
-        padding: const .only(bottom: 12),
+        padding: const .only(bottom: 4),
         child: Column(
           mainAxisSize: .min,
           crossAxisAlignment: .stretch,
-          spacing: 16,
+          spacing: 8,
           children: [
             MSegmentedControl<bool>(
               height: 44,
@@ -113,7 +107,7 @@ class _ReminderEditSheetState extends State<ReminderEditSheet> {
             ),
             if (_isRandom)
               MSegmentGroup(
-                height: 64,
+                height: 56,
                 children: [
                   for (final (isEnd, label, value) in [
                     (false, l10n.reminder.start, start),
@@ -155,12 +149,9 @@ class _ReminderEditSheetState extends State<ReminderEditSheet> {
             ),
             Column(
               crossAxisAlignment: .stretch,
-              spacing: 8,
+              spacing: 4,
               children: [
-                Text(
-                  l10n.reminder.repeat,
-                  style: theme.typography.labelLarge.onSurfaceVariant,
-                ),
+                MFormSection(l10n.reminder.repeat),
                 MSegmentedControl<ReminderPreset>(
                   height: 44,
                   selected: _repeat,
@@ -187,31 +178,26 @@ class _ReminderEditSheetState extends State<ReminderEditSheet> {
                     if (mode != ReminderPreset.custom) _days = mode.days;
                   }),
                 ),
-                if (_repeat == ReminderPreset.custom)
-                  Padding(
-                    padding: const .only(top: 8),
-                    child: MSegmentGroup(
-                      height: 44,
-                      children: [
-                        for (var index = 0; index < 7; index++)
-                          MSegment(
-                            selected: _days.contains(index + 1),
-                            semanticLabel: l10n.reminder.weekdays[index],
-                            onTap: () => setState(() {
-                              if (!_days.remove(index + 1)) {
-                                _days.add(index + 1);
-                              }
-                            }),
-                            child: MSegmentText(
-                              l10n.reminder.weekdayShort[index],
-                              style: theme.typography.labelLarge.onSurface,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
               ],
             ),
+            if (_repeat == ReminderPreset.custom)
+              MSegmentGroup(
+                height: 44,
+                children: [
+                  for (var index = 0; index < 7; index++)
+                    MSegment(
+                      selected: _days.contains(index + 1),
+                      semanticLabel: l10n.reminder.weekdays[index],
+                      onTap: () => setState(() {
+                        if (!_days.remove(index + 1)) _days.add(index + 1);
+                      }),
+                      child: MSegmentText(
+                        l10n.reminder.weekdayShort[index],
+                        style: theme.typography.labelLarge.onSurface,
+                      ),
+                    ),
+                ],
+              ),
             if (widget.reminder != null)
               MDangerRow(
                 label: l10n.reminder.delete,

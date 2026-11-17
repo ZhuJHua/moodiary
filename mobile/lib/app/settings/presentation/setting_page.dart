@@ -90,9 +90,7 @@ class _FeatureSection extends StatelessWidget {
           builder: (context, _) {
             return SettingListTile(
               title: context.l10n.reminder.title,
-              subtitle: service.enabled
-                  ? nextReminderLabel(context.l10n, service.next, service.now)
-                  : context.l10n.reminder.off,
+              subtitle: reminderStatusLabel(context.l10n, service),
               leading: _lead(context, LucideIcons.bell),
               trailing: _chevron(context),
               onTap: () => _openSetting(context, const ReminderRoute()),

@@ -85,6 +85,18 @@ void main() {
     service.events.add(null);
     await tester.pumpAndSettle();
     expect(find.text('new diary: true'), findsOneWidget);
+
+    router.go('/');
+    await tester.pumpAndSettle();
+    unawaited(router.push(LockRoute.path));
+    await tester.pumpAndSettle();
+    service.events.add(null);
+    await tester.pumpAndSettle();
+    expect(find.text('locked'), findsOneWidget);
+    expect(find.text('new diary: true'), findsNothing);
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('new diary: true'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }

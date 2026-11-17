@@ -1,13 +1,20 @@
+import 'package:flutter/foundation.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 
 import 'reminder_scheduler.dart';
+import 'reminder_service.dart';
 
 enum ReminderPreset {
   everyDay,
   workdays,
   weekend,
   custom;
+
+  static ReminderPreset of(Set<int> days) => values.firstWhere(
+    (preset) => setEquals(preset.days, days),
+    orElse: () => custom,
+  );
 
   Set<int> get days => switch (this) {
     everyDay => {1, 2, 3, 4, 5, 6, 7},
@@ -18,23 +25,27 @@ enum ReminderPreset {
 }
 
 String reminderDaysLabel(Translations l10n, Set<int> days) {
-  for (final preset in ReminderPreset.values) {
-    if (preset != ReminderPreset.custom &&
-        days.length == preset.days.length &&
-        days.containsAll(preset.days)) {
-      return switch (preset) {
-        ReminderPreset.everyDay => l10n.reminder.everyDay,
-        ReminderPreset.workdays => l10n.reminder.workdays,
-        ReminderPreset.weekend => l10n.reminder.weekend,
-        ReminderPreset.custom => l10n.common.custom,
-      };
-    }
+  switch (ReminderPreset.of(days)) {
+    case ReminderPreset.everyDay:
+      return l10n.reminder.everyDay;
+    case ReminderPreset.workdays:
+      return l10n.reminder.workdays;
+    case ReminderPreset.weekend:
+      return l10n.reminder.weekend;
+    case ReminderPreset.custom:
+      final ordered = days.toList()..sort();
+      return ordered
+          .map((day) => l10n.reminder.weekdays[day - 1])
+          .join(l10n.reminder.daySeparator);
   }
-  final ordered = days.toList()..sort();
-  return ordered
-      .map((day) => l10n.reminder.weekdays[day - 1])
-      .join(l10n.reminder.daySeparator);
 }
+
+String reminderStatusLabel(Translations l10n, ReminderService service) =>
+    service.reminders.isEmpty
+    ? l10n.reminder.addFirst
+    : !service.enabled
+    ? l10n.reminder.off
+    : nextReminderLabel(l10n, service.next, service.now);
 
 String nextReminderLabel(
   Translations l10n,

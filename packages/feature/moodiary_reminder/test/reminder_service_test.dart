@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_reminder/moodiary_reminder.dart';
@@ -12,8 +13,13 @@ import 'package:moodiary_storage/testing.dart';
 class _Permission implements NotificationPermission {
   bool enabled = true;
   int requests = 0;
+  int reads = 0;
   @override
-  Future<bool> isEnabled() async => enabled;
+  Future<bool> isEnabled() async {
+    reads++;
+    return enabled;
+  }
+
   @override
   Future<bool> request() async {
     requests++;
@@ -39,14 +45,17 @@ class _Diaries extends Fake implements DiaryRepository {
 
 class _Notifications extends Fake implements LocalNotifications {
   TZDateTime current = TZDateTime(UTC, 2026, 11, 16, 20);
-  String zone = 'UTC';
   bool channelEnabled = true;
   bool launch = false;
   bool failNext = false;
   int scheduled = 0;
   int zoneUpdates = 0;
+  int pendingReads = 0;
+  int channelChecks = 0;
   Future<void>? zoneReady;
   String? testPayload;
+  Object? scheduledContent;
+  Object? testContent;
   final pending = <int>{777};
   final cancelled = <int>[];
   final times = <int, TZDateTime>{};
@@ -58,10 +67,9 @@ class _Notifications extends Fake implements LocalNotifications {
   }
 
   @override
-  Future<String> updateTimeZone() async {
+  Future<void> updateTimeZone() async {
     zoneUpdates++;
     await zoneReady;
-    return zone;
   }
 
   @override
@@ -69,9 +77,17 @@ class _Notifications extends Fake implements LocalNotifications {
   @override
   Future<bool> launchedFrom(String payload) async => launch;
   @override
-  Future<bool> isChannelEnabled(String channelId) async => channelEnabled;
+  Future<bool> isChannelEnabled(String channelId) async {
+    channelChecks++;
+    return channelEnabled;
+  }
+
   @override
-  Future<Set<int>> pendingIds() async => {...pending};
+  Future<Set<int>> pendingIds() async {
+    pendingReads++;
+    return {...pending};
+  }
+
   @override
   Future<void> cancel(int id) async {
     pending.remove(id);
@@ -95,6 +111,7 @@ class _Notifications extends Fake implements LocalNotifications {
       throw StateError('schedule failed');
     }
     scheduled++;
+    scheduledContent = (channelId, channelName, title, body, payload);
     pending.add(id);
     times[id] = at;
   }
@@ -109,6 +126,7 @@ class _Notifications extends Fake implements LocalNotifications {
     required String payload,
   }) async {
     testPayload = payload;
+    testContent = (channelId, channelName, title, body, payload);
   }
 }
 
@@ -170,21 +188,141 @@ void main() {
         () => service.setSkipIfWritten(false),
         () => service.remove(reminder.id),
       ]) {
-        final reads = diaries.reads;
-        final updates = notifications.zoneUpdates;
+        final reads = notifications.pendingReads;
         await action();
-        expect(diaries.reads, reads + 1);
-        expect(notifications.zoneUpdates, updates + 1);
+        expect(notifications.pendingReads, reads + 1);
         await Future<void>.delayed(const Duration(milliseconds: 400));
-        expect(diaries.reads, reads + 1);
-        expect(notifications.zoneUpdates, updates + 1);
+        expect(notifications.pendingReads, reads + 1);
       }
-      final reads = diaries.reads;
+      final reads = notifications.pendingReads;
       MoodiaryKVs.reminders.set(Reminder.encode([reminder]));
       MoodiaryKVs.reminderEnabled.set(true);
       await Future<void>.delayed(const Duration(milliseconds: 400));
-      expect(diaries.reads, reads + 1);
+      expect(notifications.pendingReads, reads + 1);
       expect(notifications.pending, {777, 100009, 100010});
+    },
+  );
+
+  test(
+    'disabled reconciliation only cancels owned pending notifications',
+    () async {
+      MoodiaryKVs.reminderEnabled.set(false);
+      notifications.pending.addAll({100009, 200010, 400064});
+      await initialize();
+      expect(notifications.pending, {777});
+      expect(
+        notifications.cancelled,
+        unorderedEquals([100009, 200010, 400064]),
+      );
+      expect(notifications.zoneUpdates, 0);
+      expect(diaries.reads, 0);
+      expect(permission.reads, 0);
+      expect(notifications.channelChecks, 0);
+      expect(notifications.scheduled, 0);
+      expect(MoodiaryKVs.reminderSalt.get(), 0);
+      expect(service.next, isNull);
+    },
+  );
+
+  test(
+    'skip off avoids diary reads and restores weekly notifications',
+    () async {
+      await initialize();
+      final reads = diaries.reads;
+      diaries.written = true;
+      await service.setSkipIfWritten(false);
+      expect(diaries.reads, reads);
+      expect(notifications.pending, {777, 100009, 100010});
+      await service.setSkipIfWritten(true);
+      expect(diaries.reads, reads + 1);
+      expect(notifications.pending, {777, 200009, 100010});
+      await service.setEnabled(false);
+      expect(service.next, isNull);
+    },
+  );
+
+  test(
+    'cached reminders invalidate on KV writes and next changes on reconcile',
+    () async {
+      expect(service.next, isNull);
+      expect(MoodiaryKVs.reminderSalt.get(), 0);
+      await initialize();
+      final cached = service.reminders;
+      final next = service.next;
+      expect(service.reminders, same(cached));
+      notifications.current = TZDateTime(UTC, 2026, 11, 16, 22);
+      expect(service.next, same(next));
+      MoodiaryKVs.reminders.set(
+        Reminder.encode([
+          Reminder(id: 1, hour: 23, minute: 0, weekdays: {1}),
+        ]),
+      );
+      expect(service.reminders, isNot(same(cached)));
+      expect(service.reminders.single.time, '23:00');
+      expect(service.next, same(next));
+      await service.reconcile();
+      expect(service.next!.at, TZDateTime(UTC, 2026, 11, 16, 23));
+    },
+  );
+
+  test('status labels handle empty, off, next and no enabled times', () async {
+    final strings = AppLocale.en.translations;
+    await initialize();
+    expect(
+      reminderStatusLabel(strings, service),
+      strings.reminder.next(day: strings.reminder.today, time: '21:30'),
+    );
+    await service.setEnabled(false);
+    expect(reminderStatusLabel(strings, service), strings.reminder.off);
+    await service.remove(reminder.id);
+    expect(reminderStatusLabel(strings, service), strings.reminder.addFirst);
+    await service.save(reminder.withEnabled(false));
+    await service.setEnabled(true);
+    expect(
+      reminderStatusLabel(strings, service),
+      strings.reminder.noEnabledTimes,
+    );
+  });
+
+  test(
+    'permission checks only notify when app or channel availability changes',
+    () async {
+      await initialize();
+      var changes = 0;
+      service.addListener(() => changes++);
+      expect(await service.checkPermission(), isTrue);
+      expect(changes, 0);
+      notifications.channelEnabled = false;
+      expect(await service.checkPermission(), isFalse);
+      expect(await service.checkPermission(), isFalse);
+      expect(changes, 1);
+      permission.enabled = false;
+      notifications.channelEnabled = true;
+      expect(await service.checkPermission(), isFalse);
+      expect(changes, 1);
+      permission.enabled = true;
+      expect(await service.checkPermission(), isTrue);
+      expect(changes, 2);
+    },
+  );
+
+  test(
+    'diary events are ignored while reminders or skip-if-written are off',
+    () async {
+      await initialize();
+      for (final (enabled, skip) in [(false, true), (true, false)]) {
+        await service.setEnabled(enabled);
+        await service.setSkipIfWritten(skip);
+        final reads = notifications.pendingReads;
+        var changes = 0;
+        void changed() => changes++;
+        service.addListener(changed);
+        diaries.events.add(const DiaryDeleted('diary', fromSync: true));
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+        expect(notifications.pendingReads, reads);
+        expect(changes, 0);
+        service.removeListener(changed);
+      }
     },
   );
 
@@ -285,7 +423,13 @@ void main() {
     'changed time zone reschedules and channel permission is read on reconcile',
     () async {
       await initialize();
-      notifications.zone = 'changed';
+      notifications.current = TZDateTime(
+        parseFixedOffsetTimeZone('GMT+08:00'),
+        2026,
+        11,
+        16,
+        20,
+      );
       notifications.channelEnabled = false;
       await service.reconcile();
       expect(notifications.scheduled, 4);
@@ -294,34 +438,40 @@ void main() {
     },
   );
 
+  test('failed apply can be retried and releases the reconcile lock', () async {
+    await initialize();
+    MoodiaryKVs.reminders.set(
+      Reminder.encode([
+        Reminder(id: 1, hour: 23, minute: 0, weekdays: {1}),
+      ]),
+    );
+    notifications.failNext = true;
+    await expectLater(service.reconcile(), throwsStateError);
+    await service.reconcile();
+    expect(notifications.pending, {777, 100009});
+    expect(notifications.scheduled, 3);
+  });
+
   test(
-    'failed apply can be retried without poisoning the reconcile queue',
+    'diary events debounce reconciliation without notifying immediately',
     () async {
       await initialize();
-      MoodiaryKVs.reminders.set(
-        Reminder.encode([
-          Reminder(id: 1, hour: 23, minute: 0, weekdays: {1}),
-        ]),
-      );
-      notifications.failNext = true;
-      await expectLater(service.reconcile(), throwsStateError);
-      await service.reconcile();
-      expect(notifications.pending, {777, 100009});
-      expect(notifications.scheduled, 3);
+      final reads = diaries.reads;
+      var changes = 0;
+      service.addListener(() => changes++);
+      diaries.written = true;
+      for (var index = 0; index < 20; index++) {
+        diaries.events.add(DiaryDeleted('diary-$index', fromSync: true));
+      }
+      await Future<void>.delayed(Duration.zero);
+      expect(changes, 0);
+      expect(diaries.reads, reads);
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(changes, 1);
+      expect(diaries.reads, reads + 1);
+      expect(notifications.pending, contains(200009));
     },
   );
-
-  test('all diary events, including sync deletes, are debounced', () async {
-    await initialize();
-    final reads = diaries.reads;
-    diaries.written = true;
-    for (var index = 0; index < 20; index++) {
-      diaries.events.add(DiaryDeleted('diary-$index', fromSync: true));
-    }
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    expect(diaries.reads, reads + 1);
-    expect(notifications.pending, contains(200009));
-  });
 
   test(
     'cold and warm taps and test notifications share the reminder payload',
@@ -337,6 +487,7 @@ void main() {
       expect(taps, 1);
       await service.sendTest();
       expect(notifications.testPayload, 'reminder');
+      expect(notifications.testContent, notifications.scheduledContent);
       await subscription.cancel();
     },
   );

@@ -59,8 +59,10 @@ class DeviceNotificationPermission implements NotificationPermission {
 }
 
 abstract interface class LocalNotifications {
+  static const maxPending = 60;
+
   Future<void> initialize(void Function(String?) onTap);
-  Future<String> updateTimeZone();
+  Future<void> updateTimeZone();
   tz.TZDateTime now();
   Future<bool> launchedFrom(String payload);
   Future<bool> isChannelEnabled(String channelId);
@@ -106,7 +108,7 @@ class DeviceLocalNotifications implements LocalNotifications {
   }
 
   @override
-  Future<String> updateTimeZone() async {
+  Future<void> updateTimeZone() async {
     final id = (await FlutterTimezone.getLocalTimezone()).identifier;
     tz.Location location;
     try {
@@ -115,7 +117,6 @@ class DeviceLocalNotifications implements LocalNotifications {
       location = parseFixedOffsetTimeZone(id);
     }
     tz.setLocalLocation(location);
-    return id;
   }
 
   @override
