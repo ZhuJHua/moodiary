@@ -2,8 +2,8 @@ import 'package:moodiary_data/moodiary_data.dart';
 
 import 'diary_payloads.dart';
 
-class McpCategoryQueries {
-  McpCategoryQueries({required this.categories, required this.diaries});
+class CategoryToolQueries {
+  CategoryToolQueries({required this.categories, required this.diaries});
 
   final CategoryRepository categories;
   final DiaryRepository diaries;

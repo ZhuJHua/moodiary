@@ -3,8 +3,8 @@ import 'package:moodiary_models/moodiary_models.dart';
 
 import 'diary_payloads.dart';
 
-class McpDiaryQueries {
-  McpDiaryQueries({required this.diaries});
+class DiaryToolQueries {
+  DiaryToolQueries({required this.diaries});
 
   final DiaryRepository diaries;
 

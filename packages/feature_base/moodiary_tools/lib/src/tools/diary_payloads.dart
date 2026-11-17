@@ -5,9 +5,10 @@ library;
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+
+import '../ops/diary_display.dart';
 
 final RegExp _whitespace = RegExp(r'\s+');
 final RegExp _lineBreak = RegExp(r'\s*\n\s*');

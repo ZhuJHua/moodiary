@@ -2,29 +2,33 @@
 /// and the link graph of one diary.
 library;
 
-import 'package:mcp_dart/mcp_dart.dart';
+import 'package:flutter/foundation.dart' show internal;
+import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import '../media/diary_media.dart';
+import '../ops/diary_display.dart';
+import '../ops/diary_queries.dart';
+import '../ops/diary_writes.dart';
 import 'arguments.dart';
 import 'diary_payloads.dart';
 import 'diary_queries.dart';
+import 'diary_references.dart';
 import 'diary_write_lock.dart';
-import 'mcp_results.dart';
+import 'output_schemas.dart';
 import 'schemas.dart';
+import 'tool_def.dart';
 
-void registerDiaryTools(
-  McpServer server, {
-  required DiaryRepository diaries,
-  required CategoryRepository categories,
-}) {
-  server.registerTool(
-    'list_diaries',
+@internal
+final List<ToolDefinition> diaryTools = [
+  ToolDef(
+    name: 'list_diaries',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('list_diaries', result.data),
     title: 'List diaries',
-    description:
+    description: (_) =>
         'Lists diary summaries, newest first by default: id, title, time in '
         'UTC and local time, last modification, category, mood, tags, a '
         'preview and whether the diary is visible. Bodies are not included; '
@@ -34,7 +38,7 @@ void registerDiaryTools(
         'and pages in memory, which is slower than the other filters. '
         'excerpt picks the preview: plain (default) is one line of plain '
         'text, markdown keeps headings and lists, none drops it.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {
         'categoryId': categoryIdSchema,
@@ -52,20 +56,26 @@ void registerDiaryTools(
         'excerpt': excerptSchema,
       },
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: false,
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.read,
+    idempotent: true,
+    output: toolOutputSchema('list_diaries'),
+    parse: _parseListDiaries,
+    run: (input, ctx) => _listDiaries(
+      ctx,
+      input,
+      diaries: ctx.diaries,
+      categories: ctx.categories,
     ),
-    callback: (arguments, call) =>
-        _listDiaries(call, arguments, diaries: diaries, categories: categories),
-  );
-
-  server.registerTool(
-    'get_diary',
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+  ToolDef(
+    name: 'get_diary',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('get_diary', result.data),
     title: 'Read one diary',
-    description:
+    description: (_) =>
         'Reads one diary with its metadata. contentFormat=markdown (default) '
         'renders the stored document as Markdown; text returns the plain body '
         '(no syntax, media as [image: name] placeholders); document returns '
@@ -77,7 +87,7 @@ void registerDiaryTools(
         'the summary fields, type, media file names, the recorded place and '
         'weather, and the moodiary:// URI. Attach media with add_diary_image '
         'or add_diary_attachment; read it with list_diary_media.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {
         'id': diaryIdSchema,
@@ -93,20 +103,22 @@ void registerDiaryTools(
       },
       'required': ['id'],
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: false,
-    ),
-    callback: (arguments, call) =>
-        _getDiary(arguments, diaries: diaries, categories: categories),
-  );
-
-  server.registerTool(
-    'create_diary',
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.read,
+    idempotent: true,
+    output: toolOutputSchema('get_diary'),
+    parse: _parseGetDiary,
+    run: (input, ctx) =>
+        _getDiary(input, diaries: ctx.diaries, categories: ctx.categories),
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+  ToolDef(
+    name: 'create_diary',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('create_diary', result.data),
     title: 'Create a diary',
-    description:
+    description: (_) =>
         'Creates one diary and returns its summary. content is required; '
         'contentFormat=markdown (default) parses it as Markdown and stores '
         'the editor document so headings, lists and emphasis survive, text '
@@ -117,7 +129,7 @@ void registerDiaryTools(
         'media: a body with media nodes is invalid params, because media has '
         'to be added to an existing diary with add_diary_image or '
         'add_diary_attachment (which also creates its media index row).',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {
         'title': {
@@ -142,20 +154,22 @@ void registerDiaryTools(
       },
       'required': ['content'],
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: false,
-    ),
-    callback: (arguments, call) =>
-        _createDiary(arguments, diaries: diaries, categories: categories),
-  );
-
-  server.registerTool(
-    'update_diary',
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.write,
+    idempotent: false,
+    output: toolOutputSchema('create_diary'),
+    parse: _parseCreateDiary,
+    run: (input, ctx) =>
+        _createDiary(input, diaries: ctx.diaries, categories: ctx.categories),
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+  ToolDef(
+    name: 'update_diary',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('update_diary', result.data),
     title: 'Update a diary',
-    description:
+    description: (_) =>
         'Updates the given fields of one diary and leaves every omitted field '
         'unchanged; lastModified is bumped. Send null to clear a nullable '
         'field: categoryId, mood and tags (null or an empty array); '
@@ -168,7 +182,7 @@ void registerDiaryTools(
         'or add_diary_attachment); another diary\'s media name is invalid '
         'params. Recycled diaries are not found. An unknown category id is '
         'invalid params; an unknown diary id is a tool error.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {
         'id': diaryIdSchema,
@@ -195,43 +209,47 @@ void registerDiaryTools(
       },
       'required': ['id'],
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: false,
-      destructiveHint: true,
-      idempotentHint: true,
-      openWorldHint: false,
-    ),
-    callback: (arguments, call) =>
-        _updateDiary(arguments, diaries: diaries, categories: categories),
-  );
-
-  server.registerTool(
-    'delete_diary',
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.destructive,
+    idempotent: true,
+    output: toolOutputSchema('update_diary'),
+    parse: _parseUpdateDiary,
+    run: (input, ctx) =>
+        _updateDiary(input, diaries: ctx.diaries, categories: ctx.categories),
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+  ToolDef(
+    name: 'delete_diary',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('delete_diary', result.data),
     title: 'Delete a diary',
-    description:
+    description: (_) =>
         'Moves one diary to the recycle bin (show=false). This can be undone '
         'in the app. Permanent deletion is only available in the app. title '
         'is the stored title, empty when the diary had none. An unknown id '
         'is a tool error.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {'id': diaryIdSchema},
       'required': ['id'],
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: false,
-      destructiveHint: true,
-      idempotentHint: true,
-      openWorldHint: false,
-    ),
-    callback: (arguments, call) =>
-        _deleteDiary(arguments, diaries: diaries, categories: categories),
-  );
-
-  server.registerTool(
-    'search_diaries',
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.destructive,
+    idempotent: true,
+    output: toolOutputSchema('delete_diary'),
+    parse: _parseDeleteDiary,
+    run: (input, ctx) =>
+        _deleteDiary(input, diaries: ctx.diaries, categories: ctx.categories),
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+  ToolDef(
+    name: 'search_diaries',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('search_diaries', result.data),
     title: 'Search diaries',
-    description:
+    description: (_) =>
         'Full text search over diary titles and bodies; Chinese words, '
         'pinyin and Latin text all match. There is no '
         'tag filter here, use list_diaries tag instead. Returns the total hit '
@@ -241,7 +259,7 @@ void registerDiaryTools(
         'is omitted with excerpt=none while the highlighted excerpt stays. '
         'sort=relevance (default) ranks by match score; newest and oldest '
         'order by diary time.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {
         'query': {
@@ -258,75 +276,79 @@ void registerDiaryTools(
       },
       'required': ['query'],
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: false,
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.read,
+    idempotent: true,
+    output: toolOutputSchema('search_diaries'),
+    parse: _parseSearchDiaries,
+    run: (input, ctx) => _searchDiaries(
+      ctx,
+      input,
+      diaries: ctx.diaries,
+      categories: ctx.categories,
     ),
-    callback: (arguments, call) => _searchDiaries(
-      call,
-      arguments,
-      diaries: diaries,
-      categories: categories,
-    ),
-  );
-
-  server.registerTool(
-    'get_diary_links',
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+  ToolDef(
+    name: 'get_diary_links',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('get_diary_links', result.data),
     title: 'Read diary links',
-    description:
+    description: (_) =>
         'Lists the diaries this diary links to (forward), the diaries that '
         'link to it (backlinks) and the ids it mentions that do not exist '
         '(dangling), each with id, title and time. A dangling id is a '
         'moodiary://diary/<id> link to a diary that was deleted or never '
         'synced to this device.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {'id': diaryIdSchema},
       'required': ['id'],
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: false,
-    ),
-    callback: (arguments, call) => _getDiaryLinks(arguments, diaries: diaries),
-  );
-
-  server.registerTool(
-    'list_tags',
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.read,
+    idempotent: true,
+    output: toolOutputSchema('get_diary_links'),
+    parse: _parseGetDiaryLinks,
+    run: (input, ctx) => _getDiaryLinks(input, diaries: ctx.diaries),
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+  ToolDef(
+    name: 'list_tags',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('list_tags', result.data),
     title: 'List tags',
-    description:
+    description: (_) =>
         'Lists the tags used by visible diaries with their usage counts, '
         'most used first. The database has no tag index, so this aggregates '
         'over every visible diary and is linear in the number of diaries.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {'limit': tagLimitSchema},
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: false,
-    ),
-    callback: (arguments, call) => _listTags(arguments, diaries: diaries),
-  );
-}
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.read,
+    idempotent: true,
+    output: toolOutputSchema('list_tags'),
+    parse: _parseListTags,
+    run: (input, ctx) => _listTags(input, diaries: ctx.diaries),
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+];
 
 /// Rejects unknown category filters instead of returning an empty page.
 Future<String?> _categoryFilter(
-  Args args,
+  String? id,
+  String subject,
   CategoryRepository categories,
 ) async {
-  final id = args.optionalText('categoryId');
   if (id == null) return null;
   if (await categories.getCategoryById(id) == null) {
-    throw McpError(
-      ErrorCode.invalidParams.value,
-      '${args.subject}: categoryId "$id" is not a known category; call '
+    throw ToolArgumentException(
+      '$subject: categoryId "$id" is not a known category; call '
       'list_categories first',
     );
   }
@@ -341,8 +363,8 @@ typedef _PageArgs = ({
   int offset,
 });
 
-Future<_PageArgs> _pageArgs(Args args, CategoryRepository categories) async {
-  final categoryId = await _categoryFilter(args, categories);
+_PageArgs _pageArgs(ToolArguments args) {
+  final categoryId = args.optionalText('categoryId');
   final start = args.optionalDate('startDate');
   final end = args.optionalDate('endDate', endOfDay: true);
   args.requireOrderedRange(start, end);
@@ -390,13 +412,13 @@ Map<String, dynamic> _summary(
   return summary;
 }
 
-Future<CallToolResult> _mutation(
+Future<ToolResult> _mutation(
   CategoryRepository categories,
   Diary diary, {
   required bool created,
 }) async {
   final names = await categoryNames(categories);
-  return jsonToolResult({
+  return ToolResult({
     if (created) 'created': true else 'updated': true,
     'diary': _summary(
       diary,
@@ -412,50 +434,40 @@ DiaryContentFormat _writeFormat(String? value) => switch (value) {
   _ => DiaryContentFormat.markdown,
 };
 
-CallToolResult _writeFailure(String subject, DiaryOpsException e, String id) =>
+ToolResult _writeFailure(String subject, DiaryOpsException e, String id) =>
     switch (e.failure) {
-      DiaryOpsFailure.invalidCategory => throw McpError(
-        ErrorCode.invalidParams.value,
+      DiaryOpsFailure.invalidCategory => throw ToolArgumentException(
         '$subject: categoryId "${e.categoryId}" is not a known category; call '
         'list_categories first',
       ),
-      DiaryOpsFailure.invalidDocument => throw McpError(
-        ErrorCode.invalidParams.value,
+      DiaryOpsFailure.invalidDocument => throw ToolArgumentException(
         '$subject: content is not a Tiptap document; contentFormat="document" '
         'expects a JSON object with type "doc"',
       ),
-      DiaryOpsFailure.emptyContent => throw McpError(
-        ErrorCode.invalidParams.value,
+      DiaryOpsFailure.emptyContent => throw ToolArgumentException(
         '$subject: content must not be empty',
       ),
-      DiaryOpsFailure.notFound => toolError(
-        '$subject: no diary with id="$id".',
-      ),
-      DiaryOpsFailure.foreignMedia => throw McpError(
-        ErrorCode.invalidParams.value,
-        '$subject: the body references media this diary does not own; add new '
+      DiaryOpsFailure.notFound => _failure('$subject: no diary with id="$id".'),
+      DiaryOpsFailure.foreignMedia => throw ToolArgumentException(
+        '$subject: content references media this diary does not own; add new '
         'files with add_diary_image or add_diary_attachment first',
       ),
-      final failure => toolError(
+      final failure => _failure(
         '$subject: the diary could not be written (${failure.name}).',
       ),
     };
 
-Future<CallToolResult> _listDiaries(
-  RequestHandlerExtra call,
-  Map<String, dynamic> arguments, {
+Future<ToolResult> _listDiaries(
+  ToolContext call,
+  _ListDiariesInput input, {
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
-  final args = Args('list_diaries', arguments);
-  final paging = await _pageArgs(args, categories);
-  final tag = args.optionalText('tag');
-  final sort = parseDiarySort(args.optionalEnum('sort', diarySortValues));
-  final excerpt = args.optionalEnum('excerpt', excerptValues) ?? 'plain';
-
+  final (:paging, :tag, :sort, :excerpt) = input;
+  await _categoryFilter(paging.categoryId, 'list_diaries', categories);
   final List<Diary> page;
   if (tag == null) {
-    page = await McpDiaryQueries(diaries: diaries).page(
+    page = await DiaryToolQueries(diaries: diaries).page(
       categoryId: paging.categoryId,
       start: paging.start,
       end: paging.end,
@@ -476,8 +488,8 @@ Future<CallToolResult> _listDiaries(
   }
   final names = await categoryNames(categories);
   final rows = page.take(paging.limit).toList();
-  reportProgress(call, rows.length, message: 'list_diaries');
-  return jsonToolResult({
+  call.progress?.call(rows.length, message: 'list_diaries');
+  return ToolResult({
     'diaries': [
       for (final diary in rows)
         _summary(
@@ -493,24 +505,18 @@ Future<CallToolResult> _listDiaries(
   });
 }
 
-Future<CallToolResult> _getDiary(
-  Map<String, dynamic> arguments, {
+Future<ToolResult> _getDiary(
+  _GetDiaryInput input, {
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
-  final args = Args('get_diary', arguments);
-  final id = args.requireText('id');
-  final contentFormat =
-      args.optionalEnum('contentFormat', contentFormatValues) ?? 'markdown';
-  final linkStyle = args.optionalEnum('linkStyle', linkStyleValues) ?? 'uri';
-  final includeLinks = args.optionalBool('includeLinks') ?? true;
-
+  final (:id, :contentFormat, :linkStyle, :includeLinks) = input;
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null || !diary.show) {
-    return toolError('get_diary: no diary with id="$id".');
+    return _failure('get_diary: no diary with id="$id".');
   }
   if (contentFormat == 'document' && diary.content.length > mcpResultChars) {
-    return toolError(
+    return _failure(
       'get_diary: the stored document of id="$id" is '
       '${diary.content.length} characters, more than the $mcpResultChars '
       'character result limit; read it as text (contentFormat="text") or as '
@@ -535,7 +541,7 @@ Future<CallToolResult> _getDiary(
   }
 
   final names = await categoryNames(categories);
-  return jsonToolResult({
+  return ToolResult({
     ..._summary(diary, categoryName: names[diary.categoryId], excerpt: 'plain'),
     'type': diary.type,
     'contentFormat': contentFormat,
@@ -550,7 +556,7 @@ Future<CallToolResult> _getDiary(
       },
     'media': mediaLists(diary),
     if (includeLinks)
-      'links': await McpDiaryQueries(diaries: diaries).linkSummary(diary),
+      'links': await DiaryToolQueries(diaries: diaries).linkSummary(diary),
     'uri': '$diaryUriPrefix${diary.id}',
   });
 }
@@ -560,22 +566,13 @@ Future<CallToolResult> _getDiary(
   return (content: capped, truncated: capped != text);
 }
 
-Future<CallToolResult> _createDiary(
-  Map<String, dynamic> arguments, {
+Future<ToolResult> _createDiary(
+  _CreateDiaryInput input, {
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
-  final args = Args('create_diary', arguments);
-  final content = args.requireText('content');
-  final contentFormat = _writeFormat(
-    args.optionalEnum('contentFormat', contentFormatValues),
-  );
-  final title = args.optionalText('title') ?? '';
-  final time = args.optionalDate('time');
-  final mood = args.optionalMood('mood');
-  final tags = args.optionalStringList('tags') ?? const <String>[];
-  final categoryId = args.optionalText('categoryId');
-
+  final (:content, :contentFormat, :title, :time, :mood, :tags, :categoryId) =
+      input;
   final Diary diary;
   try {
     diary = await DiaryWrites(diaries: diaries, categories: categories).create(
@@ -594,37 +591,12 @@ Future<CallToolResult> _createDiary(
   return _mutation(categories, diary, created: true);
 }
 
-Future<CallToolResult> _updateDiary(
-  Map<String, dynamic> arguments, {
+Future<ToolResult> _updateDiary(
+  _UpdateDiaryInput input, {
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
-  final args = Args('update_diary', arguments);
-  final id = args.requireText('id');
-  final contentFormat = _writeFormat(
-    args.optionalEnum('contentFormat', contentFormatValues),
-  );
-  // Null clears nullable fields and leaves non-nullable fields unchanged.
-  final patch = DiaryPatch(
-    title: args.contains('title') ? args.text('title') : null,
-    content: args.contains('content') ? args.requireText('content') : null,
-    mood: args.has('mood') ? args.optionalMood('mood') : null,
-    moodSet: args.has('mood'),
-    categoryId: args.has('categoryId')
-        ? (args.optionalText('categoryId') ?? '')
-        : null,
-    time: args.contains('time') ? args.optionalDate('time') : null,
-    tags: args.has('tags')
-        ? (args.optionalStringList('tags') ?? const <String>[])
-        : null,
-  );
-  if (patch.isEmpty) {
-    throw McpError(
-      ErrorCode.invalidParams.value,
-      'update_diary: provide at least one field to change',
-    );
-  }
-
+  final (:id, :contentFormat, :patch) = input;
   try {
     return await withDiaryWriteLock(id, () async {
       final next = await DiaryWrites(diaries: diaries, categories: categories)
@@ -642,21 +614,19 @@ Future<CallToolResult> _updateDiary(
   }
 }
 
-Future<CallToolResult> _deleteDiary(
-  Map<String, dynamic> arguments, {
+Future<ToolResult> _deleteDiary(
+  _DeleteDiaryInput input, {
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
-  final args = Args('delete_diary', arguments);
-  final id = args.requireText('id');
-
+  final (:id) = input;
   return withDiaryWriteLock(id, () async {
     try {
       final result = await DiaryWrites(
         diaries: diaries,
         categories: categories,
       ).delete(id: id);
-      return jsonToolResult({
+      return ToolResult({
         'deleted': true,
         'id': id,
         'title': result.diary.title.trim(),
@@ -664,28 +634,19 @@ Future<CallToolResult> _deleteDiary(
           'alreadyRecycled': true,
       });
     } on DiaryOpsException {
-      return toolError('delete_diary: no diary with id="$id".');
+      return _failure('delete_diary: no diary with id="$id".');
     }
   });
 }
 
-Future<CallToolResult> _searchDiaries(
-  RequestHandlerExtra call,
-  Map<String, dynamic> arguments, {
+Future<ToolResult> _searchDiaries(
+  ToolContext call,
+  _SearchDiariesInput input, {
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
-  final args = Args('search_diaries', arguments);
-  final query = args.requireText('query');
-  final paging = await _pageArgs(args, categories);
-  final sort = switch (args.optionalEnum('sort', searchSortValues)) {
-    'newest' => SearchSort.timeDesc,
-    'oldest' => SearchSort.timeAsc,
-    _ => SearchSort.relevance,
-  };
-  final excerpt = args.optionalEnum('excerpt', excerptValues) ?? 'plain';
-  final endExclusive = paging.end?.add(const Duration(microseconds: 1));
-
+  final (:query, :paging, :sort, :excerpt, :endExclusive) = input;
+  await _categoryFilter(paging.categoryId, 'search_diaries', categories);
   final total = await diaries.countSearchDiaries(
     query: query,
     categoryId: paging.categoryId,
@@ -702,8 +663,8 @@ Future<CallToolResult> _searchDiaries(
     offset: paging.offset,
   );
   final names = await categoryNames(categories);
-  reportProgress(call, hits.length, total: total, message: 'search_diaries');
-  return jsonToolResult({
+  call.progress?.call(hits.length, total: total, message: 'search_diaries');
+  return ToolResult({
     'query': query,
     'total': total,
     'offset': paging.offset,
@@ -733,18 +694,17 @@ Future<CallToolResult> _searchDiaries(
 String _markHighlight(String text) =>
     text.replaceAll(searchHitStart, '**').replaceAll(searchHitEnd, '**');
 
-Future<CallToolResult> _getDiaryLinks(
-  Map<String, dynamic> arguments, {
+Future<ToolResult> _getDiaryLinks(
+  _GetDiaryLinksInput input, {
   required DiaryRepository diaries,
 }) async {
-  final args = Args('get_diary_links', arguments);
-  final id = args.requireText('id');
+  final (:id) = input;
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null || !diary.show) {
-    return toolError('get_diary_links: no diary with id="$id".');
+    return _failure('get_diary_links: no diary with id="$id".');
   }
-  final links = await McpDiaryQueries(diaries: diaries).linkSummary(diary);
-  return jsonToolResult({
+  final links = await DiaryToolQueries(diaries: diaries).linkSummary(diary);
+  return ToolResult({
     'id': diary.id,
     'title': diary.title,
     'time': isoUtc(diary.time),
@@ -753,15 +713,13 @@ Future<CallToolResult> _getDiaryLinks(
   });
 }
 
-Future<CallToolResult> _listTags(
-  Map<String, dynamic> arguments, {
+Future<ToolResult> _listTags(
+  _ListTagsInput input, {
   required DiaryRepository diaries,
 }) async {
-  final args = Args('list_tags', arguments);
-  final limit = args.optionalInt('limit', fallback: 50, min: 1, max: 500);
-
-  final result = await McpDiaryQueries(diaries: diaries).tags(limit: limit);
-  return jsonToolResult({
+  final (:limit) = input;
+  final result = await DiaryToolQueries(diaries: diaries).tags(limit: limit);
+  return ToolResult({
     'tags': [
       for (final entry in result.tags)
         {'tag': entry.tag, 'diaries': entry.diaries},
@@ -774,3 +732,168 @@ Future<CallToolResult> _listTags(
         'diary.',
   });
 }
+
+typedef _ListDiariesInput = ({
+  _PageArgs paging,
+  String? tag,
+  DiarySort sort,
+  String excerpt,
+});
+
+_ListDiariesInput _parseListDiaries(Map<String, Object?> raw) {
+  final args = ToolArguments('list_diaries', raw);
+  final paging = _pageArgs(args);
+  final tag = args.optionalText('tag');
+  final sort = parseDiarySort(args.optionalEnum('sort', diarySortValues));
+  final excerpt = args.optionalEnum('excerpt', excerptValues) ?? 'plain';
+
+  return (paging: paging, tag: tag, sort: sort, excerpt: excerpt);
+}
+
+typedef _GetDiaryInput = ({
+  String id,
+  String contentFormat,
+  String linkStyle,
+  bool includeLinks,
+});
+
+_GetDiaryInput _parseGetDiary(Map<String, Object?> raw) {
+  final args = ToolArguments('get_diary', raw);
+  final id = args.requireText('id');
+  final contentFormat =
+      args.optionalEnum('contentFormat', contentFormatValues) ?? 'markdown';
+  final linkStyle = args.optionalEnum('linkStyle', linkStyleValues) ?? 'uri';
+  final includeLinks = args.optionalBool('includeLinks') ?? true;
+
+  return (
+    id: id,
+    contentFormat: contentFormat,
+    linkStyle: linkStyle,
+    includeLinks: includeLinks,
+  );
+}
+
+typedef _CreateDiaryInput = ({
+  String content,
+  DiaryContentFormat contentFormat,
+  String title,
+  DateTime? time,
+  DiaryMood? mood,
+  List<String> tags,
+  String? categoryId,
+});
+
+_CreateDiaryInput _parseCreateDiary(Map<String, Object?> raw) {
+  final args = ToolArguments('create_diary', raw);
+  final content = args.requireText('content');
+  final contentFormat = _writeFormat(
+    args.optionalEnum('contentFormat', contentFormatValues),
+  );
+  final title = args.optionalText('title') ?? '';
+  final time = args.optionalDate('time');
+  final mood = args.optionalMood('mood');
+  final tags = args.optionalStringList('tags') ?? const <String>[];
+  final categoryId = args.optionalText('categoryId');
+
+  return (
+    content: content,
+    contentFormat: contentFormat,
+    title: title,
+    time: time,
+    mood: mood,
+    tags: tags,
+    categoryId: categoryId,
+  );
+}
+
+typedef _UpdateDiaryInput = ({
+  String id,
+  DiaryContentFormat contentFormat,
+  DiaryPatch patch,
+});
+
+_UpdateDiaryInput _parseUpdateDiary(Map<String, Object?> raw) {
+  final args = ToolArguments('update_diary', raw);
+  final id = args.requireText('id');
+  final contentFormat = _writeFormat(
+    args.optionalEnum('contentFormat', contentFormatValues),
+  );
+  // Null clears nullable fields and leaves non-nullable fields unchanged.
+  final patch = DiaryPatch(
+    title: args.contains('title') ? args.text('title') : null,
+    content: args.contains('content') ? args.requireText('content') : null,
+    mood: args.has('mood') ? args.optionalMood('mood') : null,
+    moodSet: args.has('mood'),
+    categoryId: args.has('categoryId')
+        ? (args.optionalText('categoryId') ?? '')
+        : null,
+    time: args.contains('time') ? args.optionalDate('time') : null,
+    tags: args.has('tags')
+        ? (args.optionalStringList('tags') ?? const <String>[])
+        : null,
+  );
+  if (patch.isEmpty) {
+    throw const ToolArgumentException(
+      'update_diary: provide at least one field to change',
+    );
+  }
+
+  return (id: id, contentFormat: contentFormat, patch: patch);
+}
+
+typedef _DeleteDiaryInput = ({String id});
+
+_DeleteDiaryInput _parseDeleteDiary(Map<String, Object?> raw) {
+  final args = ToolArguments('delete_diary', raw);
+  final id = args.requireText('id');
+
+  return (id: id);
+}
+
+typedef _SearchDiariesInput = ({
+  String query,
+  _PageArgs paging,
+  SearchSort sort,
+  String excerpt,
+  DateTime? endExclusive,
+});
+
+_SearchDiariesInput _parseSearchDiaries(Map<String, Object?> raw) {
+  final args = ToolArguments('search_diaries', raw);
+  final query = args.requireText('query');
+  final paging = _pageArgs(args);
+  final sort = switch (args.optionalEnum('sort', searchSortValues)) {
+    'newest' => SearchSort.timeDesc,
+    'oldest' => SearchSort.timeAsc,
+    _ => SearchSort.relevance,
+  };
+  final excerpt = args.optionalEnum('excerpt', excerptValues) ?? 'plain';
+  final endExclusive = paging.end?.add(const Duration(microseconds: 1));
+
+  return (
+    query: query,
+    paging: paging,
+    sort: sort,
+    excerpt: excerpt,
+    endExclusive: endExclusive,
+  );
+}
+
+typedef _GetDiaryLinksInput = ({String id});
+
+_GetDiaryLinksInput _parseGetDiaryLinks(Map<String, Object?> raw) {
+  final args = ToolArguments('get_diary_links', raw);
+  final id = args.requireText('id');
+  return (id: id);
+}
+
+typedef _ListTagsInput = ({int limit});
+
+_ListTagsInput _parseListTags(Map<String, Object?> raw) {
+  final args = ToolArguments('list_tags', raw);
+  final limit = args.optionalInt('limit', fallback: 50, min: 1, max: 500);
+
+  return (limit: limit);
+}
+
+Never _failure(String message) => throw ToolFailure(message);

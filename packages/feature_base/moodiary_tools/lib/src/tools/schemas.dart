@@ -1,6 +1,6 @@
 library;
 
-import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
+import '../ops/diary_display.dart';
 
 const List<String> excerptValues = ['plain', 'markdown', 'none'];
 

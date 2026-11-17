@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_mcp/src/tools/stats_payloads.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_tools/src/tools/stats_payloads.dart';
 
 import 'support.dart';
 
@@ -13,13 +13,13 @@ void main() {
   late MoodiaryDatabase db;
   late DiaryRepository diaries;
   late CategoryRepository categories;
-  late McpStatsPayloads stats;
+  late DiaryStatsPayloads stats;
 
   setUp(() {
     db = openTestDatabase();
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
-    stats = McpStatsPayloads(
+    stats = DiaryStatsPayloads(
       diaries: diaries,
       categories: categories,
       insights: MoodInsightsRepository(db),

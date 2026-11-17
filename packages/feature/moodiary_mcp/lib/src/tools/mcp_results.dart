@@ -4,10 +4,6 @@ import 'dart:convert';
 import 'package:mcp_dart/mcp_dart.dart';
 
 const String mcpServerName = 'moodiary';
-const int mcpInlineBytes = 8 * 1024 * 1024;
-
-String formatMegabytes(int bytes) => (bytes / (1024 * 1024)).toStringAsFixed(1);
-
 const String mcpServerInstructions =
     'Moodiary is a local diary app. These tools read and write the diary '
     'database of the device that runs this server: diaries (title, body, time, '

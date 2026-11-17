@@ -1,13 +1,13 @@
-/// Shared argument validation. Missing fields and explicit nulls are distinct;
-/// count-like arguments are clamped, while wrong types fail.
-library;
-
-import 'package:mcp_dart/mcp_dart.dart';
+import 'package:flutter/foundation.dart' show internal;
+import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// Validating view over the `arguments` object of one MCP call.
-class Args {
-  Args(this.subject, [Map<String, dynamic>? raw]) : _raw = raw ?? const {};
+import 'tool_def.dart';
+
+@internal
+class ToolArguments {
+  ToolArguments(this.subject, [Map<String, dynamic>? raw])
+    : _raw = raw ?? const {};
 
   /// Surface name used in error messages; usually the tool name.
   final String subject;
@@ -33,10 +33,10 @@ class Args {
   bool contains(String name) => _raw[name] != null;
 
   Never _invalid(String name, String problem) =>
-      throw McpError(ErrorCode.invalidParams.value, '$subject: $name $problem');
+      throw ToolArgumentException('$subject: $name $problem');
 
   Never _invalidMessage(String message) =>
-      throw McpError(ErrorCode.invalidParams.value, '$subject: $message');
+      throw ToolArgumentException('$subject: $message');
 
   /// Required, trimmed, non-empty string.
   String requireText(String name) {
@@ -199,15 +199,49 @@ class Args {
   }
 }
 
-/// Args owns validation and normalization, including clamped numeric inputs.
-class ToolArgumentSchema extends ToolInputSchema {
-  const ToolArgumentSchema(this.schema);
+@internal
+Future<List<ValidationError>> validateToolArguments(
+  Map<String, Object?> raw,
+  Schema schema,
+) => _validationSchema(schema).validate(_validationData(raw, schema));
 
-  final Map<String, dynamic> schema;
+Schema _validationSchema(Schema schema) {
+  final json = Map<String, Object?>.from(schema.value);
+  final properties = (json['properties'] as Map?)?.cast<String, Object?>();
+  if (properties == null) return schema;
+  json['properties'] = {
+    for (final entry in properties.entries)
+      entry.key: switch (entry.key) {
+        'limit' || 'offset' || 'months' || 'widthPercent' =>
+          Map<String, Object?>.from(entry.value! as Map)
+            ..remove('minimum')
+            ..remove('maximum'),
+        _ => entry.value,
+      },
+  };
+  return Schema.fromMap(json);
+}
 
-  @override
-  Map<String, dynamic> toJson() => schema;
+Map<String, Object?> _validationData(Map<String, Object?> raw, Schema schema) {
+  final required = (schema.value['required'] as List?) ?? const [];
+  final properties = (schema.value['properties'] as Map?) ?? const {};
+  return {
+    for (final entry in raw.entries)
+      if (entry.value != null || required.contains(entry.key))
+        if (!(entry.value is String &&
+            (entry.value! as String).trim().isEmpty &&
+            !required.contains(entry.key) &&
+            (properties[entry.key] as Map?)?['enum'] != null))
+          entry.key: entry.key == 'mood' && entry.value is String
+              ? _moodValue(entry.value! as String)
+              : entry.value is String &&
+                    (properties[entry.key] as Map?)?['enum'] != null
+              ? (entry.value! as String).trim()
+              : entry.value,
+  };
+}
 
-  @override
-  Object toJsonValue() => const {'type': 'object'};
+Object? _moodValue(String value) {
+  final text = value.trim().toLowerCase();
+  return text.isEmpty ? null : int.tryParse(text) ?? text;
 }

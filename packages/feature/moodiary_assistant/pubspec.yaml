@@ -15,7 +15,6 @@ dependencies:
 
   moodiary_components: 0.0.1
   moodiary_data: 0.0.1
-  moodiary_diary_ops: 0.0.1
   moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_http: 0.0.1
@@ -24,6 +23,7 @@ dependencies:
   moodiary_router: 0.0.1
   fast_core: 0.0.1
   moodiary_storage: 0.0.1
+  moodiary_tools: 0.0.1
   moodiary_utils: 0.0.1
   mui: 0.0.1
 

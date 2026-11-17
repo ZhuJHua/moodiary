@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_mcp/src/tools/diary_payloads.dart';
+import 'package:moodiary_tools/src/tools/diary_payloads.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'support.dart';

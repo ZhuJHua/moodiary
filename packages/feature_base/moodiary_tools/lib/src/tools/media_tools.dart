@@ -6,19 +6,22 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:mcp_dart/mcp_dart.dart';
+import 'package:flutter/foundation.dart' show internal;
+import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import '../media/diary_media.dart';
+import '../ops/diary_writes.dart';
 import 'arguments.dart';
+import 'diary_references.dart';
 import 'diary_write_lock.dart';
-import 'mcp_results.dart';
+import 'output_schemas.dart';
 import 'schemas.dart';
+import 'tool_def.dart';
 
 /// Validates a client supplied MIME type before storing it in a media node.
 final RegExp _mimeTypePattern = RegExp(
@@ -36,48 +39,46 @@ const List<String> _mediaKinds = ['image', 'audio', 'video', 'file'];
 /// large media.
 const int _maxPayloadBytes = 16 * 1024 * 1024;
 
-void registerMediaTools(
-  McpServer server, {
-  required DiaryRepository diaries,
-  required CategoryRepository categories,
-  DiaryMediaStore? store,
-}) {
-  final media = store ?? DiaryMediaStore();
-
-  server.registerTool(
-    'list_diary_media',
+@internal
+final List<ToolDefinition> mediaTools = [
+  ToolDef(
+    name: 'list_diary_media',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('list_diary_media', result.data),
     title: 'List the media of a diary',
-    description:
+    description: (_) =>
         'Lists every media file one diary references: images, audio, videos '
         'and file attachments. Each entry carries name, mimeType, bytes and '
         'exists; bytes is -1 when the file is missing from this device, and '
         'exists says whether the app media directory has it. Image names can '
         'be passed to read_diary_media.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {'id': diaryIdSchema},
       'required': ['id'],
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: false,
-    ),
-    callback: (arguments, call) => _listDiaryMedia(diaries, media, arguments),
-  );
-
-  server.registerTool(
-    'read_diary_media',
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.read,
+    idempotent: true,
+    output: toolOutputSchema('list_diary_media'),
+    parse: _parseListDiaryMedia,
+    run: (input, ctx) => _listDiaryMedia(ctx.diaries, ctx.mediaStore, input),
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+  ToolDef(
+    name: 'read_diary_media',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('read_diary_media', result.data),
     title: 'Read one media file of a diary',
-    description:
+    description: (_) =>
         'Returns one image of one diary as an MCP '
         'image content item (base64) plus a JSON metadata text item; images '
         'larger than 8 MB are refused instead of truncated. Audio, video and '
         'file attachments return a tool error: only images can be read. '
         'kind is inferred from the diary references when omitted. The name '
         'must be one of the images that diary references.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {
         'id': diaryIdSchema,
@@ -92,19 +93,21 @@ void registerMediaTools(
       },
       'required': ['id', 'name'],
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: false,
-    ),
-    callback: (arguments, call) => _readDiaryMedia(diaries, media, arguments),
-  );
-
-  server.registerTool(
-    'add_diary_image',
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.read,
+    idempotent: true,
+    output: toolOutputSchema('read_diary_media'),
+    parse: _parseReadDiaryMedia,
+    run: (input, ctx) => _readDiaryMedia(ctx.diaries, ctx.mediaStore, input),
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+  ToolDef(
+    name: 'add_diary_image',
+    validateArguments: validateToolArguments,
+    references: (result) => diaryReferences('add_diary_image', result.data),
     title: 'Attach an image to a diary',
-    description:
+    description: (_) =>
         'Attaches one image to an existing diary: the bytes are written into '
         'the app image directory with the app naming scheme and an image '
         'node is inserted at the end (position=end, default) or the start of '
@@ -119,7 +122,7 @@ void registerMediaTools(
         'error. The response reports the '
         'stored file name and the updated media lists instead of the whole '
         'body.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {
         'id': diaryIdSchema,
@@ -163,20 +166,23 @@ void registerMediaTools(
       },
       'required': ['id', 'data'],
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: false,
-    ),
-    callback: (arguments, call) =>
-        _addDiaryImage(diaries, categories, media, arguments),
-  );
-
-  server.registerTool(
-    'add_diary_attachment',
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.write,
+    idempotent: false,
+    output: toolOutputSchema('add_diary_image'),
+    parse: _parseAddDiaryImage,
+    run: (input, ctx) =>
+        _addDiaryImage(ctx.diaries, ctx.categories, ctx.mediaStore, input),
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+  ToolDef(
+    name: 'add_diary_attachment',
+    validateArguments: validateToolArguments,
+    references: (result) =>
+        diaryReferences('add_diary_attachment', result.data),
     title: 'Attach a file to a diary',
-    description:
+    description: (_) =>
         'Attaches one file to an existing diary: the bytes are written into '
         'the app file directory with the app naming scheme and an attachment '
         'node (src, name, mime, size) is inserted at the end of the document '
@@ -186,7 +192,7 @@ void registerMediaTools(
         'extension becomes .bin. mimeType is sniffed from the bytes and the '
         'name when omitted. The response reports the stored file name and '
         'the updated media lists instead of the whole body.',
-    inputSchema: const ToolArgumentSchema({
+    input: (_) => Schema.fromMap({
       'type': 'object',
       'properties': {
         'id': diaryIdSchema,
@@ -211,27 +217,27 @@ void registerMediaTools(
       },
       'required': ['id', 'data', 'fileName'],
     }),
-    annotations: const ToolAnnotations(
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: false,
-    ),
-    callback: (arguments, call) =>
-        _addDiaryAttachment(diaries, categories, media, arguments),
-  );
-}
+    surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
+    effect: ToolEffect.write,
+    idempotent: false,
+    output: toolOutputSchema('add_diary_attachment'),
+    parse: _parseAddDiaryAttachment,
+    run: (input, ctx) =>
+        _addDiaryAttachment(ctx.diaries, ctx.categories, ctx.mediaStore, input),
+    toJson: (result) => result.data,
+    media: (result) => result.media,
+  ),
+];
 
-Future<CallToolResult> _listDiaryMedia(
+Future<ToolResult> _listDiaryMedia(
   DiaryRepository diaries,
   DiaryMediaStore media,
-  Map<String, dynamic> arguments,
+  _ListDiaryMediaInput input,
 ) async {
-  final args = Args('list_diary_media', arguments);
-  final id = args.requireText('id');
+  final (:id) = input;
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null || !diary.show) {
-    return toolError('list_diary_media: no diary with id="$id".');
+    return _failure('list_diary_media: no diary with id="$id".');
   }
   final entries = <String, List<Map<String, dynamic>>>{};
   final lists = mediaLists(diary);
@@ -244,26 +250,23 @@ Future<CallToolResult> _listDiaryMedia(
     };
     entries[key] = await _mediaEntries(media, kind, lists[key]!);
   }
-  return jsonToolResult({
+  return ToolResult({
     'id': diary.id,
     'title': diary.title,
     'media': entries,
-    'count': entries.values.fold(0, (count, rows) => count + rows.length),
+    'count': entries.values.fold<int>(0, (count, rows) => count + rows.length),
   });
 }
 
-Future<CallToolResult> _readDiaryMedia(
+Future<ToolResult> _readDiaryMedia(
   DiaryRepository diaries,
   DiaryMediaStore media,
-  Map<String, dynamic> arguments,
+  _ReadDiaryMediaInput input,
 ) async {
-  final args = Args('read_diary_media', arguments);
-  final id = args.requireText('id');
-  final name = args.requireText('name');
-  final kindName = args.optionalEnum('kind', _mediaKinds);
+  final (:id, :name, :kindName) = input;
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null || !diary.show) {
-    return toolError('read_diary_media: no diary with id="$id".');
+    return _failure('read_diary_media: no diary with id="$id".');
   }
   final kind = kindName == null
       ? diary.mediaKindOf(name)
@@ -272,25 +275,25 @@ Future<CallToolResult> _readDiaryMedia(
   if (!isSafeMediaName(name) ||
       kind == null ||
       !diary.mediaNamesOf(kind).contains(name)) {
-    return toolError(
+    return _failure(
       'read_diary_media: diary id="$id" has no ${kind?.value ?? 'image'} media named '
       '"$name"; list_diary_media shows the names and kinds that may be read.',
     );
   }
   if (kind != MediaType.image) {
-    return toolError('read_diary_media: only images can be read.');
+    return _failure('read_diary_media: only images can be read.');
   }
   final stat = await media.stat(kind, name);
   if (!stat.exists) {
-    return toolError(
+    return _failure(
       'read_diary_media: "$name" is listed in diary id="$id" but is missing '
       'from the ${kind.value} media directory on this device.',
     );
   }
-  if (stat.bytes > mcpInlineBytes) {
-    return toolError(
-      'read_diary_media: the image "$name" is ${formatMegabytes(stat.bytes)} '
-      'MB, more than the ${formatMegabytes(mcpInlineBytes)} MB inline '
+  if (stat.bytes > _inlineBytes) {
+    return _failure(
+      'read_diary_media: the image "$name" is ${_megabytes(stat.bytes)} '
+      'MB, more than the ${_megabytes(_inlineBytes)} MB inline '
       'limit, so it is not returned. The file is still on the device; open the '
       'diary in the app to view it.',
     );
@@ -306,51 +309,37 @@ Future<CallToolResult> _readDiaryMedia(
   };
   final bytes = await media.read(kind, name);
   if (bytes == null) {
-    return toolError(
+    return _failure(
       'read_diary_media: "$name" of diary id="$id" disappeared while it was '
       'being read; call list_diary_media and try again.',
     );
   }
-  if (bytes.length > mcpInlineBytes) {
-    return toolError(
-      'read_diary_media: the image "$name" is ${formatMegabytes(bytes.length)} '
-      'MB, more than the ${formatMegabytes(mcpInlineBytes)} MB inline '
+  if (bytes.length > _inlineBytes) {
+    return _failure(
+      'read_diary_media: the image "$name" is ${_megabytes(bytes.length)} '
+      'MB, more than the ${_megabytes(_inlineBytes)} MB inline '
       'limit, so it is not returned. The file is still on the device; open the '
       'diary in the app to view it.',
     );
   }
-  return CallToolResult(
-    content: [
-      ImageContent(data: base64Encode(bytes), mimeType: stat.mimeType),
-      TextContent(text: jsonEncode(metadata)),
-    ],
-    structuredContent: metadata,
+  return ToolResult(
+    metadata,
+    media: [ToolMedia(bytes: bytes, mimeType: stat.mimeType)],
   );
 }
 
-Future<CallToolResult> _addDiaryImage(
+Future<ToolResult> _addDiaryImage(
   DiaryRepository diaries,
   CategoryRepository categories,
   DiaryMediaStore media,
-  Map<String, dynamic> arguments,
+  _AddDiaryImageInput input,
 ) async {
   const subject = 'add_diary_image';
-  final args = Args(subject, arguments);
-  final id = args.requireText('id');
-  final data = args.requireText('data');
-  final position = args.optionalEnum('position', _positions) ?? 'end';
-  final requestedMime = _normalizeMime(args.optionalText('mimeType'));
-  final displayName = args.optionalText('name');
-  // A null widthPercent is the same as omitting it: the node is written
-  // without a width attribute and the document default applies, so the
-  // present-with-a-value test is the right reader here rather than [has].
-  final widthPercent = args.contains('widthPercent')
-      ? args.optionalInt('widthPercent', fallback: 100, min: 10, max: 100)
-      : null;
-
+  final (:id, :data, :position, :requestedMime, :displayName, :widthPercent) =
+      input;
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null || !diary.show) {
-    return toolError('$subject: no diary with id="$id".');
+    return _failure('$subject: no diary with id="$id".');
   }
   if (_documentError(subject, diary) case final error?) return error;
   final payload = _decodePayload(subject, data);
@@ -359,7 +348,7 @@ Future<CallToolResult> _addDiaryImage(
 
   final resolvedMime = _resolveImageMime(requestedMime, bytes);
   if (resolvedMime.error case final error?) {
-    return toolError('$subject: $error');
+    return _failure('$subject: $error');
   }
   final SavedDiaryMedia saved;
   try {
@@ -371,7 +360,7 @@ Future<CallToolResult> _addDiaryImage(
       mimeType: resolvedMime.mime,
     );
   } on DiaryMediaException catch (e) {
-    return toolError('$subject: ${e.message}');
+    return _failure('$subject: ${e.message}');
   }
 
   final node = <String, dynamic>{
@@ -393,28 +382,17 @@ Future<CallToolResult> _addDiaryImage(
   );
 }
 
-Future<CallToolResult> _addDiaryAttachment(
+Future<ToolResult> _addDiaryAttachment(
   DiaryRepository diaries,
   CategoryRepository categories,
   DiaryMediaStore media,
-  Map<String, dynamic> arguments,
+  _AddDiaryAttachmentInput input,
 ) async {
   const subject = 'add_diary_attachment';
-  final args = Args(subject, arguments);
-  final id = args.requireText('id');
-  final data = args.requireText('data');
-  final fileName = _displayFileName(args.requireText('fileName'));
-  final requestedMime = _normalizeMime(args.optionalText('mimeType'));
-  if (requestedMime != null && !_mimeTypePattern.hasMatch(requestedMime)) {
-    throw McpError(
-      ErrorCode.invalidParams.value,
-      '$subject: mimeType must look like "type/subtype"',
-    );
-  }
-
+  final (:id, :data, :fileName, :requestedMime) = input;
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null || !diary.show) {
-    return toolError('$subject: no diary with id="$id".');
+    return _failure('$subject: no diary with id="$id".');
   }
   if (_documentError(subject, diary) case final error?) return error;
   final payload = _decodePayload(subject, data);
@@ -431,7 +409,7 @@ Future<CallToolResult> _addDiaryAttachment(
       mimeType: requestedMime,
     );
   } on DiaryMediaException catch (e) {
-    return toolError('$subject: ${e.message}');
+    return _failure('$subject: ${e.message}');
   }
 
   final node = TiptapContent.attachmentNode(
@@ -503,7 +481,7 @@ Future<SavedDiaryMedia> _saveMedia(
 
 /// Inserts [node] into the diary document and persists it, then answers with
 /// the stored file name and the updated media lists.
-Future<CallToolResult> _persistNode(
+Future<ToolResult> _persistNode(
   DiaryRepository diaries,
   CategoryRepository categories, {
   required String subject,
@@ -523,11 +501,11 @@ Future<CallToolResult> _persistNode(
       newMediaName: saved.name,
     );
   } on DiaryMediaException catch (e) {
-    return toolError('$subject: ${e.message}');
+    return _failure('$subject: ${e.message}');
   } on DiaryOpsException catch (e) {
-    return toolError('$subject: ${_opsFailureMessage(e, diary.id)}');
+    return _failure('$subject: ${_opsFailureMessage(e, diary.id)}');
   }
-  return jsonToolResult({
+  return ToolResult({
     'added': true,
     'name': saved.name,
     'mimeType': saved.mimeType,
@@ -583,10 +561,10 @@ String _noDocumentMessage(Diary diary) =>
     'update_diary contentFormat="document" first.';
 
 /// Rejects legacy bodies before writing files to avoid orphan media.
-CallToolResult? _documentError(String subject, Diary diary) =>
+ToolResult? _documentError(String subject, Diary diary) =>
     TiptapContent.parse(diary.content).isDoc
     ? null
-    : toolError('$subject: ${_noDocumentMessage(diary)}');
+    : _failure('$subject: ${_noDocumentMessage(diary)}');
 
 String _opsFailureMessage(DiaryOpsException e, String id) =>
     switch (e.failure) {
@@ -617,7 +595,7 @@ Future<List<Map<String, dynamic>>> _mediaEntries(
 
 /// Checks the size estimate before decoding. Malformed data is invalid
 /// params; exceeding the server's size cap is a tool error.
-({Uint8List? bytes, CallToolResult? error}) _decodePayload(
+({Uint8List? bytes, ToolResult? error}) _decodePayload(
   String subject,
   String data,
 ) {
@@ -632,9 +610,9 @@ Future<List<Map<String, dynamic>>> _mediaEntries(
   return (bytes: bytes, error: null);
 }
 
-CallToolResult _tooLarge(String subject, int bytes) => toolError(
-  '$subject: data decodes to ${formatMegabytes(bytes)} MB, more than the '
-  '${formatMegabytes(_maxPayloadBytes)} MB limit per file; send a smaller file '
+ToolResult _tooLarge(String subject, int bytes) => _failure(
+  '$subject: data decodes to ${_megabytes(bytes)} MB, more than the '
+  '${_megabytes(_maxPayloadBytes)} MB limit per file; send a smaller file '
   'or attach it in the app.',
 );
 
@@ -643,16 +621,10 @@ Uint8List _decodeBase64(String subject, String data) {
   try {
     bytes = base64Decode(data);
   } on FormatException {
-    throw McpError(
-      ErrorCode.invalidParams.value,
-      '$subject: data is not valid base64',
-    );
+    throw ToolArgumentException('$subject: data is not valid base64');
   }
   if (bytes.isEmpty) {
-    throw McpError(
-      ErrorCode.invalidParams.value,
-      '$subject: data decodes to zero bytes',
-    );
+    throw ToolArgumentException('$subject: data decodes to zero bytes');
   }
   return bytes;
 }
@@ -705,3 +677,83 @@ String _displayFileName(String fileName) {
   final base = fileName.replaceAll(r'\', '/').split('/').last.trim();
   return base.isEmpty ? 'attachment' : base;
 }
+
+typedef _ListDiaryMediaInput = ({String id});
+
+_ListDiaryMediaInput _parseListDiaryMedia(Map<String, Object?> raw) {
+  final args = ToolArguments('list_diary_media', raw);
+  final id = args.requireText('id');
+  return (id: id);
+}
+
+typedef _ReadDiaryMediaInput = ({String id, String name, String? kindName});
+
+_ReadDiaryMediaInput _parseReadDiaryMedia(Map<String, Object?> raw) {
+  final args = ToolArguments('read_diary_media', raw);
+  final id = args.requireText('id');
+  final name = args.requireText('name');
+  final kindName = args.optionalEnum('kind', _mediaKinds);
+  return (id: id, name: name, kindName: kindName);
+}
+
+typedef _AddDiaryImageInput = ({
+  String id,
+  String data,
+  String position,
+  String? requestedMime,
+  String? displayName,
+  int? widthPercent,
+});
+
+_AddDiaryImageInput _parseAddDiaryImage(Map<String, Object?> raw) {
+  const subject = 'add_diary_image';
+  final args = ToolArguments(subject, raw);
+  final id = args.requireText('id');
+  final data = args.requireText('data');
+  final position = args.optionalEnum('position', _positions) ?? 'end';
+  final requestedMime = _normalizeMime(args.optionalText('mimeType'));
+  final displayName = args.optionalText('name');
+  // A null widthPercent is the same as omitting it: the node is written
+  // without a width attribute and the document default applies, so the
+  // present-with-a-value test is the right reader here rather than [has].
+  final widthPercent = args.contains('widthPercent')
+      ? args.optionalInt('widthPercent', fallback: 100, min: 10, max: 100)
+      : null;
+
+  return (
+    id: id,
+    data: data,
+    position: position,
+    requestedMime: requestedMime,
+    displayName: displayName,
+    widthPercent: widthPercent,
+  );
+}
+
+typedef _AddDiaryAttachmentInput = ({
+  String id,
+  String data,
+  String fileName,
+  String? requestedMime,
+});
+
+_AddDiaryAttachmentInput _parseAddDiaryAttachment(Map<String, Object?> raw) {
+  const subject = 'add_diary_attachment';
+  final args = ToolArguments(subject, raw);
+  final id = args.requireText('id');
+  final data = args.requireText('data');
+  final fileName = _displayFileName(args.requireText('fileName'));
+  final requestedMime = _normalizeMime(args.optionalText('mimeType'));
+  if (requestedMime != null && !_mimeTypePattern.hasMatch(requestedMime)) {
+    throw const ToolArgumentException(
+      '$subject: mimeType must look like "type/subtype"',
+    );
+  }
+
+  return (id: id, data: data, fileName: fileName, requestedMime: requestedMime);
+}
+
+Never _failure(String message) => throw ToolFailure(message);
+
+const int _inlineBytes = 8 * 1024 * 1024;
+String _megabytes(int bytes) => (bytes / (1024 * 1024)).toStringAsFixed(1);
