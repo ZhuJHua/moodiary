@@ -14,6 +14,33 @@ import 'reminder_scheduler.dart';
 
 enum ReminderTapAction { openApp, newDiary }
 
+@internal
+({String title, String body}) reminderNotificationCopy(
+  Translations l10n,
+  int hour,
+) => switch (hour) {
+  >= 5 && < 11 => (
+    title: l10n.reminder.copy.morning.title,
+    body: l10n.reminder.copy.morning.body,
+  ),
+  >= 11 && < 14 => (
+    title: l10n.reminder.copy.noon.title,
+    body: l10n.reminder.copy.noon.body,
+  ),
+  >= 14 && < 18 => (
+    title: l10n.reminder.copy.afternoon.title,
+    body: l10n.reminder.copy.afternoon.body,
+  ),
+  >= 18 && < 23 => (
+    title: l10n.reminder.copy.evening.title,
+    body: l10n.reminder.copy.evening.body,
+  ),
+  _ => (
+    title: l10n.reminder.copy.night.title,
+    body: l10n.reminder.copy.night.body,
+  ),
+};
+
 Future<void> cancelReminderNotifications(
   LocalNotifications notifications,
 ) async {
@@ -66,13 +93,16 @@ class ReminderService extends ChangeNotifier {
     String body,
     String payload,
   })
-  get _content => (
-    channelId: channelId,
-    channelName: l10n.reminder.title,
-    title: l10n.reminder.notificationTitle,
-    body: l10n.reminder.notificationBody,
-    payload: payload,
-  );
+  _content(int hour) {
+    final copy = reminderNotificationCopy(l10n, hour);
+    return (
+      channelId: channelId,
+      channelName: l10n.reminder.title,
+      title: copy.title,
+      body: copy.body,
+      payload: payload,
+    );
+  }
 
   Future<void> initialize() => _initialization ??= _initialize();
 
@@ -146,9 +176,9 @@ class ReminderService extends ChangeNotifier {
         _applied.remove(id);
       }
     }
-    final content = _content;
-    final text = '${content.title}:${content.body}:${content.channelName}';
     for (final notification in desired) {
+      final content = _content(notification.reminder.hour);
+      final text = '${content.title}:${content.body}:${content.channelName}';
       final signature = '${notification.signature}:$text';
       if (pending.contains(notification.id) &&
           _applied[notification.id] == signature) {
@@ -202,9 +232,10 @@ class ReminderService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> sendTest() {
-    final content = _content;
-    return _notifications.show(
+  Future<void> sendTest() async {
+    await _notifications.updateTimeZone();
+    final content = _content(now.hour);
+    await _notifications.show(
       id: 300000,
       channelId: content.channelId,
       channelName: content.channelName,
