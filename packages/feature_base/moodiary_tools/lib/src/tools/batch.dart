@@ -2,21 +2,14 @@ import 'package:json_schema_builder/json_schema_builder.dart';
 
 import 'tool_def.dart';
 
-Schema batchItemsSchema(Map<String, Object?> item) => Schema.fromMap({
-  'type': 'object',
-  'properties': {
-    'items': {'type': 'array', 'minItems': 1, 'maxItems': 20, 'items': item},
-  },
-  'required': ['items'],
-  'additionalProperties': false,
-});
+Schema batchItemsSchema(Schema item) => S.object(
+  properties: {'items': S.list(minItems: 1, maxItems: 20, items: item)},
+  required: ['items'],
+  additionalProperties: false,
+);
 
-Map<String, Object?> toolIdsSchema(Map<String, Object?> id, {int max = 20}) => {
-  'type': 'array',
-  'minItems': 1,
-  'maxItems': max,
-  'items': id,
-};
+Schema toolIdsSchema(Schema id, {int max = 20}) =>
+    S.list(minItems: 1, maxItems: max, items: id);
 
 List<Map<String, Object?>> toolBatchItems(Map<String, Object?> raw) => [
   for (final item in raw['items']! as List)

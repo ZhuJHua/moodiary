@@ -1,31 +1,23 @@
 import 'package:flutter/foundation.dart' show internal;
 import 'package:json_schema_builder/json_schema_builder.dart';
 
-const _string = {'type': 'string'};
-const _integer = {'type': 'integer'};
-const _boolean = {'type': 'boolean'};
-const _nullableString = {
-  'type': ['string', 'null'],
-};
-const _nullableInteger = {
-  'type': ['integer', 'null'],
-};
+final _string = S.string();
+final _integer = S.integer();
+final _boolean = S.boolean();
+final _nullableString = S.combined(type: [JsonType.string, JsonType.nil]);
+final _nullableInteger = S.combined(type: [JsonType.int, JsonType.nil]);
 
-Map<String, Object?> _list(Map<String, Object?> item) => {
-  'type': 'array',
-  'items': item,
-};
-Map<String, Object?> _object(
-  Map<String, Object?> properties, {
+Schema _list(Schema item) => S.list(items: item);
+ObjectSchema _object(
+  Map<String, Schema> properties, {
   List<String> optional = const [],
-}) => {
-  'type': 'object',
-  'properties': properties,
-  'required': properties.keys.where((key) => !optional.contains(key)).toList(),
-  'additionalProperties': false,
-};
+}) => ObjectSchema(
+  properties: properties,
+  required: properties.keys.where((key) => !optional.contains(key)).toList(),
+  additionalProperties: false,
+);
 
-final _summaryFields = <String, Object?>{
+final _summaryFields = <String, Schema>{
   'id': _string,
   'title': _string,
   'time': _string,
@@ -69,7 +61,7 @@ final _mediaEntry = _object({
 });
 
 @internal
-Schema toolOutputSchema(String name) => Schema.fromMap(switch (name) {
+Schema toolOutputSchema(String name) => switch (name) {
   'get_diary' => _object({
     'diaries': _list(
       _object(
@@ -77,9 +69,7 @@ Schema toolOutputSchema(String name) => Schema.fromMap(switch (name) {
           ..._summaryFields,
           'type': _string,
           'contentFormat': _string,
-          'content': {
-            'type': ['string', 'object'],
-          },
+          'content': S.combined(type: [JsonType.string, JsonType.object]),
           'contentTruncated': _boolean,
           'truncated': _boolean,
           'fullLength': _integer,
@@ -128,9 +118,7 @@ Schema toolOutputSchema(String name) => Schema.fromMap(switch (name) {
             'titleHighlight': _string,
             'preview': _string,
             'via': _string,
-            'similarity': {
-              'type': ['number', 'null'],
-            },
+            'similarity': S.combined(type: [JsonType.num, JsonType.nil]),
           },
           optional: [
             'excerpt',
@@ -149,7 +137,7 @@ Schema toolOutputSchema(String name) => Schema.fromMap(switch (name) {
     'title': _string,
     'time': _string,
     'timeLocal': _string,
-    ...(_links['properties']! as Map<String, Object?>),
+    ..._links.properties!,
   }),
   'list_tags' => _object({
     'tags': _list(_object({'tag': _string, 'diaries': _integer})),
@@ -227,44 +215,40 @@ Schema toolOutputSchema(String name) => Schema.fromMap(switch (name) {
       }),
       'recordedDiaries': _integer,
       'diariesWithoutMood': _integer,
-      'averageScore': {
-        'type': ['number', 'null'],
-      },
+      'averageScore': S.combined(type: [JsonType.num, JsonType.nil]),
       'recordedDays': _integer,
     }),
     'generatedAt': _string,
   }),
   _ => throw ArgumentError.value(name, 'name', 'Unknown tool'),
-});
+};
 
-Map<String, Object?> _batch(Map<String, Object?> payload) {
-  final fields = payload['properties']! as Map<String, Object?>;
-  final required = (payload['required']! as List).cast<String>();
+Schema _batch(ObjectSchema payload) {
+  final fields = payload.properties!;
+  final required = payload.required!;
   return _object({
-    'results': _list({
-      'oneOf': [
-        _object(
-          {
-            'ok': {'const': true},
-            'id': _string,
-            ...fields,
-          },
-          optional: [
-            'id',
-            ...fields.keys.where((key) => !required.contains(key)),
-          ],
-        ),
-        _object(
-          {
-            'ok': {'const': false},
-            'error': _string,
-            'id': _string,
-            ...fields,
-          },
-          optional: ['id', ...fields.keys],
-        ),
-      ],
-    }),
+    'results': _list(
+      S.combined(
+        oneOf: [
+          _object(
+            {'ok': S.combined(constValue: true), 'id': _string, ...fields},
+            optional: [
+              'id',
+              ...fields.keys.where((key) => !required.contains(key)),
+            ],
+          ),
+          _object(
+            {
+              'ok': S.combined(constValue: false),
+              'error': _string,
+              'id': _string,
+              ...fields,
+            },
+            optional: ['id', ...fields.keys],
+          ),
+        ],
+      ),
+    ),
     'processed': _integer,
     'requested': _integer,
   });

@@ -25,7 +25,7 @@ final List<ToolDefinition> categoryTools = [
     description: (_) =>
         'Lists every diary category with id, name, ARGB colour, colour hex '
         'and its visible diary count. total is the number of categories.',
-    input: (_) => Schema.fromMap({'type': 'object', 'properties': {}}),
+    input: (_) => S.object(properties: {}),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
@@ -45,11 +45,12 @@ final List<ToolDefinition> categoryTools = [
         'do not repeat items that already succeeded. '
         'Creates each diary in the batch category. color accepts a 32 bit ARGB integer '
         'or a #RRGGBB / #AARRGGBB string.',
-    input: (_) => batchItemsSchema({
-      'type': 'object',
-      'properties': {'name': categoryNameSchema, 'color': colorSchema},
-      'required': ['name'],
-    }),
+    input: (_) => batchItemsSchema(
+      S.object(
+        properties: {'name': categoryNameSchema, 'color': colorSchema},
+        required: ['name'],
+      ),
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: false,
@@ -73,15 +74,16 @@ final List<ToolDefinition> categoryTools = [
         'Renames or recolours categories in items (1–20), leaving omitted fields unchanged. '
         'Send null (or an empty string) for color to clear it. Requires at '
         'least one of name and color.',
-    input: (_) => batchItemsSchema({
-      'type': 'object',
-      'properties': {
-        'id': requiredCategoryIdSchema,
-        'name': categoryNameSchema,
-        'color': colorSchema,
-      },
-      'required': ['id'],
-    }),
+    input: (_) => batchItemsSchema(
+      S.object(
+        properties: {
+          'id': requiredCategoryIdSchema,
+          'name': categoryNameSchema,
+          'color': colorSchema,
+        },
+        required: ['id'],
+      ),
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: true,
@@ -104,11 +106,10 @@ final List<ToolDefinition> categoryTools = [
         'do not repeat items that already succeeded. '
         'Deletes empty categories in ids (1–20). Refuses categories holding diaries, '
         'including those in the recycle bin, and reports the reason.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'ids': toolIdsSchema(requiredCategoryIdSchema)},
-      'required': ['ids'],
-    }),
+    input: (_) => S.object(
+      properties: {'ids': toolIdsSchema(requiredCategoryIdSchema)},
+      required: ['ids'],
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.destructive,
     idempotent: true,

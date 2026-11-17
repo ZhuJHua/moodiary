@@ -37,27 +37,16 @@ final List<ToolDefinition> assistantOnlyTools = [
         'what you need; leave it '
         'out for the most recent facts. Each row carries the id you need to '
         'revise or forget it. Do not call this for greetings or small talk.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
-        'query': {'type': 'string'},
-        'limit': {'type': 'integer'},
-      },
-      'additionalProperties': false,
-    }),
-    output: Schema.fromMap(
-      _object({
-        'facts': {
-          'type': 'array',
-          'items': _object({
-            'id': _string,
-            'category': _string,
-            'text': _string,
-          }),
-        },
-        'total': {'type': 'integer'},
-      }),
+    input: (_) => S.object(
+      properties: {'query': S.string(), 'limit': S.integer()},
+      additionalProperties: false,
     ),
+    output: _object({
+      'facts': S.list(
+        items: _object({'id': _string, 'category': _string, 'text': _string}),
+      ),
+      'total': S.integer(),
+    }),
     parse: (raw) => raw,
     run: (raw, _) async {
       final repo = getIt<MemoryRepository>();
@@ -96,8 +85,8 @@ final List<ToolDefinition> assistantOnlyTools = [
         {
           'id': _string,
           'text': _string,
-          'category': {'type': 'string'},
-          'source': {'type': 'string'},
+          'category': S.string(),
+          'source': S.string(),
         },
         optional: ['id', 'category', 'source'],
       ),
@@ -117,7 +106,7 @@ final List<ToolDefinition> assistantOnlyTools = [
         'Delete saved facts by id (from recall_memory). This is permanent — '
         'there is no recycle bin for memories. Pass every id in one call. '
         'Max 20 per call.',
-    input: (_) => Schema.fromMap(_object({'ids': toolIdsSchema(_string)})),
+    input: (_) => _object({'ids': toolIdsSchema(_string)}),
     output: _factBatchOutput,
     parse: toolBatchIds,
     run: (items, _) => runToolBatch(items, (item) async {
@@ -148,14 +137,12 @@ final List<ToolDefinition> assistantOnlyTools = [
         'literals in the code, having read it with the other tools first. '
         'Runs are capped at a couple of seconds and a few MB; an endless loop '
         'is killed, not waited for.',
-    input: (_) => Schema.fromMap(_object({'code': _string})),
-    output: Schema.fromMap(
-      _object({
-        'value': _string,
-        'logs': {'type': 'array', 'items': _string},
-        'truncated': {'type': 'boolean'},
-      }),
-    ),
+    input: (_) => _object({'code': _string}),
+    output: _object({
+      'value': _string,
+      'logs': S.list(items: _string),
+      'truncated': S.boolean(),
+    }),
     parse: (raw) {
       if ((raw['code']! as String).trim().isEmpty) {
         throw const ToolArgumentException(
@@ -173,37 +160,33 @@ final List<ToolDefinition> assistantOnlyTools = [
   ),
 ];
 
-const _string = <String, Object?>{'type': 'string'};
-Map<String, Object?> _object(
-  Map<String, Object?> fields, {
+final _string = S.string();
+Schema _object(
+  Map<String, Schema> fields, {
   List<String> optional = const [],
-}) => {
-  'type': 'object',
-  'properties': fields,
-  'required': fields.keys.where((key) => !optional.contains(key)).toList(),
-  'additionalProperties': false,
-};
-final _factBatchOutput = Schema.fromMap(
-  _object({
-    'results': {
-      'type': 'array',
-      'items': _object(
-        {
-          'ok': {'type': 'boolean'},
-          'id': _string,
-          'text': _string,
-          'category': _string,
-          'error': _string,
-          'deleted': {'type': 'boolean'},
-          'duplicate': {'type': 'boolean'},
-        },
-        optional: ['id', 'text', 'category', 'error', 'deleted', 'duplicate'],
-      ),
-    },
-    'processed': {'type': 'integer'},
-    'requested': {'type': 'integer'},
-  }),
+}) => S.object(
+  properties: fields,
+  required: fields.keys.where((key) => !optional.contains(key)).toList(),
+  additionalProperties: false,
 );
+final _factBatchOutput = _object({
+  'results': S.list(
+    items: _object(
+      {
+        'ok': S.boolean(),
+        'id': _string,
+        'text': _string,
+        'category': _string,
+        'error': _string,
+        'deleted': S.boolean(),
+        'duplicate': S.boolean(),
+      },
+      optional: ['id', 'text', 'category', 'error', 'deleted', 'duplicate'],
+    ),
+  ),
+  'processed': S.integer(),
+  'requested': S.integer(),
+});
 
 Future<ToolResult> _rememberFact(Map<String, Object?> raw) async {
   final text = (raw['text']! as String).trim();

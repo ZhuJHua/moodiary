@@ -52,11 +52,7 @@ final List<ToolDefinition> mediaTools = [
         'exists; bytes is -1 when the file is missing from this device, and '
         'exists says whether the app media directory has it. Image names can '
         'be passed to read_diary_media.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'id': diaryIdSchema},
-      'required': ['id'],
-    }),
+    input: (_) => S.object(properties: {'id': diaryIdSchema}, required: ['id']),
     surfaces: const {ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
@@ -78,21 +74,19 @@ final List<ToolDefinition> mediaTools = [
         'file attachments return a tool error: only images can be read. '
         'kind is inferred from the diary references when omitted. The name '
         'must be one of the images that diary references.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
+    input: (_) => S.object(
+      properties: {
         'id': diaryIdSchema,
         'name': mediaNameSchema,
-        'kind': {
-          'type': 'string',
-          'enum': _mediaKinds,
-          'description':
+        'kind': S.string(
+          enumValues: _mediaKinds,
+          description:
               'Media kind, inferred from the diary references when omitted. '
               'Only image can be read; other kinds return a tool error.',
-        },
+        ),
       },
-      'required': ['id', 'name'],
-    }),
+      required: ['id', 'name'],
+    ),
     surfaces: const {ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
@@ -122,50 +116,49 @@ final List<ToolDefinition> mediaTools = [
         'error. The response reports the '
         'stored file name and the updated media lists instead of the whole '
         'body.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
+    input: (_) => S.object(
+      properties: {
         'id': diaryIdSchema,
-        'data': {
-          'type': 'string',
-          'description':
+        'data': S.string(
+          description:
               'Base64 of the image file, no data: URL prefix. At most 16 MB '
               'decoded.',
-        },
-        'mimeType': {
-          'type': 'string',
-          'description':
+        ),
+        'mimeType': S.string(
+          description:
               'MIME type of the image: image/png, image/jpeg, image/webp, '
               'image/gif, image/heic or image/heif. Omitted: sniffed from data.',
-        },
-        'name': {
-          'type': 'string',
-          'description':
+        ),
+        'name': S.string(
+          description:
               'Display name stored on the image node, usually the original '
               'file name. Defaults to the stored file name.',
-        },
-        'position': {
-          'type': 'string',
-          'enum': _positions,
-          'default': 'end',
-          'description':
-              'Where in the top-level body the image node goes: end '
-              '(default) appends it after the last block, start puts it '
-              'before the first.',
-        },
-        'widthPercent': {
-          'type': ['integer', 'null'],
-          'minimum': 10,
-          'maximum': 100,
-          'description':
-              'Image width as a percentage of the content width, clamped '
-              'into 10..100. Omitted or null writes no width attribute, so '
-              'the document default applies. The document store keeps values '
-              'from 25 to 100, so 10..24 is raised to 25.',
-        },
+        ),
+        'position': schemaWithDefault(
+          S.string(
+            enumValues: _positions,
+            description:
+                'Where in the top-level body the image node goes: end '
+                '(default) appends it after the last block, start puts it '
+                'before the first.',
+          ),
+          'end',
+        ),
+        'widthPercent': nullableSchema(
+          S.integer(
+            minimum: 10,
+            maximum: 100,
+            description:
+                'Image width as a percentage of the content width, clamped '
+                'into 10..100. Omitted or null writes no width attribute, so '
+                'the document default applies. The document store keeps values '
+                'from 25 to 100, so 10..24 is raised to 25.',
+          ),
+          JsonType.int,
+        ),
       },
-      'required': ['id', 'data'],
-    }),
+      required: ['id', 'data'],
+    ),
     surfaces: const {ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: false,
@@ -192,31 +185,27 @@ final List<ToolDefinition> mediaTools = [
         'extension becomes .bin. mimeType is sniffed from the bytes and the '
         'name when omitted. The response reports the stored file name and '
         'the updated media lists instead of the whole body.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
+    input: (_) => S.object(
+      properties: {
         'id': diaryIdSchema,
-        'data': {
-          'type': 'string',
-          'description':
+        'data': S.string(
+          description:
               'Base64 of the file, no data: URL prefix. At most 16 MB '
               'decoded.',
-        },
-        'fileName': {
-          'type': 'string',
-          'description':
+        ),
+        'fileName': S.string(
+          description:
               'Original file name, e.g. "report.pdf"; used as the display '
               'name and for the stored extension.',
-        },
-        'mimeType': {
-          'type': 'string',
-          'description':
+        ),
+        'mimeType': S.string(
+          description:
               'MIME type of the file, e.g. application/pdf. Omitted: '
               'sniffed from data and the file name.',
-        },
+        ),
       },
-      'required': ['id', 'data', 'fileName'],
-    }),
+      required: ['id', 'data', 'fileName'],
+    ),
     surfaces: const {ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: false,

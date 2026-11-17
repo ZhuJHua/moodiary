@@ -29,10 +29,7 @@ final List<ToolDefinition> statsTools = [
         'the visible diaries outside that window, so '
         'sum(months.diaries) + olderDiaries + futureDiaries == '
         'visibleDiaries always holds and no diary is missing from the sum.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'months': statsMonthsSchema},
-    }),
+    input: (_) => S.object(properties: {'months': statsMonthsSchema}),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,

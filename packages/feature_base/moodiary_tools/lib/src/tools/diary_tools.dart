@@ -35,25 +35,25 @@ final List<ToolDefinition> diaryTools = [
         'ids are reported in missing. Markdown preserves media as ![name](src); '
         'keep these references when rewriting content. '
         '${surface == ToolSurface.assistant ? 'Bodies are Markdown, capped at 4000 characters; truncated and fullLength report any cap. Never rewrite from a truncated body.' : 'contentFormat selects markdown (default), text or the raw Tiptap document JSON. document is subject to the $mcpResultChars character result limit. linkStyle=uri preserves diary mention targets; label keeps only labels. includeLinks=false omits the graph. Attach files with add_diary_image or add_diary_attachment and inspect them with list_diary_media.'}',
-    input: (surface) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
+    input: (surface) => S.object(
+      properties: {
         'ids': toolIdsSchema(diaryIdSchema, max: maxBatchRead),
         if (surface == ToolSurface.mcp) ...{
           'contentFormat': readContentFormatSchema,
           'linkStyle': linkStyleSchema,
-          'includeLinks': {
-            'type': 'boolean',
-            'default': true,
-            'description':
-                'false omits links, the graph of forward links, backlinks and '
-                'dangling diary ids of this diary.',
-          },
+          'includeLinks': schemaWithDefault(
+            S.boolean(
+              description:
+                  'false omits links, the graph of forward links, backlinks and '
+                  'dangling diary ids of this diary.',
+            ),
+            true,
+          ),
         },
       },
-      'additionalProperties': false,
-      'required': ['ids'],
-    }),
+      additionalProperties: false,
+      required: ['ids'],
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
@@ -88,26 +88,23 @@ final List<ToolDefinition> diaryTools = [
         'media: a body with media nodes is invalid params, because media has '
         'to be added to an existing diary with add_diary_image or '
         'add_diary_attachment (which also creates its media index row).',
-    input: (_) => batchItemsSchema({
-      'type': 'object',
-      'properties': {
-        'title': {
-          'type': 'string',
-          'description': 'Diary title; may be empty.',
+    input: (_) => batchItemsSchema(
+      S.object(
+        properties: {
+          'title': S.string(description: 'Diary title; may be empty.'),
+          'content': S.string(
+            description:
+                'Diary body; required. Interpreted according to contentFormat.',
+          ),
+          'contentFormat': writeContentFormatSchema,
+          'time': diaryTimeSchema,
+          'categoryId': categoryIdSchema,
+          'mood': moodSchema,
+          'tags': tagsSchema,
         },
-        'content': {
-          'type': 'string',
-          'description':
-              'Diary body; required. Interpreted according to contentFormat.',
-        },
-        'contentFormat': writeContentFormatSchema,
-        'time': diaryTimeSchema,
-        'categoryId': categoryIdSchema,
-        'mood': moodSchema,
-        'tags': tagsSchema,
-      },
-      'required': ['content'],
-    }),
+        required: ['content'],
+      ),
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: false,
@@ -144,28 +141,27 @@ final List<ToolDefinition> diaryTools = [
         'or add_diary_attachment); another diary\'s media name is invalid '
         'params. Recycled diaries are not found. An unknown category id is '
         'an item error; an unknown diary id also fails only that item.',
-    input: (_) => batchItemsSchema({
-      'type': 'object',
-      'properties': {
-        'id': diaryIdSchema,
-        'title': {
-          'type': 'string',
-          'description': 'New title; an empty string clears it.',
+    input: (_) => batchItemsSchema(
+      S.object(
+        properties: {
+          'id': diaryIdSchema,
+          'title': S.string(
+            description: 'New title; an empty string clears it.',
+          ),
+          'content': S.string(
+            description:
+                'New body; replaces the old one. Interpreted according to '
+                'contentFormat.',
+          ),
+          'contentFormat': writeContentFormatSchema,
+          'time': diaryTimeSchema,
+          'categoryId': categoryIdSchema,
+          'mood': moodSchema,
+          'tags': tagsSchema,
         },
-        'content': {
-          'type': 'string',
-          'description':
-              'New body; replaces the old one. Interpreted according to '
-              'contentFormat.',
-        },
-        'contentFormat': writeContentFormatSchema,
-        'time': diaryTimeSchema,
-        'categoryId': categoryIdSchema,
-        'mood': moodSchema,
-        'tags': tagsSchema,
-      },
-      'required': ['id'],
-    }),
+        required: ['id'],
+      ),
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: true,
@@ -194,11 +190,10 @@ final List<ToolDefinition> diaryTools = [
         'in the app. Permanent deletion is only available in the app. title '
         'is the stored title, empty when the diary had none. An unknown id '
         'fails only that item.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'ids': toolIdsSchema(diaryIdSchema)},
-      'required': ['ids'],
-    }),
+    input: (_) => S.object(
+      properties: {'ids': toolIdsSchema(diaryIdSchema)},
+      required: ['ids'],
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.write,
     idempotent: true,
@@ -230,16 +225,14 @@ final List<ToolDefinition> diaryTools = [
         'instead of presenting the rows as the complete set. '
         '${surface == ToolSurface.assistant ? 'mode=auto fuses keyword and local semantic search when enabled; keyword and meaning force a path. Each hit reports via and similarity.' : 'Search is keyword-only.'} '
         'Mood is awful, bad, okay, good or great; null means not recorded.',
-    input: (surface) => Schema.fromMap({
-      'type': 'object',
-      'properties': {
-        'query': {
-          'type': 'string',
-          'description': 'Keywords or a sentence; omit to browse.',
-        },
+    input: (surface) => S.object(
+      properties: {
+        'query': S.string(
+          description: 'Keywords or a sentence; omit to browse.',
+        ),
         if (surface == ToolSurface.assistant)
-          'mode': {'type': 'string', 'enum': diarySearchModeValues},
-        'tag': {'type': 'string'},
+          'mode': S.string(enumValues: diarySearchModeValues),
+        'tag': S.string(),
         'categoryId': categoryIdSchema,
         'startDate': startDateSchema,
         'endDate': endDateSchema,
@@ -248,8 +241,8 @@ final List<ToolDefinition> diaryTools = [
         'offset': offsetSchema,
         'excerpt': excerptSchema,
       },
-      'additionalProperties': false,
-    }),
+      additionalProperties: false,
+    ),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
@@ -275,11 +268,7 @@ final List<ToolDefinition> diaryTools = [
         '(dangling), each with id, title and time. A dangling id is a '
         'moodiary://diary/<id> link to a diary that was deleted or never '
         'synced to this device.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'id': diaryIdSchema},
-      'required': ['id'],
-    }),
+    input: (_) => S.object(properties: {'id': diaryIdSchema}, required: ['id']),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
@@ -298,10 +287,7 @@ final List<ToolDefinition> diaryTools = [
         'Lists the tags used by visible diaries with their usage counts, '
         'most used first. The database has no tag index, so this aggregates '
         'over every visible diary and is linear in the number of diaries.',
-    input: (_) => Schema.fromMap({
-      'type': 'object',
-      'properties': {'limit': tagLimitSchema},
-    }),
+    input: (_) => S.object(properties: {'limit': tagLimitSchema}),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
     idempotent: true,
