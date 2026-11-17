@@ -105,12 +105,14 @@ void main() {
       );
       expect(text, contains('Saved facts: 23'));
       expect(text, contains('semantic diary search: on'));
+      expect(text, contains('2026-09-13 14:05 (Sunday)'));
     });
 
     test('记忆关闭时连账本都不出现', () {
       final text = buildTurnContext(nowLocal: at);
       expect(text.contains('Saved facts'), isFalse);
       expect(text, contains('2026-09-13 14:05'));
+      expect(text, contains('Sunday'));
     });
   });
 

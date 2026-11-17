@@ -121,7 +121,8 @@ final Schema tagsSchema = nullableSchema(
     items: S.string(),
     description:
         'Replaces the whole tag list, in the order given; send null or an empty '
-        'array to clear every tag.',
+        'array to clear every tag. Use list_tags to read existing tags before '
+        'choosing or changing them.',
   ),
   JsonType.list,
 );
@@ -172,7 +173,12 @@ final Schema diarySearchSortSchema = S.string(
 );
 
 final Schema diaryTimeSchema = S.string(
-  description: 'ISO-8601 diary time, or YYYY-MM-DD for local midnight. Defaults to now on create. Omit or send null to keep it on update.',
+  description:
+      'YYYY-MM-DD uses the current local time of day on create and keeps the '
+      'existing local time of day on update; ISO-8601 datetimes without an '
+      'offset are local, while an offset or Z is converted to local time. '
+      'Omit or send null for now on create or to keep the time on update; '
+      'future dates are allowed.',
 );
 
 Schema schemaWithDefault(Schema schema, Object value) {

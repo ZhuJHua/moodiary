@@ -56,7 +56,9 @@ class ToolContext {
     DiaryMediaStore? mediaStore,
     this.progress,
     this.semantic,
-  }) : mediaStore = mediaStore ?? DiaryMediaStore();
+    DateTime Function()? now,
+  }) : mediaStore = mediaStore ?? DiaryMediaStore(),
+       now = now ?? DateTime.now;
 
   final DiaryRepository diaries;
   final CategoryRepository categories;
@@ -65,6 +67,7 @@ class ToolContext {
   final ToolSurface surface;
   final ToolProgress? progress;
   final EmbedIndexService? semantic;
+  final DateTime Function() now;
 }
 
 abstract interface class ToolDefinition {

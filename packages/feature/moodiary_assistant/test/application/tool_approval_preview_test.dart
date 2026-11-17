@@ -7,9 +7,11 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 void main() {
   late MoodiaryDatabase db;
+  final originalTime = DateTime(2026, 11, 12, 23, 45, 15);
 
   setUp(() async {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
@@ -20,7 +22,7 @@ void main() {
     await DiaryWrites(
       diaries: diaries,
       categories: categories,
-    ).create(title: 'Original', content: 'Original body');
+    ).create(title: 'Original', content: 'Original body', time: originalTime);
   });
   tearDown(() async {
     await getIt.reset();
@@ -37,6 +39,69 @@ void main() {
         ),
         l10n,
       );
+
+  test('create preview resolves each chosen local date and time with a fixed clock', () async {
+    final now = DateTime(2026, 11, 17, 14, 5);
+    final result = await buildToolApprovalPreview(
+      const ToolApprovalRequest(
+        callId: 'create',
+        tool: AssistantTool.createDiary,
+        args: {
+          'items': [
+            {'content': 'Past diary', 'time': '2026-11-10'},
+            {'content': 'Now'},
+            {'content': 'Offset', 'time': '2026-11-10T21:30Z'},
+          ],
+        },
+        tier: .write,
+      ),
+      l10n,
+      now: () => now,
+    );
+    expect(
+      result.lines
+          .where((line) => line.label == l10n.assistant.approvalFieldTime)
+          .map((line) => line.value),
+      [
+        TimeFormat.listDateTime(DateTime(2026, 11, 10, 14, 5)),
+        TimeFormat.listDateTime(now),
+        TimeFormat.listDateTime(DateTime.utc(2026, 11, 10, 21, 30)),
+      ],
+    );
+  });
+
+  test('single and batch previews show old to new time preserving the hour', () async {
+    final diary = (await getIt<DiaryRepository>().getAllDiaries()).single;
+    final change = {'id': diary.id, 'time': '2026-11-10'};
+    final expected =
+        '${TimeFormat.listDateTime(originalTime)} → ${TimeFormat.listDateTime(DateTime(2026, 11, 10, 23, 45, 15))}';
+    for (final items in [
+      [change],
+      [
+        change,
+        {'id': 'other', 'append': 'Addition'},
+      ],
+    ]) {
+      final result = await preview(items);
+      expect(
+        result.lines,
+        contains((label: l10n.assistant.approvalFieldTime, value: expected)),
+      );
+    }
+  });
+
+  test('null time is unchanged and has no time change preview', () async {
+    final diary = (await getIt<DiaryRepository>().getAllDiaries()).single;
+    final result = await preview([
+      {'id': diary.id, 'time': null, 'title': 'New'},
+    ]);
+    expect(
+      result.lines.any(
+        (line) => line.label == l10n.assistant.approvalFieldTime,
+      ),
+      false,
+    );
+  });
 
   test(
     'single diary preview shows additions without an overwrite warning',

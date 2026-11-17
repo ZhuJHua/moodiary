@@ -256,7 +256,7 @@
   "toolBatchOutcome": "{succeeded} 项成功 · {failed} 项失败",
   "approvalFieldMood": "心情",
   "approvalFieldTags": "标签",
-  "approvalFieldTime": "时间",
+  "approvalFieldTime": "日期和时间",
   "approvalFieldColor": "颜色",
   "approvalCleared": "已清空"
 }

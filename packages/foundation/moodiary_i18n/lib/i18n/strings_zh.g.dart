@@ -1521,8 +1521,8 @@ class Translations$assistant$zh {
 	/// zh: '标签'
 	String get approvalFieldTags => '标签';
 
-	/// zh: '时间'
-	String get approvalFieldTime => '时间';
+	/// zh: '日期和时间'
+	String get approvalFieldTime => '日期和时间';
 
 	/// zh: '颜色'
 	String get approvalFieldColor => '颜色';

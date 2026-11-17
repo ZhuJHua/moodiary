@@ -256,7 +256,7 @@
   "toolBatchOutcome": "{succeeded} succeeded · {failed} failed",
   "approvalFieldMood": "Mood",
   "approvalFieldTags": "Tags",
-  "approvalFieldTime": "Time",
+  "approvalFieldTime": "Date and time",
   "approvalFieldColor": "Color",
   "approvalCleared": "Cleared"
 }
