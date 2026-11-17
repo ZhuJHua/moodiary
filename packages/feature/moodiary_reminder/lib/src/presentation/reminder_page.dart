@@ -141,21 +141,14 @@ class _ReminderPageState extends State<ReminderPage> {
                       ? theme.colors.onSurface
                       : theme.colors.onSurfaceVariant;
                   return SettingListTile(
-                    leading: Icon(
-                      reminder.isRandom
-                          ? LucideIcons.shuffle
-                          : LucideIcons.alarmClock,
-                      color: color,
-                    ),
+                    leading: Icon(LucideIcons.alarmClock, color: color),
                     title: Text(
-                      reminder.label,
+                      reminder.time,
                       style: theme.typography.titleLarge
                           .withColor(color)
                           .tabular,
                     ),
-                    subtitle: reminder.isRandom
-                        ? '$days · ${l10n.reminder.random}'
-                        : days,
+                    subtitle: days,
                     trailing: Switch(
                       value: reminder.enabled,
                       onChanged: (enabled) => _run(
@@ -178,13 +171,6 @@ class _ReminderPageState extends State<ReminderPage> {
             MSliverSettingGroup(
               title: l10n.reminder.notifications,
               children: [
-                SettingSwitchListTile(
-                  title: l10n.reminder.skipIfWritten,
-                  secondary: const Icon(LucideIcons.bookCheck),
-                  value: _service.skipIfWritten,
-                  onChanged: (value) =>
-                      _run(() => _service.setSkipIfWritten(value)),
-                ),
                 SettingListTile(
                   title: l10n.reminder.tapAction,
                   leading: const Icon(LucideIcons.mousePointerClick),

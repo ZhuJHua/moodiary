@@ -1223,11 +1223,6 @@ class _Translations$reminder$en extends Translations$reminder$zh {
 	@override String get today => 'Today';
 	@override String get tomorrow => 'Tomorrow';
 	@override String get times => 'Reminder times';
-	@override String get fixedTime => 'Fixed time';
-	@override String get randomWindow => 'Random in a window';
-	@override String get start => 'Start';
-	@override String get end => 'End';
-	@override String get random => 'Random';
 	@override String get add => 'Add a time';
 	@override String get everyDay => 'Every day';
 	@override String get workdays => 'Weekdays';
@@ -1251,7 +1246,6 @@ class _Translations$reminder$en extends Translations$reminder$zh {
 		'S',
 	];
 	@override String get daySeparator => ', ';
-	@override String get skipIfWritten => 'Skip if I’ve written today';
 	@override String get notifications => 'Notifications';
 	@override String get tapAction => 'When tapped';
 	@override String get openApp => 'Open app';

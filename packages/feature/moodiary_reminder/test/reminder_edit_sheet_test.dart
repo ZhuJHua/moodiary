@@ -37,117 +37,53 @@ MSheetScaffold<ReminderEditResult> _sheet(WidgetTester tester) =>
 void main() {
   setUp(() => LocaleSettings.setLocale(AppLocale.zh));
 
-  testWidgets(
-    'random kind switches endpoints and clamps the window without errors',
-    (tester) async {
-      await _pump(tester);
-      await tester.tap(_segment('时段内随机'));
-      await tester.pumpAndSettle();
-      expect(_sheet(tester).subtitle, '每天 21:30–23:59 随机');
-      expect(tester.widget<MSegment>(_segment('开始')).selected, isTrue);
-      expect(tester.widget<MTimeWheel>(find.byType(MTimeWheel)).hour, 21);
-      await tester.tap(_segment('结束'));
-      await tester.pumpAndSettle();
-      expect(tester.widget<MTimeWheel>(find.byType(MTimeWheel)).hour, 23);
-      expect(tester.widget<MTimeWheel>(find.byType(MTimeWheel)).minute, 59);
-      tester.widget<MTimeWheel>(find.byType(MTimeWheel)).onChanged(22, 45);
-      await tester.pumpAndSettle();
-      expect(_sheet(tester).subtitle, '每天 21:30–22:45 随机');
-      await tester.tap(_segment('开始'));
-      await tester.pumpAndSettle();
-      tester.widget<MTimeWheel>(find.byType(MTimeWheel)).onChanged(23, 59);
-      await tester.pumpAndSettle();
-      expect(_sheet(tester).subtitle, '每天 23:29–23:59 随机');
-      expect(tester.widget<MTimeWheel>(find.byType(MTimeWheel)).minute, 29);
-      await tester.tap(_segment('结束'));
-      await tester.pumpAndSettle();
-      tester.widget<MTimeWheel>(find.byType(MTimeWheel)).onChanged(0, 0);
-      await tester.pumpAndSettle();
-      expect(_sheet(tester).subtitle, '每天 00:00–00:30 随机');
-      expect(tester.widget<MTimeWheel>(find.byType(MTimeWheel)).minute, 30);
-      await tester.tap(_segment('固定时间'));
-      await tester.pumpAndSettle();
-      expect(_sheet(tester).subtitle, '每天 00:00');
-      expect(_segment('开始'), findsNothing);
-      expect(tester.widget<MTimeWheel>(find.byType(MTimeWheel)).minute, 0);
-    },
-  );
-
-  for (final (hour, minute, expected) in [
-    (8, 30, '每天 08:30–11:30 随机'),
-    (23, 59, '每天 23:29–23:59 随机'),
-  ]) {
-    testWidgets(
-      'fixed $hour:$minute becomes a valid three-hour or clamped window',
-      (tester) async {
-        await _pump(
-          tester,
-          reminder: Reminder(
-            id: 1,
-            hour: hour,
-            minute: minute,
-            weekdays: {1, 2, 3, 4, 5, 6, 7},
+  testWidgets('saving keeps the selected time, weekdays and enabled state', (
+    tester,
+  ) async {
+    ReminderEditResult? result;
+    await tester.pumpWidget(
+      _host(
+        Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              result = await MSheet.show<ReminderEditResult>(
+                context,
+                builder: (_) => ReminderEditSheet(
+                  id: 1,
+                  reminder: Reminder(
+                    id: 1,
+                    hour: 19,
+                    minute: 0,
+                    weekdays: {1, 3},
+                    enabled: false,
+                  ),
+                ),
+              );
+            },
+            child: const Text('open'),
           ),
-        );
-        await tester.tap(_segment('时段内随机'));
-        await tester.pumpAndSettle();
-        expect(_sheet(tester).subtitle, expected);
-      },
+        ),
+      ),
     );
-  }
-
-  for (final random in [true, false]) {
-    testWidgets(
-      'saving ${random ? 'random' : 'fixed'} keeps the correct window fields',
-      (tester) async {
-        ReminderEditResult? result;
-        await tester.pumpWidget(
-          _host(
-            Builder(
-              builder: (context) => TextButton(
-                onPressed: () async {
-                  result = await MSheet.show<ReminderEditResult>(
-                    context,
-                    builder: (_) => ReminderEditSheet(
-                      id: 1,
-                      reminder: Reminder(
-                        id: 1,
-                        hour: 19,
-                        minute: 0,
-                        endHour: 22,
-                        endMinute: 0,
-                        weekdays: {1, 3},
-                        enabled: false,
-                      ),
-                    ),
-                  );
-                },
-                child: const Text('open'),
-              ),
-            ),
-          ),
-        );
-        await tester.tap(find.text('open'));
-        await tester.pumpAndSettle();
-        expect(_sheet(tester).subtitle, '周一、周三 19:00–22:00 随机');
-        if (!random) {
-          await tester.tap(_segment('固定时间'));
-          await tester.pumpAndSettle();
-        }
-        tester.widget<MTimeWheel>(find.byType(MTimeWheel)).onChanged(20, 0);
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('保存'));
-        await tester.pumpAndSettle();
-        expect(result?.reminder?.hour, 20);
-        expect(result?.reminder?.minute, 0);
-        expect(result?.reminder?.isRandom, random);
-        expect(result?.reminder?.endHour, random ? 22 : null);
-        expect(result?.reminder?.endMinute, random ? 0 : null);
-        expect(result?.reminder?.weekdays, {1, 3});
-        expect(result?.reminder?.enabled, isFalse);
-      },
-    );
-  }
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(_sheet(tester).subtitle, '周一、周三 19:00');
+    tester.widget<MTimeWheel>(find.byType(MTimeWheel)).onChanged(23, 59);
+    await tester.pumpAndSettle();
+    expect(_sheet(tester).subtitle, '周一、周三 23:59');
+    await tester.tap(_segment('周二'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, '保存'));
+    await tester.pumpAndSettle();
+    expect(result?.reminder?.toJson(), {
+      'id': 1,
+      'hour': 23,
+      'minute': 59,
+      'weekdays': [1, 2, 3],
+      'enabled': false,
+    });
+    expect(result?.deleted, isFalse);
+  });
 
   testWidgets('new reminder uses the form header and every day preset', (
     tester,
