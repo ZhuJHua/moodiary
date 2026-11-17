@@ -217,6 +217,8 @@
   "approvalFieldTitle": "Title",
   "approvalFieldCategory": "Category",
   "approvalFieldContent": "Text",
+  "approvalFieldAppend": "Append",
+  "approvalFieldPrepend": "Prepend",
   "approvalFieldName": "Name",
   "approvalNoCategory": "Uncategorised",
   "approvalContentNew": "about {count} characters",
