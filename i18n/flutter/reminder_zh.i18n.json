@@ -1,7 +1,27 @@
 {
   "title": "写日记提醒",
-  "notificationTitle": "今天过得怎么样？",
-  "notificationBody": "花两分钟，记下此刻的心情。",
+  "copy": {
+    "morning": {
+      "title": "早上好",
+      "body": "新的一天，先记下此刻的心情。"
+    },
+    "noon": {
+      "title": "午间小憩",
+      "body": "歇一会儿，记两句上午的事。"
+    },
+    "afternoon": {
+      "title": "下午好",
+      "body": "抽一分钟，记下现在的状态。"
+    },
+    "evening": {
+      "title": "晚上好",
+      "body": "今天过得怎么样？写下来吧。"
+    },
+    "night": {
+      "title": "夜深了",
+      "body": "睡前写几句，给今天收个尾。"
+    }
+  },
   "notificationsOff": "通知未开启",
   "enableNotifications": "去开启",
   "enable": "提醒我写日记",

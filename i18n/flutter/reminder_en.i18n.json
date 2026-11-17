@@ -1,7 +1,27 @@
 {
   "title": "Diary reminders",
-  "notificationTitle": "How was your day?",
-  "notificationBody": "Take two minutes to capture how you feel.",
+  "copy": {
+    "morning": {
+      "title": "Good morning",
+      "body": "Start the day by noting how you feel."
+    },
+    "noon": {
+      "title": "Midday pause",
+      "body": "Take a breather and jot down your morning."
+    },
+    "afternoon": {
+      "title": "Good afternoon",
+      "body": "Take a minute to note how it's going."
+    },
+    "evening": {
+      "title": "Good evening",
+      "body": "How was your day? Write it down."
+    },
+    "night": {
+      "title": "It's late",
+      "body": "A few lines before bed to close the day."
+    }
+  },
   "notificationsOff": "Notifications are off",
   "enableNotifications": "Enable",
   "enable": "Remind me to write",

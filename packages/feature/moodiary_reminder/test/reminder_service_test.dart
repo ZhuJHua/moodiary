@@ -45,6 +45,7 @@ class _Notifications extends Fake implements LocalNotifications {
   final pending = <int>{777};
   final cancelled = <int>[];
   final times = <int, TZDateTime>{};
+  final copies = <int, ({String title, String body})>{};
   late void Function(String?) tap;
 
   @override
@@ -78,6 +79,7 @@ class _Notifications extends Fake implements LocalNotifications {
   Future<void> cancel(int id) async {
     pending.remove(id);
     times.remove(id);
+    copies.remove(id);
     cancelled.add(id);
   }
 
@@ -101,6 +103,7 @@ class _Notifications extends Fake implements LocalNotifications {
     scheduledContent = (channelId, channelName, title, body, payload);
     pending.add(id);
     times[id] = at;
+    copies[id] = (title: title, body: body);
   }
 
   @override
@@ -130,7 +133,8 @@ void main() {
     await service.reconcile();
   }
 
-  setUp(() {
+  setUp(() async {
+    await LocaleSettings.setLocale(AppLocale.zh);
     getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
     MoodiaryKVs.reminders.set(Reminder.encode([reminder]));
     MoodiaryKVs.reminderEnabled.set(true);
@@ -141,6 +145,7 @@ void main() {
 
   tearDown(() async {
     service.dispose();
+    await LocaleSettings.setLocale(AppLocale.zh);
     await getIt.reset();
   });
 
@@ -347,6 +352,57 @@ void main() {
       expect(notifications.scheduled, 1);
     },
   );
+
+  test('scheduled copy follows each reminder hour and reschedules on locale changes', () async {
+    MoodiaryKVs.reminders.set(
+      Reminder.encode([
+        Reminder(id: 1, hour: 8, minute: 0, weekdays: {1}),
+        Reminder(id: 2, hour: 21, minute: 0, weekdays: {1}),
+      ]),
+    );
+    await initialize();
+    expect(notifications.copies[100009], (
+      title: '早上好',
+      body: '新的一天，先记下此刻的心情。',
+    ));
+    expect(notifications.copies[100017], (title: '晚上好', body: '今天过得怎么样？写下来吧。'));
+    expect(notifications.scheduled, 2);
+    await service.reconcile();
+    expect(notifications.scheduled, 2);
+    await LocaleSettings.setLocale(AppLocale.en);
+    await service.reconcile();
+    expect(notifications.copies[100009], (
+      title: 'Good morning',
+      body: 'Start the day by noting how you feel.',
+    ));
+    expect(notifications.copies[100017], (
+      title: 'Good evening',
+      body: 'How was your day? Write it down.',
+    ));
+    expect(notifications.scheduled, 4);
+  });
+
+  test('test notification copy follows the current local hour', () async {
+    await initialize();
+    notifications.current = TZDateTime(
+      parseFixedOffsetTimeZone('GMT+08:00'),
+      2026,
+      11,
+      16,
+      13,
+      59,
+    );
+    final zoneUpdates = notifications.zoneUpdates;
+    await service.sendTest();
+    expect(notifications.zoneUpdates, zoneUpdates + 1);
+    expect(notifications.testContent, (
+      ReminderService.channelId,
+      l10n.reminder.title,
+      '午间小憩',
+      '歇一会儿，记两句上午的事。',
+      ReminderService.payload,
+    ));
+  });
 
   test('failed apply can be retried and releases the reconcile lock', () async {
     await initialize();

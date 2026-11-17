@@ -3265,11 +3265,7 @@ class Translations$reminder$zh {
 	/// zh: '写日记提醒'
 	String get title => '写日记提醒';
 
-	/// zh: '今天过得怎么样？'
-	String get notificationTitle => '今天过得怎么样？';
-
-	/// zh: '花两分钟，记下此刻的心情。'
-	String get notificationBody => '花两分钟，记下此刻的心情。';
+	late final Translations$reminder$copy$zh copy = Translations$reminder$copy$zh.internal(_root);
 
 	/// zh: '通知未开启'
 	String get notificationsOff => '通知未开启';
@@ -5110,4 +5106,93 @@ class Translations$editor$meta$zh {
 
 	/// zh: '不记录心情'
 	String get moodClear => '不记录心情';
+}
+
+// Path: reminder.copy
+class Translations$reminder$copy$zh {
+	Translations$reminder$copy$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	late final Translations$reminder$copy$morning$zh morning = Translations$reminder$copy$morning$zh.internal(_root);
+	late final Translations$reminder$copy$noon$zh noon = Translations$reminder$copy$noon$zh.internal(_root);
+	late final Translations$reminder$copy$afternoon$zh afternoon = Translations$reminder$copy$afternoon$zh.internal(_root);
+	late final Translations$reminder$copy$evening$zh evening = Translations$reminder$copy$evening$zh.internal(_root);
+	late final Translations$reminder$copy$night$zh night = Translations$reminder$copy$night$zh.internal(_root);
+}
+
+// Path: reminder.copy.morning
+class Translations$reminder$copy$morning$zh {
+	Translations$reminder$copy$morning$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '早上好'
+	String get title => '早上好';
+
+	/// zh: '新的一天，先记下此刻的心情。'
+	String get body => '新的一天，先记下此刻的心情。';
+}
+
+// Path: reminder.copy.noon
+class Translations$reminder$copy$noon$zh {
+	Translations$reminder$copy$noon$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '午间小憩'
+	String get title => '午间小憩';
+
+	/// zh: '歇一会儿，记两句上午的事。'
+	String get body => '歇一会儿，记两句上午的事。';
+}
+
+// Path: reminder.copy.afternoon
+class Translations$reminder$copy$afternoon$zh {
+	Translations$reminder$copy$afternoon$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '下午好'
+	String get title => '下午好';
+
+	/// zh: '抽一分钟，记下现在的状态。'
+	String get body => '抽一分钟，记下现在的状态。';
+}
+
+// Path: reminder.copy.evening
+class Translations$reminder$copy$evening$zh {
+	Translations$reminder$copy$evening$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '晚上好'
+	String get title => '晚上好';
+
+	/// zh: '今天过得怎么样？写下来吧。'
+	String get body => '今天过得怎么样？写下来吧。';
+}
+
+// Path: reminder.copy.night
+class Translations$reminder$copy$night$zh {
+	Translations$reminder$copy$night$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '夜深了'
+	String get title => '夜深了';
+
+	/// zh: '睡前写几句，给今天收个尾。'
+	String get body => '睡前写几句，给今天收个尾。';
 }
