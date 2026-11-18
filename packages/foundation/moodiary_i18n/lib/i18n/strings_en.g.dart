@@ -688,6 +688,28 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get drawerNoMatch => 'No matching categories or tags';
 	@override String get categoryAllDiary => 'All diaries';
 	@override String get tags => 'Tags';
+	@override String get tagManagerTitle => 'Tags';
+	@override String get tagSearchHint => 'Search tags';
+	@override String get tagEmpty => 'No tags yet';
+	@override String get tagNew => 'New tag';
+	@override String get tagNoMatch => 'No matching tags';
+	@override String tagUsage({required num count, required Object date}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '1 entry · Last used ${date}',
+		other: '${count} entries · Last used ${date}',
+	);
+	@override String get tagExists => 'Tag already exists';
+	@override String get tagMergeTitle => 'Merge tags';
+	@override String tagMergeMessage({required num count, required Object target, required Object source}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '#${target} already exists. The entry tagged #${source} will now show #${target}.',
+		other: '#${target} already exists. The ${count} entries tagged #${source} will now show #${target}.',
+	);
+	@override String get tagDeleteTitle => 'Delete tag?';
+	@override String tagDeleteMessage({required num count, required Object name}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '1 entry will no longer show #${name}, nor will entries in the recycle bin.',
+		other: '${count} entries will no longer show #${name}, nor will entries in the recycle bin.',
+	);
+	@override String get tagDeleteUnused => 'This tag cannot be recovered after deletion.';
+	@override String get tagNameEmpty => 'The name cannot be empty';
 	@override String get categoryNoMatch => 'No matching categories';
 	@override String get categorySyncingPlaceholder => 'Syncing category…';
 	@override String get categoryManageEntry => 'Manage categories';

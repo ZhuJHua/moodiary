@@ -55,6 +55,25 @@
   "drawerNoMatch": "没有匹配的分类或标签",
   "categoryAllDiary": "全部日记",
   "tags": "标签",
+  "tagManagerTitle": "标签管理",
+  "tagSearchHint": "搜索标签",
+  "tagEmpty": "还没有标签",
+  "tagNew": "新建标签",
+  "tagNoMatch": "没有匹配的标签",
+  "tagUsage(plural, param=count)": {
+    "other": "{count} 篇 · 最近 {date}"
+  },
+  "tagExists": "标签已存在",
+  "tagMergeTitle": "合并标签",
+  "tagMergeMessage(plural, param=count)": {
+    "other": "#{target} 已存在。确认后「{source}」的 {count} 篇日记会合并到 #{target}。"
+  },
+  "tagDeleteTitle": "删除标签？",
+  "tagDeleteMessage(plural, param=count)": {
+    "other": "{count} 篇日记将不再显示 #{name}，回收站里的日记也一样。"
+  },
+  "tagDeleteUnused": "删除后无法恢复此标签。",
+  "tagNameEmpty": "标签名称不能为空",
   "categoryNoMatch": "没有匹配的分类",
   "categorySyncingPlaceholder": "正在同步分类…",
   "categoryManageEntry": "管理分类",

@@ -139,10 +139,12 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                                 .onSurfaceVariant,
                           ),
                         ),
-                      if (visibleTags.isNotEmpty) ...[
+                      if (usage.isNotEmpty || query.isEmpty) ...[
                         _SectionHeader(
                           label: context.l10n.diary.tags,
-                          count: context.l10n.common.tagCount(count: usedCount),
+                          count: context.l10n.common.tagCount(
+                            count: usage.length,
+                          ),
                         ),
                         for (final tag in visibleTags)
                           _Tile(
@@ -158,6 +160,44 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                             ),
                             onTap: () => _pick(.tag(tag.name)),
                           ),
+                        Padding(
+                          padding: const .symmetric(
+                            horizontal: 12,
+                            vertical: 1,
+                          ),
+                          child: MInkWell(
+                            borderRadius: .circular(28),
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              const TagManagerRoute().push(context);
+                            },
+                            child: Padding(
+                              padding: const .symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      context.l10n.diary.allTags,
+                                      style: context
+                                          .theme
+                                          .typography
+                                          .labelLarge
+                                          .onSurfaceVariant,
+                                    ),
+                                  ),
+                                  Icon(
+                                    LucideIcons.chevronRight,
+                                    size: 16,
+                                    color: colors.onSurfaceVariant,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ],
                   ),

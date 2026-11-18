@@ -60,18 +60,12 @@ class PlaceBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = placeIconColor(context, place.icon);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: .circular(size * 0.3),
-      ),
-      child: Icon(
-        placeIconOf(place.icon),
-        size: size / 2,
-        color: onCategoryColor(color),
-      ),
+    return MetaBadge(
+      size: size,
+      radius: size * 0.3,
+      background: color,
+      foreground: onCategoryColor(color),
+      icon: placeIconOf(place.icon),
     );
   }
 }

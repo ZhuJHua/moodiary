@@ -1899,6 +1899,51 @@ class Translations$diary$zh {
 	/// zh: '标签'
 	String get tags => '标签';
 
+	/// zh: '标签管理'
+	String get tagManagerTitle => '标签管理';
+
+	/// zh: '搜索标签'
+	String get tagSearchHint => '搜索标签';
+
+	/// zh: '还没有标签'
+	String get tagEmpty => '还没有标签';
+
+	/// zh: '新建标签'
+	String get tagNew => '新建标签';
+
+	/// zh: '没有匹配的标签'
+	String get tagNoMatch => '没有匹配的标签';
+
+	/// zh: '(other) {{count} 篇 · 最近 {date}}'
+	String tagUsage({required num count, required Object date}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 篇 · 最近 ${date}',
+	);
+
+	/// zh: '标签已存在'
+	String get tagExists => '标签已存在';
+
+	/// zh: '合并标签'
+	String get tagMergeTitle => '合并标签';
+
+	/// zh: '(other) {#{target} 已存在。确认后「{source}」的 {count} 篇日记会合并到 #{target}。}'
+	String tagMergeMessage({required num count, required Object target, required Object source}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '#${target} 已存在。确认后「${source}」的 ${count} 篇日记会合并到 #${target}。',
+	);
+
+	/// zh: '删除标签？'
+	String get tagDeleteTitle => '删除标签？';
+
+	/// zh: '(other) {{count} 篇日记将不再显示 #{name}，回收站里的日记也一样。}'
+	String tagDeleteMessage({required num count, required Object name}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 篇日记将不再显示 #${name}，回收站里的日记也一样。',
+	);
+
+	/// zh: '删除后无法恢复此标签。'
+	String get tagDeleteUnused => '删除后无法恢复此标签。';
+
+	/// zh: '标签名称不能为空'
+	String get tagNameEmpty => '标签名称不能为空';
+
 	/// zh: '没有匹配的分类'
 	String get categoryNoMatch => '没有匹配的分类';
 
