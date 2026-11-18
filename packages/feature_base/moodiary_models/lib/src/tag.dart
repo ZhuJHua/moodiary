@@ -32,8 +32,7 @@ abstract class Tag with _$Tag {
       uuidV5('ce6729c4-5ca5-446a-9892-bb26153ac802', normalizedName);
 
   static String? normalize(String raw) {
-    var name = raw.trim();
-    if (name.startsWith('#')) name = name.substring(1).trim();
+    final name = raw.trim().replaceFirst(RegExp(r'^[#\s]+'), '');
     return name.isEmpty ? null : name.replaceAll(RegExp(r'\s+'), ' ');
   }
 }

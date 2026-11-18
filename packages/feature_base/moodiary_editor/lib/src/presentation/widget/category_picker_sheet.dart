@@ -9,45 +9,76 @@ class CategoryPickerSheet extends ConsumerWidget {
 
   const CategoryPickerSheet({super.key, required this.currentCategoryId});
 
-  void _pick(BuildContext context, Category? category) {
-    final changed = category?.id != currentCategoryId;
-    Navigator.of(
-      context,
-    ).pop<_PickerResult>(_PickerResult(category: category, hasResult: changed));
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final counts = ref.watch(categoryDiaryCountsProvider).value;
     final async = ref.watch(orderedCategoriesProvider);
-    return MSheetScaffold<_PickerResult>(
-      title: context.l10n.editor.pickCategory,
-      icon: LucideIcons.folder,
-      actions: [MAction(label: context.l10n.common.cancel)],
-      child: async.buildLoading(
-        data: (categories) => Column(
-          mainAxisSize: .min,
-          crossAxisAlignment: .stretch,
-          children: [
-            MSheetOptionTile<String?>(
-              option: MSheetOption<String?>(
-                value: null,
-                label: context.l10n.editor.noCategory,
-              ),
-              selected: currentCategoryId == null,
-              onTap: () => _pick(context, null),
-            ),
-            for (final c in categories)
-              MSheetOptionTile<String?>(
-                option: MSheetOption<String?>(
-                  value: c.id,
-                  label: c.categoryName,
+    if (!async.hasValue) {
+      return MSheetScaffold<MetaPickerResult<Category?>>(
+        title: context.l10n.editor.pickCategory,
+        icon: LucideIcons.folder,
+        actions: [MAction(label: context.l10n.common.cancel)],
+        child: async.buildLoading(data: (_) => const SizedBox.shrink()),
+      );
+    }
+    return async.buildLoading(
+      data: (categories) {
+        final options = <MSheetOption<Category?>>[];
+        Category? selected;
+        for (final category in <Category?>[null, ...categories]) {
+          if (category?.id == currentCategoryId) selected = category;
+          final count = counts == null
+              ? null
+              : category == null
+              ? counts.total -
+                    counts.byCategory.values.fold(
+                      0,
+                      (sum, value) => sum + value,
+                    )
+              : counts.byCategory[category.id] ?? 0;
+          options.add(
+            MSheetOption(
+              value: category,
+              label: category?.categoryName ?? context.l10n.editor.noCategory,
+              leading: Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  shape: .circle,
+                  color: category == null
+                      ? null
+                      : categoryColorOf(
+                          id: category.id,
+                          colorValue: category.color,
+                        ),
+                  border: category == null
+                      ? Border.all(
+                          color: context.theme.colors.outline,
+                          width: 1.4,
+                        )
+                      : null,
                 ),
-                selected: currentCategoryId == c.id,
-                onTap: () => _pick(context, c),
               ),
-          ],
-        ),
-      ),
+              subtitle: count == null
+                  ? null
+                  : count > 0
+                  ? context.l10n.diary.categoryDiaryCount(count: count)
+                  : context.l10n.diary.categoryNoDiary,
+            ),
+          );
+        }
+        return MetaPickerSheet<Category?>.list(
+          title: context.l10n.editor.pickCategory,
+          subtitle: context.l10n.editor.categoryPickerSubtitle,
+          icon: LucideIcons.folder,
+          searchHint: context.l10n.diary.categorySearchHint,
+          matchesLabel: (count) =>
+              context.l10n.editor.pickerMatches(count: count),
+          createLabel: (name) => context.l10n.editor.createCategory(name: name),
+          options: options,
+          selected: selected,
+        );
+      },
     );
   }
 
@@ -55,17 +86,22 @@ class CategoryPickerSheet extends ConsumerWidget {
     required BuildContext context,
     required String? currentCategoryId,
   }) async {
-    final result = await MSheet.show<_PickerResult>(
+    final result = await MSheet.show<MetaPickerResult<Category?>>(
       context,
       builder: (_) => CategoryPickerSheet(currentCategoryId: currentCategoryId),
     );
-    if (result == null || !result.hasResult) return (false, null);
-    return (true, result.category);
+    if (result == null) return (false, null);
+    if (result.created.isNotEmpty) {
+      if (!context.mounted) return (false, null);
+      final category = Category.create(categoryName: result.created.single);
+      final saved = await ProviderScope.containerOf(
+        context,
+        listen: false,
+      ).read(categoryControllerProvider.notifier).upsertCategory(category);
+      if (!saved) toast.error(message: l10n.diary.categoryCreateFailed);
+      return saved ? (true, category) : (false, null);
+    }
+    final category = result.selected.single;
+    return category?.id == currentCategoryId ? (false, null) : (true, category);
   }
-}
-
-class _PickerResult {
-  final Category? category;
-  final bool hasResult;
-  const _PickerResult({required this.category, required this.hasResult});
 }
