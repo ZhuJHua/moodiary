@@ -15,6 +15,7 @@ export 'src/common/frosted_glass_overlay.dart';
 export 'src/common/image_browser.dart';
 export 'src/common/media_marked_text.dart';
 export 'src/common/meta_picker_sheet.dart';
+export 'src/common/meta_tile.dart';
 export 'src/common/mood_delta_pill.dart';
 export 'src/common/mood_glyph.dart';
 export 'src/common/moodiary_logo.dart';

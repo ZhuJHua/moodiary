@@ -52,7 +52,8 @@ void main() {
     );
     await t.pumpAndSettle();
     expect(find.text('旅行'), findsOneWidget);
-    expect(find.text('标签'), findsNothing);
+    // 没有标签时仍保留「全部标签」入口，才能新建第一个标签。
+    expect(find.text('全部标签'), findsOneWidget);
     expect(find.text('日常'), findsOneWidget);
     expect(find.text('阅读'), findsOneWidget);
     expect(find.text('4'), findsOneWidget);
@@ -151,7 +152,7 @@ void main() {
     key.currentState!.openDrawer();
     await t.pumpAndSettle();
     expect(find.text('标签'), findsOneWidget);
-    expect(find.text('10 个'), findsOneWidget);
+    expect(find.text('11 个'), findsOneWidget);
     expect(find.byIcon(LucideIcons.hash), findsNWidgets(8));
     final top = find
         .ancestor(of: find.text('Tag 0'), matching: find.byType(Row))
@@ -204,7 +205,8 @@ void main() {
       ),
     );
     await t.pumpAndSettle();
-    expect(find.text('标签'), findsNothing);
+    expect(find.text('标签'), findsOneWidget);
+    expect(find.text('全部标签'), findsOneWidget);
     final container = ProviderScope.containerOf(
       t.element(find.byType(MaterialApp)),
       listen: false,

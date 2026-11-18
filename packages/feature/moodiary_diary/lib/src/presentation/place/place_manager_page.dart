@@ -368,86 +368,41 @@ class _PlaceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    return Card.filled(
-      margin: const .symmetric(vertical: 4),
-      color: selected ? colors.secondaryContainer : colors.surfaceContainerLow,
-      clipBehavior: .antiAlias,
-      child: ListTile(
-        selected: selected,
-        onTap: selecting ? onToggle : onEdit,
-        onLongPress: selecting ? null : onLongPress,
-        leading: PlaceBadge(place: place),
-        title: Text(
-          place.name,
-          maxLines: 1,
-          overflow: .ellipsis,
-          style: context.theme.typography.titleMedium.onSurface,
+    return MetaTile<String>(
+      selected: selected,
+      onTap: selecting ? onToggle : onEdit,
+      onLongPress: selecting ? null : onLongPress,
+      leading: PlaceBadge(place: place),
+      title: place.name,
+      subtitle: placeCountLabel(context, count),
+      dragIndex: dragIndex,
+      entries: [
+        MMenuEntry(
+          value: 'edit',
+          label: context.l10n.diary.edit,
+          icon: LucideIcons.squarePen,
         ),
-        subtitle: Text(
-          placeCountLabel(context, count),
-          style: context.theme.typography.labelSmall.onSurfaceVariant,
+        MMenuEntry(
+          value: 'delete',
+          label: context.l10n.common.delete,
+          icon: LucideIcons.trash2,
+          isDestructive: true,
         ),
-        trailing: selecting
-            ? SizedBox.square(
-                dimension: 48,
-                child: Center(
-                  child: SizedBox.square(
-                    dimension: 22,
-                    child: ExcludeSemantics(
-                      child: MSelectMark(selected: selected),
-                    ),
+      ],
+      onSelected: (key) => key == 'edit' ? onEdit() : onDelete(),
+      trailing: selecting
+          ? SizedBox.square(
+              dimension: 48,
+              child: Center(
+                child: SizedBox.square(
+                  dimension: 22,
+                  child: ExcludeSemantics(
+                    child: MSelectMark(selected: selected),
                   ),
                 ),
-              )
-            : Row(
-                mainAxisSize: .min,
-                children: [
-                  MMenuButton<String>(
-                    tooltip: context.l10n.common.more,
-                    onSelected: (key) {
-                      switch (key) {
-                        case 'edit':
-                          onEdit();
-                        case 'delete':
-                          onDelete();
-                      }
-                    },
-                    entries: [
-                      MMenuEntry(
-                        value: 'edit',
-                        label: context.l10n.diary.edit,
-                        icon: LucideIcons.squarePen,
-                      ),
-                      MMenuEntry(
-                        value: 'delete',
-                        label: context.l10n.common.delete,
-                        icon: LucideIcons.trash2,
-                        isDestructive: true,
-                      ),
-                    ],
-                    child: Padding(
-                      padding: const .all(12),
-                      child: Icon(
-                        LucideIcons.ellipsisVertical,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  if (dragIndex != null)
-                    ReorderableDragStartListener(
-                      index: dragIndex!,
-                      child: Padding(
-                        padding: const .only(left: 4),
-                        child: Icon(
-                          LucideIcons.gripHorizontal,
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                ],
               ),
-      ),
+            )
+          : null,
     );
   }
 }

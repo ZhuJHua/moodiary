@@ -303,81 +303,33 @@ class _CategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
     final color = categoryColorOf(colorValue: category.color, id: category.id);
-    final onColor = onCategoryColor(color);
-    return Card.filled(
-      margin: const .symmetric(vertical: 4),
-      color: colors.surfaceContainerLow,
-      clipBehavior: .antiAlias,
-      child: ListTile(
-        onTap: onRename,
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(color: color, borderRadius: .circular(13)),
-          child: Icon(LucideIcons.folder, size: 21, color: onColor),
-        ),
-        title: Text(
-          category.categoryName,
-          maxLines: 1,
-          overflow: .ellipsis,
-          style: context.theme.typography.titleMedium.onSurface,
-        ),
-        subtitle: Text(
-          count > 0
-              ? context.l10n.diary.categoryDiaryCount(count: count)
-              : context.l10n.diary.categoryNoDiary,
-          style: context.theme.typography.labelSmall.onSurfaceVariant,
-        ),
-        trailing: Row(
-          mainAxisSize: .min,
-          children: [
-            MMenuButton<String>(
-              tooltip: context.l10n.common.more,
-              onSelected: (key) {
-                switch (key) {
-                  case 'rename':
-                    onRename();
-                  case 'delete':
-                    onDelete();
-                }
-              },
-              entries: [
-                MMenuEntry(
-                  value: 'rename',
-                  label: context.l10n.diary.rename,
-                  icon: LucideIcons.squarePen,
-                ),
-                MMenuEntry(
-                  value: 'delete',
-                  label: context.l10n.common.delete,
-                  icon: LucideIcons.trash2,
-                  isDestructive: true,
-                ),
-              ],
-              child: Padding(
-                padding: const .all(12),
-                child: Icon(
-                  LucideIcons.ellipsisVertical,
-                  color: colors.onSurfaceVariant,
-                ),
-              ),
-            ),
-            if (dragIndex != null)
-              ReorderableDragStartListener(
-                index: dragIndex!,
-                child: Padding(
-                  padding: const .only(left: 4),
-                  child: Icon(
-                    LucideIcons.gripHorizontal,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ),
-          ],
-        ),
+    return MetaTile<String>(
+      leading: MetaBadge(
+        icon: LucideIcons.folder,
+        background: color,
+        foreground: onCategoryColor(color),
       ),
+      title: category.categoryName,
+      subtitle: count > 0
+          ? context.l10n.diary.categoryDiaryCount(count: count)
+          : context.l10n.diary.categoryNoDiary,
+      dragIndex: dragIndex,
+      onTap: onRename,
+      entries: [
+        MMenuEntry(
+          value: 'rename',
+          label: context.l10n.diary.rename,
+          icon: LucideIcons.squarePen,
+        ),
+        MMenuEntry(
+          value: 'delete',
+          label: context.l10n.common.delete,
+          icon: LucideIcons.trash2,
+          isDestructive: true,
+        ),
+      ],
+      onSelected: (key) => key == 'rename' ? onRename() : onDelete(),
     );
   }
 }
