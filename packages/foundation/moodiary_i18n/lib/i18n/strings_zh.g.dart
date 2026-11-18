@@ -114,6 +114,9 @@ class Translations$app$zh {
 	/// zh: '分类已被删除，已切回全部'
 	String get categoryDeletedReset => '分类已被删除，已切回全部';
 
+	/// zh: '标签已改名或删除，已切回全部'
+	String get tagFilterReset => '标签已改名或删除，已切回全部';
+
 	/// zh: '设置'
 	String get homeNavigatorSetting => '设置';
 
@@ -1662,6 +1665,9 @@ class Translations$common$zh {
 	/// zh: '{count} 个分类'
 	String categoryCount({required Object count}) => '${count} 个分类';
 
+	/// zh: '{count} 个'
+	String tagCount({required Object count}) => '${count} 个';
+
 	/// zh: '文件名'
 	String get fileName => '文件名';
 
@@ -1878,8 +1884,17 @@ class Translations$diary$zh {
 	/// zh: '搜索分类'
 	String get categorySearchHint => '搜索分类';
 
+	/// zh: '搜索分类和标签'
+	String get drawerSearchHint => '搜索分类和标签';
+
+	/// zh: '没有匹配的分类或标签'
+	String get drawerNoMatch => '没有匹配的分类或标签';
+
 	/// zh: '全部日记'
 	String get categoryAllDiary => '全部日记';
+
+	/// zh: '标签'
+	String get tags => '标签';
 
 	/// zh: '没有匹配的分类'
 	String get categoryNoMatch => '没有匹配的分类';

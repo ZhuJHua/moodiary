@@ -24,7 +24,12 @@ final class TimelineMonthCountsProvider
         $FutureProvider<Map<DateTime, int>> {
   TimelineMonthCountsProvider._({
     required TimelineMonthCountsFamily super.from,
-    required ({String? categoryId, bool uncategorized, DiarySort sort})
+    required ({
+      String? categoryId,
+      bool uncategorized,
+      String? tagName,
+      DiarySort sort,
+    })
     super.argument,
   }) : super(
          retry: null,
@@ -54,11 +59,17 @@ final class TimelineMonthCountsProvider
   FutureOr<Map<DateTime, int>> create(Ref ref) {
     final argument =
         this.argument
-            as ({String? categoryId, bool uncategorized, DiarySort sort});
+            as ({
+              String? categoryId,
+              bool uncategorized,
+              String? tagName,
+              DiarySort sort,
+            });
     return timelineMonthCounts(
       ref,
       categoryId: argument.categoryId,
       uncategorized: argument.uncategorized,
+      tagName: argument.tagName,
       sort: argument.sort,
     );
   }
@@ -75,13 +86,18 @@ final class TimelineMonthCountsProvider
 }
 
 String _$timelineMonthCountsHash() =>
-    r'274bc4691bf8e2f2da8b8e155f0b86761179a5ba';
+    r'4c7827152b79e0352eb6650db9ac84b3e5307ce8';
 
 final class TimelineMonthCountsFamily extends $Family
     with
         $FunctionalFamilyOverride<
           FutureOr<Map<DateTime, int>>,
-          ({String? categoryId, bool uncategorized, DiarySort sort})
+          ({
+            String? categoryId,
+            bool uncategorized,
+            String? tagName,
+            DiarySort sort,
+          })
         > {
   TimelineMonthCountsFamily._()
     : super(
@@ -95,11 +111,13 @@ final class TimelineMonthCountsFamily extends $Family
   TimelineMonthCountsProvider call({
     String? categoryId,
     bool uncategorized = false,
+    String? tagName,
     required DiarySort sort,
   }) => TimelineMonthCountsProvider._(
     argument: (
       categoryId: categoryId,
       uncategorized: uncategorized,
+      tagName: tagName,
       sort: sort,
     ),
     from: this,

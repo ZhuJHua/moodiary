@@ -4,31 +4,37 @@ class DiaryFilter {
   final String? categoryId;
 
   final bool uncategorized;
+  final String? tagName;
 
-  const DiaryFilter._(this.categoryId, this.uncategorized);
+  const DiaryFilter._(this.categoryId, this.uncategorized, this.tagName);
 
-  const DiaryFilter.all() : this._(null, false);
+  const DiaryFilter.all() : this._(null, false, null);
 
-  const DiaryFilter.category(String id) : this._(id, false);
+  const DiaryFilter.category(String id) : this._(id, false, null);
 
-  const DiaryFilter.uncategorized() : this._(null, true);
+  const DiaryFilter.uncategorized() : this._(null, true, null);
 
-  bool get isAll => categoryId == null && !uncategorized;
+  const DiaryFilter.tag(String name) : this._(null, false, name);
+
+  bool get isAll => categoryId == null && !uncategorized && tagName == null;
 
   @override
   bool operator ==(Object other) =>
       other is DiaryFilter &&
       other.categoryId == categoryId &&
-      other.uncategorized == uncategorized;
+      other.uncategorized == uncategorized &&
+      other.tagName == tagName;
 
   @override
-  int get hashCode => Object.hash(categoryId, uncategorized);
+  int get hashCode => Object.hash(categoryId, uncategorized, tagName);
 
   @override
   String toString() => isAll
       ? 'DiaryFilter.all()'
       : uncategorized
       ? 'DiaryFilter.uncategorized()'
+      : tagName != null
+      ? 'DiaryFilter.tag($tagName)'
       : 'DiaryFilter.category($categoryId)';
 }
 

@@ -10,6 +10,24 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:mui/mui.dart';
 
+@visibleForTesting
+String? resolveSelectedTagName(
+  String name,
+  Map<String, Tag> previous,
+  Map<String, Tag> current,
+) {
+  if (current.values.any((tag) => !tag.deleted && tag.name == name)) {
+    return name;
+  }
+  for (final tag in previous.values) {
+    if (tag.deleted || tag.name != name) continue;
+    if (current[tag.id] case Tag(deleted: false, name: final newName)) {
+      return newName;
+    }
+  }
+  return null;
+}
+
 class _DiaryListView extends ConsumerStatefulWidget {
   final VoidCallback? onOpenDrawer;
 
@@ -20,6 +38,8 @@ class _DiaryListView extends ConsumerStatefulWidget {
 }
 
 class _DiaryListViewState extends ConsumerState<_DiaryListView> {
+  Map<String, Tag> _lastTags = const {};
+
   Widget _buildDiaryView(DiaryFilter filter) {
     return ValueListenableBuilder(
       valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
@@ -65,6 +85,26 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
         toast.info(message: context.l10n.app.categoryDeletedReset);
       }
     });
+
+    if (filter.tagName != null) {
+      _lastTags = ref.read(tagCatalogProvider).value?.byId ?? _lastTags;
+      ref.listen(tagCatalogProvider, (_, next) {
+        final name = ref.read(homeDiaryFilterProvider).tagName;
+        if (name == null) return;
+        if (next case AsyncData(:final value)) {
+          final resolved = resolveSelectedTagName(name, _lastTags, value.byId);
+          _lastTags = value.byId;
+          if (resolved == name) return;
+          if (resolved != null) {
+            ref.read(homeDiaryFilterProvider.notifier).select(.tag(resolved));
+            return;
+          }
+          ref.read(homeDiaryFilterProvider.notifier).reset();
+          ref.read(diarySelectionProvider.notifier).clear();
+          toast.info(message: context.l10n.app.tagFilterReset);
+        }
+      });
+    }
 
     final body = _buildDiaryView(filter);
     return PopScope(
@@ -158,6 +198,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           diaryControllerProvider(
             categoryId: filter.categoryId,
             uncategorized: filter.uncategorized,
+            tagName: filter.tagName,
           ).notifier,
         )
         .softDeleteByIds(ids);
@@ -186,6 +227,17 @@ class _FilterTitle extends ConsumerWidget {
 
     final (String label, Color? dot, int? count) = switch (filter) {
       _ when filter.isAll => (context.l10n.common.appName, null, null),
+      DiaryFilter(tagName: final name?) => (
+        name,
+        null,
+        ref
+            .watch(tagCatalogProvider)
+            .value
+            ?.usage
+            .where((tag) => tag.name == name)
+            .firstOrNull
+            ?.count,
+      ),
       _ when filter.uncategorized => (
         context.l10n.diary.categoryNoCategory,
         null,
@@ -206,7 +258,10 @@ class _FilterTitle extends ConsumerWidget {
     return Row(
       mainAxisSize: .min,
       children: [
-        if (dot != null) ...[
+        if (filter.tagName != null) ...[
+          Icon(LucideIcons.hash, size: 16, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+        ] else if (dot != null) ...[
           Container(
             width: 9,
             height: 9,
