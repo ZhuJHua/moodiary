@@ -8,6 +8,7 @@ class BackupImportResult {
   final int diaryCount;
 
   final int categoryCount;
+  final int tagCount;
 
   final int mediaCount;
 
@@ -20,6 +21,7 @@ class BackupImportResult {
   const BackupImportResult({
     required this.diaryCount,
     required this.categoryCount,
+    required this.tagCount,
     required this.mediaCount,
     required this.failed,
     this.cancelled = false,

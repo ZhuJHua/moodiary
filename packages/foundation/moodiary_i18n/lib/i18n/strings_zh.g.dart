@@ -2456,8 +2456,8 @@ class Translations$export$zh {
 	/// zh: '恢复完成：{summary}'
 	String restoreDone({required Object summary}) => '恢复完成：${summary}';
 
-	/// zh: '日记 {diary} 条 / 分类 {category} 条 / 媒体 {media} 个'
-	String restoreSummary({required Object diary, required Object category, required Object media}) => '日记 ${diary} 条 / 分类 ${category} 条 / 媒体 ${media} 个';
+	/// zh: '日记 {diary} 条 / 分类 {category} 条 / 标签 {tag} 条 / 媒体 {media} 个'
+	String restoreSummary({required Object diary, required Object category, required Object tag, required Object media}) => '日记 ${diary} 条 / 分类 ${category} 条 / 标签 ${tag} 条 / 媒体 ${media} 个';
 
 	/// zh: '{base}，跳过 {skipped} 条（本机内容更新）'
 	String restoreSummarySkipped({required Object base, required Object skipped}) => '${base}，跳过 ${skipped} 条（本机内容更新）';
@@ -3618,11 +3618,20 @@ class Translations$sync$zh {
 	/// zh: '上传分类'
 	String get kindCategoryUpload => '上传分类';
 
+	/// zh: '上传标签'
+	String get kindTagUpload => '上传标签';
+
 	/// zh: '下载分类'
 	String get kindCategoryDownload => '下载分类';
 
+	/// zh: '下载标签'
+	String get kindTagDownload => '下载标签';
+
 	/// zh: '跳过分类'
 	String get kindCategorySkip => '跳过分类';
+
+	/// zh: '跳过标签'
+	String get kindTagSkip => '跳过标签';
 
 	/// zh: '推送分类删除'
 	String get kindCategoryTombstonePush => '推送分类删除';
@@ -3777,6 +3786,9 @@ class Translations$sync$zh {
 	/// zh: '分类'
 	String get rowCategory => '分类';
 
+	/// zh: '标签'
+	String get rowTag => '标签';
+
 	/// zh: '媒体'
 	String get rowMedia => '媒体';
 
@@ -3852,8 +3864,8 @@ class Translations$sync$zh {
 	/// zh: '内容已是最新，没有变更'
 	String get lanUpToDate => '内容已是最新，没有变更';
 
-	/// zh: '日记 {diary} 条 · 分类 {category} 条'
-	String lanReceived({required Object diary, required Object category}) => '日记 ${diary} 条 · 分类 ${category} 条';
+	/// zh: '日记 {diary} 条 · 分类 {category} 条 · 标签 {tag} 条'
+	String lanReceived({required Object diary, required Object category, required Object tag}) => '日记 ${diary} 条 · 分类 ${category} 条 · 标签 ${tag} 条';
 
 	/// zh: '{base}（{failed} 条失败）'
 	String lanReceivedFailed({required Object base, required Object failed}) => '${base}（${failed} 条失败）';
@@ -4218,8 +4230,8 @@ class Translations$sync$zh {
 	/// zh: '{count} 条失败'
 	String warnFailedCount({required Object count}) => '${count} 条失败';
 
-	/// zh: '日记 {diary} + 分类 {category} + 媒体 {media}（耗时 {ms}ms）'
-	String reCipherSummary({required Object diary, required Object category, required Object media, required Object ms}) => '日记 ${diary} + 分类 ${category} + 媒体 ${media}（耗时 ${ms}ms）';
+	/// zh: '日记 {diary} + 分类 {category} + 标签 {tag} + 媒体 {media}（耗时 {ms}ms）'
+	String reCipherSummary({required Object diary, required Object category, required Object tag, required Object media, required Object ms}) => '日记 ${diary} + 分类 ${category} + 标签 ${tag} + 媒体 ${media}（耗时 ${ms}ms）';
 
 	/// zh: '{base} {failed} 个对象失败已跳过'
 	String reCipherFailedSuffix({required Object base, required Object failed}) => '${base}\n${failed} 个对象失败已跳过';
@@ -4232,6 +4244,9 @@ class Translations$sync$zh {
 
 	/// zh: '分类 {id}'
 	String stepCategory({required Object id}) => '分类 ${id}';
+
+	/// zh: '标签 {id}'
+	String stepTag({required Object id}) => '标签 ${id}';
 
 	/// zh: '地点 {id}'
 	String stepPlace({required Object id}) => '地点 ${id}';
@@ -4257,11 +4272,17 @@ class Translations$sync$zh {
 	/// zh: '上传 {count} 个分类'
 	String summaryUploadedCategories({required Object count}) => '上传 ${count} 个分类';
 
+	/// zh: '上传 {count} 个标签'
+	String summaryUploadedTags({required Object count}) => '上传 ${count} 个标签';
+
 	/// zh: '下载 {count} 篇日记'
 	String summaryDownloadedDiaries({required Object count}) => '下载 ${count} 篇日记';
 
 	/// zh: '下载 {count} 个分类'
 	String summaryDownloadedCategories({required Object count}) => '下载 ${count} 个分类';
+
+	/// zh: '下载 {count} 个标签'
+	String summaryDownloadedTags({required Object count}) => '下载 ${count} 个标签';
 
 	/// zh: '媒体 {count} 个'
 	String summaryMedia({required Object count}) => '媒体 ${count} 个';

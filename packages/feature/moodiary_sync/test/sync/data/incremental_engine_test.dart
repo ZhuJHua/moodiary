@@ -15,7 +15,9 @@ import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
+import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_sync/src/data/sync_stores.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import '../sync_test_harness.dart';
@@ -34,8 +36,10 @@ void main() {
     FakeRemoteBackend backend, {
     FakeDiaryStore? diaries,
     FakeCategoryStore? categories,
+    SyncTagStore? tags,
     FakeTombstoneStore? tombstones,
     FakeMediaFiles? media,
+    Future<SyncCipher> Function()? cipherProvider,
     int concurrency = 4,
   }) {
     final tombstoneStore =
@@ -48,10 +52,11 @@ void main() {
       logger: logger,
       diaryStore: diaries ?? FakeDiaryStore(const [], tombstoneStore),
       categoryStore: categories ?? FakeCategoryStore(const [], tombstoneStore),
+      tagStore: tags ?? FakeTagStore(),
       placeStore: FakePlaceStore(const [], tombstoneStore),
       tombstoneStore: tombstoneStore,
       mediaFiles: media ?? FakeMediaFiles(),
-      cipherProvider: () async => SyncCipher.plaintext,
+      cipherProvider: cipherProvider ?? () async => SyncCipher.plaintext,
       concurrency: concurrency,
     );
   }
@@ -67,6 +72,7 @@ void main() {
       logger: logger,
       diaryStore: FakeDiaryStore(diaries.cast()),
       categoryStore: FakeCategoryStore(cats.cast()),
+      tagStore: FakeTagStore(),
       placeStore: FakePlaceStore(),
       tombstoneStore: FakeTombstoneStore(),
       mediaFiles: media ?? FakeMediaFiles(),
@@ -107,7 +113,11 @@ void main() {
           backend.objects[SyncKeys.diaryObjectPath(diary.id)] = jsonBytes(json);
         }
         final store = FakeDiaryStore();
-        final report = await engineOn(backend, diaries: store).pull();
+        final report = await engineOn(
+          backend,
+          diaries: store,
+          tags: RepoSyncTagStore(),
+        ).pull();
         expect(report.failed, 0);
         expect(store.diaries, hasLength(4));
         for (final entry in legacy.entries) {
@@ -142,12 +152,179 @@ void main() {
         store.diaries[diary.id] = diary.copyWith(lastModified: atMs(200));
       }
     };
-    final report = await engineOn(backend, diaries: store).pull();
+    final report = await engineOn(
+      backend,
+      diaries: store,
+      tags: RepoSyncTagStore(),
+    ).pull();
     expect(report.failed, 0);
     expect(report.diaryCount, 0);
     expect(store.diaries[diary.id]!.lastModified, atMs(200));
     expect(await tags.getAllTags(includeDeleted: true), isEmpty);
   });
+
+  test('two devices exchange tags before diaries and rename and delete independently', () async {
+    final backend = FakeRemoteBackend();
+    final first = Tag(id: 'a', name: 'work', lastModified: atMs(10));
+    final second = first.copyWith(id: 'b');
+    final tagsA = FakeTagStore([first]);
+    final tagsB = FakeTagStore([second]);
+    final diary = buildDiary(
+      id: 'diary',
+      modifiedMs: 20,
+    ).copyWith(tagIds: ['a', 'b']);
+    final diariesB = FakeDiaryStore();
+    final deviceA = engineOn(
+      backend,
+      tags: tagsA,
+      diaries: FakeDiaryStore([diary]),
+    );
+    final deviceB = engineOn(backend, tags: tagsB, diaries: diariesB);
+    await deviceA.push();
+    expect(
+      backend.ops.indexOf('write tag/a.json'),
+      lessThan(backend.ops.indexOf('write diary/diary.json')),
+    );
+    backend.ops.clear();
+    expect((await deviceB.sync()).failed, 0);
+    expect(
+      backend.ops.indexOf('read tag/a.json'),
+      lessThan(backend.ops.indexOf('read diary/diary.json')),
+    );
+    expect(
+      resolveTagNames(diary.tagIds, tagsB.tags).map((entry) => entry.name),
+      ['work'],
+    );
+    tagsA.tags['a'] = first.copyWith(name: 'home', lastModified: atMs(30));
+    await deviceA.push();
+    expect((await deviceB.pull()).tagCount, 1);
+    expect(tagsB.tags['a']!.name, 'home');
+    expect(diariesB.diaries['diary'], diary);
+    tagsA.tags['a'] = tagsA.tags['a']!.copyWith(
+      deleted: true,
+      lastModified: atMs(40),
+    );
+    await deviceA.push();
+    expect((await deviceB.pull()).tagCount, 1);
+    expect(tagsB.tags['a']!.deleted, isTrue);
+    expect(diariesB.diaries['diary']!.lastModified, atMs(20));
+    backend.objects.remove('tag/a.json');
+    expect((await engineOn(backend).pull()).failed, 1);
+  });
+
+  test(
+    'legacy category tombstones create deleted rows unless local is newer',
+    () async {
+      final backend = FakeRemoteBackend();
+      backend.objects[SyncKeys.manifestPath] = jsonBytes({
+        'version': 3,
+        'entries': {
+          for (final id in ['old', 'absent', 'new'])
+            'c:$id': {'t': atMs(20).millisecondsSinceEpoch, 'd': true},
+        },
+      });
+      final categories = FakeCategoryStore([
+        buildCategory(id: 'old', modifiedMs: 10, name: 'old name'),
+        buildCategory(id: 'new', modifiedMs: 30),
+      ]);
+      final report = await engineOn(backend, categories: categories).pull();
+      expect(report.categoryCount, 2);
+      expect(categories.categories['old']!.categoryName, 'old name');
+      expect(categories.categories['absent']!.categoryName, '');
+      for (final id in ['old', 'absent']) {
+        expect(categories.categories[id]!.deleted, isTrue);
+        expect(categories.categories[id]!.lastModified, atMs(20));
+      }
+      expect(categories.categories['new']!.deleted, isFalse);
+      await engineOn(backend, categories: categories).push();
+      expect(backend.manifest()!.entries['c:old']!.deleted, isFalse);
+      expect(backend.objects, contains('category/old.json'));
+    },
+  );
+
+  test('pull preserves plaintext when upgrading v3 with a local DEK', () async {
+    final backend = FakeRemoteBackend();
+    backend.objects[SyncKeys.manifestPath] = jsonBytes({
+      'version': 3,
+      'entries': {},
+    });
+    await SyncKeyManager.storeDek(SyncKeyManager.generateDek());
+    await SyncKeyManager.writeRemoteKeyfile(
+      backend,
+      const SyncKeyfile(
+        kdfMemoryKiB: SyncKeyManager.kdfMemoryKiB,
+        kdfIterations: SyncKeyManager.kdfIterations,
+        kdfParallelism: SyncKeyManager.kdfParallelism,
+        saltB64: 'c2FsdA==',
+        wrappedDekB64: 'd3JhcHBlZA==',
+      ),
+    );
+
+    final report = await engineOn(backend, cipherProvider: SyncCipher.current).pull();
+
+    expect(report.failed, 0);
+    expect(SyncCipher.isCipherText(backend.objects[SyncKeys.manifestPath]!), isFalse);
+    expect(backend.manifest()!.version, 4);
+  });
+
+  for (final interruption in ['none', 'before', 'readback']) {
+    test('v3 format barrier with interruption $interruption', () async {
+      final backend = FakeRemoteBackend();
+      backend.objects[SyncKeys.manifestPath] = jsonBytes({
+        'version': 3,
+        'entries': {
+          'd:old': {'t': 1},
+        },
+      });
+      final tags = FakeTagStore([Tag.legacy('work')]);
+      SyncManifest readAsLegacyClient() {
+        final json = jsonDecode(
+          utf8.decode(backend.objects[SyncKeys.manifestPath]!),
+        ) as Map<String, dynamic>;
+        final version = json['version'] as int;
+        if (version < 1 || version > 3) {
+          throw SyncException(
+            l10n.sync.errManifestVersion(remote: version, local: 3),
+          );
+        }
+        return SyncManifest.fromJson(json);
+      }
+
+      expect(readAsLegacyClient().entries.keys, ['d:old']);
+      backend.beforeOp = (op, key) {
+        if (op == 'write' && key.startsWith('tag/')) {
+          expect(readAsLegacyClient, throwsA(isA<SyncException>()));
+        }
+        if (key != SyncKeys.manifestPath) return;
+        if (interruption == 'before' && op == 'write') {
+          throw StateError('interrupted');
+        }
+        if (op == 'read' &&
+            backend.manifest()!.version == 4 &&
+            interruption == 'readback') {
+          throw StateError('interrupted');
+        }
+      };
+      final run = engineOn(backend, tags: tags).push();
+      if (interruption == 'none') {
+        expect((await run).tagCount, 1);
+        final writes = backend.ops.where(
+          (op) => op.startsWith('write ') && op != 'write sync.lock',
+        );
+        expect(writes.first, 'write manifest.json');
+        expect(writes.last, 'write manifest.json');
+        expect(backend.manifest()!.version, greaterThan(3));
+      } else {
+        await expectLater(run, throwsA(isA<StateError>()));
+        expect(backend.manifest()!.version, interruption == 'before' ? 3 : 4);
+        expect(backend.manifest()!.entries.keys, ['d:old']);
+        expect(
+          backend.objects.keys.where((key) => key.startsWith('tag/')),
+          isEmpty,
+        );
+      }
+    });
+  }
 
   group('push — first sync', () {
     test('uploads all diaries + categories and writes a v4 manifest', () async {
@@ -267,6 +444,7 @@ void main() {
         logger: logger,
         diaryStore: FakeDiaryStore(const []),
         categoryStore: FakeCategoryStore(const []),
+        tagStore: FakeTagStore(),
         placeStore: FakePlaceStore(),
         tombstoneStore: FakeTombstoneStore(),
         mediaFiles: FakeMediaFiles(),
@@ -1152,6 +1330,19 @@ void main() {
         expect(backend.manifest()!.entries['c:c1']!.deleted, isFalse);
       },
     );
+
+    test('pull reports a missing newer category and keeps the local row', () async {
+      final backend = FakeRemoteBackend();
+      final local = buildCategory(id: 'c1', modifiedMs: 100, name: 'local');
+      final categories = FakeCategoryStore([local]);
+      await seedRemote(backend, cats: [buildCategory(id: local.id, modifiedMs: 200)]);
+      await backend.deleteObject(SyncKeys.categoryObjectPath(local.id));
+
+      final report = await engineOn(backend, categories: categories).pull();
+
+      expect(report.failed, greaterThan(0));
+      expect(categories.categories[local.id], local);
+    });
 
     test(
       'pull counts a category local-write failure (no false success) (B)',

@@ -139,4 +139,4 @@ Principle: split freely, never duplicate dependencies. http / sync / llm share o
 - No `[workspace.dependencies]`: the same crate is pinned per package, and `tool/check_generated.dart` fails on drift across Cargo.toml, toolchain channel and FRB / ffigen pins.
 - The license manifest `mobile/assets/licenses/third_party.json` is generated at build time by `mobile/hook/build.dart`; local machines and CI need `cargo-about` 0.9.2. It scans the in-repo crates and merges the root `third_party.json` shipped by each package in `_externalLicensePackages` (`sqlite3_simple`, `sqlite3_vec` — vendored C/C++ that cargo-about cannot see), resolved through `.dart_tool/package_config.json`.
 - Keep zip handling in Rust; LAN archives use entry-level AES-256 encryption.
-- `lanProtoVersion` is 4: `lan_receiver._admit` requires the `x-moodiary-proto` header to equal 4.
+- `lanProtoVersion` is 5: `lan_receiver._admit` requires the `x-moodiary-proto` header to equal 5.
