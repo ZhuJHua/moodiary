@@ -2062,15 +2062,6 @@ class Translations$diary$zh {
 	/// zh: '地图加载失败'
 	String get mapLoadFailed => '地图加载失败';
 
-	/// zh: '添加标签'
-	String get addTag => '添加标签';
-
-	/// zh: '标签名'
-	String get tagNameHint => '标签名';
-
-	/// zh: '添加'
-	String get add => '添加';
-
 	/// zh: '获取天气失败，请稍后重试'
 	String get weatherFailed => '获取天气失败，请稍后重试';
 
@@ -2293,8 +2284,38 @@ class Translations$editor$zh {
 	/// zh: '选择分类'
 	String get pickCategory => '选择分类';
 
-	/// zh: '不分类'
-	String get noCategory => '不分类';
+	/// zh: '无分类'
+	String get noCategory => '无分类';
+
+	/// zh: '点选即保存'
+	String get categoryPickerSubtitle => '点选即保存';
+
+	/// zh: '新建分类「{name}」'
+	String createCategory({required Object name}) => '新建分类「${name}」';
+
+	/// zh: '选择标签'
+	String get pickTags => '选择标签';
+
+	/// zh: '可多选 · 已选 {count} 个'
+	String tagPickerSubtitle({required Object count}) => '可多选 · 已选 ${count} 个';
+
+	/// zh: '搜索或新建标签'
+	String get tagSearchHint => '搜索或新建标签';
+
+	/// zh: '已选'
+	String get tagSelected => '已选';
+
+	/// zh: '最近使用'
+	String get tagRecent => '最近使用';
+
+	/// zh: '匹配 · {count}'
+	String pickerMatches({required Object count}) => '匹配 · ${count}';
+
+	/// zh: '新建标签「{name}」'
+	String createTag({required Object name}) => '新建标签「${name}」';
+
+	/// zh: '点完成后保存'
+	String get createTagHint => '点完成后保存';
 
 	/// zh: '升级数据迁移'
 	String get migrationTitle => '升级数据迁移';

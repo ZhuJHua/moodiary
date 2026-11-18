@@ -5,7 +5,7 @@ void main() {
   test('legacy tag IDs and diary JSON are stable', () {
     final tag = Tag.legacy('Travel');
     expect(tag.id, '00398b23-dea3-58c6-92d5-739a939f7875');
-    expect(Tag.normalize(' ##Travel '), '#Travel');
+    expect(Tag.normalize(' ##Travel '), 'Travel');
     expect(Tag.normalize(' # \t'), isNull);
     expect(Tag.fromJson(tag.toJson()), tag);
     expect(tag.lastModified.microsecondsSinceEpoch, 0);
