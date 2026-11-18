@@ -115,6 +115,12 @@ class CategoryManagerRoute extends MoodiaryRouteBase {
   const CategoryManagerRoute() : super(path);
 }
 
+class TagManagerRoute extends MoodiaryRouteBase {
+  static const String path = '/tag_manager';
+
+  const TagManagerRoute() : super(path);
+}
+
 class PlaceManagerRoute extends MoodiaryRouteBase {
   static const String path = '/place_manager';
 

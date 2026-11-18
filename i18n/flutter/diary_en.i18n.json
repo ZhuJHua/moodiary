@@ -55,6 +55,28 @@
   "drawerNoMatch": "No matching categories or tags",
   "categoryAllDiary": "All diaries",
   "tags": "Tags",
+  "tagManagerTitle": "Tags",
+  "tagSearchHint": "Search tags",
+  "tagEmpty": "No tags yet",
+  "tagNew": "New tag",
+  "tagNoMatch": "No matching tags",
+  "tagUsage(plural, param=count)": {
+    "one": "1 entry · Last used {date}",
+    "other": "{count} entries · Last used {date}"
+  },
+  "tagExists": "Tag already exists",
+  "tagMergeTitle": "Merge tags",
+  "tagMergeMessage(plural, param=count)": {
+    "one": "#{target} already exists. The entry tagged #{source} will now show #{target}.",
+    "other": "#{target} already exists. The {count} entries tagged #{source} will now show #{target}."
+  },
+  "tagDeleteTitle": "Delete tag?",
+  "tagDeleteMessage(plural, param=count)": {
+    "one": "1 entry will no longer show #{name}, nor will entries in the recycle bin.",
+    "other": "{count} entries will no longer show #{name}, nor will entries in the recycle bin."
+  },
+  "tagDeleteUnused": "This tag cannot be recovered after deletion.",
+  "tagNameEmpty": "The name cannot be empty",
   "categoryNoMatch": "No matching categories",
   "categorySyncingPlaceholder": "Syncing category…",
   "categoryManageEntry": "Manage categories",
