@@ -14,7 +14,6 @@ Diary diary(DateTime time, {DateTime? modified, String id = 'x'}) => Diary(
   imageName: const [],
   audioName: const [],
   videoName: const [],
-  tags: const [],
   type: DiaryType.tiptap.value,
 );
 

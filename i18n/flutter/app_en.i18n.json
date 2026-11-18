@@ -160,7 +160,6 @@
   "repairFixed": "Repaired {count} entries:",
   "repairFixedPreview": "· card preview: {count}",
   "repairFixedMedia": "· media references: {count}",
-  "repairFixedOrphan": "· dangling categories: {count}",
   "repairReindexed": "Search index rebuilt ({count} entries).",
   "repairDoneTitle": "Repair finished",
   "repairOk": "Got it",

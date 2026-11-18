@@ -1,4 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -28,7 +30,7 @@ Diary diary({
   imageName: images,
   audioName: audios,
   videoName: videos,
-  tags: tags,
+  tagIds: tags.map(Tag.legacyId).toList(),
   type: DiaryType.tiptap.value,
 );
 
@@ -43,10 +45,33 @@ Place place() => Place(
 Category cat() =>
     Category(id: 'a', categoryName: 'work', lastModified: DateTime(2026));
 
-Widget wrap(Widget child) => MuiTheme(
-  data: _mui,
-  child: MaterialApp(
-    home: Scaffold(body: ListView(children: [child])),
+Widget wrap(Widget child) => ProviderScope(
+  overrides: [
+    tagCatalogProvider.overrideWithValue(
+      AsyncData((
+        byId: {
+          for (final name in [
+            'a',
+            'b',
+            'c',
+            '夏天的第一杯冰美式与午后的碎碎念',
+            '夏天的第二杯冰美式与午后的碎碎念',
+          ])
+            Tag.legacyId(name): Tag(
+              id: Tag.legacyId(name),
+              name: name,
+              lastModified: DateTime.utc(2026),
+            ),
+        },
+        usage: [],
+      )),
+    ),
+  ],
+  child: MuiTheme(
+    data: _mui,
+    child: MaterialApp(
+      home: Scaffold(body: ListView(children: [child])),
+    ),
   ),
 );
 
@@ -207,7 +232,7 @@ void main() {
             DiaryFeedTile(
               diary: diary(
                 images: images,
-                tags: const [long, long],
+                tags: const [long, '夏天的第二杯冰美式与午后的碎碎念'],
                 weather: const DiaryWeather(icon: '100', temp: '26', text: '晴'),
               ),
               place: place(),
@@ -248,7 +273,6 @@ void main() {
       imageName: const [],
       audioName: const [],
       videoName: const [],
-      tags: const [],
       type: DiaryType.tiptap.value,
     );
 

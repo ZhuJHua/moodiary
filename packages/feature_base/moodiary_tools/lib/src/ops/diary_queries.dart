@@ -33,9 +33,10 @@ const int maxBatchRead = 10;
 const int _searchCandidateLimit = 50;
 
 class DiaryQueries {
-  DiaryQueries({required this.diaries, this.semantic});
+  DiaryQueries({required this.diaries, required this.tags, this.semantic});
 
   final DiaryRepository diaries;
+  final TagRepository tags;
 
   final EmbedIndexService? semantic;
 
@@ -50,6 +51,12 @@ class DiaryQueries {
     int offset = 0,
     String? tag,
   }) async {
+    final tagIds = tag == null
+        ? null
+        : {
+            for (final entry in await tags.getAllTags())
+              if (entry.name == tag) entry.id,
+          };
     final semanticAvailable = semantic?.enabled ?? false;
     final meaningRan =
         mode != 'keyword' && query.isNotEmpty && semanticAvailable;
@@ -63,7 +70,7 @@ class DiaryQueries {
             sort: meaningRan ? 'relevance' : sort,
             limit: meaningRan ? _searchCandidateLimit : limit,
             offset: meaningRan ? 0 : offset,
-            tag: tag,
+            tagIds: tagIds,
             fixedWindow: meaningRan,
           )
         : (
@@ -94,7 +101,7 @@ class DiaryQueries {
           !diary.show ||
           (categoryId != null && diary.categoryId != categoryId) ||
           !_inRange(diary.time, start, endExclusive) ||
-          (tag != null && !diary.tags.contains(tag))) {
+          (tagIds != null && !diary.tagIds.any(tagIds.contains))) {
         continue;
       }
       hits.add(hit);
@@ -142,11 +149,11 @@ class DiaryQueries {
     String? sort,
     required int limit,
     required int offset,
-    String? tag,
+    Set<String>? tagIds,
     bool fixedWindow = false,
   }) async {
     if (query.isNotEmpty) {
-      final filterInDart = tag != null || sort == 'modified';
+      final filterInDart = tagIds != null || sort == 'modified';
       final hits = await diaries.searchDiaries(
         query: query,
         categoryId: categoryId,
@@ -168,19 +175,20 @@ class DiaryQueries {
           : offset + hits.length;
       final matched = [
         for (final hit in hits)
-          if (tag == null || hit.diary.tags.contains(tag)) hit.diary,
+          if (tagIds == null || hit.diary.tagIds.any(tagIds.contains))
+            hit.diary,
       ];
       if (sort == 'modified') {
         matched.sort(diarySortComparator(DiarySort.lastModifiedDesc));
       }
       return (
         results: matched.skip(filterInDart ? offset : 0).take(limit).toList(),
-        total: tag == null ? total : matched.length,
+        total: tagIds == null ? total : matched.length,
         hits: {for (final hit in hits) hit.diary.id: hit},
         capped: fixedWindow && hits.length >= _searchCandidateLimit,
       );
     }
-    if (tag == null && start == null && endExclusive == null) {
+    if (tagIds == null && start == null && endExclusive == null) {
       final counts = await diaries.diaryCountByCategory();
       final page = await diaries.getDiaryByCategory(
         categoryId: categoryId,
@@ -212,7 +220,7 @@ class DiaryQueries {
               (diary) =>
                   (categoryId == null || diary.categoryId == categoryId) &&
                   _inRange(diary.time, start, endExclusive) &&
-                  (tag == null || diary.tags.contains(tag)),
+                  (tagIds == null || diary.tagIds.any(tagIds.contains)),
             )
             .toList()
           ..sort(diarySortComparator(parseDiarySort(sort)));

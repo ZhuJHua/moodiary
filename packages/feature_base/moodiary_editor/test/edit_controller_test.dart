@@ -271,7 +271,7 @@ void main() {
 
     expect(await controller.autoSave(), DraftSaveResult.saved);
     expect(repository.indexes, [IndexMode.skip]);
-    expect(repository.stored?.tags, ['tag']);
+    expect(repository.stored?.tagIds, ['tag']);
   });
 
   test('同步 upsert 已打开的日记后只改标签，保存保留同步正文', () async {
@@ -287,7 +287,7 @@ void main() {
     controller.changeTags(['tag']);
     expect(await controller.autoSave(), DraftSaveResult.saved);
     expect(repository.stored?.content, 'synced');
-    expect(repository.stored?.tags, ['tag']);
+    expect(repository.stored?.tagIds, ['tag']);
   });
 
   test('没有本地编辑时采纳外部更新并同步保存快照', () async {

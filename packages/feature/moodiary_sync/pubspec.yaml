@@ -43,6 +43,7 @@ dependencies:
   meta: 1.19.0
 
 dev_dependencies:
+  drift: 2.35.0
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

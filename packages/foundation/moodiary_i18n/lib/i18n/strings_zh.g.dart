@@ -543,9 +543,6 @@ class Translations$app$zh {
 	/// zh: '· 媒体引用 {count} 篇'
 	String repairFixedMedia({required Object count}) => '· 媒体引用 ${count} 篇';
 
-	/// zh: '· 失效分类 {count} 篇'
-	String repairFixedOrphan({required Object count}) => '· 失效分类 ${count} 篇';
-
 	/// zh: '搜索索引已重建（{count} 篇）。'
 	String repairReindexed({required Object count}) => '搜索索引已重建（${count} 篇）。';
 
@@ -1931,14 +1928,13 @@ class Translations$diary$zh {
 	/// zh: '删除分类？'
 	String get categoryDeleteTitle => '删除分类？';
 
-	/// zh: '「{name}」下仍有日记（含回收站）时不可删除，日记本身不受影响。'
-	String categoryDeleteMessage({required Object name}) => '「${name}」下仍有日记（含回收站）时不可删除，日记本身不受影响。';
+	/// zh: '(other) {「{name}」下的 {count} 篇日记将变为未分类。}'
+	String categoryDeleteMessage({required num count, required Object name}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '「${name}」下的 ${count} 篇日记将变为未分类。',
+	);
 
 	/// zh: '已删除'
 	String get categoryDeleted => '已删除';
-
-	/// zh: '仍有日记（含回收站），无法删除'
-	String get categoryDeleteBlocked => '仍有日记（含回收站），无法删除';
 
 	/// zh: '暂无分类'
 	String get categoryEmpty => '暂无分类';
@@ -2260,9 +2256,6 @@ class Translations$diary$zh {
 
 	/// zh: '保存失败'
 	String get saveFailed => '保存失败';
-
-	/// zh: '未知分类'
-	String get unknownCategory => '未知分类';
 
 	/// zh: '升级后需重建索引，旧日记正文才能被搜索到'
 	String get searchReindexHint => '升级后需重建索引，旧日记正文才能被搜索到';

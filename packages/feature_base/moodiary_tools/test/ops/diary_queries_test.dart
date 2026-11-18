@@ -36,13 +36,15 @@ class _SemanticIndex extends Fake implements EmbedIndexService {
 
 void main() {
   late MoodiaryDatabase db;
+  late TagRepository tagRepo;
   late DiaryRepository diaries;
   late DiaryQueries queries;
 
   setUp(() {
     db = openTestDatabase();
+    tagRepo = TagRepository(db);
     diaries = DiaryRepository(db);
-    queries = DiaryQueries(diaries: diaries);
+    queries = DiaryQueries(tags: tagRepo, diaries: diaries);
   });
 
   tearDown(() => db.close());
@@ -53,7 +55,11 @@ void main() {
       () async {
         await diaries.insertADiary(makeDiary('entry', 'orchard'));
         final index = _SemanticIndex(['entry']);
-        queries = DiaryQueries(diaries: diaries, semantic: index);
+        queries = DiaryQueries(
+          tags: tagRepo,
+          diaries: diaries,
+          semantic: index,
+        );
 
         final result = await queries.search(query: 'orchard', limit: 1030);
 
@@ -100,7 +106,11 @@ void main() {
           makeDiary('meaning-only', 'trees', time: DateTime.utc(2026, 1, 3)),
         ]);
         final index = _SemanticIndex(['shared', 'meaning-only']);
-        queries = DiaryQueries(diaries: diaries, semantic: index);
+        queries = DiaryQueries(
+          tags: tagRepo,
+          diaries: diaries,
+          semantic: index,
+        );
         final result = await queries.search(
           query: 'orchard',
           sort: 'relevance',
@@ -159,7 +169,11 @@ void main() {
           makeDiary('meaning', 'trees', categoryId: 'work'),
         );
         final index = _SemanticIndex(['meaning']);
-        queries = DiaryQueries(diaries: diaries, semantic: index);
+        queries = DiaryQueries(
+          tags: tagRepo,
+          diaries: diaries,
+          semantic: index,
+        );
         final start = DateTime.utc(2026, 1, 1);
         final end = DateTime.utc(2026, 2, 1);
         final result = await queries.search(
@@ -191,16 +205,22 @@ void main() {
       'semantic candidates exclude stale, hidden and tag mismatches',
       () async {
         await diaries.insertDiaries([
-          makeDiary('visible', 'trees', tags: ['travel']),
+          makeDiary(
+            'visible',
+            'trees',
+            tagIds: await tagRepo.ensureTags(['travel']),
+          ),
           makeDiary('hidden', 'trees', show: false),
           makeDiary('other', 'trees'),
         ]);
         final result = await DiaryQueries(
+          tags: tagRepo,
           diaries: diaries,
           semantic: _SemanticIndex(['hidden', 'unknown', 'other', 'visible']),
         ).search(query: 'trip', mode: 'meaning', tag: 'travel', limit: 10);
         expect(result.rows.single.diary.id, 'visible');
         final empty = await DiaryQueries(
+          tags: tagRepo,
           diaries: diaries,
           semantic: _SemanticIndex([]),
         ).search(query: 'missing', limit: 10);
@@ -220,7 +240,11 @@ void main() {
           makeDiary('B', 'trees', title: ''),
         ]);
         final index = _SemanticIndex(['B', 'C']);
-        queries = DiaryQueries(diaries: diaries, semantic: index);
+        queries = DiaryQueries(
+          tags: tagRepo,
+          diaries: diaries,
+          semantic: index,
+        );
         final ids = <String>[];
         for (var offset = 0; offset < 4; offset++) {
           final page = await queries.search(
@@ -241,11 +265,12 @@ void main() {
     test('semantic tag filtering happens before page slicing', () async {
       await diaries.insertDiaries([
         makeDiary('A', 'trees'),
-        makeDiary('B', 'trees', tags: ['travel']),
+        makeDiary('B', 'trees', tagIds: await tagRepo.ensureTags(['travel'])),
       ]);
       for (final mode in ['auto', 'meaning']) {
         final index = _SemanticIndex(['A', 'B']);
         final result = await DiaryQueries(
+          tags: tagRepo,
           diaries: diaries,
           semantic: index,
         ).search(query: 'trip', mode: mode, tag: 'travel', limit: 1);
@@ -264,7 +289,11 @@ void main() {
           for (final id in ids) makeDiary(id, 'trees'),
         ]);
         final index = _SemanticIndex(ids);
-        queries = DiaryQueries(diaries: diaries, semantic: index);
+        queries = DiaryQueries(
+          tags: tagRepo,
+          diaries: diaries,
+          semantic: index,
+        );
         for (final offset in [0, 1, 49, 50, 100]) {
           final result = await queries.search(
             query: 'orchard',
@@ -288,7 +317,11 @@ void main() {
         for (var index = 0; index < 50; index++)
           makeDiary('entry-$index', 'orchard'),
       ]);
-      queries = DiaryQueries(diaries: diaries, semantic: _SemanticIndex([]));
+      queries = DiaryQueries(
+        tags: tagRepo,
+        diaries: diaries,
+        semantic: _SemanticIndex([]),
+      );
       final result = await queries.search(query: 'orchard', limit: 50);
       expect(result.rows, hasLength(50));
       expect(result.total, 50);
@@ -312,10 +345,14 @@ void main() {
               'orchard',
               title: '',
               time: DateTime.utc(2026, 1, index + 1),
-              tags: index == 0 ? ['travel'] : [],
+              tagIds: await tagRepo.ensureTags(index == 0 ? ['travel'] : []),
             ),
         ]);
-        queries = DiaryQueries(diaries: diaries, semantic: _SemanticIndex([]));
+        queries = DiaryQueries(
+          tags: tagRepo,
+          diaries: diaries,
+          semantic: _SemanticIndex([]),
+        );
         final tagged = await queries.search(
           query: 'orchard',
           tag: 'travel',
@@ -346,8 +383,12 @@ void main() {
             ),
         ]);
         final index = _SemanticIndex([]);
-        final result = await DiaryQueries(diaries: diaries, semantic: index)
-            .search(
+        final result =
+            await DiaryQueries(
+              tags: tagRepo,
+              diaries: diaries,
+              semantic: index,
+            ).search(
               query: '',
               mode: 'meaning',
               sort: 'oldest',
@@ -366,13 +407,18 @@ void main() {
       'filtering a full semantic window still marks the total as bounded',
       () async {
         await diaries.insertADiary(
-          makeDiary('tagged', 'trees', tags: ['travel']),
+          makeDiary(
+            'tagged',
+            'trees',
+            tagIds: await tagRepo.ensureTags(['travel']),
+          ),
         );
         final index = _SemanticIndex([
           for (var index = 0; index < 49; index++) 'stale-$index',
           'tagged',
         ]);
         final result = await DiaryQueries(
+          tags: tagRepo,
           diaries: diaries,
           semantic: index,
         ).search(query: 'trip', mode: 'meaning', tag: 'travel', limit: 1);
@@ -391,6 +437,7 @@ void main() {
           _SemanticIndex(['keyword'], enabled: false),
         ]) {
           final result = await DiaryQueries(
+            tags: tagRepo,
             diaries: diaries,
             semantic: index,
           ).search(mode: 'meaning', query: 'orchard', limit: 2);

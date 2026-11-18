@@ -9,11 +9,13 @@ void main() {
   final now = DateTime(2026, 11, 17, 14, 5, 37, 123);
   final original = DateTime(2026, 10, 21, 23, 45, 15, 456);
   late MoodiaryDatabase db;
+  late TagRepository tagRepo;
   late DiaryRepository diaries;
   late CategoryRepository categories;
 
   setUp(() {
     db = openTestDatabase();
+    tagRepo = TagRepository(db);
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
   });
@@ -28,6 +30,7 @@ void main() {
     final result = await definition.call(
       args,
       ToolContext(
+        tags: tagRepo,
         diaries: diaries,
         categories: categories,
         insights: MoodInsightsRepository(db),
@@ -170,7 +173,12 @@ void main() {
 
   test('get and search expose local minutes and existing tags', () async {
     await diaries.insertADiary(
-      makeDiary('existing', 'Original', time: original, tags: ['travel']),
+      makeDiary(
+        'existing',
+        'Original',
+        time: original,
+        tagIds: await tagRepo.ensureTags(['travel']),
+      ),
     );
     for (final name in ['get_diary', 'search_diaries']) {
       final result = await call(ToolSurface.assistant, name, {

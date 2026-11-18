@@ -17,6 +17,7 @@ import 'package:moodiary_data/src/mood_insights_repository.dart' as _i504;
 import 'package:moodiary_data/src/open_diary_registry.dart' as _i107;
 import 'package:moodiary_data/src/place_repository.dart' as _i925;
 import 'package:moodiary_data/src/sync_pending.dart' as _i931;
+import 'package:moodiary_data/src/tag_repository.dart' as _i521;
 import 'package:moodiary_data/src/tombstone_repository.dart' as _i952;
 import 'package:moodiary_ml/moodiary_ml.dart' as _i611;
 
@@ -45,6 +46,9 @@ class MoodiaryDataPackageModule extends _i526.MicroPackageModule {
     );
     gh.lazySingleton<_i504.MoodInsightsRepository>(
       () => _i504.MoodInsightsRepository(gh<_i527.MoodiaryDatabase>()),
+    );
+    gh.lazySingleton<_i521.TagRepository>(
+      () => _i521.TagRepository(gh<_i527.MoodiaryDatabase>()),
     );
     gh.lazySingleton<_i952.TombstoneRepository>(
       () => _i952.TombstoneRepository(gh<_i527.MoodiaryDatabase>()),

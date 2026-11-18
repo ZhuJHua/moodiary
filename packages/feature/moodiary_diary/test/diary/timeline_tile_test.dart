@@ -1,8 +1,10 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
@@ -28,7 +30,7 @@ Diary diary({
   imageName: const [],
   audioName: audio,
   videoName: video,
-  tags: tags,
+  tagIds: tags.map(Tag.legacyId).toList(),
   type: DiaryType.tiptap.value,
 );
 
@@ -43,10 +45,27 @@ Place place() => Place(
 Category cat() =>
     Category(id: 'a', categoryName: 'work', lastModified: DateTime(2026));
 
-Widget wrap(Widget child) => MuiTheme(
-  data: _mui,
-  child: MaterialApp(
-    home: Scaffold(body: ListView(children: [child])),
+Widget wrap(Widget child) => ProviderScope(
+  overrides: [
+    tagCatalogProvider.overrideWithValue(
+      AsyncData((
+        byId: {
+          for (final name in ['a', 'b', 'c', 'd', '旅行', '海'])
+            Tag.legacyId(name): Tag(
+              id: Tag.legacyId(name),
+              name: name,
+              lastModified: DateTime.utc(2026),
+            ),
+        },
+        usage: [],
+      )),
+    ),
+  ],
+  child: MuiTheme(
+    data: _mui,
+    child: MaterialApp(
+      home: Scaffold(body: ListView(children: [child])),
+    ),
   ),
 );
 
@@ -169,35 +188,30 @@ void main() {
       final bottom = diary(title: '', mood: lower);
 
       await t.pumpWidget(
-        MuiTheme(
-          data: _mui,
-          child: MaterialApp(
-            home: Scaffold(
-              body: RepaintBoundary(
-                key: boundaryKey,
-                child: Column(
-                  mainAxisSize: .min,
-                  children: [
-                    DiaryTimelineTile(
-                      key: const ValueKey('a'),
-                      diary: top,
-                      stamp: top.time,
-                      dayStart: true,
-                      breakBefore: false,
-                      moodBelow: bottom.mood,
-                      hasBelow: true,
-                    ),
-                    DiaryTimelineTile(
-                      key: const ValueKey('b'),
-                      diary: bottom,
-                      stamp: bottom.time,
-                      dayStart: true,
-                      breakBefore: false,
-                      hasAbove: true,
-                    ),
-                  ],
+        wrap(
+          RepaintBoundary(
+            key: boundaryKey,
+            child: Column(
+              mainAxisSize: .min,
+              children: [
+                DiaryTimelineTile(
+                  key: const ValueKey('a'),
+                  diary: top,
+                  stamp: top.time,
+                  dayStart: true,
+                  breakBefore: false,
+                  moodBelow: bottom.mood,
+                  hasBelow: true,
                 ),
-              ),
+                DiaryTimelineTile(
+                  key: const ValueKey('b'),
+                  diary: bottom,
+                  stamp: bottom.time,
+                  dayStart: true,
+                  breakBefore: false,
+                  hasAbove: true,
+                ),
+              ],
             ),
           ),
         ),

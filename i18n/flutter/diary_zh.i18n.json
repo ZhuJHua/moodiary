@@ -68,9 +68,10 @@
   "categoryRenamed": "已重命名为「{name}」",
   "categoryRenameFailed": "重命名失败",
   "categoryDeleteTitle": "删除分类？",
-  "categoryDeleteMessage": "「{name}」下仍有日记（含回收站）时不可删除，日记本身不受影响。",
+  "categoryDeleteMessage(plural, param=count)": {
+    "other": "「{name}」下的 {count} 篇日记将变为未分类。"
+  },
   "categoryDeleted": "已删除",
-  "categoryDeleteBlocked": "仍有日记（含回收站），无法删除",
   "categoryEmpty": "暂无分类",
   "categoryNew": "新建分类",
   "categoryDiaryCount": "{count} 篇日记",
@@ -178,7 +179,6 @@
   "saved": "已保存",
   "unsaved": "未保存",
   "saveFailed": "保存失败",
-  "unknownCategory": "未知分类",
   "searchReindexHint": "升级后需重建索引，旧日记正文才能被搜索到",
   "searchReindex": "重建",
   "autoSaved": "自动保存",

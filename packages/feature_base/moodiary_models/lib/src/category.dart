@@ -11,6 +11,7 @@ abstract class Category with _$Category {
   const factory Category({
     required String id,
     required String categoryName,
+    @Default(false) bool deleted,
     @UtcDateTimeConverter() required DateTime lastModified,
     String? parentId,
 

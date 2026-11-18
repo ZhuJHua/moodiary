@@ -17,6 +17,9 @@ List<Category> _applyEvent(List<Category> list, CategoryEvent event) {
       if (!list.any((c) => c.id == id)) return list;
       return list.where((c) => c.id != id).toList();
     case CategoryUpserted(:final category):
+      if (category.deleted) {
+        return list.where((c) => c.id != category.id).toList();
+      }
       final index = list.indexWhere((c) => c.id == category.id);
       final updated = [...list];
       if (index == -1) {
@@ -111,13 +114,19 @@ Future<({Map<String, int> byCategory, int total})> categoryDiaryCounts(
 ) async {
   final diaryRepo = getIt<DiaryRepository>();
   Timer? debounce;
-  final sub = diaryRepo.diaryEvents.listen((_) {
+  void invalidate(Object _) {
     debounce?.cancel();
     debounce = Timer(const Duration(milliseconds: 200), ref.invalidateSelf);
-  });
+  }
+
+  final sub = diaryRepo.diaryEvents.listen(invalidate);
+  final categories = getIt<CategoryRepository>().categoryEvents.listen(
+    invalidate,
+  );
   ref.onDispose(() {
     debounce?.cancel();
     sub.cancel();
+    categories.cancel();
   });
   return diaryRepo.diaryCountByCategory();
 }

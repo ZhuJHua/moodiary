@@ -58,6 +58,7 @@ void main() {
       iconUri: Uri.parse('http://127.0.0.1/icon.png'),
       diaries: diaries,
       categories: categories,
+      tags: TagRepository(db),
       insights: insights,
       appVersion: 'test',
       mediaStore: DiaryMediaStore(
@@ -78,6 +79,7 @@ void main() {
       server: buildMoodiaryServer(
         diaries: diaries,
         categories: categories,
+        tags: TagRepository(db),
         insights: insights,
         appVersion: 'test',
         iconUri: Uri.parse('http://127.0.0.1/icon.png'),

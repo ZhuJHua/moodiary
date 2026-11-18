@@ -1,5 +1,7 @@
 import 'package:fast_image/fast_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/application/diary_stamp.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -530,7 +532,7 @@ class _AudioBar extends StatelessWidget {
   }
 }
 
-class _MetaLine extends StatelessWidget {
+class _MetaLine extends ConsumerWidget {
   final Diary diary;
   final DateTime stamp;
   final bool showAudioMark;
@@ -550,7 +552,11 @@ class _MetaLine extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tags = resolveTagNames(
+      diary.tagIds,
+      ref.watch(tagCatalogProvider).value?.byId ?? const {},
+    ).map((entry) => entry.name);
     final colors = context.theme.colors;
     final onVariant = colors.onSurfaceVariant;
     final style = context.theme.typography.labelSmall.onSurfaceVariant;
@@ -617,14 +623,14 @@ class _MetaLine extends StatelessWidget {
           const SizedBox(width: 6),
           DiarySyncBadge(state: syncState),
         ],
-        if (diary.tags.isNotEmpty)
+        if (tags.isNotEmpty)
           // 不限宽会把左边 Expanded 压到 0 导致 RenderFlex 溢出
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _kTagAreaMax),
             child: Row(
               mainAxisSize: .min,
               children: [
-                for (final tag in diary.tags.take(2))
+                for (final tag in tags.take(2))
                   Flexible(
                     child: Padding(
                       padding: const .only(left: 7),

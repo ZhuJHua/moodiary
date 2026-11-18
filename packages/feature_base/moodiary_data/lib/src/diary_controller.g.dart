@@ -50,7 +50,7 @@ final class DiaryControllerProvider
   }
 }
 
-String _$diaryControllerHash() => r'1ec0634998c20f62d500c52cc888e8bf45feb524';
+String _$diaryControllerHash() => r'3f5c504c898f0f4139f5a7476a5772c1ed281c0e';
 
 final class DiaryControllerFamily extends $Family
     with

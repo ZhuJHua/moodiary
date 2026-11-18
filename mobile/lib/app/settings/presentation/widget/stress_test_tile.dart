@@ -173,7 +173,6 @@ class _StressTestTileState extends State<StressTestTile> {
       imageName: const [],
       audioName: const [],
       videoName: const [],
-      tags: const [],
       type: DiaryType.tiptap.value,
     );
   }

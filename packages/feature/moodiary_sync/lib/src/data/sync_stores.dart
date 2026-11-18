@@ -31,6 +31,13 @@ abstract interface class SyncCategoryStore {
   Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false});
 }
 
+abstract interface class SyncTagStore {
+  Future<List<String>> adoptLegacyTags(
+    List<String> names, {
+    bool fromSync = true,
+  });
+}
+
 abstract interface class SyncPlaceStore {
   Future<List<Place>> getAllPlacesForSync();
   Future<Place?> getPlaceById(String id);
@@ -82,7 +89,8 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   late final _repo = getIt<CategoryRepository>();
 
   @override
-  Future<List<Category>> getAllCategoriesForSync() => _repo.getAllCategories();
+  Future<List<Category>> getAllCategoriesForSync() =>
+      _repo.getAllCategoriesForSync();
 
   @override
   Future<Category?> getCategoryById(String id) => _repo.getCategoryById(id);
@@ -94,6 +102,17 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   @override
   Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false}) =>
       _repo.tombstoneCategoryForSync(id, fromSync: fromSync);
+}
+
+class RepoSyncTagStore implements SyncTagStore {
+  late final _repo = getIt<TagRepository>();
+
+  @override
+  Future<List<String>> adoptLegacyTags(
+    List<String> names, {
+    bool fromSync = true,
+  }) async =>
+      names.isEmpty ? [] : _repo.adoptLegacyTags(names, fromSync: fromSync);
 }
 
 class RepoSyncPlaceStore implements SyncPlaceStore {
