@@ -133,6 +133,7 @@
   "meCalendar": "日历",
   "sectionFeature": "功能",
   "assistantEntry": "智能助手",
+  "assistantStatusOff": "已关闭",
   "stressTitle": "压测数据（调试）",
   "stressSubtitle": "批量生成或清除随机双链日记，用于图谱性能测试",
   "stressDialogTitle": "压测数据",

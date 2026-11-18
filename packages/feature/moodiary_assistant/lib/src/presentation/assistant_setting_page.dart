@@ -22,13 +22,39 @@ class AssistantSettingPage extends StatelessWidget {
       appBar: AppBar(title: Text(context.l10n.assistant.settingTitle)),
       body: Padding(
         padding: const .symmetric(horizontal: 8.0),
-        child: CustomScrollView(
-          slivers: [
-            const _ProviderSection(),
-            const _PersonalSection(),
-            const _ToolSection(),
-            SliverGap(context.safeBottom),
-          ],
+        child: ValueListenableBuilder<bool>(
+          valueListenable: MoodiaryKVs.assistantEnabled.getNotifier(),
+          builder: (context, enabled, _) => CustomScrollView(
+            slivers: [
+              MSliverSettingGroup(
+                children: [
+                  SettingSwitchListTile(
+                    secondary: const Icon(LucideIcons.bot),
+                    title: context.l10n.assistant.enableAssistant,
+                    subtitle: enabled
+                        ? null
+                        : context.l10n.assistant.entryPointsHidden,
+                    value: enabled,
+                    onChanged: MoodiaryKVs.assistantEnabled.set,
+                  ),
+                ],
+              ),
+              SliverOpacity(
+                opacity: enabled ? 1 : context.theme.states.disabledOpacity,
+                sliver: SliverIgnorePointer(
+                  ignoring: !enabled,
+                  sliver: const SliverMainAxisGroup(
+                    slivers: [
+                      _ProviderSection(),
+                      _PersonalSection(),
+                      _ToolSection(),
+                    ],
+                  ),
+                ),
+              ),
+              SliverGap(context.safeBottom),
+            ],
+          ),
         ),
       ),
     );

@@ -678,12 +678,17 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                   onPressed: _enterEdit,
                 ),
               if (diary != null && _mode == .read) ...[
-                IconButton(
-                  tooltip: context.l10n.diary.askAssistant,
-                  icon: const Icon(LucideIcons.botMessageSquare),
-                  onPressed: () =>
-                      AssistantConversationRoute(citedDiaryId: diary.id)
-                          .push(context),
+                ValueListenableBuilder<bool>(
+                  valueListenable: MoodiaryKVs.assistantEnabled.getNotifier(),
+                  builder: (context, enabled, child) =>
+                      enabled ? child! : const SizedBox.shrink(),
+                  child: IconButton(
+                    tooltip: context.l10n.diary.askAssistant,
+                    icon: const Icon(LucideIcons.botMessageSquare),
+                    onPressed: () =>
+                        AssistantConversationRoute(citedDiaryId: diary.id)
+                            .push(context),
+                  ),
                 ),
                 IconButton(
                   tooltip: context.l10n.diary.share,

@@ -133,6 +133,7 @@
   "meCalendar": "Calendar",
   "sectionFeature": "Features",
   "assistantEntry": "AI assistant",
+  "assistantStatusOff": "Off",
   "stressTitle": "Stress-test data (debug)",
   "stressSubtitle": "Generate or remove randomly linked entries for graph performance tests",
   "stressDialogTitle": "Stress-test data",

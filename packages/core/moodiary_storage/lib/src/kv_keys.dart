@@ -84,6 +84,7 @@ enum MoodiaryKVs<T extends Object> {
 
   qweatherApiHost<String>(),
 
+  assistantEnabled<bool>(defaultValue: true),
   assistantActiveProviderId<String>(defaultValue: ''),
 
   assistantDisclaimerAccepted<bool>(defaultValue: false),

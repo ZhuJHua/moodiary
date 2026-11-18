@@ -462,6 +462,9 @@ class Translations$app$zh {
 	/// zh: '智能助手'
 	String get assistantEntry => '智能助手';
 
+	/// zh: '已关闭'
+	String get assistantStatusOff => '已关闭';
+
 	/// zh: '压测数据（调试）'
 	String get stressTitle => '压测数据（调试）';
 
@@ -831,8 +834,32 @@ class Translations$assistant$zh {
 	/// zh: '仍要切换'
 	String get modelSwitchConfirm => '仍要切换';
 
-	/// zh: '还没有历史会话'
-	String get historyEmpty => '还没有历史会话';
+	/// zh: '启用智能助手'
+	String get enableAssistant => '启用智能助手';
+
+	/// zh: '入口已隐藏'
+	String get entryPointsHidden => '入口已隐藏';
+
+	/// zh: '还没有连接模型'
+	String get noModelConnected => '还没有连接模型';
+
+	/// zh: '连接模型'
+	String get connectModel => '连接模型';
+
+	/// zh: '隐藏助手'
+	String get hideAssistant => '隐藏助手';
+
+	/// zh: '隐藏智能助手？'
+	String get hideAssistantTitle => '隐藏智能助手？';
+
+	/// zh: '可在 设置 › 智能助手 中重新开启'
+	String get hideAssistantMessage => '可在 设置 › 智能助手 中重新开启';
+
+	/// zh: '已隐藏智能助手'
+	String get assistantHidden => '已隐藏智能助手';
+
+	/// zh: '还没有对话'
+	String get historyEmpty => '还没有对话';
 
 	/// zh: '今天'
 	String get historyToday => '今天';
@@ -1592,6 +1619,12 @@ class Translations$common$zh {
 
 	/// zh: '取消'
 	String get cancel => '取消';
+
+	/// zh: '隐藏'
+	String get hide => '隐藏';
+
+	/// zh: '撤销'
+	String get undo => '撤销';
 
 	/// zh: '更多'
 	String get more => '更多';

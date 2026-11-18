@@ -8,28 +8,29 @@ import 'package:moodiary_mobile/app/home/diary_home_page.dart'
     show DiaryHomePage;
 import 'package:moodiary_mobile/app/me/me_page.dart' show MePage;
 import 'package:moodiary_router/moodiary_router.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
 import 'mood_upgrade_notice.dart';
 
 enum _ShellTab { diary, assistant, me }
 
-List<MNavDestination> _navDestinations(BuildContext context) {
+MNavDestination _navDestination(BuildContext context, _ShellTab tab) {
   final l10n = context.l10n;
-  return [
-    MNavDestination(
+  return switch (tab) {
+    .diary => MNavDestination(
       icon: const Icon(LucideIcons.bookText),
       label: l10n.app.homeNavigatorDiary,
     ),
-    MNavDestination(
+    .assistant => MNavDestination(
       icon: const Icon(LucideIcons.astroid),
       label: l10n.app.homeNavigatorAssistant,
     ),
-    MNavDestination(
+    .me => MNavDestination(
       icon: const Icon(LucideIcons.circleUser),
       label: l10n.app.homeNavigatorMe,
     ),
-  ];
+  };
 }
 
 class MobileRootShell extends ConsumerStatefulWidget {
@@ -89,20 +90,31 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
   @override
   Widget build(BuildContext context) {
     final selecting = ref.watch(diarySelectionProvider).isNotEmpty;
-    final drawerUsable = _tab == .diary && !selecting;
-    return Scaffold(
-      key: _scaffoldKey,
-      extendBody: true,
-      drawer: drawerUsable ? const CategoryDrawer() : null,
-      drawerEnableOpenDragGesture: drawerUsable,
-      body: MLazyIndexedStack(index: _tab.index, children: _pages),
-      bottomNavigationBar: MNavBar(
-        selectedIndex: _tab.index,
-        onDestinationSelected: (i) =>
-            setState(() => _tab = _ShellTab.values[i]),
-        destinations: _navDestinations(context),
-        action: _navAction(context),
-      ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: MoodiaryKVs.assistantEnabled.getNotifier(),
+      builder: (context, enabled, _) {
+        final tabs = enabled
+            ? _ShellTab.values
+            : const [_ShellTab.diary, _ShellTab.me];
+        if (!enabled && _tab == .assistant) _tab = .diary;
+        final drawerUsable = _tab == .diary && !selecting;
+        return Scaffold(
+          key: _scaffoldKey,
+          extendBody: true,
+          drawer: drawerUsable ? const CategoryDrawer() : null,
+          drawerEnableOpenDragGesture: drawerUsable,
+          body: MLazyIndexedStack(index: _tab.index, children: _pages),
+          bottomNavigationBar: MNavBar(
+            selectedIndex: tabs.indexOf(_tab),
+            onDestinationSelected: (index) =>
+                setState(() => _tab = tabs[index]),
+            destinations: [
+              for (final tab in tabs) _navDestination(context, tab),
+            ],
+            action: _navAction(context),
+          ),
+        );
+      },
     );
   }
 }
