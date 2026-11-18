@@ -383,29 +383,19 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<void> _onAddTag() async {
-    final tag = await _editorController.withInputSuspended(
-      () => MAlert.prompt(
-        context,
-        title: l10n.diary.addTag,
-        hintText: l10n.diary.tagNameHint,
-        confirmLabel: l10n.diary.add,
-      ),
-    );
-    if (tag == null || tag.isEmpty || !mounted) return;
-    final name = Tag.normalize(tag);
-    if (name == null) return;
-    final catalog = await ref.read(tagCatalogProvider.future);
-    if (!mounted) return;
     final before = ref.read(_provider).value;
-    if (before == null ||
-        tagIdsWithName(before.tagIds, catalog.byId, name).isNotEmpty) {
+    if (before == null) return;
+    final ids = await _editorController.withInputSuspended(
+      () => TagPickerSheet.show(context, tagIds: before.tagIds),
+    );
+    if (ids == null || !mounted) return;
+    final current = ref.read(_provider).value;
+    if (current == null ||
+        current.id != before.id ||
+        !listEquals(current.tagIds, before.tagIds)) {
       return;
     }
-    final ids = await getIt<TagRepository>().ensureTags([tag]);
-    if (!mounted || ids.isEmpty) return;
-    final current = ref.read(_provider).value;
-    if (current == null || current.tagIds.contains(ids.first)) return;
-    ref.read(_provider.notifier).changeTags([...current.tagIds, ids.first]);
+    ref.read(_provider.notifier).changeTags(ids);
     _markDirty();
     _scheduleAutoSave();
   }

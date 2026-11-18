@@ -747,9 +747,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get mapTiandituKey => 'Tianditu key';
 	@override String get mapTiandituNoKey => 'Tianditu needs a key';
 	@override String get mapLoadFailed => 'Map failed to load';
-	@override String get addTag => 'Add a tag';
-	@override String get tagNameHint => 'Tag name';
-	@override String get add => 'Add';
 	@override String get weatherFailed => 'Could not fetch the weather — try again later';
 	@override String weatherFetched({required Object weather}) => 'Weather: ${weather}';
 	@override String get weatherAuto => 'Fetch automatically';
@@ -830,6 +827,16 @@ class _Translations$editor$en extends Translations$editor$zh {
 	// Translations
 	@override String get audioFileError => 'Audio file error';
 	@override String get pickCategory => 'Pick a category';
+	@override String get categoryPickerSubtitle => 'Tap a category to save';
+	@override String createCategory({required Object name}) => 'Create category “${name}”';
+	@override String get pickTags => 'Tags';
+	@override String tagPickerSubtitle({required Object count}) => 'Select multiple · ${count} selected';
+	@override String get tagSearchHint => 'Search or create a tag';
+	@override String get tagSelected => 'Selected';
+	@override String get tagRecent => 'Recently used';
+	@override String pickerMatches({required Object count}) => 'Matches · ${count}';
+	@override String createTag({required Object name}) => 'Create tag “${name}”';
+	@override String get createTagHint => 'Saved when you tap Done';
 	@override String get noCategory => 'No category';
 	@override String get migrationTitle => 'Upgrade data migration';
 	@override String get migrationIntro => 'Version 2.8.0 uses a new data engine and editor. A one-time migration is required before you can continue.';
