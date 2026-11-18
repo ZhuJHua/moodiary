@@ -75,6 +75,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get homeNavigatorAssistant => 'Assistant';
 	@override String get homePageAddDiaryButton => 'Create a diary';
 	@override String get categoryDeletedReset => 'Category deleted, showing all diaries';
+	@override String get tagFilterReset => 'Tag renamed or deleted, showing all diaries';
 	@override String get homeNavigatorSetting => 'Setting';
 	@override String get languageSystem => 'Follow System';
 	@override String get languageSimplifiedChinese => '简体中文';
@@ -603,6 +604,7 @@ class _Translations$common$en extends Translations$common$zh {
 	@override String get untitled => 'Untitled';
 	@override String get retry => 'Retry';
 	@override String categoryCount({required Object count}) => '${count} categories';
+	@override String tagCount({required Object count}) => '${count}';
 	@override String get fileName => 'File name';
 	@override String get close => 'Close';
 	@override String get appName => 'Moodiary';
@@ -681,7 +683,10 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get graphLinks => 'Links';
 	@override String get graphNoLocalLinks => 'This diary has no links yet';
 	@override String get categorySearchHint => 'Search categories';
+	@override String get drawerSearchHint => 'Search categories and tags';
+	@override String get drawerNoMatch => 'No matching categories or tags';
 	@override String get categoryAllDiary => 'All diaries';
+	@override String get tags => 'Tags';
 	@override String get categoryNoMatch => 'No matching categories';
 	@override String get categorySyncingPlaceholder => 'Syncing category…';
 	@override String get categoryManageEntry => 'Manage categories';

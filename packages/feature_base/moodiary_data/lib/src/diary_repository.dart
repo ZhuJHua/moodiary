@@ -453,20 +453,39 @@ class DiaryRepository {
     'WHERE c.id = diaries.category_id AND c.deleted = 0))',
   );
 
+  Expression<bool>? _homeFilter(
+    String? categoryId,
+    bool uncategorized,
+    String? tagName,
+  ) {
+    assert(!(uncategorized && categoryId != null));
+    assert(tagName == null || (!uncategorized && categoryId == null));
+    if (uncategorized) return _uncategorized;
+    if (categoryId != null) return _db.diaries.categoryId.equals(categoryId);
+    if (tagName == null) return null;
+    final links = _db.diaryTags;
+    final tags = _db.tags;
+    return existsQuery(
+      _db.select(links).join([innerJoin(tags, tags.id.equalsExp(links.tagId))])
+        ..where(
+          links.diaryId.equalsExp(_db.diaries.id) &
+              tags.deleted.equals(0) &
+              tags.name.equals(tagName),
+        ),
+    );
+  }
+
   Future<List<Diary>> getDiaryByCategory({
     String? categoryId,
     bool uncategorized = false,
+    String? tagName,
     int? offset,
     int? limit,
     DiarySort sort = .timeDesc,
   }) async {
-    assert(!(uncategorized && categoryId != null));
     final q = _visible();
-    if (uncategorized) {
-      q.where((_) => _uncategorized);
-    } else if (categoryId != null) {
-      q.where((d) => d.categoryId.equals(categoryId));
-    }
+    final filter = _homeFilter(categoryId, uncategorized, tagName);
+    if (filter != null) q.where((_) => filter);
     _orderBy(q, sort);
     if (limit != null) q.limit(limit, offset: offset);
     return _assemble(await q.get());
@@ -475,20 +494,17 @@ class DiaryRepository {
   Future<Map<DateTime, int>> diaryCountByMonth({
     String? categoryId,
     bool uncategorized = false,
+    String? tagName,
     DiarySort sort = .timeDesc,
   }) async {
-    assert(!(uncategorized && categoryId != null));
     final col = sort == .lastModifiedDesc
         ? _db.diaries.lastModified
         : _db.diaries.time;
     final q = _db.selectOnly(_db.diaries)
       ..addColumns([col])
       ..where(_db.diaries.show.equals(1));
-    if (uncategorized) {
-      q.where(_uncategorized);
-    } else if (categoryId != null) {
-      q.where(_db.diaries.categoryId.equals(categoryId));
-    }
+    final filter = _homeFilter(categoryId, uncategorized, tagName);
+    if (filter != null) q.where(filter);
     final counts = <DateTime, int>{};
     for (final row in await q.get()) {
       final local = dbToTime(row.read(col)!).toLocal();
