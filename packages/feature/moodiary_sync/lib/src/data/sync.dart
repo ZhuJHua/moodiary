@@ -48,12 +48,14 @@ abstract class IRemoteSyncBackend implements RemoteObjectStore {
 class SyncCounts {
   final int diaries;
   final int categories;
+  final int tags;
   final int places;
   final int mediaFiles;
 
   const SyncCounts({
     this.diaries = 0,
     this.categories = 0,
+    this.tags = 0,
     this.places = 0,
     this.mediaFiles = 0,
   });
@@ -61,13 +63,19 @@ class SyncCounts {
   static const SyncCounts zero = SyncCounts();
 
   bool get isEmpty =>
-      diaries == 0 && categories == 0 && places == 0 && mediaFiles == 0;
+      diaries == 0 &&
+      categories == 0 &&
+      tags == 0 &&
+      places == 0 &&
+      mediaFiles == 0;
 
-  bool get hasEntryChanges => diaries > 0 || categories > 0 || places > 0;
+  bool get hasEntryChanges =>
+      diaries > 0 || categories > 0 || tags > 0 || places > 0;
 
   SyncCounts operator +(SyncCounts other) => SyncCounts(
     diaries: diaries + other.diaries,
     categories: categories + other.categories,
+    tags: tags + other.tags,
     places: places + other.places,
     mediaFiles: mediaFiles + other.mediaFiles,
   );
@@ -102,6 +110,7 @@ class SyncReport {
 
   int get diaryCount => pushed.diaries + pulled.diaries;
   int get categoryCount => pushed.categories + pulled.categories;
+  int get tagCount => pushed.tags + pulled.tags;
 
   bool get changedNothing => pushed.isEmpty && pulled.isEmpty;
 
@@ -112,10 +121,12 @@ class SyncReport {
         l10n.sync.summaryUploadedDiaries(count: pushed.diaries),
       if (pushed.categories > 0)
         l10n.sync.summaryUploadedCategories(count: pushed.categories),
+      if (pushed.tags > 0) l10n.sync.summaryUploadedTags(count: pushed.tags),
       if (pulled.diaries > 0)
         l10n.sync.summaryDownloadedDiaries(count: pulled.diaries),
       if (pulled.categories > 0)
         l10n.sync.summaryDownloadedCategories(count: pulled.categories),
+      if (pulled.tags > 0) l10n.sync.summaryDownloadedTags(count: pulled.tags),
       if (media > 0) l10n.sync.summaryMedia(count: media),
     ];
     final clean = failed == 0 && !cancelled;
@@ -129,9 +140,9 @@ class SyncReport {
 
   @override
   String toString() =>
-      '上行 日记 ${pushed.diaries} / 分类 ${pushed.categories} / '
+      '上行 日记 ${pushed.diaries} / 分类 ${pushed.categories} / 标签 ${pushed.tags} / '
       '媒体 ${pushed.mediaFiles}；'
-      '下行 日记 ${pulled.diaries} / 分类 ${pulled.categories} / '
+      '下行 日记 ${pulled.diaries} / 分类 ${pulled.categories} / 标签 ${pulled.tags} / '
       '媒体 ${pulled.mediaFiles}'
       '（耗时 ${elapsed.inMilliseconds}ms）'
       '${warning == null ? '' : '\n$warning'}';

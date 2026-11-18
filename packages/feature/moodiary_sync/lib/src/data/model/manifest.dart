@@ -33,7 +33,7 @@ class ManifestEntry {
 }
 
 class SyncManifest {
-  static const int currentVersion = 3;
+  static const int currentVersion = 4;
 
   static const int legacyVersion = 1;
 
@@ -114,11 +114,13 @@ class SyncManifest {
 class SyncKeys {
   static const String diaryPrefix = 'd:';
   static const String categoryPrefix = 'c:';
+  static const String tagPrefix = 't:';
   static const String mediaInfoPrefix = 'm:';
   static const String placePrefix = 'p:';
 
   static String diary(String id) => '$diaryPrefix$id';
   static String category(String id) => '$categoryPrefix$id';
+  static String tag(String id) => '$tagPrefix$id';
   static String mediaInfo(String fileName) => '$mediaInfoPrefix$fileName';
   static String place(String id) => '$placePrefix$id';
 
@@ -131,6 +133,7 @@ class SyncKeys {
   static String diaryObjectPath(String id) => 'diary/$id.json';
 
   static String categoryObjectPath(String id) => 'category/$id.json';
+  static String tagObjectPath(String id) => 'tag/$id.json';
 
   static String placeObjectPath(String id) => 'place/$id.json';
 

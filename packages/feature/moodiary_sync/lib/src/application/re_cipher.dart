@@ -19,6 +19,7 @@ import 'package:path/path.dart' as p;
 class ReCipherReport {
   final int diaryCount;
   final int categoryCount;
+  final int tagCount;
   final int placeCount;
   final int mediaCount;
   final int failed;
@@ -27,6 +28,7 @@ class ReCipherReport {
   const ReCipherReport({
     required this.diaryCount,
     required this.categoryCount,
+    this.tagCount = 0,
     this.placeCount = 0,
     required this.mediaCount,
     required this.failed,
@@ -38,6 +40,7 @@ class ReCipherReport {
     final base = l10n.sync.reCipherSummary(
       diary: diaryCount,
       category: categoryCount,
+      tag: tagCount,
       media: mediaCount,
       ms: elapsed.inMilliseconds,
     );
@@ -69,11 +72,22 @@ class CloudReCipher {
     ReCipherProgress? onProgress,
   }) {
     return IncrementalSyncEngine.runExclusive(
-      () => RemoteLease.protect(
-        backend,
-        () => _run(from: from, to: to, onProgress: onProgress),
-        logger: _logger,
-      ),
+      () => RemoteLease.protect(backend, () async {
+        try {
+          return await _run(from: from, to: to, onProgress: onProgress);
+        } catch (error) {
+          _logger.error(
+            .syncEnd,
+            reason: .aborted,
+            payload: {
+              ..._backendPayload(),
+              'direction': 're-cipher',
+              'error': error.toString(),
+            },
+          );
+          rethrow;
+        }
+      }, logger: _logger),
     );
   }
 
@@ -108,10 +122,20 @@ class CloudReCipher {
     if (mfDecoded is! Map<String, dynamic>) {
       throw SyncException(l10n.sync.errManifestReCipher);
     }
-    final manifest = SyncManifest.fromJson(mfDecoded);
+    var manifest = SyncManifest.fromJson(mfDecoded);
+    var baseline = mfBytes;
+    if (manifest.version < SyncManifest.currentVersion) {
+      manifest = manifest.copyForUpdate();
+      baseline = await _commitManifest(
+        manifest,
+        baseline,
+        SyncCipher.isCipherText(mfBytes) ? from : SyncCipher.plaintext,
+      );
+    }
 
     final diaryIds = <String>[];
     final categoryIds = <String>[];
+    final tagIds = <String>[];
     final placeIds = <String>[];
     final mediaInfoIds = <String>[];
     for (final entry in manifest.entries.entries) {
@@ -120,6 +144,8 @@ class CloudReCipher {
         diaryIds.add(entry.key.substring(SyncKeys.diaryPrefix.length));
       } else if (entry.key.startsWith(SyncKeys.categoryPrefix)) {
         categoryIds.add(entry.key.substring(SyncKeys.categoryPrefix.length));
+      } else if (entry.key.startsWith(SyncKeys.tagPrefix)) {
+        tagIds.add(entry.key.substring(SyncKeys.tagPrefix.length));
       } else if (entry.key.startsWith(SyncKeys.placePrefix)) {
         placeIds.add(entry.key.substring(SyncKeys.placePrefix.length));
       } else if (entry.key.startsWith(SyncKeys.mediaInfoPrefix)) {
@@ -130,6 +156,7 @@ class CloudReCipher {
 
     int diaryCount = 0;
     int categoryCount = 0;
+    int tagCount = 0;
     int placeCount = 0;
     int mediaCount = 0;
     int failed = 0;
@@ -138,6 +165,7 @@ class CloudReCipher {
     int total =
         diaryIds.length +
         categoryIds.length +
+        tagIds.length +
         placeIds.length +
         mediaInfoIds.length;
     void emitProgress(String label) => onProgress?.call(done, total, label);
@@ -145,10 +173,11 @@ class CloudReCipher {
 
     Future<bool?> reEncodeJson(
       String path, {
+      bool requireObject = false,
       void Function(Map<String, dynamic> decoded)? onDecoded,
     }) async {
       final bytes = await backend.readObject(path);
-      if (bytes == null) return null;
+      if (bytes == null) return requireObject ? false : null;
       if (_alreadyConverted(SyncCipher.isCipherText(bytes), from, to)) {
         final converted = await to.decode(bytes);
         if (converted is Map<String, dynamic>) onDecoded?.call(converted);
@@ -211,6 +240,28 @@ class CloudReCipher {
       emitProgress(l10n.sync.stepCategory(id: id));
     }
 
+    for (final id in tagIds) {
+      try {
+        final ok = await reEncodeJson(
+          SyncKeys.tagObjectPath(id),
+          requireObject: true,
+        );
+        if (ok == true) {
+          tagCount++;
+        } else if (ok == false) {
+          failed++;
+        }
+      } catch (e) {
+        failed++;
+        _logger.error(
+          .reCipher,
+          payload: {'tagId': id, 'detail': e.toString()},
+        );
+      }
+      done++;
+      emitProgress(l10n.sync.stepTag(id: id));
+    }
+
     for (final id in placeIds) {
       try {
         final ok = await reEncodeJson(SyncKeys.placeObjectPath(id));
@@ -268,25 +319,7 @@ class CloudReCipher {
     }
 
     emitProgress(l10n.sync.stepManifest);
-    final token =
-        'recipher:${MoodiaryKVs.syncDeviceId.get() ?? ''}:'
-        '${DateTime.now().microsecondsSinceEpoch}:${_seq++}';
-    final updated = manifest.copyForUpdate().withWriteToken(token);
-    final newMfBytes = await to.encode(updated.toJson());
-    if (!listEquals(await backend.readObject(SyncKeys.manifestPath), mfBytes)) {
-      throw SyncException(l10n.sync.errManifestRace, kind: .manifestRace);
-    }
-    await backend.writeObject(SyncKeys.manifestPath, newMfBytes);
-    final verifyBytes = await backend.readObject(SyncKeys.manifestPath);
-    final verifyDecoded = verifyBytes == null
-        ? null
-        : await to.decode(verifyBytes);
-    final verifyToken = verifyDecoded is Map<String, dynamic>
-        ? SyncManifest.fromJson(verifyDecoded).writeToken
-        : null;
-    if (verifyToken != token) {
-      throw SyncException(l10n.sync.errManifestRace, kind: .manifestRace);
-    }
+    await _commitManifest(manifest, baseline, to);
 
     sw.stop();
     _logger.info(
@@ -296,6 +329,7 @@ class CloudReCipher {
         'direction': 're-cipher',
         'diaryCount': diaryCount,
         'categoryCount': categoryCount,
+        'tagCount': tagCount,
         'placeCount': placeCount,
         'mediaCount': mediaCount,
         'failed': failed,
@@ -306,11 +340,42 @@ class CloudReCipher {
     return ReCipherReport(
       diaryCount: diaryCount,
       categoryCount: categoryCount,
+      tagCount: tagCount,
       placeCount: placeCount,
       mediaCount: mediaCount,
       failed: failed,
       elapsed: sw.elapsed,
     );
+  }
+
+  Future<Uint8List> _commitManifest(
+    SyncManifest manifest,
+    Uint8List baseline,
+    SyncCipher cipher,
+  ) async {
+    final token =
+        'recipher:${MoodiaryKVs.syncDeviceId.get() ?? ''}:'
+        '${DateTime.now().microsecondsSinceEpoch}:${_seq++}';
+    final updated = manifest.withWriteToken(token);
+    final newMfBytes = await cipher.encode(updated.toJson());
+    if (!listEquals(
+      await backend.readObject(SyncKeys.manifestPath),
+      baseline,
+    )) {
+      throw SyncException(l10n.sync.errManifestRace, kind: .manifestRace);
+    }
+    await backend.writeObject(SyncKeys.manifestPath, newMfBytes);
+    final verifyBytes = await backend.readObject(SyncKeys.manifestPath);
+    final verifyDecoded = verifyBytes == null
+        ? null
+        : await cipher.decode(verifyBytes);
+    final verifyToken = verifyDecoded is Map<String, dynamic>
+        ? SyncManifest.fromJson(verifyDecoded).writeToken
+        : null;
+    if (verifyToken != token) {
+      throw SyncException(l10n.sync.errManifestRace, kind: .manifestRace);
+    }
+    return newMfBytes;
   }
 
   Future<bool> _reEncryptMediaByFile(

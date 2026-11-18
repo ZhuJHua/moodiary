@@ -30,6 +30,7 @@ void main() {
         logger: logger,
         diaryStore: FakeDiaryStore(const []),
         categoryStore: FakeCategoryStore(const []),
+        tagStore: FakeTagStore(),
         placeStore: FakePlaceStore(),
         tombstoneStore: FakeTombstoneStore(),
         mediaFiles: FakeMediaFiles(),
