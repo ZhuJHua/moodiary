@@ -462,7 +462,10 @@ class DiaryRepository {
     assert(tagName == null || (!uncategorized && categoryId == null));
     if (uncategorized) return _uncategorized;
     if (categoryId != null) return _db.diaries.categoryId.equals(categoryId);
-    if (tagName == null) return null;
+    return tagName == null ? null : _hasLiveTag(tagName);
+  }
+
+  Expression<bool> _hasLiveTag(String tagName) {
     final links = _db.diaryTags;
     final tags = _db.tags;
     return existsQuery(
@@ -802,14 +805,14 @@ class DiaryRepository {
       _db.customSelect("SELECT jieba_query('预热')").getSingle();
 
   Expression<bool> _searchPredicate(
-    DiaryFts fts,
     Diaries d,
-    String match,
     String? categoryId,
+    String? tagName,
     DateTime? start,
     DateTime? end,
   ) {
-    var where = fts.match(match) & d.show.equals(1);
+    var where = d.show.equals(1);
+    if (tagName != null) where = where & _hasLiveTag(tagName);
     if (categoryId != null) where = where & d.categoryId.equals(categoryId);
     if (start != null) {
       where = where & d.time.isBiggerOrEqualValue(dbTime(start));
@@ -818,22 +821,44 @@ class DiaryRepository {
     return where;
   }
 
+  // 截断不能落在媒体标记中间，否则卡片认不出媒体。
+  static String _leadingExcerpt(String text, [int length = 120]) {
+    final runes = text.runes.toList();
+    if (runes.length <= length) return text;
+    var end = length;
+    final lastOpen = runes
+        .sublist(0, end)
+        .lastIndexWhere((r) => r > 0xFDD0 && r <= 0xFDEF);
+    if (lastOpen >= 0 && !runes.sublist(lastOpen, end).contains(0xFDD0)) {
+      final close = runes.indexOf(0xFDD0, end);
+      end = close < 0 ? runes.length : close + 1;
+    }
+    if (end >= runes.length) return text;
+    return '${String.fromCharCodes(runes.sublist(0, end))}…';
+  }
+
   /// 不取 highlight / snippet，所以可以对全量算。
   Future<int> countSearchDiaries({
     required String query,
     String? categoryId,
+    String? tagName,
     DateTime? start,
     DateTime? end,
   }) async {
     final match = await _matchExpression(query);
-    if (match.isEmpty) return 0;
+    if (match.isEmpty && tagName == null) return 0;
     final fts = _db.diaryFts;
     final d = _db.diaries;
     final count = countAll();
-    final select = _db.selectOnly(fts)
+    final predicate = _searchPredicate(d, categoryId, tagName, start, end);
+    final select = _db.selectOnly(d)
       ..addColumns([count])
-      ..join([innerJoin(d, d.rid.equalsExp(_ftsRowId), useColumns: false)])
-      ..where(_searchPredicate(fts, d, match, categoryId, start, end));
+      ..where(predicate);
+    if (match.isNotEmpty) {
+      select
+        ..join([innerJoin(fts, d.rid.equalsExp(_ftsRowId), useColumns: false)])
+        ..where(fts.match(match));
+    }
     return (await select.getSingle()).read(count) ?? 0;
   }
 
@@ -841,6 +866,7 @@ class DiaryRepository {
   Future<List<DiarySearchHit>> searchDiaries({
     required String query,
     String? categoryId,
+    String? tagName,
     DateTime? start,
     DateTime? end,
     SearchSort sort = .relevance,
@@ -848,10 +874,23 @@ class DiaryRepository {
     int offset = 0,
   }) async {
     final match = await _matchExpression(query);
-    if (match.isEmpty) return const [];
-
     final fts = _db.diaryFts;
     final d = _db.diaries;
+    final predicate = _searchPredicate(d, categoryId, tagName, start, end);
+    if (match.isEmpty) {
+      if (tagName == null) return const [];
+      final select = _db.select(d)..where((_) => predicate);
+      _orderBy(select, sort == .timeAsc ? .timeAsc : .timeDesc);
+      if (limit >= 0 || offset > 0) select.limit(limit, offset: offset);
+      return [
+        for (final diary in await _assemble(await select.get()))
+          DiarySearchHit(
+            diary: diary,
+            titleHighlight: diary.title,
+            excerpt: _leadingExcerpt(diary.contentText),
+          ),
+      ];
+    }
     final titleHit = fts.highlight(
       fts.title,
       before: searchHitStart,
@@ -868,7 +907,7 @@ class DiaryRepository {
     final select = _db.selectOnly(fts)
       ..addColumns([titleHit, bodyHit])
       ..join([innerJoin(d, d.rid.equalsExp(_ftsRowId), useColumns: true)])
-      ..where(_searchPredicate(fts, d, match, categoryId, start, end));
+      ..where(fts.match(match) & predicate);
 
     select.orderBy(switch (sort) {
       .relevance => [

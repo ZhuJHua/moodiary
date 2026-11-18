@@ -1743,6 +1743,9 @@ class Translations$diary$zh {
 	/// zh: '全部分类'
 	String get allCategories => '全部分类';
 
+	/// zh: '全部标签'
+	String get allTags => '全部标签';
+
 	/// zh: '全部'
 	String get categoryAll => '全部';
 
