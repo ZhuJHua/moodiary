@@ -144,6 +144,10 @@ class StorageCandidate {
     this.imageStem,
     this.modified,
   });
+
+  /// Name shown in cleanup previews: the referenced media name, the source
+  /// stem of an image derivative, or the file's own name.
+  String get fileName => mediaName ?? imageStem ?? p.basename(path);
 }
 
 class StorageCandidates {

@@ -35,13 +35,44 @@ String _areaName(BuildContext context, int index) => switch (index) {
   _ => context.l10n.storage.file,
 };
 
-String _itemName(BuildContext context, Reclaimable item) => switch (item.kind) {
-  .retiredModel => context.l10n.storage.retiredMood,
-  .unusedModel => context.l10n.storage.unusedModel,
-  .partialDownload => context.l10n.storage.partial,
-  .cache => context.l10n.storage.cache,
-  .unusedMedia => context.l10n.storage.unusedMedia,
-  .legacyBackup => context.l10n.storage.legacy,
+String _itemName(BuildContext context, StorageCleanupKind kind) =>
+    switch (kind) {
+      .retiredModel => context.l10n.storage.retiredMood,
+      .unusedModel => context.l10n.storage.unusedModel,
+      .partialDownload => context.l10n.storage.partial,
+      .cache => context.l10n.storage.cache,
+      .unusedMedia => context.l10n.storage.unusedMedia,
+      .legacyBackup => context.l10n.storage.legacy,
+    };
+
+bool _isThumbnail(StorageCandidate file) =>
+    file.imageStem != null ||
+    (file.mediaName?.startsWith('thumbnail-') ?? false);
+
+String _candidateType(BuildContext context, StorageCandidate file) {
+  final l10n = context.l10n;
+  if (_isThumbnail(file)) return l10n.storage.thumbnail;
+  return switch (file.area) {
+    .image => l10n.media.typeImage,
+    .audio => l10n.common.audio,
+    .video => l10n.common.video,
+    .file => l10n.media.typeFile,
+    .cache => l10n.storage.cache,
+    .model => l10n.storage.model,
+    .legacyBackups => l10n.storage.legacy,
+    _ => l10n.storage.other,
+  };
+}
+
+IconData _candidateIcon(StorageCandidate file) => switch (file.area) {
+  .image => LucideIcons.image,
+  .audio => LucideIcons.music,
+  .video => LucideIcons.film,
+  .file => LucideIcons.paperclip,
+  .cache => LucideIcons.hardDrive,
+  .model => LucideIcons.cpu,
+  .legacyBackups => LucideIcons.database,
+  _ => LucideIcons.file,
 };
 
 class _StorageView {
@@ -178,7 +209,7 @@ class StoragePage extends ConsumerWidget {
             children: [
               for (final item in confirmedItems)
                 _SheetLine(
-                  name: _itemName(sheetContext, item),
+                  name: _itemName(sheetContext, item.kind),
                   bytes: item.bytes,
                 ),
               const MSettingDivider(),
@@ -192,7 +223,7 @@ class StoragePage extends ConsumerWidget {
                 title: sheetContext.l10n.storage.warning(
                   names: confirmedItems
                       .where((i) => i.safety == .careful)
-                      .map((i) => _itemName(sheetContext, i))
+                      .map((i) => _itemName(sheetContext, i.kind))
                       .join(sheetContext.l10n.storage.listSeparator),
                 ),
               ),
@@ -408,6 +439,7 @@ class _ReclaimTile extends ConsumerWidget {
   final Reclaimable item;
   final _StorageView state;
   const _ReclaimTile({required this.item, required this.state});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final enabled = item.available && !state.cleaning;
@@ -430,13 +462,149 @@ class _ReclaimTile extends ConsumerWidget {
         : item.status.isLoading
         ? context.l10n.storage.counting
         : parts.join(' · ');
-    return SettingCheckboxListTile(
-      title: _itemName(context, item),
+    final tile = SettingCheckboxListTile(
+      title: _itemName(context, item.kind),
       subtitle: subtitle,
       value: state.checked.contains(item.kind),
       onChanged: enabled
           ? (_) => ref.read(storageSelectionProvider.notifier).toggle(item.kind)
           : null,
+    );
+    final candidates = item.candidates;
+    // 谨慎清理的项目删除后无法恢复，先给用户一个只读的明细入口，
+    // 看清具体会删掉哪些文件，而不是只看到“删除后无法恢复”。
+    if (item.safety != .careful || candidates == null) return tile;
+    return Row(
+      children: [
+        Expanded(child: tile),
+        IconButton(
+          tooltip: context.l10n.storage.details,
+          iconSize: 20,
+          visualDensity: .compact,
+          icon: Icon(
+            LucideIcons.list,
+            color: context.theme.colors.onSurfaceVariant,
+          ),
+          onPressed: () => MSheet.show<void>(
+            context,
+            builder: (_) =>
+                _CleanupFilesSheet(kind: item.kind, candidates: candidates),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 谨慎清理项目的只读文件明细。
+class _CleanupFilesSheet extends StatelessWidget {
+  final StorageCleanupKind kind;
+  final StorageCandidates candidates;
+
+  const _CleanupFilesSheet({required this.kind, required this.candidates});
+
+  static const double _kRowExtent = 56;
+  static const double _kMaxListExtent = 360;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final files = List<StorageCandidate>.of(candidates.files)
+      ..sort((a, b) {
+        final area = a.area.index.compareTo(b.area.index);
+        if (area != 0) return area;
+        final name = a.fileName.toLowerCase().compareTo(
+          b.fileName.toLowerCase(),
+        );
+        return name != 0 ? name : a.path.compareTo(b.path);
+      });
+    // 固定高度让列表按需构建：未使用的媒体可能有上千个文件，一次性构建会卡住。
+    final maxExtent = (MediaQuery.sizeOf(context).height * .42).clamp(
+      112.0,
+      _kMaxListExtent,
+    );
+    final extent = (files.length * _kRowExtent)
+        .clamp(_kRowExtent, maxExtent)
+        .toDouble();
+    return MSheetScaffold<void>(
+      title: _itemName(context, kind),
+      subtitle:
+          '${l10n.storage.fileCount(count: files.length)} · '
+          '${storageSize(candidates.bytes)}',
+      icon: LucideIcons.list,
+      actions: [MAction(label: l10n.common.close)],
+      child: Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .stretch,
+        children: [
+          MNoticeItem(
+            icon: LucideIcons.triangleAlert,
+            title: l10n.storage.irreversible,
+            body: l10n.storage.detailsHint,
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: extent,
+            child: ListView.separated(
+              padding: .zero,
+              itemCount: files.length,
+              separatorBuilder: (_, _) => const MSettingDivider(),
+              itemBuilder: (_, index) => _CandidateRow(file: files[index]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CandidateRow extends StatelessWidget {
+  final StorageCandidate file;
+
+  const _CandidateRow({required this.file});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Padding(
+      padding: const .symmetric(horizontal: 4, vertical: 8),
+      child: Row(
+        children: [
+          Icon(
+            _candidateIcon(file),
+            size: 20,
+            color: theme.colors.onSurfaceVariant,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: .start,
+              mainAxisSize: .min,
+              children: [
+                Text(
+                  file.fileName,
+                  maxLines: 1,
+                  overflow: .ellipsis,
+                  style: theme.typography.bodyMedium.onSurface,
+                ),
+                Text(
+                  _candidateType(context, file),
+                  maxLines: 1,
+                  overflow: .ellipsis,
+                  style: theme.typography.labelSmall.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            storageSize(file.bytes),
+            style: theme.typography.bodySmall.onSurfaceVariant.copyWith(
+              fontFeatures: const [.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
