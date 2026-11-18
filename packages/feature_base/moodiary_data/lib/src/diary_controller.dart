@@ -4,6 +4,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'category_repository.dart';
 import 'diary_repository.dart';
 import 'loadmore.dart';
 
@@ -51,6 +52,7 @@ List<Diary> applyDiaryEvent(
 @riverpod
 class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   late final _repository = getIt<DiaryRepository>();
+  Set<String> _activeCategories = {};
 
   DiarySort get _sort => .getType(MoodiaryKVs.homeSortMode.get()!);
 
@@ -65,6 +67,18 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
     void onSortChanged() => refresh();
     sortNotifier.addListener(onSortChanged);
     ref.onDispose(() => sortNotifier.removeListener(onSortChanged));
+    if (uncategorized) {
+      final buildRef = ref;
+      final categories = getIt<CategoryRepository>();
+      final sub = categories.categoryEvents.listen(
+        (_) => buildRef.invalidateSelf(),
+      );
+      buildRef.onDispose(sub.cancel);
+      final active = await categories.getAllCategories();
+      if (!buildRef.mounted) return [];
+      _activeCategories = {for (final c in active) c.id};
+      return init(refreshFirst: true);
+    }
     return init();
   }
 
@@ -92,7 +106,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
         belongs: (d) =>
             d.show &&
             (uncategorized
-                ? d.categoryId == null
+                ? !_activeCategories.contains(d.categoryId)
                 : categoryId == null || d.categoryId == categoryId),
         compare: diarySortComparator(_sort),
         mayHaveMore: !noMore,

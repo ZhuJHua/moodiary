@@ -93,6 +93,7 @@ class ExportService {
     final workDir = await _freshWorkDir();
     try {
       final categories = await _categoryNames(diaries);
+      final tags = await _tags(diaries);
       final places = await _places(diaries);
       final media = _MediaStage(
         workDir,
@@ -108,6 +109,7 @@ class ExportService {
           await _toExportDoc(
             diaries[i],
             categories,
+            tags,
             places,
             media,
             includePosition: settings.common.includePosition,
@@ -188,12 +190,14 @@ class ExportService {
     required bool includePosition,
   }) async {
     final categories = await _categoryNames(diaries);
+    final tags = await _tags(diaries);
     final places = await _places(diaries);
     return [
       for (final diary in diaries)
         await _toExportDoc(
           diary,
           categories,
+          tags,
           places,
           null,
           includePosition: includePosition,
@@ -204,6 +208,7 @@ class ExportService {
   static Future<ExportDoc> _toExportDoc(
     Diary diary,
     Map<String, String> categories,
+    Map<String, Tag> tags,
     Map<String, Place> places,
     _MediaStage? media, {
     required bool includePosition,
@@ -226,12 +231,19 @@ class ExportService {
       mood: diary.mood,
       weather: diary.weather,
       place: includePosition ? places[diary.placeId] : null,
-      tags: diary.tags,
+      tags: [
+        for (final entry in resolveTagNames(diary.tagIds, tags)) entry.name,
+      ],
       categoryName: categories[diary.categoryId],
       resolvePath: AppFiles.getRealPath,
     );
 
     return media == null ? doc : media.apply(doc);
+  }
+
+  static Future<Map<String, Tag>> _tags(List<Diary> diaries) async {
+    final ids = diaries.expand((diary) => diary.tagIds).toSet();
+    return ids.isEmpty ? {} : getIt<TagRepository>().getTagsByIds(ids);
   }
 
   static Future<Map<String, String>> _categoryNames(List<Diary> diaries) async {
@@ -244,7 +256,9 @@ class ExportService {
     final names = <String, String>{};
     for (final id in ids) {
       final category = await repository.getCategoryById(id);
-      if (category != null) names[id] = category.categoryName;
+      if (category != null && !category.deleted) {
+        names[id] = category.categoryName;
+      }
     }
     return names;
   }

@@ -19,6 +19,7 @@ class MoodiaryMcpPackageModule extends _i526.MicroPackageModule {
       () => _i952.McpService(
         gh<_i691.DiaryRepository>(),
         gh<_i691.CategoryRepository>(),
+        gh<_i691.TagRepository>(),
         gh<_i691.MoodInsightsRepository>(),
         gh<_i691.EmbedIndexService>(),
       ),

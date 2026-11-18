@@ -160,7 +160,6 @@
   "repairFixed": "修复 {count} 篇：",
   "repairFixedPreview": "· 卡片预览 {count} 篇",
   "repairFixedMedia": "· 媒体引用 {count} 篇",
-  "repairFixedOrphan": "· 失效分类 {count} 篇",
   "repairReindexed": "搜索索引已重建（{count} 篇）。",
   "repairDoneTitle": "修复完成",
   "repairOk": "好",

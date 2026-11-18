@@ -481,7 +481,7 @@ Diary buildDiary({
     audioName: audios,
     videoName: videos,
     fileName: files,
-    tags: const [],
+
     type: 'tiptap',
   );
 }

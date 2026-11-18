@@ -34,7 +34,11 @@ void main() {
     db = openTestDatabase();
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
-    writes = DiaryWrites(diaries: diaries, categories: categories);
+    writes = DiaryWrites(
+      tags: TagRepository(db),
+      diaries: diaries,
+      categories: categories,
+    );
   });
 
   tearDown(() => db.close());

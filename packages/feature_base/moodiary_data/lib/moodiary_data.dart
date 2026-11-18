@@ -25,4 +25,6 @@ export 'src/place_controller.dart';
 export 'src/place_repository.dart';
 export 'src/secret_controller.dart';
 export 'src/sync_pending.dart';
+export 'src/tag_catalog.dart';
+export 'src/tag_repository.dart';
 export 'src/tombstone_repository.dart';

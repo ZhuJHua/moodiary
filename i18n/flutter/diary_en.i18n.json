@@ -69,9 +69,11 @@
   "categoryRenamed": "Renamed to “{name}”",
   "categoryRenameFailed": "Could not rename it",
   "categoryDeleteTitle": "Delete this category?",
-  "categoryDeleteMessage": "“{name}” can’t be deleted while entries (even in the recycle bin) are filed under it. Entries are kept.",
+  "categoryDeleteMessage(plural, param=count)": {
+    "one": "“{name}” will be removed. 1 entry becomes uncategorized.",
+    "other": "“{name}” will be removed. {count} entries become uncategorized."
+  },
   "categoryDeleted": "Deleted",
-  "categoryDeleteBlocked": "Still has entries (check the recycle bin)",
   "categoryEmpty": "No categories yet",
   "categoryNew": "New category",
   "categoryDiaryCount": "{count} entries",
@@ -179,7 +181,6 @@
   "saved": "Saved",
   "unsaved": "Unsaved",
   "saveFailed": "Could not save",
-  "unknownCategory": "Unknown category",
   "searchReindexHint": "Rebuild the index after upgrading so older entries become searchable",
   "searchReindex": "Rebuild",
   "autoSaved": "Autosaved",

@@ -382,7 +382,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _scheduleAutoSave();
   }
 
-  Future<void> _onAddTag(Diary current) async {
+  Future<void> _onAddTag() async {
     final tag = await _editorController.withInputSuspended(
       () => MAlert.prompt(
         context,
@@ -392,14 +392,33 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       ),
     );
     if (tag == null || tag.isEmpty || !mounted) return;
-    if (current.tags.contains(tag)) return;
-    ref.read(_provider.notifier).changeTags([...current.tags, tag]);
+    final name = Tag.normalize(tag);
+    if (name == null) return;
+    final catalog = await ref.read(tagCatalogProvider.future);
+    if (!mounted) return;
+    final before = ref.read(_provider).value;
+    if (before == null ||
+        tagIdsWithName(before.tagIds, catalog.byId, name).isNotEmpty) {
+      return;
+    }
+    final ids = await getIt<TagRepository>().ensureTags([tag]);
+    if (!mounted || ids.isEmpty) return;
+    final current = ref.read(_provider).value;
+    if (current == null || current.tagIds.contains(ids.first)) return;
+    ref.read(_provider.notifier).changeTags([...current.tagIds, ids.first]);
     _markDirty();
     _scheduleAutoSave();
   }
 
-  void _onRemoveTag(Diary current, int index) {
-    final next = [...current.tags]..removeAt(index);
+  void _onRemoveTag(String name) {
+    final current = ref.read(_provider).value;
+    if (current == null) return;
+    final matches = tagIdsWithName(
+      current.tagIds,
+      ref.read(tagCatalogProvider).value?.byId ?? const {},
+      name,
+    ).toSet();
+    final next = current.tagIds.where((id) => !matches.contains(id)).toList();
     ref.read(_provider.notifier).changeTags(next);
     _markDirty();
     _scheduleAutoSave();
@@ -853,6 +872,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _ensureLinksLoaded(diary.id);
     _shownContent ??= diary.content;
     _shownTitle ??= diary.title;
+    final tags = resolveTagNames(
+      diary.tagIds,
+      ref.watch(tagCatalogProvider).value?.byId ?? const {},
+    );
     final references = ref.watch(
       diaryMetaReferencesProvider(
         categoryId: diary.categoryId,
@@ -880,14 +903,18 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       editorController: _editorController,
       onActiveHeadingChanged: (i) => _activeHeading.value = i,
       onOpenDiaryLink: _openLinkedDiary,
-      metaJson: _metaJson(diary, references),
+      metaJson: _metaJson(diary, references, [
+        for (final tag in tags) tag.name,
+      ]),
       metaReady: references.ready,
       linksJson: _linksJson(),
       onPickDate: () => _onPickDate(diary),
       onPickTime: () => _onPickTime(diary),
       onPickCategory: () => _onPickCategory(diary),
-      onAddTag: () => _onAddTag(diary),
-      onRemoveTag: (i) => _onRemoveTag(diary, i),
+      onAddTag: _onAddTag,
+      onRemoveTag: (index) {
+        if (index >= 0 && index < tags.length) _onRemoveTag(tags[index].name);
+      },
       onChangeMood: _onChangeMoodName,
       onChangeWeather: _onChangeWeather,
       onClearWeather: _onClearWeather,
@@ -913,12 +940,13 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _onChangeMood(mood);
   }
 
-  String _metaJson(Diary diary, DiaryMetaReferences references) {
+  String _metaJson(
+    Diary diary,
+    DiaryMetaReferences references,
+    List<String> tagNames,
+  ) {
     final weather = diary.weather;
-    final categoryLabel = diary.categoryId == null
-        ? null
-        : references.category?.categoryName ??
-              context.l10n.diary.unknownCategory;
+    final categoryLabel = references.category?.categoryName;
     final qweatherHost = MoodiaryKVs.qweatherApiHost.get();
     final qweatherKey = ref
         .watch(secretKvProvider(MoodiarySecureKVs.qweatherKey))
@@ -988,7 +1016,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       'positionNewPlaceLabel': context.l10n.diary.positionNewPlace,
       'positionManageLabel': context.l10n.diary.positionManagePlaces,
       'positionClearLabel': context.l10n.diary.positionClear,
-      'tags': diary.tags,
+      'tags': tagNames,
       'deleteLabel': context.l10n.common.delete,
     });
   }

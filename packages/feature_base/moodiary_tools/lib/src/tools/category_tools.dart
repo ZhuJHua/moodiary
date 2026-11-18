@@ -85,8 +85,7 @@ final List<ToolDef> categoryTools = [
     title: 'Delete a category',
     description: (_) =>
         '$toolBatchDescription'
-        'Deletes empty categories in ids (1–20). Refuses categories holding diaries, '
-        'including those in the recycle bin, and reports the reason.',
+        'Deletes categories in ids (1–20). Their entries become uncategorized.',
     input: (_) => S.object(
       properties: {'ids': toolIdsSchema(requiredCategoryIdSchema)},
       required: ['ids'],
@@ -161,11 +160,7 @@ Future<ToolResult> _deleteCategory(String id, ToolContext ctx) async {
   try {
     final result = await ops.delete(id);
     if (!result.deleted) {
-      throw const ToolFailure(
-        'the app refuses to delete a category that still holds diaries, '
-        'including diaries in the recycle bin; move those diaries to '
-        'another category first',
-      );
+      throw const ToolFailure('the category could not be deleted');
     }
     return ToolResult({'id': id, 'name': result.category.categoryName});
   } on DiaryOpsException {

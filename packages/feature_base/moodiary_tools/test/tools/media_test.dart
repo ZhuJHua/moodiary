@@ -88,6 +88,7 @@ void main() {
   void buildServer() {
     client = TestToolClient(
       ToolContext(
+        tags: TagRepository(db),
         diaries: diaries,
         categories: categories,
         insights: MoodInsightsRepository(db),

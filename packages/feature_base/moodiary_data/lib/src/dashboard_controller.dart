@@ -18,6 +18,8 @@ class DashboardController extends _$DashboardController {
     );
     ref.onDispose(diarySub.cancel);
     ref.onDispose(catSub.cancel);
+    final tags = getIt<TagRepository>().tagEvents.listen(_markStale);
+    ref.onDispose(tags.cancel);
 
     _stale = false;
     return _compute();
@@ -47,7 +49,9 @@ class DashboardController extends _$DashboardController {
       categoryCount: cats.length,
       streakDays: _streakDays(byDay.keys),
       thisMonthCount: _thisMonthCount(visible),
-      tagCount: _tagCount(visible),
+      tagCount: (await getIt<TagRepository>().getTagUsage())
+          .where((t) => t.count > 0)
+          .length,
       byDay: byDay,
       lastYearCount: _lastYearCount(byDay),
     );
@@ -141,14 +145,6 @@ class DashboardController extends _$DashboardController {
       if (!day.isBefore(from)) sum += w.count;
     });
     return sum;
-  }
-
-  int _tagCount(List<Diary> diaries) {
-    final unique = <String>{};
-    for (final d in diaries) {
-      unique.addAll(d.tags);
-    }
-    return unique.length;
   }
 
   static DateTime _dayBefore(DateTime day) =>

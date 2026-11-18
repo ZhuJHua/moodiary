@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -300,6 +303,35 @@ void main() {
       );
       return dir;
     }
+
+    test('restores 2.9 diary tag names to resolvable tag IDs', () async {
+      final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+      final tags = TagRepository(db);
+      getIt.registerSingleton<TagRepository>(tags);
+      final diary = buildDiary(id: 'legacy-tags', modifiedMs: 1000);
+      final dir = await buildArchiveDir(diaries: [diary]);
+      final names = ['周末', 'travel'];
+      final legacy = diary.toJson()
+        ..remove('tagIds')
+        ..['tags'] = names;
+      await File(p.join(dir, SyncKeys.diaryObjectPath(diary.id)))
+          .writeAsString(jsonEncode(legacy));
+      final diaries = FakeDiaryStore();
+      final report = await LocalArchive.importDirectory(
+        dir,
+        diaryStore: diaries,
+        categoryStore: FakeCategoryStore(),
+        placeStore: FakePlaceStore(),
+        tombstoneStore: diaries.tombstones,
+        mediaFiles: FakeMediaFiles(),
+        cipherProvider: () async => SyncCipher.plaintext,
+      );
+      expect(report.failed, 0);
+      final ids = diaries.diaries[diary.id]!.tagIds;
+      final restored = await tags.getTagsByIds(ids);
+      expect(ids.map((id) => restored[id]!.name), names);
+    });
 
     test('缺 manifest.json 且非旧包 → errNotBackup', () async {
       final dir = p.join(tmp.path, 'empty');

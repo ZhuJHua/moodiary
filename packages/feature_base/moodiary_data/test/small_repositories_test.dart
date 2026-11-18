@@ -28,12 +28,13 @@ void main() {
 
       expect(await repo.deleteACategory(c.id), isTrue);
       expect(await repo.getAllCategories(), isEmpty);
-      expect(await tombs.getByKey(SyncTombstone.categoryKey(c.id)), isNotNull);
+      expect(await tombs.getByKey(SyncTombstone.categoryKey(c.id)), isNull);
+      expect((await repo.getAllCategoriesForSync()).single.deleted, isTrue);
       await repo.insertACategory(c);
       expect(await tombs.getByKey(SyncTombstone.categoryKey(c.id)), isNull);
     });
 
-    test('分类下有日记时拒绝删除', () async {
+    test('分类下有日记时仍可软删除', () async {
       final repo = CategoryRepository(db);
       final c = Category.create(categoryName: '生活');
       await repo.insertACategory(c);
@@ -52,8 +53,9 @@ void main() {
               type: 'tiptap',
             ),
           );
-      expect(await repo.deleteACategory(c.id), isFalse);
-      expect(await repo.getAllCategories(), hasLength(1));
+      expect(await repo.deleteACategory(c.id), isTrue);
+      expect(await repo.getAllCategories(), isEmpty);
+      expect((await repo.getCategoryById(c.id))!.deleted, isTrue);
     });
   });
 

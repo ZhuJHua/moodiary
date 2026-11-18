@@ -11,6 +11,7 @@ import 'mcp_results.dart';
 McpServer buildMoodiaryServer({
   required DiaryRepository diaries,
   required CategoryRepository categories,
+  required TagRepository tags,
   required MoodInsightsRepository insights,
   required String appVersion,
   required Uri iconUri,
@@ -40,6 +41,7 @@ McpServer buildMoodiaryServer({
     server,
     diaries: diaries,
     categories: categories,
+    tags: tags,
     insights: insights,
     mediaStore: mediaStore,
     semantic: semantic,
@@ -52,6 +54,7 @@ void registerMoodiaryTools(
   McpServer server, {
   required DiaryRepository diaries,
   required CategoryRepository categories,
+  required TagRepository tags,
   required MoodInsightsRepository insights,
   DiaryMediaStore? mediaStore,
   EmbedIndexService? semantic,
@@ -76,6 +79,7 @@ void registerMoodiaryTools(
             ToolContext(
               diaries: diaries,
               categories: categories,
+              tags: tags,
               insights: insights,
               surface: ToolSurface.mcp,
               mediaStore: mediaStore,

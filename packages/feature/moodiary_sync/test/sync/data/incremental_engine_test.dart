@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -79,6 +80,9 @@ void main() {
   test(
     'pull converts legacy moods and scene tags in the current UI language',
     () async {
+      final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+      getIt.registerSingleton<TagRepository>(TagRepository(db));
       addTearDown(() => LocaleSettings.setLocale(AppLocale.zh));
       for (final locale in AppLocale.values) {
         await LocaleSettings.setLocale(locale);
@@ -94,10 +98,12 @@ void main() {
         ];
         await seedRemote(backend, diaries: source);
         for (final diary in source) {
-          final json = diary.toJson()..['mood'] = diary.id;
+          final json = diary.toJson()
+            ..remove('tagIds')
+            ..['mood'] = diary.id;
           if (diary.id == 'travel') {
             json['tags'] = [l10n.common.legacySceneTravel];
-        }
+          }
           backend.objects[SyncKeys.diaryObjectPath(diary.id)] = jsonBytes(json);
         }
         final store = FakeDiaryStore();
@@ -109,10 +115,39 @@ void main() {
           expect(diary.mood, entry.value, reason: entry.key);
           expect(diary.lastModified, atMs(100));
         }
-        expect(store.diaries['travel']!.tags, [l10n.common.legacySceneTravel]);
+        expect(store.diaries['travel']!.tagIds, [
+          Tag.legacyId(l10n.common.legacySceneTravel),
+        ]);
       }
     },
   );
+
+  test('legacy pull skips tag adoption when a newer local edit wins', () async {
+    final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    final tags = TagRepository(db);
+    getIt.registerSingleton<TagRepository>(tags);
+    final backend = FakeRemoteBackend();
+    final diary = buildDiary(id: 'a', modifiedMs: 100);
+    await seedRemote(backend, diaries: [diary]);
+    final path = SyncKeys.diaryObjectPath(diary.id);
+    backend.objects[path] = jsonBytes(
+      diary.toJson()
+        ..remove('tagIds')
+        ..['tags'] = ['legacy'],
+    );
+    final store = FakeDiaryStore();
+    backend.beforeOp = (op, key) {
+      if (op == 'read' && key == path) {
+        store.diaries[diary.id] = diary.copyWith(lastModified: atMs(200));
+      }
+    };
+    final report = await engineOn(backend, diaries: store).pull();
+    expect(report.failed, 0);
+    expect(report.diaryCount, 0);
+    expect(store.diaries[diary.id]!.lastModified, atMs(200));
+    expect(await tags.getAllTags(includeDeleted: true), isEmpty);
+  });
 
   group('push — first sync', () {
     test('uploads all diaries + categories and writes a v4 manifest', () async {
