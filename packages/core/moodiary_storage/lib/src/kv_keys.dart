@@ -15,6 +15,10 @@ enum MoodiaryKVs<T extends Object> {
 
   mcpEnabled<bool>(defaultValue: false),
 
+  reminders<String>(defaultValue: '[]'),
+  reminderEnabled<bool>(defaultValue: false),
+  reminderTapAction<String>(defaultValue: 'openApp'),
+
   mcpPort<int>(defaultValue: 8765),
 
   mcpAllowLan<bool>(defaultValue: false),

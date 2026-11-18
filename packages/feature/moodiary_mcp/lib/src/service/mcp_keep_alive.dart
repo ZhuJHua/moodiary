@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_native/moodiary_native.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 
 import 'mcp_service.dart';
 
@@ -24,12 +25,13 @@ final class KeepAlivePermissionStatus {
 /// occur only when that state changes.
 @lazySingleton
 class McpKeepAlive implements BackgroundKeepAliveEvents {
-  McpKeepAlive(this._server) {
+  McpKeepAlive(this._server, this._notificationPermission) {
     BackgroundKeepAliveEvents.setUp(this);
     _server.state.addListener(_onServerStateChanged);
   }
 
   final McpService _server;
+  final NotificationPermission _notificationPermission;
 
   @override
   Future<void> onStopRequested() => _server.disable();
@@ -45,7 +47,7 @@ class McpKeepAlive implements BackgroundKeepAliveEvents {
       final api = BackgroundKeepAliveApi();
       final granted = await Future.wait([
         api.isExempt(),
-        api.isNotificationsEnabled(),
+        _notificationPermission.isEnabled(),
       ]);
       return [
         KeepAlivePermissionStatus(
@@ -71,12 +73,16 @@ class McpKeepAlive implements BackgroundKeepAliveEvents {
   }
 
   /// Permission dialogs are asynchronous; re-read [statuses] on resume.
-  Future<void> request(KeepAlivePermission permission) {
+  Future<void> request(KeepAlivePermission permission) async {
     final api = BackgroundKeepAliveApi();
-    return switch (permission) {
-      KeepAlivePermission.batteryOptimization => api.requestExemption(),
-      KeepAlivePermission.notifications => api.requestNotifications(),
-    };
+    switch (permission) {
+      case KeepAlivePermission.batteryOptimization:
+        await api.requestExemption();
+      case KeepAlivePermission.notifications:
+        if (!await _notificationPermission.request()) {
+          await _notificationPermission.openSettings();
+        }
+    }
   }
 
   Future<void> openAppSettings() => BackgroundKeepAliveApi().openAppSettings();

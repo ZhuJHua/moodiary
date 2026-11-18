@@ -57,8 +57,6 @@ private open class BackgroundKeepAlivePigeonCodec : StandardMessageCodec() {
 interface BackgroundKeepAliveApi {
   fun isExempt(): Boolean
   fun requestExemption()
-  fun isNotificationsEnabled(): Boolean
-  fun requestNotifications()
   fun setKeepAlive(enabled: Boolean, notificationText: String, stopLabel: String)
   fun openAppSettings()
 
@@ -92,37 +90,6 @@ interface BackgroundKeepAliveApi {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.requestExemption()
-              listOf(null)
-            } catch (exception: Throwable) {
-              BackgroundKeepAlivePigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.isNotificationsEnabled$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              listOf(api.isNotificationsEnabled())
-            } catch (exception: Throwable) {
-              BackgroundKeepAlivePigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.requestNotifications$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              api.requestNotifications()
               listOf(null)
             } catch (exception: Throwable) {
               BackgroundKeepAlivePigeonUtils.wrapError(exception)

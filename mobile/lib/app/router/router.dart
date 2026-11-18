@@ -10,6 +10,7 @@ import 'package:moodiary_migration/moodiary_migration.dart'
 import 'package:moodiary_mobile/app/router/route_error_page.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
 import 'package:moodiary_mobile/app/shell/root_shell.dart' show MobileRootShell;
+import 'package:moodiary_reminder/moodiary_reminder.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:mui/mui.dart';
@@ -41,14 +42,16 @@ GoRouter createMobileRouter({
 @visibleForTesting
 List<RouteBase> buildMobileRoutes() => _mobileRoutes();
 
+bool isGateRoute(String path) =>
+    path == EditorMigrationRoute.path || path == LockRoute.path;
+
 @visibleForTesting
 String? migrationGateRedirect(String matchedLocation) {
   if (!EngineMigrationService.requiresMigration &&
       !EditorMigrationService.requiresMigration) {
     return null;
   }
-  if (matchedLocation == EditorMigrationRoute.path ||
-      matchedLocation == LockRoute.path) {
+  if (isGateRoute(matchedLocation)) {
     return null;
   }
   return EditorMigrationRoute.path;
@@ -62,6 +65,7 @@ List<RouteBase> _mobileRoutes() => [
   ...diaryRoutes(),
   ...mediaRoutes(),
   ...settingRoutes(),
+  ...reminderRoutes(),
   ...syncRoutes(),
   ...exportRoutes(),
   ...lockRoutes(),

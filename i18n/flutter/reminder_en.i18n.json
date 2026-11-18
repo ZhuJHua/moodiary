@@ -1,0 +1,61 @@
+{
+  "title": "Diary reminders",
+  "copy": {
+    "morning": {
+      "title": "Good morning",
+      "body": "Start the day by noting how you feel."
+    },
+    "noon": {
+      "title": "Midday pause",
+      "body": "Take a breather and jot down your morning."
+    },
+    "afternoon": {
+      "title": "Good afternoon",
+      "body": "Take a minute to note how it's going."
+    },
+    "evening": {
+      "title": "Good evening",
+      "body": "How was your day? Write it down."
+    },
+    "night": {
+      "title": "It's late",
+      "body": "A few lines before bed to close the day."
+    }
+  },
+  "notificationsOff": "Notifications are off",
+  "enableNotifications": "Enable",
+  "enable": "Remind me to write",
+  "off": "Off",
+  "noEnabledTimes": "No times enabled",
+  "addFirst": "Add a time first",
+  "next": "Next: {day} at {time}",
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "times": "Reminder times",
+  "add": "Add a time",
+  "everyDay": "Every day",
+  "workdays": "Weekdays",
+  "weekend": "Weekends",
+  "weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+  "weekdayShort": ["M", "T", "W", "T", "F", "S", "S"],
+  "daySeparator": ", ",
+  "notifications": "Notifications",
+  "tapAction": "When tapped",
+  "openApp": "Open app",
+  "newDiary": "New entry",
+  "test": "Send a test notification",
+  "testSent": "Sent. Check your notifications.",
+  "notificationSettings": "Notification settings",
+  "create": "New reminder",
+  "edit": "Edit reminder",
+  "delete": "Delete reminder",
+  "deleteMessage": "Delete this reminder?",
+  "repeat": "Repeat",
+  "primerTitle": "Enable notifications",
+  "primerMessage": "Only used to remind you when it’s time to write.",
+  "notNow": "Not now",
+  "continueAction": "Continue",
+  "settingsMessage": "Enable notifications and diary reminders in system settings.",
+  "openSettings": "Open settings",
+  "failed": "Something went wrong. Please try again."
+}

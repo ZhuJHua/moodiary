@@ -44,6 +44,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$lock$en lock = _Translations$lock$en._(_root);
 	@override late final _Translations$media$en media = _Translations$media$en._(_root);
 	@override late final _Translations$picker$en picker = _Translations$picker$en._(_root);
+	@override late final _Translations$reminder$en reminder = _Translations$reminder$en._(_root);
 	@override late final _Translations$share$en share = _Translations$share$en._(_root);
 	@override late final _Translations$storage$en storage = _Translations$storage$en._(_root);
 	@override late final _Translations$sync$en sync = _Translations$sync$en._(_root);
@@ -1165,6 +1166,69 @@ class _Translations$picker$en extends Translations$picker$zh {
 	@override String get captureFailed => 'Capture failed';
 }
 
+// Path: reminder
+class _Translations$reminder$en extends Translations$reminder$zh {
+	_Translations$reminder$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Diary reminders';
+	@override late final _Translations$reminder$copy$en copy = _Translations$reminder$copy$en._(_root);
+	@override String get notificationsOff => 'Notifications are off';
+	@override String get enableNotifications => 'Enable';
+	@override String get enable => 'Remind me to write';
+	@override String get off => 'Off';
+	@override String get noEnabledTimes => 'No times enabled';
+	@override String get addFirst => 'Add a time first';
+	@override String next({required Object day, required Object time}) => 'Next: ${day} at ${time}';
+	@override String get today => 'Today';
+	@override String get tomorrow => 'Tomorrow';
+	@override String get times => 'Reminder times';
+	@override String get add => 'Add a time';
+	@override String get everyDay => 'Every day';
+	@override String get workdays => 'Weekdays';
+	@override String get weekend => 'Weekends';
+	@override List<String> get weekdays => [
+		'Monday',
+		'Tuesday',
+		'Wednesday',
+		'Thursday',
+		'Friday',
+		'Saturday',
+		'Sunday',
+	];
+	@override List<String> get weekdayShort => [
+		'M',
+		'T',
+		'W',
+		'T',
+		'F',
+		'S',
+		'S',
+	];
+	@override String get daySeparator => ', ';
+	@override String get notifications => 'Notifications';
+	@override String get tapAction => 'When tapped';
+	@override String get openApp => 'Open app';
+	@override String get newDiary => 'New entry';
+	@override String get test => 'Send a test notification';
+	@override String get testSent => 'Sent. Check your notifications.';
+	@override String get notificationSettings => 'Notification settings';
+	@override String get create => 'New reminder';
+	@override String get edit => 'Edit reminder';
+	@override String get delete => 'Delete reminder';
+	@override String get deleteMessage => 'Delete this reminder?';
+	@override String get repeat => 'Repeat';
+	@override String get primerTitle => 'Enable notifications';
+	@override String get primerMessage => 'Only used to remind you when it’s time to write.';
+	@override String get notNow => 'Not now';
+	@override String get continueAction => 'Continue';
+	@override String get settingsMessage => 'Enable notifications and diary reminders in system settings.';
+	@override String get openSettings => 'Open settings';
+	@override String get failed => 'Something went wrong. Please try again.';
+}
+
 // Path: share
 class _Translations$share$en extends Translations$share$zh {
 	_Translations$share$en._(TranslationsEn root) : this._root = root, super.internal(root);
@@ -1761,4 +1825,73 @@ class _Translations$editor$meta$en extends Translations$editor$meta$zh {
 	@override String get removeTag => 'Remove tag';
 	@override String get moodUnset => 'Not recorded';
 	@override String get moodClear => 'Don\'t record';
+}
+
+// Path: reminder.copy
+class _Translations$reminder$copy$en extends Translations$reminder$copy$zh {
+	_Translations$reminder$copy$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override late final _Translations$reminder$copy$morning$en morning = _Translations$reminder$copy$morning$en._(_root);
+	@override late final _Translations$reminder$copy$noon$en noon = _Translations$reminder$copy$noon$en._(_root);
+	@override late final _Translations$reminder$copy$afternoon$en afternoon = _Translations$reminder$copy$afternoon$en._(_root);
+	@override late final _Translations$reminder$copy$evening$en evening = _Translations$reminder$copy$evening$en._(_root);
+	@override late final _Translations$reminder$copy$night$en night = _Translations$reminder$copy$night$en._(_root);
+}
+
+// Path: reminder.copy.morning
+class _Translations$reminder$copy$morning$en extends Translations$reminder$copy$morning$zh {
+	_Translations$reminder$copy$morning$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Good morning';
+	@override String get body => 'Start the day by noting how you feel.';
+}
+
+// Path: reminder.copy.noon
+class _Translations$reminder$copy$noon$en extends Translations$reminder$copy$noon$zh {
+	_Translations$reminder$copy$noon$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Midday pause';
+	@override String get body => 'Take a breather and jot down your morning.';
+}
+
+// Path: reminder.copy.afternoon
+class _Translations$reminder$copy$afternoon$en extends Translations$reminder$copy$afternoon$zh {
+	_Translations$reminder$copy$afternoon$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Good afternoon';
+	@override String get body => 'Take a minute to note how it\'s going.';
+}
+
+// Path: reminder.copy.evening
+class _Translations$reminder$copy$evening$en extends Translations$reminder$copy$evening$zh {
+	_Translations$reminder$copy$evening$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Good evening';
+	@override String get body => 'How was your day? Write it down.';
+}
+
+// Path: reminder.copy.night
+class _Translations$reminder$copy$night$en extends Translations$reminder$copy$night$zh {
+	_Translations$reminder$copy$night$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'It\'s late';
+	@override String get body => 'A few lines before bed to close the day.';
 }
