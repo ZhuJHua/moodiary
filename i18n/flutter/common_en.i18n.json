@@ -32,6 +32,7 @@
   "untitled": "Untitled",
   "retry": "Retry",
   "categoryCount": "{count} categories",
+  "tagCount": "{count}",
   "fileName": "File name",
   "close": "Close",
   "appName": "Moodiary",

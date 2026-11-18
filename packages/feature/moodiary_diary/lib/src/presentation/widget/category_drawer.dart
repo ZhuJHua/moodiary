@@ -9,6 +9,7 @@ import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
 const int _kSearchThreshold = 8;
+const int _kTopTags = 8;
 
 class CategoryDrawer extends ConsumerStatefulWidget {
   const CategoryDrawer({super.key});
@@ -41,6 +42,17 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
               .clamp(0, counts.total);
 
     final query = _query.trim().toLowerCase();
+    final usage =
+        ref.watch(tagCatalogProvider).value?.usage ?? const <TagUsage>[];
+    final usedCount = usage.where((tag) => tag.count > 0).length;
+    final visibleTags = [
+      for (final (index, tag) in usage.indexed)
+        if ((tag.count > 0 || tag.name == filter.tagName) &&
+            (query.isEmpty
+                ? index < _kTopTags || tag.name == filter.tagName
+                : tag.name.toLowerCase().contains(query)))
+          tag,
+    ];
     final visible = query.isEmpty
         ? categories
         : categories
@@ -56,33 +68,19 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
               crossAxisAlignment: .stretch,
               children: [
                 _Header(total: total),
-                Padding(
-                  padding: const .fromLTRB(16, 4, 16, 6),
-                  child: Row(
-                    children: [
-                      Text(
-                        context.l10n.common.category,
-                        style: context
-                            .theme
-                            .typography
-                            .labelMedium
-                            .onSurfaceVariant,
-                      ),
-                      const Spacer(),
-                      Text(
-                        context.l10n.common.categoryCount(
-                          count: categories.length,
-                        ),
-                        style: context.theme.typography.labelSmall.outline,
-                      ),
-                    ],
+                _SectionHeader(
+                  label: context.l10n.common.category,
+                  count: context.l10n.common.categoryCount(
+                    count: categories.length,
                   ),
                 ),
-                if (categories.length >= _kSearchThreshold)
+                if (_query.isNotEmpty ||
+                    categories.length >= _kSearchThreshold ||
+                    usedCount > _kTopTags)
                   Padding(
                     padding: const .fromLTRB(12, 0, 12, 8),
                     child: SearchBar(
-                      hintText: context.l10n.diary.categorySearchHint,
+                      hintText: context.l10n.diary.drawerSearchHint,
                       leading: const Icon(LucideIcons.search, size: 20),
                       constraints: const BoxConstraints(minHeight: 42),
                       elevation: const WidgetStatePropertyAll(0),
@@ -124,14 +122,16 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                             label:
                                 context.l10n.diary.categorySyncingPlaceholder,
                           ),
-                      if (visible.isEmpty && query.isNotEmpty)
+                      if (visible.isEmpty &&
+                          visibleTags.isEmpty &&
+                          query.isNotEmpty)
                         Padding(
                           padding: const .symmetric(
                             horizontal: 16,
                             vertical: 12,
                           ),
                           child: Text(
-                            context.l10n.diary.categoryNoMatch,
+                            context.l10n.diary.drawerNoMatch,
                             style: context
                                 .theme
                                 .typography
@@ -139,6 +139,26 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                                 .onSurfaceVariant,
                           ),
                         ),
+                      if (visibleTags.isNotEmpty) ...[
+                        _SectionHeader(
+                          label: context.l10n.diary.tags,
+                          count: context.l10n.common.tagCount(count: usedCount),
+                        ),
+                        for (final tag in visibleTags)
+                          _Tile(
+                            label: tag.name,
+                            count: tag.count,
+                            selected: filter.tagName == tag.name,
+                            leading: Icon(
+                              LucideIcons.hash,
+                              size: 16,
+                              color: filter.tagName == tag.name
+                                  ? colors.onSecondaryContainer
+                                  : colors.onSurfaceVariant,
+                            ),
+                            onTap: () => _pick(.tag(tag.name)),
+                          ),
+                      ],
                     ],
                   ),
                 ),
@@ -201,6 +221,28 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
       ),
     );
   }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String label;
+  final String count;
+
+  const _SectionHeader({required this.label, required this.count});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const .fromLTRB(16, 4, 16, 6),
+    child: Row(
+      children: [
+        Text(
+          label,
+          style: context.theme.typography.labelMedium.onSurfaceVariant,
+        ),
+        const Spacer(),
+        Text(count, style: context.theme.typography.labelSmall.outline),
+      ],
+    ),
+  );
 }
 
 class _Header extends StatelessWidget {

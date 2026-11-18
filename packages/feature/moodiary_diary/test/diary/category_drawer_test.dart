@@ -15,6 +15,10 @@ import '../support/pump.dart';
 Category cat(String id, String name) =>
     Category(id: id, categoryName: name, lastModified: DateTime(2026));
 
+final _emptyCatalog = tagCatalogProvider.overrideWithValue(
+  const .data((byId: <String, Tag>{}, usage: <TagUsage>[])),
+);
+
 Widget wrap({
   required List<Category> categories,
   required Map<String, int> byCategory,
@@ -22,6 +26,7 @@ Widget wrap({
 }) => muiTestApp(
   const CategoryDrawer(),
   overrides: [
+    _emptyCatalog,
     orderedCategoriesProvider.overrideWithValue(.data(categories)),
     categoryDiaryCountsProvider.overrideWith(
       (ref) async => (byCategory: byCategory, total: total),
@@ -47,6 +52,7 @@ void main() {
     );
     await t.pumpAndSettle();
     expect(find.text('旅行'), findsOneWidget);
+    expect(find.text('标签'), findsNothing);
     expect(find.text('日常'), findsOneWidget);
     expect(find.text('阅读'), findsOneWidget);
     expect(find.text('4'), findsOneWidget);
@@ -71,6 +77,7 @@ void main() {
       muiTestApp(
         const SizedBox.expand(),
         overrides: [
+          _emptyCatalog,
           orderedCategoriesProvider.overrideWithValue(.data(three)),
           categoryDiaryCountsProvider.overrideWith(
             (ref) async => (byCategory: const {'tr': 2}, total: 8),
@@ -110,11 +117,113 @@ void main() {
     );
   });
 
+  testWidgets('tag search selects and retains a tag outside the top eight', (
+    t,
+  ) async {
+    await t.binding.setSurfaceSize(const Size(600, 1100));
+    addTearDown(() => t.binding.setSurfaceSize(null));
+    final key = GlobalKey<ScaffoldState>();
+    final usage = [
+      for (var i = 0; i <= 10; i++)
+        (
+          name: 'Tag $i',
+          ids: {'id$i'},
+          count: 10 - i,
+          lastUsed: DateTime(2026),
+        ),
+    ];
+    await t.pumpWidget(
+      muiTestApp(
+        const SizedBox.expand(),
+        drawer: const CategoryDrawer(),
+        scaffoldKey: key,
+        overrides: [
+          orderedCategoriesProvider.overrideWithValue(const .data([])),
+          categoryDiaryCountsProvider.overrideWith(
+            (_) async => (byCategory: <String, int>{}, total: 10),
+          ),
+          tagCatalogProvider.overrideWithValue(
+            .data((byId: <String, Tag>{}, usage: usage)),
+          ),
+        ],
+      ),
+    );
+    key.currentState!.openDrawer();
+    await t.pumpAndSettle();
+    expect(find.text('标签'), findsOneWidget);
+    expect(find.text('10 个'), findsOneWidget);
+    expect(find.byIcon(LucideIcons.hash), findsNWidgets(8));
+    final top = find
+        .ancestor(of: find.text('Tag 0'), matching: find.byType(Row))
+        .first;
+    expect(find.descendant(of: top, matching: find.text('10')), findsOneWidget);
+    expect(find.text('Tag 8'), findsNothing);
+    await t.enterText(find.byType(SearchBar), 'tAG');
+    await t.pumpAndSettle();
+    expect(find.byIcon(LucideIcons.hash), findsNWidgets(10));
+    expect(find.text('Tag 10'), findsNothing);
+    await t.tap(find.text('Tag 9'));
+    await t.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      t.element(find.byType(MaterialApp)),
+      listen: false,
+    );
+    expect(
+      container.read(homeDiaryFilterProvider),
+      const DiaryFilter.tag('Tag 9'),
+    );
+    key.currentState!.openDrawer();
+    await t.pumpAndSettle();
+    expect(find.text('Tag 8'), findsNothing);
+    final label = find.text('Tag 9');
+    final surface = t.widget<Material>(
+      find.ancestor(of: label, matching: find.byType(Material)).first,
+    );
+    expect(surface.color, t.element(label).theme.colors.secondaryContainer);
+  });
+
+  testWidgets('a selected unused tag keeps the tag section visible', (t) async {
+    final tag = Tag.create('Trip');
+    await t.pumpWidget(
+      muiTestApp(
+        const CategoryDrawer(),
+        overrides: [
+          orderedCategoriesProvider.overrideWithValue(const .data([])),
+          categoryDiaryCountsProvider.overrideWith(
+            (_) async => (byCategory: <String, int>{}, total: 0),
+          ),
+          tagCatalogProvider.overrideWithValue(
+            .data((
+              byId: {tag.id: tag},
+              usage: [
+                (name: tag.name, ids: {tag.id}, count: 0, lastUsed: null),
+              ],
+            )),
+          ),
+        ],
+      ),
+    );
+    await t.pumpAndSettle();
+    expect(find.text('标签'), findsNothing);
+    final container = ProviderScope.containerOf(
+      t.element(find.byType(MaterialApp)),
+      listen: false,
+    );
+    container.read(homeDiaryFilterProvider.notifier).select(.tag(tag.name));
+    await t.pumpAndSettle();
+    expect(find.text('标签'), findsOneWidget);
+    final row = find
+        .ancestor(of: find.text(tag.name), matching: find.byType(Row))
+        .first;
+    expect(find.descendant(of: row, matching: find.text('0')), findsOneWidget);
+  });
+
   testWidgets('counts stay blank until the query lands', (t) async {
     await t.pumpWidget(
       muiTestApp(
         const CategoryDrawer(),
         overrides: [
+          _emptyCatalog,
           orderedCategoriesProvider.overrideWithValue(.data(three)),
           categoryDiaryCountsProvider.overrideWith(
             (ref) =>
