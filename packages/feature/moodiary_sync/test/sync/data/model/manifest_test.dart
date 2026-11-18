@@ -65,9 +65,9 @@ void main() {
       expect(restored.entries['c:cat']!.media, isEmpty);
     });
 
-    test('accepts every older manifest (v1 from 2.8.0, v2) and writes v3', () {
-      expect(SyncManifest.currentVersion, 3);
-      for (final version in [SyncManifest.legacyVersion, 2]) {
+    test('accepts v1 through v3 and writes v4', () {
+      expect(SyncManifest.currentVersion, 4);
+      for (final version in [SyncManifest.legacyVersion, 2, 3]) {
         final m = SyncManifest.fromJson(validJson()..['version'] = version);
         expect(m.version, version);
         expect(m.copyForUpdate().version, SyncManifest.currentVersion);

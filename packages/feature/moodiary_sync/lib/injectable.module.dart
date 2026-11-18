@@ -55,6 +55,7 @@ class MoodiarySyncPackageModule extends _i526.MicroPackageModule {
         gh<_i443.SyncRunner>(),
         gh<_i691.DiaryRepository>(),
         gh<_i691.CategoryRepository>(),
+        gh<_i691.TagRepository>(),
         gh<_i691.PlaceRepository>(),
         gh<_i691.SyncDirtyTracker>(),
         gh<_i691.OpenDiaryRegistry>(),

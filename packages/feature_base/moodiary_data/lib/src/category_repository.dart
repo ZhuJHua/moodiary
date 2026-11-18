@@ -57,27 +57,6 @@ class CategoryRepository {
     return row == null ? null : _toCategory(row);
   }
 
-  Future<SyncTombstone> tombstoneCategoryForSync(
-    String id, {
-    bool fromSync = false,
-  }) async {
-    final tombstone = SyncTombstone.forCategory(id, at: .timestamp());
-    await _db.transaction(() async {
-      await (_db.delete(_db.categories)..where((c) => c.id.equals(id))).go();
-      await _db
-          .into(_db.tombstones)
-          .insertOnConflictUpdate(
-            TombstonesCompanion.insert(
-              key: tombstone.key,
-              timeMs: tombstone.timeMs,
-              pushedBackendsJson: Value(dbStringList(tombstone.pushedBackends)),
-            ),
-          );
-    });
-    _events.add(CategoryDeleted(id, fromSync: fromSync));
-    return tombstone;
-  }
-
   Future<void> insertACategory(
     Category category, {
     bool fromSync = false,

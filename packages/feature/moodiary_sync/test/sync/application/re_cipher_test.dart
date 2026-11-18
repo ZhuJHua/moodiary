@@ -12,6 +12,23 @@ import 'package:moodiary_sync/src/data/sync_logger.dart';
 
 import '../sync_test_harness.dart';
 
+class _TestCipher extends SyncCipher {
+  const _TestCipher() : super.withKey(const []);
+
+  @override
+  Future<Uint8List> encode(Object value) async => Uint8List.fromList([
+    ...utf8.encode(SyncCipher.magic),
+    ...await SyncCipher.plaintext.encode(value),
+  ]);
+
+  @override
+  Future<dynamic> decode(Uint8List bytes) => SyncCipher.plaintext.decode(
+    SyncCipher.isCipherText(bytes)
+        ? bytes.sublist(SyncCipher.magic.length)
+        : bytes,
+  );
+}
+
 void main() {
   late SyncLogger logger;
   late Directory cacheRoot;
@@ -38,6 +55,39 @@ void main() {
       'd:a': {'t': 100},
     },
   });
+
+  test(
+    're-cipher converts tag objects both ways and reports missing objects',
+    () async {
+      final backend = FakeRemoteBackend();
+      backend.objects[SyncKeys.manifestPath] = jsonBytes({
+        'version': 4,
+        'entries': {
+          't:a': {'t': 1},
+          't:missing': {'t': 2},
+        },
+      });
+      final path = SyncKeys.tagObjectPath('a');
+      final data = {'id': 'a', 'deleted': true};
+      backend.objects[path] = jsonBytes(data);
+      const encrypted = _TestCipher();
+      final converter = CloudReCipher(backend, logger: logger);
+      final forward = await converter.run(
+        from: SyncCipher.plaintext,
+        to: encrypted,
+      );
+      expect(forward!.tagCount, 1);
+      expect(forward.failed, 1);
+      expect(SyncCipher.isCipherText(backend.objects[path]!), isTrue);
+      final reverse = await converter.run(
+        from: encrypted,
+        to: SyncCipher.plaintext,
+      );
+      expect(reverse!.tagCount, 1);
+      expect(reverse.failed, 1);
+      expect(await SyncCipher.plaintext.decode(backend.objects[path]!), data);
+    },
+  );
 
   test('别人先写 → 翻转 manifest 前中止，对方的索引原样保留', () async {
     final backend = FakeRemoteBackend();

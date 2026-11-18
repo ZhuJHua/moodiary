@@ -184,9 +184,8 @@ class ArchiveApplier {
         } else if (entry.key.startsWith(SyncKeys.categoryPrefix)) {
           final id = entry.key.substring(SyncKeys.categoryPrefix.length);
           final local = localCategories[id];
-          final tombMs = tombstones[entry.key]?.timeMs;
           if (local == null) {
-            if (tombMs == null || remoteMs > tombMs) newCategories.add(id);
+            newCategories.add(id);
           } else if (remoteMs > local.lastModified.millisecondsSinceEpoch) {
             updCategories.add(id);
           }
@@ -206,6 +205,7 @@ class ArchiveApplier {
     int skipped = 0;
     int diaryChanged = 0;
     int categoryChanged = 0;
+    int tagChanged = 0;
     int placeChanged = 0;
     int failed = 0;
 
@@ -345,35 +345,30 @@ class ArchiveApplier {
         } else if (key.startsWith(SyncKeys.categoryPrefix)) {
           final id = key.substring(SyncKeys.categoryPrefix.length);
           if (isTombstone) {
-            if (restoring) return;
-            final tombstoneMs = entry.value.timeMs;
-            Category? local = localCategories[id];
-            if (local != null) {
-              local = await categoryRepo.getCategoryById(id);
-            }
+            final local = await categoryRepo.getCategoryById(id);
+            final ms = entry.value.timeMs;
             if (local != null &&
-                local.lastModified.millisecondsSinceEpoch > tombstoneMs) {
-              _logger.info(
-                .categorySkip,
-                reason: .localNewer,
-                payload: {'categoryId': id},
-              );
+                (restoring ||
+                    local.lastModified.millisecondsSinceEpoch > ms ||
+                    (local.deleted &&
+                        local.lastModified.millisecondsSinceEpoch == ms))) {
+              skipped++;
               return;
             }
-            if (local != null) {
-              tombstones.add(
-                await categoryRepo.tombstoneCategory(id, fromSync: fromSync),
-              );
-              categoryChanged++;
-              _logger.info(.categoryTombstonePull, payload: {'categoryId': id});
-            }
-            if (trackingId != null) tombstones.markPushed(key, trackingId);
+            final time = DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+            final category =
+                local ?? Category(id: id, categoryName: '', lastModified: time);
+            await categoryRepo.insertACategory(
+              category.copyWith(deleted: true, lastModified: time),
+              fromSync: fromSync,
+            );
+            categoryChanged++;
+            _logger.info(.categoryTombstonePull, payload: {'categoryId': id});
             return;
           }
           final remoteMs = entry.value.timeMs;
           final localMs =
-              localCategories[id]?.lastModified.millisecondsSinceEpoch ??
-              (restoring ? null : tombstones[key]?.timeMs);
+              localCategories[id]?.lastModified.millisecondsSinceEpoch;
           if (localMs != null && remoteMs <= localMs) {
             skipped++;
             _logger.info(
@@ -386,15 +381,20 @@ class ArchiveApplier {
           final bytes = await backend.readObject(
             SyncKeys.categoryObjectPath(id),
           );
-          if (bytes == null) return;
-          final decoded = await (await _cipher()).decode(bytes);
-          if (decoded is! Map<String, dynamic>) return;
+          final decoded = bytes == null
+              ? null
+              : await (await _cipher()).decode(bytes);
+          if (decoded is! Map<String, dynamic>) {
+            failed++;
+            _logger.error(
+              .categoryDownload,
+              reason: .remoteMissing,
+              payload: {'categoryId': id},
+            );
+            return;
+          }
           final freshLocal = await categoryRepo.getCategoryById(id);
-          final freshMs =
-              freshLocal?.lastModified.millisecondsSinceEpoch ??
-              (restoring
-                  ? null
-                  : (await _tombstoneStore.getByKey(key))?.timeMs);
+          final freshMs = freshLocal?.lastModified.millisecondsSinceEpoch;
           if (freshMs != null && remoteMs <= freshMs) {
             pending.completeCategory(id);
             _logger.info(
@@ -413,16 +413,74 @@ class ArchiveApplier {
             );
             return;
           }
+          if (restoring && category.deleted && freshLocal != null) {
+            skipped++;
+            pending.completeCategory(id);
+            _logger.info(
+              .categorySkip,
+              reason: .localExists,
+              payload: {'categoryId': id},
+            );
+            return;
+          }
           await categoryRepo.insertACategory(
-            restoring && freshLocal == null
+            restoring && freshLocal == null && !category.deleted
                 ? category.copyWith(lastModified: DateTime.timestamp())
                 : category,
             fromSync: fromSync,
           );
-          tombstones.remove(key);
           pending.completeCategory(id);
           categoryChanged++;
           _logger.info(.categoryDownload, payload: {'categoryId': id});
+        } else if (key.startsWith(SyncKeys.tagPrefix)) {
+          final id = key.substring(SyncKeys.tagPrefix.length);
+          final remoteMs = entry.value.timeMs;
+          bool upToDate(Tag? local) =>
+              local != null &&
+              local.lastModified.millisecondsSinceEpoch >= remoteMs;
+          if (upToDate(await _tagStore.getTagById(id))) {
+            skipped++;
+            _logger.info(.tagSkip, reason: .upToDate, payload: {'tagId': id});
+            return;
+          }
+          final bytes = await backend.readObject(SyncKeys.tagObjectPath(id));
+          if (bytes == null) {
+            failed++;
+            _logger.error(
+              .tagDownload,
+              reason: .remoteMissing,
+              payload: {'tagId': id},
+            );
+            return;
+          }
+          final decoded = await (await _cipher()).decode(bytes);
+          final tag = Tag.fromJson(decoded as Map<String, dynamic>);
+          if (tag.id != id) {
+            failed++;
+            _logger.error(
+              .tagDownload,
+              payload: {'tagId': id, 'objectId': tag.id},
+            );
+            return;
+          }
+          final local = await _tagStore.getTagById(id);
+          if (upToDate(local) || (restoring && tag.deleted && local != null)) {
+            skipped++;
+            _logger.info(
+              .tagSkip,
+              reason: upToDate(local) ? .upToDate : .localExists,
+              payload: {'tagId': id},
+            );
+            return;
+          }
+          await _tagStore.insertATag(
+            restoring && local == null && !tag.deleted
+                ? tag.copyWith(lastModified: DateTime.timestamp())
+                : tag,
+            fromSync: fromSync,
+          );
+          tagChanged++;
+          _logger.info(.tagDownload, payload: {'tagId': id});
         } else if (key.startsWith(SyncKeys.placePrefix)) {
           final id = key.substring(SyncKeys.placePrefix.length);
           if (isTombstone) {
@@ -511,6 +569,7 @@ class ArchiveApplier {
             final k when k.startsWith(SyncKeys.diaryPrefix) => .diaryDownload,
             final k when k.startsWith(SyncKeys.categoryPrefix) =>
               .categoryDownload,
+            final k when k.startsWith(SyncKeys.tagPrefix) => .tagDownload,
             final k when k.startsWith(SyncKeys.placePrefix) => .placeDownload,
             _ => .error,
           },
@@ -520,15 +579,20 @@ class ArchiveApplier {
     }
 
     final entries = manifest.entries.entries.toList();
-    final placeEntries = entries
-        .where((e) => e.key.startsWith(SyncKeys.placePrefix))
-        .toList();
-    final otherEntries = entries
-        .where((e) => !e.key.startsWith(SyncKeys.placePrefix))
-        .toList();
+    bool catalog(MapEntry<String, ManifestEntry> entry) =>
+        entry.key.startsWith(SyncKeys.placePrefix) ||
+        entry.key.startsWith(SyncKeys.tagPrefix);
     try {
-      await runPooled(placeEntries, concurrency, pullOneEntry);
-      await runPooled(otherEntries, concurrency, pullOneEntry);
+      await runPooled(
+        entries.where(catalog).toList(),
+        concurrency,
+        pullOneEntry,
+      );
+      await runPooled(
+        entries.where((entry) => !catalog(entry)).toList(),
+        concurrency,
+        pullOneEntry,
+      );
     } finally {
       pending.clear();
     }
@@ -545,6 +609,7 @@ class ArchiveApplier {
         'direction': 'pull',
         'diaryCount': diaryChanged,
         'categoryCount': categoryChanged,
+        'tagCount': tagChanged,
         'placeCount': placeChanged,
         'mediaCount': _mediaDownloaded,
         'failed': failed,
@@ -563,6 +628,7 @@ class ArchiveApplier {
       pulled: SyncCounts(
         diaries: diaryChanged,
         categories: categoryChanged,
+        tags: tagChanged,
         places: placeChanged,
         mediaFiles: _mediaDownloaded,
       ),

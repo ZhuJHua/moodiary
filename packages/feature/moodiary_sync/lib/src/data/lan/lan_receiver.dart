@@ -209,6 +209,7 @@ class LanReceiverService {
           jsonEncode({
             'diaryCount': report.diaryCount,
             'categoryCount': report.categoryCount,
+            'tagCount': report.tagCount,
             'failed': report.failed,
             'warning': ?report.warning,
           }),

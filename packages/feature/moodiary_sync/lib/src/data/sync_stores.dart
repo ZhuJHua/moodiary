@@ -27,11 +27,13 @@ abstract interface class SyncCategoryStore {
   Future<Category?> getCategoryById(String id);
 
   Future<void> insertACategory(Category category, {bool fromSync = false});
-
-  Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false});
 }
 
 abstract interface class SyncTagStore {
+  Future<List<Tag>> getAllTagsForSync();
+  Future<Tag?> getTagById(String id);
+  Future<void> insertATag(Tag tag, {bool fromSync = false});
+
   Future<List<String>> adoptLegacyTags(
     List<String> names, {
     bool fromSync = true,
@@ -98,14 +100,21 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   @override
   Future<void> insertACategory(Category category, {bool fromSync = false}) =>
       _repo.insertACategory(category, fromSync: fromSync);
-
-  @override
-  Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false}) =>
-      _repo.tombstoneCategoryForSync(id, fromSync: fromSync);
 }
 
 class RepoSyncTagStore implements SyncTagStore {
   late final _repo = getIt<TagRepository>();
+
+  @override
+  Future<List<Tag>> getAllTagsForSync() =>
+      _repo.getAllTags(includeDeleted: true);
+
+  @override
+  Future<Tag?> getTagById(String id) => _repo.getTagById(id);
+
+  @override
+  Future<void> insertATag(Tag tag, {bool fromSync = false}) =>
+      _repo.insertATag(tag, fromSync: fromSync);
 
   @override
   Future<List<String>> adoptLegacyTags(

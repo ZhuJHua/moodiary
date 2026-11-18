@@ -273,17 +273,33 @@ final class FakeCategoryStore implements SyncCategoryStore {
     categories[category.id] = category;
     tombstones.rows.remove(SyncTombstone.categoryKey(category.id));
   }
+}
+
+final class FakeTagStore implements SyncTagStore {
+  final Map<String, Tag> tags;
+
+  FakeTagStore([List<Tag> seed = const []])
+    : tags = {for (final tag in seed) tag.id: tag};
 
   @override
-  Future<SyncTombstone> tombstoneCategory(
-    String id, {
-    bool fromSync = false,
-  }) async {
-    categories.remove(id);
-    final row = SyncTombstone.forCategory(id, at: .timestamp());
-    tombstones.rows[row.key] = row;
-    return row;
+  Future<List<Tag>> getAllTagsForSync() async => tags.values.toList();
+
+  @override
+  Future<Tag?> getTagById(String id) async => tags[id];
+
+  @override
+  Future<void> insertATag(Tag tag, {bool fromSync = false}) async {
+    tags[tag.id] = tag;
   }
+
+  @override
+  Future<List<String>> adoptLegacyTags(
+    List<String> names, {
+    bool fromSync = true,
+  }) async => [
+    for (final name in names)
+      (tags.putIfAbsent(Tag.legacyId(name), () => Tag.legacy(name))).id,
+  ];
 }
 
 final class FakePlaceStore implements SyncPlaceStore {

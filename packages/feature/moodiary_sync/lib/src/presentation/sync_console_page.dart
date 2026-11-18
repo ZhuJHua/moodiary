@@ -480,6 +480,14 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
                 _divider(context),
                 Expanded(
                   child: _Counter(
+                    label: l10n.sync.rowTag,
+                    local: value?.localTags,
+                    remote: value?.remoteTags,
+                  ),
+                ),
+                _divider(context),
+                Expanded(
+                  child: _Counter(
                     label: l10n.sync.rowMedia,
                     local: value?.localMedia,
                     remote: value?.remoteMedia,
@@ -1282,8 +1290,11 @@ IconData _kindIcon(SyncEventKind kind) => switch (kind) {
   .diaryTombstonePush => LucideIcons.eraser,
   .diaryTombstonePull => LucideIcons.trash2,
   .categoryUpload => LucideIcons.upload,
+  .tagUpload => LucideIcons.upload,
   .categoryDownload => LucideIcons.download,
+  .tagDownload => LucideIcons.download,
   .categorySkip => LucideIcons.skipForward,
+  .tagSkip => LucideIcons.skipForward,
   .categoryTombstonePush => LucideIcons.eraser,
   .categoryTombstonePull => LucideIcons.trash2,
   .placeUpload => LucideIcons.upload,
@@ -1314,8 +1325,11 @@ String _kindLabel(Translations l10n, SyncEventKind kind) => switch (kind) {
   .diaryTombstonePush => l10n.sync.kindDiaryTombstonePush,
   .diaryTombstonePull => l10n.sync.kindDiaryTombstonePull,
   .categoryUpload => l10n.sync.kindCategoryUpload,
+  .tagUpload => l10n.sync.kindTagUpload,
   .categoryDownload => l10n.sync.kindCategoryDownload,
+  .tagDownload => l10n.sync.kindTagDownload,
   .categorySkip => l10n.sync.kindCategorySkip,
+  .tagSkip => l10n.sync.kindTagSkip,
   .categoryTombstonePush => l10n.sync.kindCategoryTombstonePush,
   .categoryTombstonePull => l10n.sync.kindCategoryTombstonePull,
   .placeUpload => l10n.sync.kindPlaceUpload,
@@ -1361,6 +1375,7 @@ String? _subjectOf(Translations l10n, SyncEvent event) {
     .categorySkip ||
     .categoryTombstonePush ||
     .categoryTombstonePull => str('categoryId') ?? str('key'),
+    .tagUpload || .tagDownload || .tagSkip => str('tagId') ?? str('key'),
     .placeUpload ||
     .placeDownload ||
     .placeSkip ||
@@ -1371,6 +1386,7 @@ String? _subjectOf(Translations l10n, SyncEvent event) {
     .reCipher =>
       str('diaryId') ??
           str('categoryId') ??
+          str('tagId') ??
           str('mediaFileName') ??
           str('ref') ??
           str('path'),
