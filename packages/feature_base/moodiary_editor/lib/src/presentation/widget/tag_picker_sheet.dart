@@ -36,13 +36,11 @@ List<String>? applyTagSelection(
 }
 
 abstract final class TagPickerSheet {
-  static Future<List<String>?> show(
-    BuildContext context, {
-    required List<String> tagIds,
-  }) async {
-    final ({Map<String, Tag> byId, List<TagUsage> usage}) catalog;
+  static Future<({Map<String, Tag> byId, List<TagUsage> usage})?> _catalog(
+    BuildContext context,
+  ) async {
     try {
-      catalog = await ProviderScope.containerOf(
+      return await ProviderScope.containerOf(
         context,
         listen: false,
       ).read(tagCatalogProvider.future);
@@ -51,7 +49,54 @@ abstract final class TagPickerSheet {
       toast.error(message: l10n.common.loadFailed);
       return null;
     }
-    if (!context.mounted) return null;
+  }
+
+  static Future<(bool, String?)> pickOne(
+    BuildContext context, {
+    String? current,
+  }) async {
+    final catalog = await _catalog(context);
+    if (catalog == null || !context.mounted) return (false, null);
+    const icon = Icon(LucideIcons.hash, size: 18);
+    final result = await MSheet.show<MetaPickerResult<String?>>(
+      context,
+      builder: (context) => MetaPickerSheet<String?>.list(
+        title: context.l10n.editor.pickTags,
+        subtitle: null,
+        icon: LucideIcons.hash,
+        searchHint: context.l10n.editor.tagSearchHint,
+        matchesLabel: (count) =>
+            context.l10n.editor.pickerMatches(count: count),
+        selected: current,
+        options: [
+          MSheetOption(
+            value: null,
+            label: context.l10n.diary.allTags,
+            leading: icon,
+          ),
+          for (final tag in catalog.usage)
+            if (tag.count > 0)
+              MSheetOption(
+                value: tag.name,
+                label: tag.name,
+                leading: icon,
+                subtitle: context.l10n.diary.searchResult(count: tag.count),
+              ),
+        ],
+      ),
+    );
+    if (result == null || result.selected.single == current) {
+      return (false, null);
+    }
+    return (true, result.selected.single);
+  }
+
+  static Future<List<String>?> show(
+    BuildContext context, {
+    required List<String> tagIds,
+  }) async {
+    final catalog = await _catalog(context);
+    if (catalog == null || !context.mounted) return null;
     final initial = resolveTagNames(
       tagIds,
       catalog.byId,

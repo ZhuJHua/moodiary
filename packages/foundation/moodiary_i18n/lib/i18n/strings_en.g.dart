@@ -636,6 +636,7 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get pageViewModeButton => 'View mode';
 	@override String get categoryNoCategory => 'No category';
 	@override String get allCategories => 'All categories';
+	@override String get allTags => 'All tags';
 	@override String get categoryAll => 'All';
 	@override String get categoryColorLabel => 'Color';
 	@override String get search => 'Search';

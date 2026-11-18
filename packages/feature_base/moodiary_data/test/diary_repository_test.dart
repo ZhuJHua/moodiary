@@ -140,6 +140,96 @@ void main() {
     freshDatabasePerTest();
 
     test(
+      'tag filter intersects keyword, category and date across live ids',
+      () async {
+        final tags = TagRepository(db);
+        for (final id in ['first', 'second', 'deleted']) {
+          await tags.insertATag(
+            Tag.legacy('Travel').copyWith(id: id, deleted: id == 'deleted'),
+          );
+        }
+        await repo.insertDiaries([
+          makeDiary(
+            'a',
+            '苹果',
+            categoryId: 'c1',
+            files: ['😀' * 130],
+            tagIds: ['first', 'second'],
+          ),
+          makeDiary('b', '苹果', categoryId: 'c2', tagIds: ['second']),
+          makeDiary(
+            'c',
+            '香蕉',
+            categoryId: 'c1',
+            tagIds: ['first'],
+            time: DateTime.utc(2026, 2),
+          ),
+          makeDiary('d', '苹果', tagIds: ['deleted']),
+          makeDiary('e', '苹果', tagIds: ['first'], show: false),
+          makeDiary('f', '苹果'),
+        ]);
+
+        Future<void> check(
+          String query,
+          List<String> expected, {
+          String? categoryId,
+          DateTime? start,
+          String? tagName = 'Travel',
+        }) async {
+          expect(
+            await repo.countSearchDiaries(
+              query: query,
+              tagName: tagName,
+              categoryId: categoryId,
+              start: start,
+            ),
+            expected.length,
+          );
+          final hits = await repo.searchDiaries(
+            query: query,
+            tagName: tagName,
+            categoryId: categoryId,
+            start: start,
+            sort: .timeAsc,
+          );
+          expect(hits.map((hit) => hit.diary.id), expected);
+        }
+
+        await check('苹果', ['a', 'b']);
+        await check('苹果', ['a'], categoryId: 'c1');
+        await check('', ['a', 'c'], categoryId: 'c1');
+        await check('', ['c'], start: DateTime.utc(2026, 2));
+        await check(' \uFDD1\uFDD0 ', ['a', 'b', 'c']);
+        await check('', [], tagName: null);
+
+        for (final sort in SearchSort.values) {
+          final pages = [
+            for (var offset = 0; offset < 4; offset += 2)
+              ...await repo.searchDiaries(
+                query: '',
+                tagName: 'Travel',
+                sort: sort,
+                limit: 2,
+                offset: offset,
+              ),
+          ];
+          expect(
+            pages.length,
+            await repo.countSearchDiaries(query: '', tagName: 'Travel'),
+          );
+          expect(
+            pages.map((hit) => hit.diary.id),
+            sort == .timeAsc ? ['a', 'b', 'c'] : ['c', 'b', 'a'],
+          );
+          final hit = pages.singleWhere((hit) => hit.diary.id == 'a');
+          expect(hit.titleHighlight, 'title-a');
+          // 截断点落在文件名标记里时整段保留，卡片才能渲染成媒体。
+          expect(hit.excerpt, '苹果\n﷔${'😀' * 130}﷐');
+        }
+      },
+    );
+
+    test(
       'late, renamed and deleted tags update FTS without editing the diary',
       () async {
         final tags = TagRepository(db);
