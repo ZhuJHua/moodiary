@@ -191,6 +191,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get meCalendar => 'Calendar';
 	@override String get sectionFeature => 'Features';
 	@override String get assistantEntry => 'AI assistant';
+	@override String get assistantStatusOff => 'Off';
 	@override String get stressTitle => 'Stress-test data (debug)';
 	@override String get stressSubtitle => 'Generate or remove randomly linked entries for graph performance tests';
 	@override String get stressDialogTitle => 'Stress-test data';
@@ -320,7 +321,15 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get modelSwitchDropPending => 'The selected image will be removed.';
 	@override String get modelSwitchSmallerContext => 'This model has a smaller context; the history will be compacted before sending.';
 	@override String get modelSwitchConfirm => 'Switch anyway';
-	@override String get historyEmpty => 'No chat history yet';
+	@override String get enableAssistant => 'Enable assistant';
+	@override String get entryPointsHidden => 'Entry points hidden';
+	@override String get noModelConnected => 'No model connected';
+	@override String get connectModel => 'Connect a model';
+	@override String get hideAssistant => 'Hide assistant';
+	@override String get hideAssistantTitle => 'Hide the assistant?';
+	@override String get hideAssistantMessage => 'Turn it back on in Settings › AI assistant';
+	@override String get assistantHidden => 'Assistant hidden';
+	@override String get historyEmpty => 'No chats yet';
 	@override String get historyToday => 'Today';
 	@override String get historyLast7 => 'Last 7 days';
 	@override String get historyEarlier => 'Earlier';
@@ -580,6 +589,8 @@ class _Translations$common$en extends Translations$common$zh {
 	@override String get weatherHot => 'Hot';
 	@override String get weatherCold => 'Cold';
 	@override String get cancel => 'Cancel';
+	@override String get hide => 'Hide';
+	@override String get undo => 'Undo';
 	@override String get more => 'More';
 	@override String get custom => 'Custom';
 	@override String get save => 'Save';

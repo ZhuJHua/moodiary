@@ -72,11 +72,15 @@ class _FeatureSection extends StatelessWidget {
           trailing: _chevron(context),
           onTap: () => _openSetting(context, const DiarySettingRoute()),
         ),
-        SettingListTile(
-          title: context.l10n.app.assistantEntry,
-          leading: _lead(context, LucideIcons.bot),
-          trailing: _chevron(context),
-          onTap: () => _openSetting(context, const AssistantSettingRoute()),
+        ValueListenableBuilder<bool>(
+          valueListenable: MoodiaryKVs.assistantEnabled.getNotifier(),
+          builder: (context, enabled, _) => SettingListTile(
+            title: context.l10n.app.assistantEntry,
+            subtitle: enabled ? null : context.l10n.app.assistantStatusOff,
+            leading: _lead(context, LucideIcons.bot),
+            trailing: _chevron(context),
+            onTap: () => _openSetting(context, const AssistantSettingRoute()),
+          ),
         ),
         if (Platform.isAndroid) const _McpTile(),
       ],

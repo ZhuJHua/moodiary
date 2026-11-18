@@ -2721,26 +2721,101 @@ class _HistoryGroupLabel extends StatelessWidget {
   }
 }
 
-class _EmptySessions extends StatelessWidget {
+class _EmptySessions extends StatefulWidget {
   const _EmptySessions();
 
   @override
+  State<_EmptySessions> createState() => _EmptySessionsState();
+}
+
+class _EmptySessionsState extends State<_EmptySessions> {
+  late final _repo = getIt<LlmProviderRepository>();
+  late final StreamSubscription<void> _subscription;
+  LlmProvider? _provider;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = _repo.providerEvents.listen((_) => _load());
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final provider = await _repo.getActiveProvider();
+    if (!mounted) return;
+    setState(() {
+      _provider = provider;
+      _loaded = true;
+    });
+  }
+
+  Future<void> _hideAssistant() async {
+    final confirmed = await MAlert.confirm(
+      context,
+      icon: LucideIcons.eyeOff,
+      title: context.l10n.assistant.hideAssistantTitle,
+      message: context.l10n.assistant.hideAssistantMessage,
+      confirmLabel: context.l10n.common.hide,
+    );
+    if (!confirmed || !mounted) return;
+    final bottom = MediaQuery.paddingOf(context).bottom + 12;
+    MSnackbar.show(
+      context,
+      message: context.l10n.assistant.assistantHidden,
+      action: MSnackbarAction(
+        label: context.l10n.common.undo,
+        onPressed: () => MoodiaryKVs.assistantEnabled.set(true),
+      ),
+      bottom: bottom,
+    );
+    MoodiaryKVs.assistantEnabled.set(false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!_loaded) return const SizedBox.shrink();
     final scheme = context.theme.colors;
+    final l10n = context.l10n;
+    final connected = _provider != null;
+    final (icon, title, actionLabel, action) = connected
+        ? (
+            LucideIcons.messagesSquare,
+            l10n.assistant.historyEmpty,
+            l10n.assistant.newChat,
+            () => const AssistantConversationRoute().push(context),
+          )
+        : (
+            LucideIcons.cloudOff,
+            l10n.assistant.noModelConnected,
+            l10n.assistant.connectModel,
+            () => const AssistantProvidersRoute().push(context),
+          );
     return Center(
       child: Column(
         mainAxisSize: .min,
         children: [
-          Icon(
-            LucideIcons.messagesSquare,
-            size: 40,
-            color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-          ),
+          Icon(icon, size: 48, color: scheme.onSurfaceVariant),
           const SizedBox(height: 12),
-          Text(
-            context.l10n.assistant.historyEmpty,
-            style: context.theme.typography.bodyMedium.onSurfaceVariant,
-          ),
+          Text(title, style: context.theme.typography.titleMedium.onSurface),
+          const SizedBox(height: 24),
+          FilledButton(onPressed: action, child: Text(actionLabel)),
+          if (!connected) ...[
+            const SizedBox(height: 4),
+            TextButton(
+              onPressed: _hideAssistant,
+              style: TextButton.styleFrom(
+                foregroundColor: scheme.onSurfaceVariant,
+              ),
+              child: Text(l10n.assistant.hideAssistant),
+            ),
+          ],
         ],
       ),
     );

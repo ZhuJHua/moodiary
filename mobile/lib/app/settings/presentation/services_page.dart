@@ -43,14 +43,20 @@ class _AiSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MSliverSettingGroup(
-      title: context.l10n.app.servicesAssistant,
-      children: [
-        ValueListenableBuilder<String>(
-          valueListenable: MoodiaryKVs.assistantActiveProviderId.getNotifier(),
-          builder: (context, _, _) => const AssistantSummaryTile(),
-        ),
-      ],
+    return ValueListenableBuilder<bool>(
+      valueListenable: MoodiaryKVs.assistantEnabled.getNotifier(),
+      builder: (context, enabled, child) =>
+          enabled ? child! : const SliverToBoxAdapter(),
+      child: MSliverSettingGroup(
+        title: context.l10n.app.servicesAssistant,
+        children: [
+          ValueListenableBuilder<String>(
+            valueListenable: MoodiaryKVs.assistantActiveProviderId
+                .getNotifier(),
+            builder: (context, _, _) => const AssistantSummaryTile(),
+          ),
+        ],
+      ),
     );
   }
 }
