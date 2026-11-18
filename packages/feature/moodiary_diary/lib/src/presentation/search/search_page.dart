@@ -8,6 +8,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/search_controller.dart';
 import 'package:moodiary_diary/src/presentation/search/search_result_card.dart';
+import 'package:moodiary_editor/moodiary_editor.dart' show TagPickerSheet;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -60,6 +61,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 
   void _clearInput() {
+    _debounce?.cancel();
     _textController.clear();
     _controller.search('');
     _focusNode.requestFocus();
@@ -119,7 +121,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                 child: _buildBody(context, state),
               ),
             ),
-            if (state.query.isNotEmpty)
+            if (state.hasSearch)
               Padding(
                 padding: const .all(8.0),
                 child: Row(
@@ -152,6 +154,21 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           _dateChip(context, state),
           const SizedBox(width: 8),
           _categoryChip(context, state),
+          const SizedBox(width: 8),
+          MInkWell(
+            onTap: () async {
+              final (picked, name) = await TagPickerSheet.pickOne(
+                context,
+                current: state.tagName,
+              );
+              if (picked && mounted) await _controller.setTag(name);
+            },
+            child: _FilterChip(
+              icon: LucideIcons.hash,
+              label: state.tagName ?? context.l10n.diary.allTags,
+              active: state.tagName != null,
+            ),
+          ),
           const SizedBox(width: 8),
           _sortChip(context, state),
         ],
@@ -294,6 +311,8 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                       )
                     : SearchResultCard(
                         hit: state.results[index],
+                        query: state.query,
+                        tagName: state.tagName,
                         onTap: _controller.recordHistory,
                       ),
                 separatorBuilder: (_, _) => const SizedBox(height: 10),
@@ -312,7 +331,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
         ],
       );
     }
-    if (state.query.isEmpty) return _historyView(context);
+    if (!state.hasSearch) return _historyView(context);
     return _placeholder(
       context,
       key: 'empty',

@@ -20,6 +20,7 @@ abstract class DiarySearchState with _$DiarySearchState {
     Duration? elapsed,
     @Default('') String query,
     String? categoryId,
+    String? tagName,
     @Default(DateRangePreset.all) DateRangePreset datePreset,
     DateTime? customStart,
     DateTime? customEnd,
@@ -29,6 +30,7 @@ abstract class DiarySearchState with _$DiarySearchState {
   const DiarySearchState._();
 
   bool get hasMore => results.length < totalCount;
+  bool get hasSearch => query.isNotEmpty || tagName != null;
 }
 
 @riverpod
@@ -52,6 +54,11 @@ class DiarySearchController extends _$DiarySearchController {
 
   Future<void> setCategory(String? categoryId) async {
     state = state.copyWith(categoryId: categoryId);
+    await _run();
+  }
+
+  Future<void> setTag(String? tagName) async {
+    state = state.copyWith(tagName: tagName);
     await _run();
   }
 
@@ -107,7 +114,7 @@ class DiarySearchController extends _$DiarySearchController {
 
   Future<void> _run() async {
     final trimmed = state.query;
-    if (trimmed.isEmpty) {
+    if (!state.hasSearch) {
       _seq++;
       if (!ref.mounted) return;
       state = state.copyWith(
@@ -127,12 +134,14 @@ class DiarySearchController extends _$DiarySearchController {
     final (total, results) = await (
       _repository.countSearchDiaries(
         query: trimmed,
+        tagName: state.tagName,
         categoryId: state.categoryId,
         start: range.start,
         end: range.end,
       ),
       _repository.searchDiaries(
         query: trimmed,
+        tagName: state.tagName,
         categoryId: state.categoryId,
         start: range.start,
         end: range.end,
@@ -157,6 +166,7 @@ class DiarySearchController extends _$DiarySearchController {
     final range = _resolveRange();
     final next = await _repository.searchDiaries(
       query: state.query,
+      tagName: state.tagName,
       categoryId: state.categoryId,
       start: range.start,
       end: range.end,
@@ -165,8 +175,11 @@ class DiarySearchController extends _$DiarySearchController {
       offset: state.results.length,
     );
     if (!ref.mounted || seq != _seq) return;
+    final results = [...state.results, ...next];
     state = state.copyWith(
-      results: [...state.results, ...next],
+      results: results,
+      // 结果集在两次查询之间变小时，停在已加载的数量上，避免一直转圈。
+      totalCount: next.length < _pageSize ? results.length : state.totalCount,
       isLoadingMore: false,
     );
   }
