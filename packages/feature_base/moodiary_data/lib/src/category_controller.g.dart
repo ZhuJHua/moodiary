@@ -140,7 +140,7 @@ final class CategoryDiaryCountsProvider
 }
 
 String _$categoryDiaryCountsHash() =>
-    r'a1b9a0a64560ce96f857d3386d1f5d77316c11a5';
+    r'eec1cedc4139168f4904fd4052abca2e292bdb90';
 
 @ProviderFor(getCategory)
 final getCategoryProvider = GetCategoryFamily._();

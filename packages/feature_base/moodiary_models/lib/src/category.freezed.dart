@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Category {
 
- String get id; String get categoryName;@UtcDateTimeConverter() DateTime get lastModified; String? get parentId; int? get color;
+ String get id; String get categoryName; bool get deleted;@UtcDateTimeConverter() DateTime get lastModified; String? get parentId; int? get color;
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $CategoryCopyWith<Category> get copyWith => _$CategoryCopyWithImpl<Category>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as Category;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Category&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.categoryName, _this.categoryName) || other.categoryName == _this.categoryName)&&(identical(other.lastModified, _this.lastModified) || other.lastModified == _this.lastModified)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId)&&(identical(other.color, _this.color) || other.color == _this.color));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Category&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.categoryName, _this.categoryName) || other.categoryName == _this.categoryName)&&(identical(other.deleted, _this.deleted) || other.deleted == _this.deleted)&&(identical(other.lastModified, _this.lastModified) || other.lastModified == _this.lastModified)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId)&&(identical(other.color, _this.color) || other.color == _this.color));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Category;
-  return Object.hash(runtimeType,_this.id,_this.categoryName,_this.lastModified,_this.parentId,_this.color);
+  return Object.hash(runtimeType,_this.id,_this.categoryName,_this.deleted,_this.lastModified,_this.parentId,_this.color);
 }
 
 @override
 String toString() {
   final _this = this as Category;
-  return 'Category(id: ${_this.id}, categoryName: ${_this.categoryName}, lastModified: ${_this.lastModified}, parentId: ${_this.parentId}, color: ${_this.color})';
+  return 'Category(id: ${_this.id}, categoryName: ${_this.categoryName}, deleted: ${_this.deleted}, lastModified: ${_this.lastModified}, parentId: ${_this.parentId}, color: ${_this.color})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $CategoryCopyWith<$Res>  {
   factory $CategoryCopyWith(Category value, $Res Function(Category) _then) = _$CategoryCopyWithImpl;
 @useResult
 $Res call({
- String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color
+ String id, String categoryName, bool deleted,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color
 });
 
 
@@ -71,11 +71,12 @@ class _$CategoryCopyWithImpl<$Res>
 
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? categoryName = null,Object? lastModified = null,Object? parentId = freezed,Object? color = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? categoryName = null,Object? deleted = null,Object? lastModified = null,Object? parentId = freezed,Object? color = freezed,}) {
   return _then(Category(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,categoryName: null == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
-as String,lastModified: null == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
+as String,deleted: null == deleted ? _self.deleted : deleted // ignore: cast_nullable_to_non_nullable
+as bool,lastModified: null == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
 as DateTime,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
 as String?,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as int?,
@@ -163,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String categoryName,  bool deleted, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Category() when $default != null:
-return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color);case _:
+return $default(_that.id,_that.categoryName,_that.deleted,_that.lastModified,_that.parentId,_that.color);case _:
   return orElse();
 
 }
@@ -184,10 +185,10 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String categoryName,  bool deleted, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)  $default,) {final _that = this;
 switch (_that) {
 case _Category():
-return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color);case _:
+return $default(_that.id,_that.categoryName,_that.deleted,_that.lastModified,_that.parentId,_that.color);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +205,10 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String categoryName,  bool deleted, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)?  $default,) {final _that = this;
 switch (_that) {
 case _Category() when $default != null:
-return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color);case _:
+return $default(_that.id,_that.categoryName,_that.deleted,_that.lastModified,_that.parentId,_that.color);case _:
   return null;
 
 }
@@ -219,11 +220,12 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 @JsonSerializable()
 
 class _Category extends Category {
-  const _Category({required this.id, required this.categoryName, @UtcDateTimeConverter() required this.lastModified, this.parentId, this.color}): super._();
+  const _Category({required this.id, required this.categoryName, this.deleted = false, @UtcDateTimeConverter() required this.lastModified, this.parentId, this.color}): super._();
   factory _Category.fromJson(Map<String, dynamic> json) => _$CategoryFromJson(json);
 
 @override final  String id;
 @override final  String categoryName;
+@override@JsonKey() final  bool deleted;
 @override@UtcDateTimeConverter() final  DateTime lastModified;
 @override final  String? parentId;
 @override final  int? color;
@@ -241,18 +243,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Category&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.color, color) || other.color == color));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Category&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.deleted, deleted) || other.deleted == deleted)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.color, color) || other.color == color));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,categoryName,lastModified,parentId,color);
+    return Object.hash(runtimeType,id,categoryName,deleted,lastModified,parentId,color);
 }
 
 @override
 String toString() {
-    return 'Category(id: $id, categoryName: $categoryName, lastModified: $lastModified, parentId: $parentId, color: $color)';
+    return 'Category(id: $id, categoryName: $categoryName, deleted: $deleted, lastModified: $lastModified, parentId: $parentId, color: $color)';
 }
 
 
@@ -263,7 +265,7 @@ abstract mixin class _$CategoryCopyWith<$Res> implements $CategoryCopyWith<$Res>
   factory _$CategoryCopyWith(_Category value, $Res Function(_Category) _then) = __$CategoryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color
+ String id, String categoryName, bool deleted,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color
 });
 
 
@@ -280,11 +282,12 @@ class __$CategoryCopyWithImpl<$Res>
 
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? categoryName = null,Object? lastModified = null,Object? parentId = freezed,Object? color = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? categoryName = null,Object? deleted = null,Object? lastModified = null,Object? parentId = freezed,Object? color = freezed,}) {
   return _then(_Category(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,categoryName: null == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
-as String,lastModified: null == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
+as String,deleted: null == deleted ? _self.deleted : deleted // ignore: cast_nullable_to_non_nullable
+as bool,lastModified: null == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
 as DateTime,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
 as String?,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as int?,

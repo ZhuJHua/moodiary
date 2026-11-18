@@ -13,6 +13,7 @@ void main() {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
     repo = DiaryRepository(db);
     getIt.registerSingleton<DiaryRepository>(repo);
+    getIt.registerSingleton<TagRepository>(TagRepository(db));
     getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
     getIt.registerSingleton<MoodInsightsRepository>(MoodInsightsRepository(db));
   });

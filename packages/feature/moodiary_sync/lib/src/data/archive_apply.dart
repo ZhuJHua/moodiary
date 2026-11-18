@@ -56,6 +56,7 @@ class ArchiveApplier {
   final SyncDiaryStore _diaryStore;
   final SyncCategoryStore _categoryStore;
   final SyncPlaceStore _placeStore;
+  final SyncTagStore _tagStore;
   final SyncTombstoneStore _tombstoneStore;
   final SyncMediaFiles _mediaFiles;
   final Future<SyncCipher> Function() _cipherProvider;
@@ -69,6 +70,7 @@ class ArchiveApplier {
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
     SyncPlaceStore? placeStore,
+    SyncTagStore? tagStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
@@ -85,6 +87,7 @@ class ArchiveApplier {
     diaryStore ?? RepoSyncDiaryStore(),
     categoryStore ?? RepoSyncCategoryStore(),
     placeStore ?? RepoSyncPlaceStore(),
+    tagStore ?? RepoSyncTagStore(),
     tombstoneStore ?? RepoSyncTombstoneStore(),
     mediaFiles ?? DiskSyncMediaFiles(),
     cipherProvider ?? SyncCipher.current,
@@ -102,6 +105,7 @@ class ArchiveApplier {
     this._diaryStore,
     this._categoryStore,
     this._placeStore,
+    this._tagStore,
     this._tombstoneStore,
     this._mediaFiles,
     this._cipherProvider,
@@ -284,7 +288,7 @@ class ArchiveApplier {
               decoded['tags'] = tags;
             }
           }
-          final diary = Diary.fromJson(decoded);
+          var diary = Diary.fromJson(decoded);
           if (diary.id != id) {
             failed++;
             _logger.error(
@@ -308,6 +312,15 @@ class ArchiveApplier {
               payload: {'diaryId': id},
             );
             return;
+          }
+          if (decoded['tags'] case final List names
+              when !decoded.containsKey('tagIds')) {
+            diary = diary.copyWith(
+              tagIds: await _tagStore.adoptLegacyTags(
+                List<String>.from(names),
+                fromSync: true,
+              ),
+            );
           }
           await diaryRepo.insertADiary(
             restoring && oldDiary == null

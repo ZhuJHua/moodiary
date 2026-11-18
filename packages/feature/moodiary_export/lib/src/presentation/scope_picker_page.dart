@@ -65,17 +65,17 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
         .where((id) => id.isNotEmpty)
         .toSet();
     final repository = getIt<CategoryRepository>();
-    final categories = <Category>[];
-    for (final id in ids) {
-      final category = await repository.getCategoryById(id);
-      if (category != null) categories.add(category);
-    }
+    final categories = (await repository.getAllCategories())
+        .where((category) => ids.contains(category.id))
+        .toList();
     categories.sort((a, b) => a.categoryName.compareTo(b.categoryName));
 
     if (!mounted) return;
     setState(() {
       _diaries = visible;
       _categories = categories;
+      final selectable = {null, ...categories.map((c) => c.id)};
+      _categoryIds.retainAll(selectable);
       _loading = false;
     });
   }
@@ -150,7 +150,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
             style: FilledButton.styleFrom(
               shape: RoundedRectangleBorder(borderRadius: .circular(14)),
             ),
-            onPressed: built == null
+            onPressed: built == null || _loading
                 ? null
                 : () => Navigator.of(context).pop(built),
             child: Text(
@@ -175,10 +175,10 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
 
   Widget _categoryList(Translations l10n) {
     final scheme = context.theme.colors;
-    final uncategorized = _diaries.where((d) {
-      final id = d.categoryId;
-      return id == null || id.isEmpty;
-    }).length;
+    final active = _categories.map((c) => c.id).toSet();
+    final uncategorized = _diaries
+        .where((d) => !active.contains(d.categoryId))
+        .length;
 
     return Card.filled(
       color: scheme.surfaceContainerLow,

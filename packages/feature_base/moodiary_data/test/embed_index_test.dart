@@ -62,7 +62,6 @@ Diary makeDiary(String id, String text, {bool show = true, String? title}) =>
       imageName: const [],
       audioName: const [],
       videoName: const [],
-      tags: const [],
       type: 'tiptap',
     );
 

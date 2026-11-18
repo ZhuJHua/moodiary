@@ -1,5 +1,7 @@
 import 'package:fast_image/fast_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -431,14 +433,18 @@ class _Thumb extends StatelessWidget {
   }
 }
 
-class _Footer extends StatelessWidget {
+class _Footer extends ConsumerWidget {
   final Diary diary;
   final Place? place;
 
   const _Footer({required this.diary, required this.place});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tags = resolveTagNames(
+      diary.tagIds,
+      ref.watch(tagCatalogProvider).value?.byId ?? const {},
+    ).map((entry) => entry.name);
     final colors = context.theme.colors;
     final style = context.theme.typography.labelSmall.onSurfaceVariant;
     final chips = <Widget>[];
@@ -470,7 +476,7 @@ class _Footer extends StatelessWidget {
         ),
       );
     }
-    for (final tag in diary.tags.take(2)) {
+    for (final tag in tags.take(2)) {
       chips.add(
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 108),
@@ -478,8 +484,8 @@ class _Footer extends StatelessWidget {
         ),
       );
     }
-    if (diary.tags.length > 2) {
-      chips.add(Text('+${diary.tags.length - 2}', style: style));
+    if (tags.length > 2) {
+      chips.add(Text('+${tags.length - 2}', style: style));
     }
     final placeName = place?.name.trim() ?? '';
     if (placeName.isNotEmpty) {

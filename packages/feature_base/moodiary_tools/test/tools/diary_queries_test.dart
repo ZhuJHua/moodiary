@@ -12,7 +12,7 @@ void main() {
   setUp(() {
     db = openTestDatabase();
     diaries = DiaryRepository(db);
-    queries = DiaryToolQueries(diaries: diaries);
+    queries = DiaryToolQueries(tags: TagRepository(db), diaries: diaries);
   });
 
   tearDown(() => db.close());

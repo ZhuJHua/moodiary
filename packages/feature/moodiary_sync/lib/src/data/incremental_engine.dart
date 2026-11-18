@@ -40,6 +40,7 @@ class IncrementalSyncEngine {
   final SyncDiaryStore _diaryStore;
   final SyncCategoryStore _categoryStore;
   final SyncPlaceStore _placeStore;
+  final SyncTagStore _tagStore;
   final SyncTombstoneStore _tombstoneStore;
   final SyncMediaFiles _mediaFiles;
 
@@ -68,6 +69,7 @@ class IncrementalSyncEngine {
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
     SyncPlaceStore? placeStore,
+    SyncTagStore? tagStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
@@ -85,6 +87,7 @@ class IncrementalSyncEngine {
       diaryStore ?? RepoSyncDiaryStore(),
       categoryStore ?? RepoSyncCategoryStore(),
       placeStore ?? RepoSyncPlaceStore(),
+      tagStore ?? RepoSyncTagStore(),
       tombstoneStore ?? RepoSyncTombstoneStore(),
       mediaFiles ?? DiskSyncMediaFiles(),
       cipherProvider ?? SyncCipher.current,
@@ -102,6 +105,7 @@ class IncrementalSyncEngine {
     this._diaryStore,
     this._categoryStore,
     this._placeStore,
+    this._tagStore,
     this._tombstoneStore,
     this._mediaFiles,
     this._cipherProvider,
@@ -199,6 +203,7 @@ class IncrementalSyncEngine {
       diaryStore: _diaryStore,
       categoryStore: _categoryStore,
       placeStore: _placeStore,
+      tagStore: _tagStore,
       tombstoneStore: _tombstoneStore,
       mediaFiles: _mediaFiles,
       cipherProvider: _cipher,

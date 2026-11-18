@@ -95,9 +95,14 @@ class DiaryPatch {
 typedef _Converted = ({String content, String contentText, DiaryType type});
 
 class DiaryWrites {
-  DiaryWrites({required this.diaries, required this.categories});
+  DiaryWrites({
+    required this.diaries,
+    required this.tags,
+    required this.categories,
+  });
 
   final DiaryRepository diaries;
+  final TagRepository tags;
 
   final CategoryRepository categories;
 
@@ -134,7 +139,7 @@ class DiaryWrites {
       imageName: const [],
       audioName: const [],
       videoName: const [],
-      tags: tags,
+      tagIds: tags.isEmpty ? [] : await this.tags.ensureTags(tags),
       type: converted.type,
       aspect: null,
     );
@@ -254,7 +259,9 @@ class DiaryWrites {
       next = next.copyWith(time: time);
     }
     if (patch.tags case final tags?) {
-      next = next.copyWith(tags: tags);
+      next = next.copyWith(
+        tagIds: tags.isEmpty ? [] : await this.tags.ensureTags(tags),
+      );
     }
 
     next = touched(next);
@@ -339,7 +346,7 @@ class DiaryWrites {
     final id = raw?.trim();
     if (id == null || id.isEmpty) return null;
     final category = await categories.getCategoryById(id);
-    if (category != null) return id;
+    if (category != null && !category.deleted) return id;
     if (requireKnown) {
       throw DiaryOpsException(DiaryOpsFailure.invalidCategory, categoryId: id);
     }

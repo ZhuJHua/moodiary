@@ -15,6 +15,7 @@ void main() {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
     categories = CategoryRepository(db);
     diaries = DiaryRepository(db);
+    getIt.registerSingleton<TagRepository>(TagRepository(db));
     getIt.registerSingleton<CategoryRepository>(categories);
     getIt.registerSingleton<DiaryRepository>(diaries);
     getIt.registerSingleton<MoodInsightsRepository>(MoodInsightsRepository(db));
@@ -70,7 +71,7 @@ void main() {
       'ids': [category.id],
     });
     expect(deleted, contains('"ok":true'));
-    expect(await categories.getCategoryById(category.id), isNull);
+    expect((await categories.getCategoryById(category.id))?.deleted, isTrue);
   });
 
   test('renaming and deleting preserve existing child links', () async {
@@ -94,11 +95,11 @@ void main() {
       'ids': [category.id],
     });
     expect(deleted, contains('"ok":true'));
-    expect(await categories.getCategoryById(category.id), isNull);
+    expect((await categories.getCategoryById(category.id))?.deleted, isTrue);
     expect(await categories.getCategoryById(child.id), renamed);
   });
 
-  test('refuses deletion while a recycled diary uses the category', () async {
+  test('deletes a category used by a recycled diary', () async {
     final category = Category.create(categoryName: 'Work');
     await categories.insertACategory(category);
     await diaries.insertADiary(
@@ -109,7 +110,7 @@ void main() {
       'ids': [category.id],
     });
 
-    expect(result, contains('still holds diaries'));
-    expect(await categories.getCategoryById(category.id), category);
+    expect(result, contains('"ok":true'));
+    expect((await categories.getCategoryById(category.id))?.deleted, isTrue);
   });
 }

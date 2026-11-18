@@ -39,16 +39,19 @@ String richDocument() => jsonEncode({
 
 void main() {
   late MoodiaryDatabase db;
+  late TagRepository tagRepo;
   late DiaryRepository diaries;
   late CategoryRepository categories;
   late TestToolClient client;
   setUp(() {
     getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
     db = openTestDatabase();
+    tagRepo = TagRepository(db);
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
     client = TestToolClient(
       ToolContext(
+        tags: tagRepo,
         diaries: diaries,
         categories: categories,
         insights: MoodInsightsRepository(db),
@@ -93,6 +96,7 @@ void main() {
       );
       for (final surface in ToolSurface.values) {
         final context = ToolContext(
+          tags: tagRepo,
           diaries: diaries,
           categories: categories,
           insights: MoodInsightsRepository(db),
@@ -141,6 +145,7 @@ void main() {
     expect(read['missing'], ['bin']);
     final mediaClient = TestToolClient(
       ToolContext(
+        tags: tagRepo,
         diaries: diaries,
         categories: categories,
         insights: MoodInsightsRepository(db),
@@ -367,44 +372,44 @@ void main() {
     );
   });
 
-  test(
-    'delete_category refuses a non-empty category without changing its rows',
-    () async {
-      final id = await client.newCategory('Busy');
-      final child = Category.create(categoryName: 'Child', parentId: id);
-      await categories.insertACategory(child);
-      await diaries.insertADiary(makeDiary('kept', 'body', categoryId: id));
-      final before = (await diaries.getDiaryByBusinessId('kept'))!;
-      final deleted = row(
-        await run('delete_category', {
-          'ids': [id],
-        }),
-      );
-      expect(deleted['id'], id);
-      expect(deleted['ok'], false);
-      expect(deleted['error'], contains('still holds diaries'));
-      expect(await categories.getCategoryById(id), isNotNull);
-      expect(await categories.getCategoryById(child.id), child);
-      expect(await diaries.getDiaryByBusinessId('kept'), before);
-      final blank = row(
-        await run('create_category', {
-          'items': [
-            {'name': '   '},
-          ],
-        }),
-      );
-      expect(blank['ok'], false);
-      expect(blank['error'], contains('must not be empty'));
-      await diaries.updateADiary(newDiary: before.copyWith(show: false));
-      final recycled = row(
-        await run('delete_category', {
-          'ids': [id],
-        }),
-      );
-      expect(recycled['ok'], false);
-      expect(recycled['error'], contains('recycle bin'));
-    },
-  );
+  test('delete_category removes a non-empty category and preserves its entries and children', () async {
+    final id = await client.newCategory('Busy');
+    final child = Category.create(categoryName: 'Child', parentId: id);
+    await categories.insertACategory(child);
+    await diaries.insertADiary(makeDiary('kept', 'body', categoryId: id));
+    final before = (await diaries.getDiaryByBusinessId('kept'))!;
+    final deleted = row(
+      await run('delete_category', {
+        'ids': [id],
+      }),
+    );
+    expect(deleted['id'], id);
+    expect(deleted['ok'], true);
+    expect((await categories.getCategoryById(id))?.deleted, isTrue);
+    expect(await diaries.getDiaryByCategory(uncategorized: true), [before]);
+    expect(await categories.getCategoryById(child.id), child);
+    expect(await diaries.getDiaryByBusinessId('kept'), before);
+    final blank = row(
+      await run('create_category', {
+        'items': [
+          {'name': '   '},
+        ],
+      }),
+    );
+    expect(blank['ok'], false);
+    expect(blank['error'], contains('must not be empty'));
+    final other = await client.newCategory('Recycled');
+    await diaries.updateADiary(
+      newDiary: before.copyWith(show: false, categoryId: other),
+    );
+    final recycled = row(
+      await run('delete_category', {
+        'ids': [other],
+      }),
+    );
+    expect(recycled['ok'], true);
+    expect((await categories.getCategoryById(other))?.deleted, isTrue);
+  });
 
   test('delete_category leaves child categories untouched after deleting an empty parent', () async {
     final parent = await client.newCategory('Root');
@@ -416,7 +421,7 @@ void main() {
       }),
     );
     expect(deleted['ok'], true);
-    expect(await categories.getCategoryById(parent), isNull);
+    expect((await categories.getCategoryById(parent))?.deleted, isTrue);
     expect(await categories.getCategoryById(child.id), child);
   });
 
@@ -797,6 +802,7 @@ void main() {
           (tool) => tool.name == 'get_diary',
         );
         final context = ToolContext(
+          tags: tagRepo,
           diaries: diaries,
           categories: categories,
           insights: MoodInsightsRepository(db),
@@ -927,13 +933,17 @@ void main() {
           makeDiary(
             'tag-$day',
             'body',
-            tags: day.isEven ? ['work'] : ['home'],
+            tagIds: await tagRepo.ensureTags(day.isEven ? ['work'] : ['home']),
             time: DateTime(2026, 1, day, 12),
           ),
         );
       }
       await diaries.insertADiary(
-        makeDiary('partial-tag', 'body', tags: ['homework']),
+        makeDiary(
+          'partial-tag',
+          'body',
+          tagIds: await tagRepo.ensureTags(['homework']),
+        ),
       );
       for (final query in [null, 'body']) {
         final first = await run('search_diaries', {
@@ -962,7 +972,12 @@ void main() {
       expect(unknown['hasMore'], false);
       final category = await client.newCategory('Tagged');
       await diaries.insertADiary(
-        makeDiary('scoped', 'body', categoryId: category, tags: ['work']),
+        makeDiary(
+          'scoped',
+          'body',
+          categoryId: category,
+          tagIds: await tagRepo.ensureTags(['work']),
+        ),
       );
       final scoped = await run('search_diaries', {
         'tag': 'work',
@@ -975,9 +990,18 @@ void main() {
 
   test('list_tags aggregates usage over visible diaries only', () async {
     await diaries.insertDiaries([
-      makeDiary('first', 'a', tags: ['travel', 'food']),
-      makeDiary('second', 'b', tags: ['travel']),
-      makeDiary('hidden', 'c', tags: ['travel', 'hidden-only'], show: false),
+      makeDiary(
+        'first',
+        'a',
+        tagIds: await tagRepo.ensureTags(['travel', 'food']),
+      ),
+      makeDiary('second', 'b', tagIds: await tagRepo.ensureTags(['travel'])),
+      makeDiary(
+        'hidden',
+        'c',
+        tagIds: await tagRepo.ensureTags(['travel', 'hidden-only']),
+        show: false,
+      ),
     ]);
     final tags = await run('list_tags');
     expect(
@@ -1057,14 +1081,14 @@ void main() {
           'start',
           'apple',
           categoryId: category,
-          tags: ['fruit'],
+          tagIds: await tagRepo.ensureTags(['fruit']),
           time: DateTime(2026, 1, 2),
         ),
         makeDiary(
           'end',
           'apple',
           categoryId: category,
-          tags: ['fruit'],
+          tagIds: await tagRepo.ensureTags(['fruit']),
           time: DateTime(2026, 1, 3, 23, 59, 59),
         ),
         makeDiary(
@@ -1268,7 +1292,7 @@ void main() {
     expect(diary.title, '');
     expect(diary.mood, null);
     expect(diary.categoryId, null);
-    expect(diary.tags, isEmpty);
+    expect(diary.tagIds, isEmpty);
     expect(diary.contentText, 'body');
     expect(diary.time, DateTime.utc(2026, 1, 15, 8, 30));
     final failure = row(
@@ -1347,6 +1371,7 @@ void main() {
     expect((read['diaries'] as List).single['content'], isA<Map>());
     expect((read['diaries'] as List).single, isNot(contains('links')));
     final context = ToolContext(
+      tags: tagRepo,
       diaries: diaries,
       categories: categories,
       insights: MoodInsightsRepository(db),
@@ -1380,14 +1405,23 @@ void main() {
 
   test('link graph retains forward, backward and dangling ids', () async {
     await diaries.insertDiaries([
-      makeDiary('target', 'entry', tags: ['travel']),
+      makeDiary(
+        'target',
+        'entry',
+        tagIds: await tagRepo.ensureTags(['travel']),
+      ),
       makeDiary(
         'source',
         'entry',
-        tags: ['travel', 'food'],
+        tagIds: await tagRepo.ensureTags(['travel', 'food']),
         linkTo: ['target', 'ghost'],
       ),
-      makeDiary('hidden', 'entry', tags: ['travel'], show: false),
+      makeDiary(
+        'hidden',
+        'entry',
+        tagIds: await tagRepo.ensureTags(['travel']),
+        show: false,
+      ),
     ]);
     final graph = await run('get_diary_links', {'id': 'source'});
     expect((graph['forward'] as List).single['id'], 'target');

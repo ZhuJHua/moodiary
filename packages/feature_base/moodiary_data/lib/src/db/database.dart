@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -61,7 +62,7 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -124,7 +125,84 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
               await m.addColumn(schema.diaryMedia, schema.diaryMedia.name);
               await customStatement('DROP TABLE diary_fts');
               await m.createTable(schema.diaryFts);
-              for (final trigger in [diaryFtsAi, diaryFtsAd, diaryFtsAu]) {
+              await customStatement('''
+CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN
+  INSERT INTO diary_fts (rowid, title, content_text)
+    VALUES (new.rid, new.title, new.content_text);
+END''');
+              await customStatement('''
+CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN
+  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)
+    VALUES ('delete', old.rid, old.title, old.content_text);
+END''');
+              await customStatement('''
+CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries
+WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text
+BEGIN
+  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)
+    VALUES ('delete', old.rid, old.title, old.content_text);
+  INSERT INTO diary_fts (rowid, title, content_text)
+    VALUES (new.rid, new.title, new.content_text);
+END''');
+              await customStatement(
+                "INSERT INTO diary_fts(diary_fts) VALUES('rebuild')",
+              );
+            },
+            from3To4: (m, schema) async {
+              for (final name in [
+                'diary_fts_ai',
+                'diary_fts_ad',
+                'diary_fts_au',
+              ]) {
+                await customStatement('DROP TRIGGER IF EXISTS $name');
+              }
+              await m.deleteTable('diary_fts');
+              await m.addColumn(schema.diaries, schema.diaries.tagsText);
+              await m.addColumn(schema.categories, schema.categories.deleted);
+              await m.createTable(schema.tags);
+              await m.create(schema.idxTagsName);
+              final old = await customSelect(
+                'SELECT diary_id, tag FROM diary_tags ORDER BY diary_id, seq',
+              ).get();
+              await m.deleteTable('diary_tags');
+              await m.createTable(schema.diaryTags);
+              await m.create(schema.idxDiaryTagsTag);
+              final ids = <String, String>{};
+              String? previousDiary;
+              final seen = <String>{};
+              for (final row in old) {
+                final diary = row.read<String>('diary_id');
+                if (previousDiary != diary) seen.clear();
+                previousDiary = diary;
+                final name = Tag.normalize(row.read<String>('tag'));
+                if (name == null || !seen.add(name)) continue;
+                final id = ids[name] ?? Tag.legacyId(name);
+                if (!ids.containsKey(name)) {
+                  await _insertLegacyTag(id, name);
+                  ids[name] = id;
+                }
+                await customStatement(
+                  'INSERT INTO diary_tags (diary_id, seq, tag_id) VALUES (?, ?, ?)',
+                  [diary, seen.length - 1, id],
+                );
+              }
+              await refreshTagsText();
+              await customStatement('''
+INSERT INTO categories (id, name, deleted, last_modified)
+SELECT substr("key", 3), '', 1, time_ms * 1000 FROM tombstones WHERE "key" GLOB 'c:*'
+ON CONFLICT(id) DO UPDATE SET deleted = 1, last_modified = excluded.last_modified
+''');
+              await customStatement(
+                "DELETE FROM tombstones WHERE \"key\" GLOB 'c:*'",
+              );
+              await m.createTable(schema.diaryFts);
+              for (final trigger in [
+                diaryFtsAi,
+                diaryFtsAd,
+                diaryFtsAu,
+                tagsAi,
+                tagsAu,
+              ]) {
                 await m.create(trigger);
               }
               await customStatement(
@@ -214,6 +292,26 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
     }
   }
 
+  Future<void> _insertLegacyTag(String id, String name) => customStatement(
+    'INSERT OR IGNORE INTO tags (id, name, deleted, last_modified) VALUES (?, ?, 0, 0)',
+    [id, name],
+  );
+
+  Future<void> refreshTagsText([List<String>? diaryIds]) async {
+    const update = '''
+UPDATE diaries SET tags_text = COALESCE((SELECT group_concat(name, ' ') FROM
+  (SELECT t.name FROM diary_tags dt JOIN tags t ON t.id = dt.tag_id
+   WHERE dt.diary_id = diaries.id AND t.deleted = 0 ORDER BY dt.seq)), '')''';
+    if (diaryIds == null) return customStatement(update);
+    for (var start = 0; start < diaryIds.length; start += 500) {
+      final chunk = diaryIds.sublist(start, min(start + 500, diaryIds.length));
+      await customStatement(
+        '$update WHERE id IN (${List.filled(chunk.length, '?').join(',')})',
+        chunk,
+      );
+    }
+  }
+
   /// Must run after locale loading and before sync can read migrated diaries.
   /// Kept transactional so interruption retries without duplicate scene tags.
   Future<void> applyLegacyMoodScenes(String Function(LegacyMoodScene) label) =>
@@ -221,15 +319,19 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
         final pending = await select(legacyMoodScenes).get();
         for (final row in pending) {
           final scene = LegacyMoodScene.values.byName(row.scene);
-          final tag = label(scene);
+          final name = Tag.normalize(label(scene));
+          if (name == null) continue;
+          final tag = Tag.legacyId(name);
+          await _insertLegacyTag(tag, name);
           await customStatement(
-            'INSERT INTO diary_tags (diary_id, seq, tag) '
+            'INSERT INTO diary_tags (diary_id, seq, tag_id) '
             'SELECT ?, COALESCE(MAX(seq), -1) + 1, ? FROM diary_tags '
             'WHERE diary_id = ? HAVING NOT EXISTS '
-            '(SELECT 1 FROM diary_tags WHERE diary_id = ? AND tag = ?)',
+            '(SELECT 1 FROM diary_tags WHERE diary_id = ? AND tag_id = ?)',
             [row.diaryId, tag, row.diaryId, row.diaryId, tag],
           );
         }
+        await refreshTagsText([for (final row in pending) row.diaryId]);
         await delete(legacyMoodScenes).go();
       });
 

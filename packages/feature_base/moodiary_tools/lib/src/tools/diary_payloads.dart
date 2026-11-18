@@ -5,6 +5,7 @@ library;
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show internal, visibleForTesting;
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
@@ -111,6 +112,7 @@ String? _colorHex(int? argb) => argb == null
 /// Diary summary with a plain or Markdown excerpt.
 Map<String, dynamic> diarySummary(
   Diary diary, {
+  required Map<String, Tag> tags,
   String? categoryName,
   bool renderMarkdown = false,
   bool includeExcerpt = true,
@@ -123,7 +125,7 @@ Map<String, dynamic> diarySummary(
   'categoryId': diary.categoryId,
   'categoryName': categoryName,
   'mood': diary.mood?.name,
-  'tags': diary.tags,
+  'tags': [for (final entry in resolveTagNames(diary.tagIds, tags)) entry.name],
   if (includeExcerpt)
     'excerpt': excerptOf(diary, renderMarkdown: renderMarkdown),
   'show': diary.show,

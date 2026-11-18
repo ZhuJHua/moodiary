@@ -4,12 +4,12 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'diary_payloads.dart';
 
 class DiaryToolQueries {
-  DiaryToolQueries({required this.diaries});
+  DiaryToolQueries({required this.diaries, required this._tags});
 
   final DiaryRepository diaries;
+  final TagRepository _tags;
 
-  /// Tag usage over visible diaries, most used first. The database has no tag
-  /// index, so this aggregates over every visible diary.
+  /// Tag usage over visible diaries, most used first.
   Future<
     ({
       List<({String tag, int diaries})> tags,
@@ -18,28 +18,19 @@ class DiaryToolQueries {
     })
   >
   tags({required int limit}) async {
-    final all = await diaries.getAllDiaries();
-    final counts = <String, int>{};
-    var visible = 0;
-    for (final diary in all) {
-      if (!diary.show) continue;
-      visible++;
-      for (final tag in diary.tags) {
-        counts.update(tag, (count) => count + 1, ifAbsent: () => 1);
-      }
-    }
-    final sorted = counts.entries.toList()
+    final usage = await _tags.getTagUsage();
+    final sorted = usage.where((entry) => entry.count > 0).toList()
       ..sort((a, b) {
-        final byCount = b.value.compareTo(a.value);
-        return byCount != 0 ? byCount : a.key.compareTo(b.key);
+        final byCount = b.count.compareTo(a.count);
+        return byCount != 0 ? byCount : a.name.compareTo(b.name);
       });
     return (
       tags: [
         for (final entry in sorted.take(limit))
-          (tag: entry.key, diaries: entry.value),
+          (tag: entry.name, diaries: entry.count),
       ],
-      totalDistinct: counts.length,
-      scannedDiaries: visible,
+      totalDistinct: sorted.length,
+      scannedDiaries: (await diaries.diaryCountByCategory()).total,
     );
   }
 

@@ -218,7 +218,6 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String repairFixed({required Object count}) => 'Repaired ${count} entries:';
 	@override String repairFixedPreview({required Object count}) => '· card preview: ${count}';
 	@override String repairFixedMedia({required Object count}) => '· media references: ${count}';
-	@override String repairFixedOrphan({required Object count}) => '· dangling categories: ${count}';
 	@override String repairReindexed({required Object count}) => 'Search index rebuilt (${count} entries).';
 	@override String get repairDoneTitle => 'Repair finished';
 	@override String get repairOk => 'Got it';
@@ -701,9 +700,11 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String categoryRenamed({required Object name}) => 'Renamed to “${name}”';
 	@override String get categoryRenameFailed => 'Could not rename it';
 	@override String get categoryDeleteTitle => 'Delete this category?';
-	@override String categoryDeleteMessage({required Object name}) => '“${name}” can’t be deleted while entries (even in the recycle bin) are filed under it. Entries are kept.';
+	@override String categoryDeleteMessage({required num count, required Object name}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '“${name}” will be removed. 1 entry becomes uncategorized.',
+		other: '“${name}” will be removed. ${count} entries become uncategorized.',
+	);
 	@override String get categoryDeleted => 'Deleted';
-	@override String get categoryDeleteBlocked => 'Still has entries (check the recycle bin)';
 	@override String get categoryEmpty => 'No categories yet';
 	@override String get categoryNew => 'New category';
 	@override String categoryDiaryCount({required Object count}) => '${count} entries';
@@ -811,7 +812,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get saved => 'Saved';
 	@override String get unsaved => 'Unsaved';
 	@override String get saveFailed => 'Could not save';
-	@override String get unknownCategory => 'Unknown category';
 	@override String get searchReindexHint => 'Rebuild the index after upgrading so older entries become searchable';
 	@override String get searchReindex => 'Rebuild';
 	@override String get autoSaved => 'Autosaved';

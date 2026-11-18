@@ -24,6 +24,7 @@ class CategoryRepository {
     lastModified: dbToTime(r.lastModified),
     parentId: r.parentId,
     color: r.color,
+    deleted: r.deleted != 0,
   );
 
   static CategoriesCompanion _toCompanion(Category c) =>
@@ -33,12 +34,19 @@ class CategoryRepository {
         lastModified: dbTime(c.lastModified),
         parentId: Value(c.parentId),
         color: Value(c.color),
+        deleted: Value(c.deleted ? 1 : 0),
       );
 
-  Future<List<Category>> getAllCategories() async {
-    final rows = await (_db.select(
-      _db.categories,
-    )..orderBy([(c) => OrderingTerm.asc(c.id)])).get();
+  Future<List<Category>> getAllCategories() => _categories(activeOnly: true);
+
+  Future<List<Category>> getAllCategoriesForSync() =>
+      _categories(activeOnly: false);
+
+  Future<List<Category>> _categories({required bool activeOnly}) async {
+    final query = _db.select(_db.categories)
+      ..orderBy([(c) => OrderingTerm.asc(c.id)]);
+    if (activeOnly) query.where((c) => c.deleted.equals(0));
+    final rows = await query.get();
     return [for (final r in rows) _toCategory(r)];
   }
 
@@ -87,31 +95,17 @@ class CategoryRepository {
   }
 
   Future<bool> deleteACategory(String id) async {
-    final tombstone = SyncTombstone.forCategory(id, at: .timestamp());
-    final deleted = await _db.transaction(() async {
-      final hasDiary =
-          await (_db.select(_db.diaries)
-                ..where((d) => d.categoryId.equals(id))
-                ..limit(1))
-              .getSingleOrNull() !=
-          null;
-      if (hasDiary) return false;
-      final removed = await (_db.delete(
-        _db.categories,
-      )..where((c) => c.id.equals(id))).go();
-      if (removed == 0) return false;
-      await _db
-          .into(_db.tombstones)
-          .insertOnConflictUpdate(
-            TombstonesCompanion.insert(
-              key: tombstone.key,
-              timeMs: tombstone.timeMs,
-              pushedBackendsJson: Value(dbStringList(tombstone.pushedBackends)),
-            ),
-          );
-      return true;
-    });
-    if (deleted) _events.add(CategoryDeleted(id));
-    return deleted;
+    final rows =
+        await (_db.update(
+          _db.categories,
+        )..where((c) => c.id.equals(id) & c.deleted.equals(0))).writeReturning(
+          CategoriesCompanion(
+            deleted: const Value(1),
+            lastModified: Value(dbTime(DateTime.timestamp())),
+          ),
+        );
+    if (rows.isEmpty) return false;
+    _events.add(CategoryUpserted(_toCategory(rows.single)));
+    return true;
   }
 }

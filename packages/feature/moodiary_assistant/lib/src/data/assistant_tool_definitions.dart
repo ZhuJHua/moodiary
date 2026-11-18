@@ -15,6 +15,7 @@ final List<ToolDef> assistantToolDefinitions = List.unmodifiable([
 ToolContext assistantToolContext() => ToolContext(
   diaries: getIt<DiaryRepository>(),
   categories: getIt<CategoryRepository>(),
+  tags: getIt<TagRepository>(),
   insights: getIt<MoodInsightsRepository>(),
   surface: ToolSurface.assistant,
   semantic: getIt.isRegistered<EmbedIndexService>()
