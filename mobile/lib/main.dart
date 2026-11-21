@@ -143,11 +143,10 @@ void main() async {
     return true;
   };
 
-  unawaited(MGlassSurface.initialize());
-
   registerThirdPartyLicenses();
 
   try {
+    await MGlassApp.initialize();
     await _initSystem();
     buildRouter(initialLocation: resolveInitialLocation());
   } catch (e, s) {
@@ -161,7 +160,7 @@ void main() async {
   }
 
   runApp(
-    MGlassSurface.wrapApp(
+    MGlassApp(
       child: BuildBadge(
         child: TranslationProvider(
           child: ProviderScope(retry: (_, _) => null, child: const Moodiary()),
@@ -190,7 +189,8 @@ class Moodiary extends ConsumerWidget {
           value: systemOverlayStyleOf(brightness),
           // ignore: deprecated_member_use
           child: MaterialUiCompatibilityBridge(
-            child: FrostedGlassOverlayComponent(
+            child: MGlassPrivacyOverlay(
+              isEnabled: () => MoodiaryKVs.backendPrivacy.get() == true,
               child: ValueListenableBuilder<String>(
                 valueListenable: MoodiaryKVs.moodPalette.getNotifier(),
                 builder: (context, palette, child) => MoodPaletteScope(

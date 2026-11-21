@@ -11,7 +11,6 @@ export 'src/common/audio_player.dart';
 export 'src/common/code_theme.dart';
 export 'src/common/diary_citation_card.dart';
 export 'src/common/diary_share.dart';
-export 'src/common/frosted_glass_overlay.dart';
 export 'src/common/image_browser.dart';
 export 'src/common/media_marked_text.dart';
 export 'src/common/mood_delta_pill.dart';

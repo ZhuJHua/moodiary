@@ -33,7 +33,8 @@ class ToolApprovalCard extends StatelessWidget {
       borderRadius: MuiRadius.inside(MuiRadius.xl, _kInset),
     );
 
-    return MGlassSurface(
+    return Card.filled(
+      margin: EdgeInsets.zero,
       shape: const RoundedRectangleBorder(borderRadius: MuiRadius.xl),
       child: Padding(
         padding: const .all(_kInset),

@@ -1,18 +1,20 @@
-import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
-class FrostedGlassOverlayComponent extends StatefulWidget {
-  const FrostedGlassOverlayComponent({super.key, required this.child});
+class MGlassPrivacyOverlay extends StatefulWidget {
+  const MGlassPrivacyOverlay({
+    super.key,
+    required this.isEnabled,
+    required this.child,
+  });
 
+  final ValueGetter<bool> isEnabled;
   final Widget child;
 
   @override
-  State<FrostedGlassOverlayComponent> createState() =>
-      _FrostedGlassOverlayComponentState();
+  State<MGlassPrivacyOverlay> createState() => _MGlassPrivacyOverlayState();
 }
 
-class _FrostedGlassOverlayComponentState
-    extends State<FrostedGlassOverlayComponent>
+class _MGlassPrivacyOverlayState extends State<MGlassPrivacyOverlay>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _animationController = AnimationController(
     vsync: this,
@@ -32,7 +34,7 @@ class _FrostedGlassOverlayComponentState
   }
 
   @override
-  void didUpdateWidget(covariant FrostedGlassOverlayComponent oldWidget) {
+  void didUpdateWidget(covariant MGlassPrivacyOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
     // OverlayEntry 的 builder 闭包捕获旧值，child 变化需显式 markNeedsBuild
     if (widget.child != oldWidget.child) _appEntry.markNeedsBuild();
@@ -47,7 +49,7 @@ class _FrostedGlassOverlayComponentState
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (MoodiaryKVs.backendPrivacy.get() != true) return;
+    if (!widget.isEnabled()) return;
     switch (state) {
       case .inactive:
       case .hidden:

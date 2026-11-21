@@ -20,13 +20,14 @@ class MCircleButtonGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
+    final theme = context.theme;
+    final scheme = theme.colors;
     const shape = StadiumBorder();
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: context.theme.overlay,
+        color: theme.overlay,
         shape: shape,
-        shadows: MGlassSurface.defaultShadows(scheme),
+        shadows: theme.elevations.high,
       ),
       child: ClipPath(
         clipper: const ShapeBorderClipper(shape: shape),

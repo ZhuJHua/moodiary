@@ -15,18 +15,18 @@ import 'mood_upgrade_notice.dart';
 
 enum _ShellTab { diary, assistant, me }
 
-MNavDestination _navDestination(BuildContext context, _ShellTab tab) {
+MGlassNavDestination _navDestination(BuildContext context, _ShellTab tab) {
   final l10n = context.l10n;
   return switch (tab) {
-    .diary => MNavDestination(
+    .diary => MGlassNavDestination(
       icon: const Icon(LucideIcons.bookText),
       label: l10n.app.homeNavigatorDiary,
     ),
-    .assistant => MNavDestination(
+    .assistant => MGlassNavDestination(
       icon: const Icon(LucideIcons.astroid),
       label: l10n.app.homeNavigatorAssistant,
     ),
-    .me => MNavDestination(
+    .me => MGlassNavDestination(
       icon: const Icon(LucideIcons.circleUser),
       label: l10n.app.homeNavigatorMe,
     ),
@@ -66,20 +66,20 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
     await NewDiaryRoute(categoryId: categoryId).push(context);
   }
 
-  MNavAction _navAction(BuildContext context) {
+  MGlassNavAction _navAction(BuildContext context) {
     final l10n = context.l10n;
     return switch (_tab) {
-      .diary => MNavAction(
+      .diary => MGlassNavAction(
         icon: const Icon(LucideIcons.pencilLine),
         tooltip: l10n.app.homePageAddDiaryButton,
         onPressed: _newDiary,
       ),
-      .assistant => MNavAction(
+      .assistant => MGlassNavAction(
         icon: const Icon(LucideIcons.messageCirclePlus),
         tooltip: l10n.assistant.newChat,
         onPressed: () => const AssistantConversationRoute().push(context),
       ),
-      .me => MNavAction(
+      .me => MGlassNavAction(
         icon: const Icon(LucideIcons.settings),
         tooltip: l10n.app.settingsTitle,
         onPressed: () => const SettingRoute().push(context),
@@ -104,7 +104,7 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
           drawer: drawerUsable ? const CategoryDrawer() : null,
           drawerEnableOpenDragGesture: drawerUsable,
           body: MLazyIndexedStack(index: _tab.index, children: _pages),
-          bottomNavigationBar: MNavBar(
+          bottomNavigationBar: MGlassNavBar(
             selectedIndex: tabs.indexOf(_tab),
             onDestinationSelected: (index) =>
                 setState(() => _tab = tabs[index]),
