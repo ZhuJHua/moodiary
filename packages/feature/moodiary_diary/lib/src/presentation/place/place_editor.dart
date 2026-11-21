@@ -107,7 +107,7 @@ class PlaceMarker extends StatelessWidget {
           color: color,
           shape: .circle,
           border: .all(color: theme.onMedia, width: selected ? 3 : 2),
-          boxShadow: MGlassSurface.defaultShadows(theme.colors),
+          boxShadow: theme.elevations.high,
         ),
         child: Icon(
           placeIconOf(place.icon),
@@ -472,7 +472,7 @@ class _PlaceEditorSheetState extends ConsumerState<_PlaceEditorSheet> {
                     LucideIcons.mapPin,
                     size: 36,
                     color: placeIconColor(context, _draft.icon),
-                    shadows: MGlassSurface.defaultShadows(theme.colors),
+                    shadows: theme.elevations.high,
                   ),
                 ),
               ),

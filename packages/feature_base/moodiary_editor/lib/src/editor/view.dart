@@ -330,13 +330,14 @@ class _SelectionMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors,
+    final theme = context.theme;
+    final colors = theme.colors,
         foreground = colors.onSurface,
         top = MediaQuery.paddingOf(context).top + 8,
         above = details.anchorAbove - Offset(8, top + _gap),
         below = details.anchorBelow - Offset(8, top - _gap),
         fitsAbove = above.dy >= _height;
-    final style = context.theme.typography.labelSmall.withColor(foreground);
+    final style = theme.typography.labelSmall.withColor(foreground);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: MediaQuery.disableAnimationsOf(context)
@@ -364,7 +365,7 @@ class _SelectionMenu extends StatelessWidget {
             decoration: ShapeDecoration(
               color: colors.surfaceBright,
               shape: const RoundedRectangleBorder(borderRadius: MuiRadius.xl),
-              shadows: MGlassSurface.defaultShadows(colors),
+              shadows: theme.elevations.high,
             ),
             child: ClipRRect(
               borderRadius: MuiRadius.xl,

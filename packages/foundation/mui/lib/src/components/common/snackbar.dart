@@ -186,7 +186,7 @@ class _SnackbarState extends State<_Snackbar> with TickerProviderStateMixin {
                           shape: const RoundedRectangleBorder(
                             borderRadius: MuiRadius.lg,
                           ),
-                          shadows: MGlassSurface.defaultShadows(colors),
+                          shadows: theme.elevations.high,
                         ),
                         child: Padding(
                           padding: const .fromLTRB(16, 4, 4, 4),

@@ -617,7 +617,7 @@ class _FootprintPin extends StatelessWidget {
               color: color,
               shape: .circle,
               border: .all(color: theme.onMedia, width: selected ? 3 : 2),
-              boxShadow: MGlassSurface.defaultShadows(theme.colors),
+              boxShadow: theme.elevations.high,
             ),
             child: single
                 ? null

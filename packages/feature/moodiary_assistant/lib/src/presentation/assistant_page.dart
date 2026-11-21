@@ -1840,139 +1840,136 @@ class _AssistantComposerState extends State<_AssistantComposer> {
           child: Column(
             mainAxisSize: .min,
             crossAxisAlignment: .stretch,
+            spacing: 8.0,
             children: [
-              if (approval != null) ...[
+              if (approval != null)
                 ToolApprovalCard(
                   request: approval,
                   preview: widget.approvalPreview,
                   onApprove: widget.onApprove,
                   onSkip: widget.onSkip,
                 ),
-                const SizedBox(height: 8),
-              ],
-              MGlassSurface(
-                shape: const RoundedRectangleBorder(borderRadius: radius),
-                child: Padding(
-                  padding: const .all(_kComposerPadding),
-                  child: Column(
-                    mainAxisSize: .min,
-                    crossAxisAlignment: .stretch,
-                    children: [
-                      if (widget.citedDiaryId case final cited?)
-                        Padding(
-                          padding: const .fromLTRB(8, 6, 8, 2),
-                          child: DiaryCitations(
-                            ids: [cited],
-                            raised: true,
-                            onRemove: widget.onRemoveCitation,
-                          ),
-                        ),
-                      if (widget.pendingImageName != null)
-                        _ComposerImagePreview(
-                          imageName: widget.pendingImageName!,
-                          onRemove: widget.onRemoveImage,
-                        ),
+              MGlassContainer.card(
+                borderRadius: radius.topLeft.x,
+                padding: const .all(_kComposerPadding),
+                child: Column(
+                  mainAxisSize: .min,
+                  crossAxisAlignment: .stretch,
+                  children: [
+                    if (widget.citedDiaryId case final cited?)
                       Padding(
-                        padding: const .fromLTRB(8, 8, 8, 6),
-                        child: NotificationListener<ScrollMetricsNotification>(
-                          onNotification: (notification) {
-                            final overflowing =
-                                notification.metrics.maxScrollExtent > 0;
-                            if (overflowing != _overflowing) {
-                              setState(() => _overflowing = overflowing);
-                            }
-                            return false;
-                          },
-                          child: MField(
-                            controller: widget.controller,
-                            focusNode: widget.focusNode,
-                            enabled: inputEnabled,
-                            maxLines: _maxLines(context),
-                            variant: .plain,
-                            showClear: false,
-                            textInputAction: .send,
-                            hintText: l10n.assistant.inputHint,
-                            onSubmitted: (_) => widget.onSend(),
-                          ),
+                        padding: const .fromLTRB(8, 6, 8, 2),
+                        child: DiaryCitations(
+                          ids: [cited],
+                          raised: true,
+                          onRemove: widget.onRemoveCitation,
                         ),
                       ),
-                      Row(
-                        mainAxisAlignment: .spaceBetween,
-                        children: [
-                          if (widget.onSendImage case final onSendImage?)
-                            Tooltip(
-                              message: l10n.assistant.toolSendImage,
-                              child: MInkWell.fade(
-                                onTap: widget.sending ? null : onSendImage,
-                                child: SizedBox.square(
-                                  dimension: _kComposerControlSize,
-                                  child: Icon(
-                                    LucideIcons.image,
-                                    color: widget.sending
-                                        ? scheme.onSurfaceVariant.withValues(
-                                            alpha: 0.38,
-                                          )
-                                        : scheme.onSurfaceVariant,
-                                  ),
+                    if (widget.pendingImageName != null)
+                      _ComposerImagePreview(
+                        imageName: widget.pendingImageName!,
+                        onRemove: widget.onRemoveImage,
+                      ),
+                    Padding(
+                      padding: const .fromLTRB(8, 8, 8, 6),
+                      child: NotificationListener<ScrollMetricsNotification>(
+                        onNotification: (notification) {
+                          final overflowing =
+                              notification.metrics.maxScrollExtent > 0;
+                          if (overflowing != _overflowing) {
+                            setState(() => _overflowing = overflowing);
+                          }
+                          return false;
+                        },
+                        child: MField(
+                          controller: widget.controller,
+                          focusNode: widget.focusNode,
+                          enabled: inputEnabled,
+                          maxLines: _maxLines(context),
+                          variant: .plain,
+                          showClear: false,
+                          textInputAction: .send,
+                          hintText: l10n.assistant.inputHint,
+                          onSubmitted: (_) => widget.onSend(),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: .spaceBetween,
+                      children: [
+                        if (widget.onSendImage case final onSendImage?)
+                          Tooltip(
+                            message: l10n.assistant.toolSendImage,
+                            child: MInkWell.fade(
+                              onTap: widget.sending ? null : onSendImage,
+                              child: SizedBox.square(
+                                dimension: _kComposerControlSize,
+                                child: Icon(
+                                  LucideIcons.image,
+                                  color: widget.sending
+                                      ? scheme.onSurfaceVariant.withValues(
+                                          alpha: 0.38,
+                                        )
+                                      : scheme.onSurfaceVariant,
                                 ),
                               ),
-                            )
-                          else
-                            const SizedBox.shrink(),
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: .end,
-                              children: [
-                                if (_overflowing) ...[
-                                  Tooltip(
-                                    message: l10n.assistant.composerFullscreen,
-                                    child: MInkWell.fade(
-                                      onTap: widget.onFullscreen,
-                                      child: SizedBox.square(
-                                        dimension: _kComposerControlSize,
-                                        child: Icon(
-                                          LucideIcons.maximize2,
-                                          color: scheme.onSurfaceVariant,
-                                        ),
+                            ),
+                          )
+                        else
+                          const SizedBox.shrink(),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: .end,
+                            children: [
+                              if (_overflowing) ...[
+                                Tooltip(
+                                  message: l10n.assistant.composerFullscreen,
+                                  child: MInkWell.fade(
+                                    onTap: widget.onFullscreen,
+                                    child: SizedBox.square(
+                                      dimension: _kComposerControlSize,
+                                      child: Icon(
+                                        LucideIcons.maximize2,
+                                        color: scheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 4),
-                                ],
-                                if (widget.modelChip case final chip?) ...[
-                                  Flexible(child: chip),
-                                  const SizedBox(width: 8),
-                                ],
-                                ValueListenableBuilder<TextEditingValue>(
-                                  valueListenable: widget.controller,
-                                  builder: (context, value, _) {
-                                    if (widget.sending && approval == null) {
-                                      return MCircleButton(
-                                        tooltip: l10n.assistant.stop,
-                                        onPressed: widget.onStop,
-                                        size: _kComposerControlSize,
-                                        icon: const Icon(LucideIcons.square),
-                                      );
-                                    }
-                                    final canSend =
-                                        value.text.trim().isNotEmpty ||
-                                        (approval == null &&
-                                            widget.pendingImageName != null);
-                                    return MCircleButton(
-                                      tooltip: l10n.assistant.send,
-                                      onPressed: canSend ? widget.onSend : null,
-                                      size: _kComposerControlSize,
-                                      icon: const Icon(LucideIcons.arrowUp),
-                                    );
-                                  },
                                 ),
+                                const SizedBox(width: 4),
                               ],
-                            ),
+                              if (widget.modelChip case final chip?) ...[
+                                Flexible(child: chip),
+                                const SizedBox(width: 8),
+                              ],
+                              ValueListenableBuilder<TextEditingValue>(
+                                valueListenable: widget.controller,
+                                builder: (context, value, _) {
+                                  if (widget.sending && approval == null) {
+                                    return MCircleButton(
+                                      tooltip: l10n.assistant.stop,
+                                      onPressed: widget.onStop,
+                                      size: _kComposerControlSize,
+                                      icon: const Icon(LucideIcons.square),
+                                    );
+                                  }
+                                  final canSend =
+                                      value.text.trim().isNotEmpty ||
+                                      (approval == null &&
+                                          widget.pendingImageName != null);
+                                  return MCircleButton(
+                                    tooltip: l10n.assistant.send,
+                                    onPressed: canSend ? widget.onSend : null,
+                                    size: _kComposerControlSize,
+                                    icon: const Icon(LucideIcons.arrowUp),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],

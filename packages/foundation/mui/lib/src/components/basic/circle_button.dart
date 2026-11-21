@@ -27,8 +27,9 @@ class MCircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    final states = context.theme.states;
+    final theme = context.theme;
+    final scheme = theme.colors;
+    final states = theme.states;
     final enabled = onPressed != null;
 
     final (Color background, Color foreground) = switch (tone) {
@@ -41,7 +42,7 @@ class MCircleButton extends StatelessWidget {
         scheme.surfaceContainerHigh,
         scheme.onSurfaceVariant,
       ),
-      MCircleButtonTone.overlay => (context.theme.overlay, scheme.onSurface),
+      MCircleButtonTone.overlay => (theme.overlay, scheme.onSurface),
     };
 
     final fill = enabled
@@ -55,9 +56,7 @@ class MCircleButton extends StatelessWidget {
       decoration: ShapeDecoration(
         color: fill,
         shape: const CircleBorder(),
-        shadows: elevated && enabled
-            ? MGlassSurface.defaultShadows(scheme)
-            : null,
+        shadows: elevated && enabled ? theme.elevations.high : null,
       ),
       child: MInkWell(
         shape: const CircleBorder(),

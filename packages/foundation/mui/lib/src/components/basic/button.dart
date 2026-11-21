@@ -1,35 +1,5 @@
 import 'package:mui/mui.dart';
 
-class FrostedGlassButton extends StatelessWidget {
-  final Widget child;
-  final double size;
-  final Function()? onPressed;
-
-  const FrostedGlassButton({
-    super.key,
-    required this.child,
-    required this.size,
-    this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: size,
-        height: size,
-        clipBehavior: .hardEdge,
-        decoration: const ShapeDecoration(shape: CircleBorder()),
-        child: BackdropFilter(
-          filter: .blur(sigmaX: 10, sigmaY: 10),
-          child: Center(child: child),
-        ),
-      ),
-    );
-  }
-}
-
 class MultiFabLayoutDelegate extends MultiChildLayoutDelegate {
   MultiFabLayoutDelegate({required this.controller, required this.layoutIds})
     : super(relayout: controller);

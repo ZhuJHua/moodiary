@@ -44,15 +44,13 @@ class GraphInfoCard extends StatelessWidget {
           child: child,
         ),
       ),
-      child: Semantics(
-        button: true,
-        label: l10n.diary.graphOpenDiary,
-        child: MGlassSurface(
-          shape: const RoundedRectangleBorder(
-            borderRadius: AppBorderRadius.xLargeBorderRadius,
-          ),
-          shadows: const [],
-          borderColor: cs.outlineVariant.withValues(alpha: 0.45),
+      child: Card.filled(
+        margin: EdgeInsets.zero,
+        shape: const RoundedRectangleBorder(borderRadius: MuiRadius.xl),
+        clipBehavior: Clip.antiAlias,
+        child: Semantics(
+          button: true,
+          label: l10n.diary.graphOpenDiary,
           child: MInkWell(
             onTap: onOpen,
             child: Padding(

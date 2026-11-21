@@ -218,6 +218,29 @@ List<File> _dartFiles(String root) {
   });
 }
 
+final _glassPluginDirective = RegExp(
+  r"""^\s*(import|export)\s+['"]package:(glassmorphism|liquid_glass_widgets)/""",
+  multiLine: true,
+);
+
+List<String> _checkGlassPluginBoundary() {
+  final violations = <String>[];
+  for (final root in ['packages', ..._appDirs]) {
+    for (final file in _dartFiles(root)) {
+      final path = file.path.replaceAll('\\', '/');
+      final isMui = path.startsWith('packages/foundation/mui/');
+      for (final match in _glassPluginDirective.allMatches(
+        file.readAsStringSync(),
+      )) {
+        if (!isMui || match[1] == 'export') {
+          violations.add('$path: ${match[1]} ${match[2]}');
+        }
+      }
+    }
+  }
+  return violations;
+}
+
 const Map<String, Set<String>> _rustFacadeOwners = {
   'http': {'moodiary_http'},
   'sync': {'moodiary_sync'},
@@ -538,6 +561,16 @@ void main(List<String> args) {
     );
     exit(1);
   }
+
+  final glassViolations = _checkGlassPluginBoundary();
+  if (glassViolations.isNotEmpty) {
+    stderr.writeln('❌ 玻璃插件只能由 mui 导入，不能直接导出：');
+    for (final violation in glassViolations) {
+      stderr.writeln('  ✗ $violation');
+    }
+    exit(1);
+  }
+  stdout.writeln('✅ 玻璃插件只通过 mui 的 MGlass 组件使用。');
 
   final testingImports = _checkTestingImports();
   if (testingImports.isEmpty) {
