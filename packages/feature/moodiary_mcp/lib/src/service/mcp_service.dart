@@ -49,14 +49,20 @@ class McpServerState {
 /// Owns the local MCP endpoint, tool catalog and bearer token.
 @lazySingleton
 class McpService {
-  McpService(this._diaries, this._categories, this._insights, [this._semantic])
-    : _endpointFactory = null,
-      _networkChanges = null;
+  McpService(
+    this._diaries,
+    this._categories,
+    this._tags,
+    this._insights, [
+    this._semantic,
+  ]) : _endpointFactory = null,
+       _networkChanges = null;
 
   @visibleForTesting
   McpService.forTesting(
     this._diaries,
     this._categories,
+    this._tags,
     this._insights,
     this._endpointFactory,
     this._networkChanges,
@@ -64,6 +70,7 @@ class McpService {
 
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
+  final TagRepository _tags;
   final MoodInsightsRepository _insights;
   final EmbedIndexService? _semantic;
   final McpHttpEndpoint Function()? _endpointFactory;
@@ -140,6 +147,7 @@ class McpService {
             serverFactory: (iconUri) => buildMoodiaryServer(
               diaries: _diaries,
               categories: _categories,
+              tags: _tags,
               insights: _insights,
               semantic: _semantic,
               appVersion: version,

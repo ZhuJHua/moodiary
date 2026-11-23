@@ -36,8 +36,17 @@ class CategoryScope extends ExportScope {
   @override
   Future<List<Diary>> resolve() async {
     final all = await getIt<DiaryRepository>().getAllDiaries();
+    final active = {
+      for (final category
+          in await getIt<CategoryRepository>().getAllCategories())
+        if (category.id.isNotEmpty) category.id,
+    };
     return _visibleSorted(
-      all.where((d) => categoryIds.contains(d.categoryId)).toList(),
+      all.where((d) {
+        return categoryIds.contains(
+          active.contains(d.categoryId) ? d.categoryId : null,
+        );
+      }).toList(),
     );
   }
 

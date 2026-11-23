@@ -119,14 +119,20 @@ void main() {
 
       expect(result.deleted, isTrue);
       expect(result.category, category);
-      expect(await categories.getCategoryById(category.id), isNull);
+      expect((await categories.getCategoryById(category.id))?.deleted, isTrue);
       expect(await categories.getCategoryById(child.id), child);
-      expect(await db.select(db.tombstones).get(), hasLength(1));
-      expect(events, [isA<CategoryDeleted>()]);
+      expect(await db.select(db.tombstones).get(), isEmpty);
+      expect(events, [
+        isA<CategoryUpserted>().having(
+          (event) => event.category.deleted,
+          'deleted',
+          true,
+        ),
+      ]);
     });
 
     for (final visible in [true, false]) {
-      test('refuses a category holding a diary with show=$visible', () async {
+      test('deletes a category holding a diary with show=$visible', () async {
         final category = await ops.create(name: 'Work');
         await diaries.insertADiary(
           makeDiary(
@@ -138,8 +144,15 @@ void main() {
 
         final result = await ops.delete(category.id);
 
-        expect(result.deleted, isFalse);
-        expect(await categories.getCategoryById(category.id), category);
+        expect(result.deleted, isTrue);
+        expect(
+          (await categories.getCategoryById(category.id))?.deleted,
+          isTrue,
+        );
+        expect(
+          (await diaries.getDiaryByBusinessId("d1"))?.categoryId,
+          category.id,
+        );
         expect(await db.select(db.tombstones).get(), isEmpty);
       });
     }

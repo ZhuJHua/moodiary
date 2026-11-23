@@ -25,6 +25,7 @@ class LocalArchive {
       final categories = await RepoSyncCategoryStore()
           .getAllCategoriesForSync();
       final places = await RepoSyncPlaceStore().getAllPlacesForSync();
+      final tags = await RepoSyncTagStore().getAllTagsForSync();
       final tombstones = await RepoSyncTombstoneStore().getAll();
       final zipPath = p.join(
         PlatformService.get().applicationCachePath,
@@ -38,6 +39,7 @@ class LocalArchive {
           diaries: diaries,
           categories: categories,
           places: places,
+          tags: tags,
           tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
         );
@@ -68,6 +70,7 @@ class LocalArchive {
       final categories = await RepoSyncCategoryStore()
           .getAllCategoriesForSync();
       final places = await RepoSyncPlaceStore().getAllPlacesForSync();
+      final tags = await RepoSyncTagStore().getAllTagsForSync();
       final tombstones = await RepoSyncTombstoneStore().getAll();
       final zipPath = p.join(
         PlatformService.get().applicationCachePath,
@@ -82,6 +85,7 @@ class LocalArchive {
           diaries: diaries,
           categories: categories,
           places: places,
+          tags: tags,
           tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
           remote: remote,
@@ -102,6 +106,7 @@ class LocalArchive {
     diaries: await RepoSyncDiaryStore().getAllDiaries(),
     categories: await RepoSyncCategoryStore().getAllCategoriesForSync(),
     places: await RepoSyncPlaceStore().getAllPlacesForSync(),
+    tags: await RepoSyncTagStore().getAllTagsForSync(),
     tombstones: await RepoSyncTombstoneStore().getAll(),
     mediaBaseDir: PlatformService.get().applicationSupportPath,
   );
@@ -110,11 +115,13 @@ class LocalArchive {
     required List<Diary> diaries,
     required List<Category> categories,
     List<Place> places = const [],
+    List<Tag> tags = const [],
     required List<SyncTombstone> tombstones,
     required String mediaBaseDir,
   }) async {
     final entries = <String, ManifestEntry>{};
     for (final tombstone in tombstones) {
+      if (tombstone.kind == .category) continue;
       entries[tombstone.key] = ManifestEntry(
         timeMs: tombstone.timeMs,
         deleted: true,
@@ -137,6 +144,11 @@ class LocalArchive {
         timeMs: category.lastModified.millisecondsSinceEpoch,
       );
     }
+    for (final tag in tags) {
+      entries[SyncKeys.tag(tag.id)] = ManifestEntry(
+        timeMs: tag.lastModified.millisecondsSinceEpoch,
+      );
+    }
     for (final place in places) {
       entries[SyncKeys.place(place.id)] = ManifestEntry(
         timeMs: place.lastModified.millisecondsSinceEpoch,
@@ -155,6 +167,7 @@ class LocalArchive {
     required List<Diary> diaries,
     required List<Category> categories,
     List<Place> places = const [],
+    List<Tag> tags = const [],
     required List<SyncTombstone> tombstones,
     required String mediaBaseDir,
     SyncManifest? remote,
@@ -164,6 +177,7 @@ class LocalArchive {
       diaries: diaries,
       categories: categories,
       places: places,
+      tags: tags,
       tombstones: tombstones,
       mediaBaseDir: mediaBaseDir,
     );
@@ -185,6 +199,7 @@ class LocalArchive {
 
     final diaryById = {for (final d in diaries) d.id: d};
     final categoryById = {for (final c in categories) c.id: c};
+    final tagById = {for (final tag in tags) tag.id: tag};
     final placeById = {for (final p in places) p.id: p};
     final remoteMedia = remote?.referencedMedia() ?? const <String>{};
     final addedMedia = <String>{};
@@ -210,6 +225,12 @@ class LocalArchive {
         await sink.addBytes(
           SyncKeys.categoryObjectPath(id),
           await cipher.encode(categoryById[id]!.toJson()),
+        );
+      } else if (entry.key.startsWith(SyncKeys.tagPrefix)) {
+        final id = entry.key.substring(SyncKeys.tagPrefix.length);
+        await sink.addBytes(
+          SyncKeys.tagObjectPath(id),
+          await cipher.encode(tagById[id]!.toJson()),
         );
       } else if (entry.key.startsWith(SyncKeys.placePrefix)) {
         final id = entry.key.substring(SyncKeys.placePrefix.length);
@@ -277,6 +298,7 @@ class LocalArchive {
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
     SyncPlaceStore? placeStore,
+    SyncTagStore? tagStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
@@ -304,6 +326,7 @@ class LocalArchive {
         diaryStore: diaryStore,
         categoryStore: categoryStore,
         placeStore: placeStore,
+        tagStore: tagStore,
         tombstoneStore: tombstoneStore,
         mediaFiles: mediaFiles,
         cipherProvider: cipher,

@@ -24,7 +24,7 @@ Diary makeDiary(
   String type = 'tiptap',
   List<String> linkTo = const [],
   List<Map<String, dynamic>> media = const [],
-  List<String> tags = const [],
+  List<String> tagIds = const [],
   DateTime? time,
   String? categoryId,
   bool show = true,
@@ -64,7 +64,7 @@ Diary makeDiary(
       imageName: const [],
       audioName: const [],
       videoName: const [],
-      tags: tags,
+      tagIds: tagIds,
       type: type,
     ),
   );

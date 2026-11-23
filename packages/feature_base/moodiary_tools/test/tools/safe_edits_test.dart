@@ -26,6 +26,7 @@ void main() {
     final result = await def.call(
       args,
       ToolContext(
+        tags: TagRepository(db),
         surface: surface,
         diaries: diaries,
         categories: categories,

@@ -218,7 +218,6 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String repairFixed({required Object count}) => 'Repaired ${count} entries:';
 	@override String repairFixedPreview({required Object count}) => '· card preview: ${count}';
 	@override String repairFixedMedia({required Object count}) => '· media references: ${count}';
-	@override String repairFixedOrphan({required Object count}) => '· dangling categories: ${count}';
 	@override String repairReindexed({required Object count}) => 'Search index rebuilt (${count} entries).';
 	@override String get repairDoneTitle => 'Repair finished';
 	@override String get repairOk => 'Got it';
@@ -701,9 +700,11 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String categoryRenamed({required Object name}) => 'Renamed to “${name}”';
 	@override String get categoryRenameFailed => 'Could not rename it';
 	@override String get categoryDeleteTitle => 'Delete this category?';
-	@override String categoryDeleteMessage({required Object name}) => '“${name}” can’t be deleted while entries (even in the recycle bin) are filed under it. Entries are kept.';
+	@override String categoryDeleteMessage({required num count, required Object name}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '“${name}” will be removed. 1 entry becomes uncategorized.',
+		other: '“${name}” will be removed. ${count} entries become uncategorized.',
+	);
 	@override String get categoryDeleted => 'Deleted';
-	@override String get categoryDeleteBlocked => 'Still has entries (check the recycle bin)';
 	@override String get categoryEmpty => 'No categories yet';
 	@override String get categoryNew => 'New category';
 	@override String categoryDiaryCount({required Object count}) => '${count} entries';
@@ -811,7 +812,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get saved => 'Saved';
 	@override String get unsaved => 'Unsaved';
 	@override String get saveFailed => 'Could not save';
-	@override String get unknownCategory => 'Unknown category';
 	@override String get searchReindexHint => 'Rebuild the index after upgrading so older entries become searchable';
 	@override String get searchReindex => 'Rebuild';
 	@override String get autoSaved => 'Autosaved';
@@ -892,7 +892,7 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get restoreConfirmLabel => 'Restore';
 	@override String get restoring => 'Restoring…';
 	@override String restoreDone({required Object summary}) => 'Restored: ${summary}';
-	@override String restoreSummary({required Object diary, required Object category, required Object media}) => '${diary} diaries / ${category} categories / ${media} media files';
+	@override String restoreSummary({required Object diary, required Object category, required Object tag, required Object media}) => '${diary} diaries / ${category} categories / ${tag} tags / ${media} media files';
 	@override String restoreSummarySkipped({required Object base, required Object skipped}) => '${base}, ${skipped} skipped (this device has newer content)';
 	@override String restoreSummaryFailed({required Object base, required Object failed}) => '${base}, ${failed} failed';
 	@override String restorePartial({required Object summary}) => 'Restore did not fully succeed: ${summary}. Check storage space and connection, then retry — don\'t delete the old device\'s data yet';
@@ -1333,8 +1333,11 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get kindDiaryTombstonePush => 'Entry deletion pushed';
 	@override String get kindDiaryTombstonePull => 'Entry deletion pulled';
 	@override String get kindCategoryUpload => 'Category uploaded';
+	@override String get kindTagUpload => 'Tag uploaded';
 	@override String get kindCategoryDownload => 'Category downloaded';
+	@override String get kindTagDownload => 'Tag downloaded';
 	@override String get kindCategorySkip => 'Category skipped';
+	@override String get kindTagSkip => 'Tag skipped';
 	@override String get kindCategoryTombstonePush => 'Category deletion pushed';
 	@override String get kindCategoryTombstonePull => 'Category deletion pulled';
 	@override String get kindPlaceUpload => 'Place upload';
@@ -1386,6 +1389,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get statusNever => 'Never synced';
 	@override String get rowDiary => 'Entries';
 	@override String get rowCategory => 'Categories';
+	@override String get rowTag => 'Tags';
 	@override String get rowMedia => 'Media';
 	@override String get statusRunning => 'Syncing';
 	@override String get lanSendTitle => 'Send over the local network';
@@ -1405,13 +1409,30 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get lanPacking => 'Preparing the data…';
 	@override String get lanUploading => 'Sending';
 	@override String get lanApplying => 'Waiting for the other device to save…';
+	@override String get lanSendUpToDate => 'The other device is already up to date. Nothing to send.';
+	@override String get lanSendCompletedUpToDate => 'Transfer complete. The other device is up to date.';
+	@override String lanSendCompleted({required Object diaries, required Object categories, required Object tags}) => 'Transfer complete: ${diaries} · ${categories} · ${tags}';
+	@override String lanSentDiaries({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '${count} diary entry',
+		other: '${count} diary entries',
+	);
+	@override String lanSentCategories({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '${count} category',
+		other: '${count} categories',
+	);
+	@override String lanSentTags({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '${count} tag',
+		other: '${count} tags',
+	);
+	@override String get lanSendDetailsSeparator => '; ';
+	@override String lanSendCompletedWithDetails({required Object base, required Object details}) => '${base} (${details})';
 	@override String get lanReceiveTitle => 'Receive over the local network';
 	@override String lanStartFailed({required Object error}) => 'Could not start receiving: ${error}';
 	@override String get lanPinCopied => 'Pairing code copied';
 	@override String get lanPinHelp => 'Enter it on the sending device · tap to copy';
 	@override String get lanAddressCopied => 'Address copied';
 	@override String get lanUpToDate => 'Already up to date — nothing changed';
-	@override String lanReceived({required Object diary, required Object category}) => '${diary} entries · ${category} categories';
+	@override String lanReceived({required Object diary, required Object category, required Object tag}) => '${diary} entries · ${category} categories · ${tag} tags';
 	@override String lanReceivedFailed({required Object base, required Object failed}) => '${base} (${failed} failed)';
 	@override String get lanWaiting => 'Waiting for the sender to connect…';
 	@override String get lanReceiving => 'Receiving';
@@ -1533,11 +1554,12 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String warnMediaFailed({required Object count}) => '${count} media file(s) could not be downloaded; images or audio may be missing from those entries';
 	@override String get warnStopped => 'Stopped by you — the rest will continue on the next sync';
 	@override String warnFailedCount({required Object count}) => '${count} failed';
-	@override String reCipherSummary({required Object diary, required Object category, required Object media, required Object ms}) => '${diary} entries + ${category} categories + ${media} files (${ms}ms)';
+	@override String reCipherSummary({required Object diary, required Object category, required Object tag, required Object media, required Object ms}) => '${diary} entries + ${category} categories + ${tag} tags + ${media} files (${ms}ms)';
 	@override String reCipherFailedSuffix({required Object base, required Object failed}) => '${base}\n${failed} objects failed and were skipped';
 	@override String get stepPrepare => 'Preparing';
 	@override String stepDiary({required Object id}) => 'Entry ${id}';
 	@override String stepCategory({required Object id}) => 'Category ${id}';
+	@override String stepTag({required Object id}) => 'Tag ${id}';
 	@override String stepPlace({required Object id}) => 'Place ${id}';
 	@override String stepMediaInfo({required Object id}) => 'Media record ${id}';
 	@override String stepMedia({required Object ref}) => 'Media ${ref}';
@@ -1546,8 +1568,10 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get summaryUpToDate => 'Nothing to sync';
 	@override String summaryUploadedDiaries({required Object count}) => '${count} diaries uploaded';
 	@override String summaryUploadedCategories({required Object count}) => '${count} categories uploaded';
+	@override String summaryUploadedTags({required Object count}) => '${count} tags uploaded';
 	@override String summaryDownloadedDiaries({required Object count}) => '${count} diaries downloaded';
 	@override String summaryDownloadedCategories({required Object count}) => '${count} categories downloaded';
+	@override String summaryDownloadedTags({required Object count}) => '${count} tags downloaded';
 	@override String summaryMedia({required Object count}) => '${count} media files';
 	@override String get lanAuthLocked => 'Too many incorrect pairing codes. This session is locked — start receiving again to get a new code.';
 	@override String errWriteRemote({required Object key, required Object error}) => 'Failed to write remote object (${key}): ${error}';

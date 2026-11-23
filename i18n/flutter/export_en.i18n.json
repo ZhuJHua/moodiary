@@ -12,7 +12,7 @@
   "restoreConfirmLabel": "Restore",
   "restoring": "Restoring…",
   "restoreDone": "Restored: {summary}",
-  "restoreSummary": "{diary} diaries / {category} categories / {media} media files",
+  "restoreSummary": "{diary} diaries / {category} categories / {tag} tags / {media} media files",
   "restoreSummarySkipped": "{base}, {skipped} skipped (this device has newer content)",
   "restoreSummaryFailed": "{base}, {failed} failed",
   "restorePartial": "Restore did not fully succeed: {summary}. Check storage space and connection, then retry — don't delete the old device's data yet",

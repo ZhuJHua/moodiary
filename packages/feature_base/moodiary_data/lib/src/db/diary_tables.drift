@@ -19,7 +19,8 @@ CREATE TABLE diaries (
   place_id      TEXT,
   weather_icon  TEXT,
   weather_temp  TEXT,
-  weather_text  TEXT
+  weather_text  TEXT,
+  tags_text     TEXT NOT NULL DEFAULT ''
 ) AS DiaryRow;
 
 -- 第二排序键 id 与 Dart 侧 diarySortComparator 逐字段一致（uuid v7 按创建时刻
@@ -43,14 +44,36 @@ CREATE TABLE diary_media (
 CREATE INDEX idx_diary_media_kind ON diary_media (kind, diary_id);
 CREATE INDEX idx_diary_media_file ON diary_media (file_name);
 
+CREATE TABLE tags (
+  id TEXT NOT NULL PRIMARY KEY,
+  name TEXT NOT NULL,
+  deleted INTEGER NOT NULL DEFAULT 0,
+  last_modified INTEGER NOT NULL
+) AS TagRow;
+CREATE INDEX idx_tags_name ON tags (name);
+
 CREATE TABLE diary_tags (
   diary_id TEXT NOT NULL REFERENCES diaries (id) ON DELETE CASCADE,
   seq      INTEGER NOT NULL,
-  tag      TEXT NOT NULL,
+  tag_id   TEXT NOT NULL,
   PRIMARY KEY (diary_id, seq)
 ) AS DiaryTagRow;
 
-CREATE INDEX idx_diary_tags_tag ON diary_tags (tag);
+CREATE INDEX idx_diary_tags_tag ON diary_tags (tag_id);
+
+CREATE TRIGGER tags_ai AFTER INSERT ON tags BEGIN
+  UPDATE diaries SET tags_text = COALESCE((SELECT group_concat(name, ' ') FROM
+    (SELECT t.name FROM diary_tags dt JOIN tags t ON t.id = dt.tag_id
+     WHERE dt.diary_id = diaries.id AND t.deleted = 0 ORDER BY dt.seq)), '')
+  WHERE id IN (SELECT diary_id FROM diary_tags WHERE tag_id = new.id);
+END;
+
+CREATE TRIGGER tags_au AFTER UPDATE OF name, deleted ON tags BEGIN
+  UPDATE diaries SET tags_text = COALESCE((SELECT group_concat(name, ' ') FROM
+    (SELECT t.name FROM diary_tags dt JOIN tags t ON t.id = dt.tag_id
+     WHERE dt.diary_id = diaries.id AND t.deleted = 0 ORDER BY dt.seq)), '')
+  WHERE id IN (SELECT diary_id FROM diary_tags WHERE tag_id = new.id);
+END;
 
 -- 双链（有向 src→dst；dst 允许悬空——目标可能不存在或后创建，故无外键）。
 CREATE TABLE diary_links (
@@ -65,28 +88,29 @@ CREATE INDEX idx_diary_links_dst ON diary_links (dst_id);
 CREATE VIRTUAL TABLE diary_fts USING fts5(
   title,
   content_text,
+  tags_text,
   content='diaries',
   content_rowid='rid',
   tokenize='simple'
 );
 
 CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN
-  INSERT INTO diary_fts (rowid, title, content_text)
-    VALUES (new.rid, new.title, new.content_text);
+  INSERT INTO diary_fts (rowid, title, content_text, tags_text)
+    VALUES (new.rid, new.title, new.content_text, new.tags_text);
 END;
 
 CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN
-  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)
-    VALUES ('delete', old.rid, old.title, old.content_text);
+  INSERT INTO diary_fts (diary_fts, rowid, title, content_text, tags_text)
+    VALUES ('delete', old.rid, old.title, old.content_text, old.tags_text);
 END;
 
-CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries
-WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text
+CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text, tags_text ON diaries
+WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text OR old.tags_text IS NOT new.tags_text
 BEGIN
-  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)
-    VALUES ('delete', old.rid, old.title, old.content_text);
-  INSERT INTO diary_fts (rowid, title, content_text)
-    VALUES (new.rid, new.title, new.content_text);
+  INSERT INTO diary_fts (diary_fts, rowid, title, content_text, tags_text)
+    VALUES ('delete', old.rid, old.title, old.content_text, old.tags_text);
+  INSERT INTO diary_fts (rowid, title, content_text, tags_text)
+    VALUES (new.rid, new.title, new.content_text, new.tags_text);
 END;
 
 -- Deferred until the stored UI language has loaded; never synced as domain data.

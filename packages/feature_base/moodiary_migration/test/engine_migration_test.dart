@@ -140,6 +140,18 @@ void main() {
           pushedBackends: const ['backend-a'],
         ),
       );
+      for (final id in ['existing', 'missing']) {
+        isar.syncTombstones.put(
+          legacy.SyncTombstone(
+            key: 'c:$id',
+            timeMs: now.millisecondsSinceEpoch + 123,
+            pushedBackends: const [],
+          ),
+        );
+      }
+      isar.categorys.put(
+        legacy.Category(id: 'existing', categoryName: 'Old', lastModified: now),
+      );
       isar.llmProviders.put(
         legacy.LlmProvider(
           id: 'p1',
@@ -203,6 +215,7 @@ void main() {
   Future<EngineMigrationReport> migrate() => EngineMigrationService.migrate(
     database: db,
     diaryRepository: DiaryRepository(db),
+    tagRepository: TagRepository(db),
     categoryRepository: CategoryRepository(db),
     placeRepository: PlaceRepository(db, DiaryRepository(db)),
     fontRepository: FontRepository(db),
@@ -230,7 +243,11 @@ void main() {
     expect(place.longitude, 118.08);
     expect(full.weather?.text, '晴');
     expect(full.imageName, ['image-1.jpg']);
-    expect(full.tags, ['旅行']);
+    expect(full.tagIds, [Tag.legacyId('旅行')]);
+    expect(
+      (await TagRepository(db).getTagById(full.tagIds.single))?.name,
+      '旅行',
+    );
     expect(full.time, DateTime.utc(2026, 1, 1, 8));
     final pos2 = (await repo.getDiaryByBusinessId('d-pos2'))!;
     expect(
@@ -254,6 +271,13 @@ void main() {
     expect(await repo.hasLegacyFormatDiaries(), isTrue);
 
     expect((await CategoryRepository(db).getAllCategories()).single.id, 'c1');
+    for (final id in ['existing', 'missing']) {
+      final row = (await CategoryRepository(db).getCategoryById(id))!;
+      expect(row.deleted, isTrue);
+      expect(row.categoryName, id == 'existing' ? 'Old' : '');
+      expect(row.lastModified, DateTime.utc(2026, 5, 1, 0, 0, 0, 123));
+      expect(await TombstoneRepository(db).getByKey('c:$id'), isNull);
+    }
     expect(
       (await FontRepository(db).getFontByFontFamily('LXGW'))!.fontWghtAxisMap,
       {'wght': 400},
@@ -371,6 +395,7 @@ void main() {
     await EngineMigrationService.migrate(
       database: db,
       diaryRepository: repo,
+      tagRepository: TagRepository(db),
       categoryRepository: CategoryRepository(db),
       placeRepository: PlaceRepository(db, DiaryRepository(db)),
       fontRepository: FontRepository(db),

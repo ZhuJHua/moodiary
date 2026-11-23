@@ -148,6 +148,7 @@ class _StatusLine extends StatelessWidget {
   static String _summary(SyncReport report) {
     if (report.diaryCount == 0 &&
         report.categoryCount == 0 &&
+        report.tagCount == 0 &&
         report.failed == 0 &&
         !report.cancelled) {
       return l10n.sync.lanUpToDate;
@@ -155,6 +156,7 @@ class _StatusLine extends StatelessWidget {
     final base = l10n.sync.lanReceived(
       diary: report.diaryCount,
       category: report.categoryCount,
+      tag: report.tagCount,
     );
     return report.failed > 0
         ? l10n.sync.lanReceivedFailed(base: base, failed: report.failed)

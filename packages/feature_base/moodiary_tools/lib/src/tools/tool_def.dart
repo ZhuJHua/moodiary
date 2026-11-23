@@ -41,6 +41,7 @@ Never toolFailure(String message) => throw ToolFailure(message);
 class ToolContext {
   ToolContext({
     required this.diaries,
+    required this.tags,
     required this.categories,
     required this.insights,
     required this.surface,
@@ -58,6 +59,7 @@ class ToolContext {
        now = now ?? DateTime.now;
 
   final DiaryRepository diaries;
+  final TagRepository tags;
   final CategoryRepository categories;
   final MoodInsightsRepository insights;
   final DiaryMediaStore mediaStore;

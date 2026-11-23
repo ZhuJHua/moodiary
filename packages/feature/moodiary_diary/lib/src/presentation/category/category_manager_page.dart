@@ -74,7 +74,7 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
             category: c,
             count: counts[c.id] ?? 0,
             onRename: () => _onEditCategory(c),
-            onDelete: () => _onDelete(c),
+            onDelete: () => _onDelete(c, counts[c.id] ?? 0),
           );
         },
       );
@@ -123,7 +123,7 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
             count: counts[c.id] ?? 0,
             dragIndex: index,
             onRename: () => _onEditCategory(c),
-            onDelete: () => _onDelete(c),
+            onDelete: () => _onDelete(c, counts[c.id] ?? 0),
           ),
         );
       },
@@ -189,11 +189,14 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
     }
   }
 
-  Future<void> _onDelete(Category category) async {
+  Future<void> _onDelete(Category category, int count) async {
     final confirmed = await MAlert.confirm(
       context,
       title: l10n.diary.categoryDeleteTitle,
-      message: l10n.diary.categoryDeleteMessage(name: category.categoryName),
+      message: l10n.diary.categoryDeleteMessage(
+        name: category.categoryName,
+        count: count,
+      ),
       confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
@@ -205,7 +208,7 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
     if (ok) {
       toast.success(message: l10n.diary.categoryDeleted);
     } else {
-      toast.error(message: l10n.diary.categoryDeleteBlocked);
+      toast.error(message: l10n.common.loadFailed);
     }
   }
 }

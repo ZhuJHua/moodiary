@@ -90,7 +90,6 @@ void main() {
       imageName: const [],
       audioName: const [],
       videoName: const [],
-      tags: const [],
       type: .richText,
     ).copyWith(show: show);
 
@@ -101,6 +100,7 @@ void main() {
       getIt.registerSingleton<MoodInsightsRepository>(
         MoodInsightsRepository(db),
       );
+      getIt.registerSingleton<TagRepository>(TagRepository(db));
       getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
       a = diary('搬家');
       b = diary('加班');

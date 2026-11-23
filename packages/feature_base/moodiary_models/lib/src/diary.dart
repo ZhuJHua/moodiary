@@ -26,7 +26,7 @@ abstract class Diary with _$Diary {
     required List<String> audioName,
     required List<String> videoName,
     @Default(<String>[]) List<String> fileName,
-    required List<String> tags,
+    @Default(<String>[]) List<String> tagIds,
 
     String? placeId,
     required String type,
@@ -45,7 +45,7 @@ abstract class Diary with _$Diary {
     required List<String> imageName,
     required List<String> audioName,
     required List<String> videoName,
-    required List<String> tags,
+    List<String> tagIds = const [],
     String? placeId,
     required DiaryType type,
     double? aspect,
@@ -64,7 +64,7 @@ abstract class Diary with _$Diary {
       imageName: imageName,
       audioName: audioName,
       videoName: videoName,
-      tags: tags,
+      tagIds: tagIds,
       placeId: placeId,
       type: type.value,
       aspect: aspect,
@@ -84,7 +84,6 @@ abstract class Diary with _$Diary {
       imageName: [],
       audioName: [],
       videoName: [],
-      tags: [],
       type: type.value,
     );
   }

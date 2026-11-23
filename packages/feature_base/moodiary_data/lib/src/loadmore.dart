@@ -14,8 +14,12 @@ mixin LoadMoreMixin<T> on AnyNotifier<AsyncValue<List<T>>, List<T>> {
 
   void markMissedEvent() => _missedEvent = true;
 
-  Future<List<T>> init() async {
-    await _load();
+  Future<List<T>> init({bool refreshFirst = false}) async {
+    if (refreshFirst) {
+      await refresh();
+    } else {
+      await _load();
+    }
     if (_missedEvent) {
       _missedEvent = false;
       await refresh();

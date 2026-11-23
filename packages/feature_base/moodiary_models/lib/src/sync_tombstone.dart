@@ -28,15 +28,6 @@ abstract class SyncTombstone with _$SyncTombstone {
         pushedBackends: const [],
       );
 
-  factory SyncTombstone.forCategory(
-    String categoryId, {
-    required DateTime at,
-  }) => SyncTombstone(
-    key: categoryKey(categoryId),
-    timeMs: at.millisecondsSinceEpoch,
-    pushedBackends: const [],
-  );
-
   factory SyncTombstone.forPlace(String placeId, {required DateTime at}) =>
       SyncTombstone(
         key: placeKey(placeId),

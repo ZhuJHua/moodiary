@@ -25,5 +25,6 @@ export 'src/place_merge_record.dart';
 export 'src/reasoning_control.dart';
 export 'src/search.dart';
 export 'src/sync_tombstone.dart';
+export 'src/tag.dart';
 export 'src/utc_date_time_converter.dart';
 export 'src/view_mode.dart';

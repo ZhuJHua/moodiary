@@ -5,7 +5,8 @@ CREATE TABLE categories (
   name          TEXT NOT NULL,
   last_modified INTEGER NOT NULL,
   parent_id     TEXT,
-  color         INTEGER
+  color         INTEGER,
+  deleted       INTEGER NOT NULL DEFAULT 0
 ) AS CategoryRow;
 
 CREATE TABLE fonts (

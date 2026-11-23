@@ -9,6 +9,7 @@ part of 'category.dart';
 _Category _$CategoryFromJson(Map<String, dynamic> json) => _Category(
   id: json['id'] as String,
   categoryName: json['categoryName'] as String,
+  deleted: json['deleted'] as bool? ?? false,
   lastModified: const UtcDateTimeConverter().fromJson(
     json['lastModified'] as String,
   ),
@@ -19,6 +20,7 @@ _Category _$CategoryFromJson(Map<String, dynamic> json) => _Category(
 Map<String, dynamic> _$CategoryToJson(_Category instance) => <String, dynamic>{
   'id': instance.id,
   'categoryName': instance.categoryName,
+  'deleted': instance.deleted,
   'lastModified': const UtcDateTimeConverter().toJson(instance.lastModified),
   'parentId': instance.parentId,
   'color': instance.color,
