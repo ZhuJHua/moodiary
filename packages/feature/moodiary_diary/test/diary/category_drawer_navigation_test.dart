@@ -21,11 +21,7 @@ void main() {
           path: '/',
           builder: (_, _) => Scaffold(key: key, drawer: const CategoryDrawer()),
         ),
-        for (final route in const [
-          CategoryManagerRoute(),
-          TagManagerRoute(),
-          SettingRoute(),
-        ])
+        for (final route in const [CategoryManagerRoute(), TagManagerRoute()])
           GoRoute(
             path: route.location,
             builder: (_, _) => Text(route.location),
@@ -64,10 +60,10 @@ void main() {
       (find.byTooltip('管理分类'), const CategoryManagerRoute()),
       (find.byTooltip('管理标签'), const TagManagerRoute()),
       (find.text('更多 1'), const TagManagerRoute()),
-      (find.text('设置'), const SettingRoute()),
     ]) {
       key.currentState!.openDrawer();
       await tester.pumpAndSettle();
+      expect(find.byIcon(LucideIcons.settings), findsNothing);
       await tester.ensureVisible(entry);
       await tester.pumpAndSettle();
       await tester.tap(entry);

@@ -53,6 +53,8 @@
   "categorySearchHint": "搜索分类",
   "drawerSearchHint": "搜索分类和标签",
   "drawerNoMatch": "没有匹配的分类或标签",
+  "drawerNoCategories": "还没有分类，点右侧图标新建",
+  "drawerNoTags": "还没有标签，点右侧图标新建",
   "categoryAllDiary": "全部日记",
   "tags": "标签",
   "tagManagerTitle": "标签管理",

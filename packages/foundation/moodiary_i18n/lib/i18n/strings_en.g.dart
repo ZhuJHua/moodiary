@@ -76,7 +76,6 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get homePageAddDiaryButton => 'Create a diary';
 	@override String get categoryDeletedReset => 'Category deleted, showing all diaries';
 	@override String get tagFilterReset => 'Tag renamed or deleted, showing all diaries';
-	@override String get homeNavigatorSetting => 'Setting';
 	@override String get languageSystem => 'Follow System';
 	@override String get languageSimplifiedChinese => '简体中文';
 	@override String get languageEnglish => 'English';
@@ -686,6 +685,8 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get categorySearchHint => 'Search categories';
 	@override String get drawerSearchHint => 'Search categories and tags';
 	@override String get drawerNoMatch => 'No matching categories or tags';
+	@override String get drawerNoCategories => 'No categories yet. Tap the icon on the right to add one.';
+	@override String get drawerNoTags => 'No tags yet. Tap the icon on the right to add one.';
 	@override String get categoryAllDiary => 'All diaries';
 	@override String get tags => 'Tags';
 	@override String get tagManagerTitle => 'Tags';

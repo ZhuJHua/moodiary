@@ -117,9 +117,6 @@ class Translations$app$zh {
 	/// zh: '标签已改名或删除，已切回全部'
 	String get tagFilterReset => '标签已改名或删除，已切回全部';
 
-	/// zh: '设置'
-	String get homeNavigatorSetting => '设置';
-
 	/// zh: '跟随系统'
 	String get languageSystem => '跟随系统';
 
@@ -1892,6 +1889,12 @@ class Translations$diary$zh {
 
 	/// zh: '没有匹配的分类或标签'
 	String get drawerNoMatch => '没有匹配的分类或标签';
+
+	/// zh: '还没有分类，点右侧图标新建'
+	String get drawerNoCategories => '还没有分类，点右侧图标新建';
+
+	/// zh: '还没有标签，点右侧图标新建'
+	String get drawerNoTags => '还没有标签，点右侧图标新建';
 
 	/// zh: '全部日记'
 	String get categoryAllDiary => '全部日记';

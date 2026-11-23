@@ -53,6 +53,8 @@
   "categorySearchHint": "Search categories",
   "drawerSearchHint": "Search categories and tags",
   "drawerNoMatch": "No matching categories or tags",
+  "drawerNoCategories": "No categories yet. Tap the icon on the right to add one.",
+  "drawerNoTags": "No tags yet. Tap the icon on the right to add one.",
   "categoryAllDiary": "All diaries",
   "tags": "Tags",
   "tagManagerTitle": "Tags",
