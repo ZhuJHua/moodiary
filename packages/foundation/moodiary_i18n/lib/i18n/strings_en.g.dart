@@ -75,7 +75,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get homeNavigatorAssistant => 'Assistant';
 	@override String get homePageAddDiaryButton => 'Create a diary';
 	@override String get categoryDeletedReset => 'Category deleted, showing all diaries';
-	@override String get homeNavigatorSetting => 'Setting';
+	@override String get tagFilterReset => 'Tag renamed or deleted, showing all diaries';
 	@override String get languageSystem => 'Follow System';
 	@override String get languageSimplifiedChinese => '简体中文';
 	@override String get languageEnglish => 'English';
@@ -634,6 +634,7 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get pageViewModeButton => 'View mode';
 	@override String get categoryNoCategory => 'No category';
 	@override String get allCategories => 'All categories';
+	@override String get allTags => 'All tags';
 	@override String get categoryAll => 'All';
 	@override String get categoryColorLabel => 'Color';
 	@override String get search => 'Search';
@@ -681,10 +682,42 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get graphLinks => 'Links';
 	@override String get graphNoLocalLinks => 'This diary has no links yet';
 	@override String get categorySearchHint => 'Search categories';
+	@override String get drawerSearchHint => 'Search categories and tags';
+	@override String get drawerNoMatch => 'No matching categories or tags';
+	@override String get drawerNoCategories => 'No categories yet. Tap the icon on the right to add one.';
+	@override String get drawerNoTags => 'No tags yet. Tap the icon on the right to add one.';
 	@override String get categoryAllDiary => 'All diaries';
+	@override String get tags => 'Tags';
+	@override String get tagManagerTitle => 'Tags';
+	@override String get tagSearchHint => 'Search tags';
+	@override String get tagEmpty => 'No tags yet';
+	@override String get tagEmptyBody => 'Enter a name above to create a tag. It will appear here for you to use again.';
+	@override String tagRemove({required Object name}) => 'Remove ${name}';
+	@override String tagShowAll({required Object count}) => 'Show all ${count}';
+	@override String get tagNew => 'New tag';
+	@override String get tagNoMatch => 'No matching tags';
+	@override String tagUsage({required num count, required Object date}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '1 entry · Last used ${date}',
+		other: '${count} entries · Last used ${date}',
+	);
+	@override String get tagExists => 'Tag already exists';
+	@override String get tagMergeTitle => 'Merge tags';
+	@override String tagMergeMessage({required num count, required Object target, required Object source}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '#${target} already exists. The entry tagged #${source} will now show #${target}.',
+		other: '#${target} already exists. The ${count} entries tagged #${source} will now show #${target}.',
+	);
+	@override String get tagDeleteTitle => 'Delete tag?';
+	@override String tagDeleteMessage({required num count, required Object name}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '1 entry will no longer show #${name}, nor will entries in the recycle bin.',
+		other: '${count} entries will no longer show #${name}, nor will entries in the recycle bin.',
+	);
+	@override String get tagDeleteUnused => 'This tag cannot be recovered after deletion.';
+	@override String get tagNameEmpty => 'The name cannot be empty';
 	@override String get categoryNoMatch => 'No matching categories';
 	@override String get categorySyncingPlaceholder => 'Syncing category…';
 	@override String get categoryManageEntry => 'Manage categories';
+	@override String get tagManageEntry => 'Manage tags';
+	@override String drawerMoreTags({required Object count}) => '${count} more';
 	@override String get sortTitle => 'Sort';
 	@override String get sortNewestFirst => 'Newest first';
 	@override String get sortOldestFirst => 'Oldest first';
@@ -747,9 +780,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get mapTiandituKey => 'Tianditu key';
 	@override String get mapTiandituNoKey => 'Tianditu needs a key';
 	@override String get mapLoadFailed => 'Map failed to load';
-	@override String get addTag => 'Add a tag';
-	@override String get tagNameHint => 'Tag name';
-	@override String get add => 'Add';
 	@override String get weatherFailed => 'Could not fetch the weather — try again later';
 	@override String weatherFetched({required Object weather}) => 'Weather: ${weather}';
 	@override String get weatherAuto => 'Fetch automatically';
@@ -830,6 +860,13 @@ class _Translations$editor$en extends Translations$editor$zh {
 	// Translations
 	@override String get audioFileError => 'Audio file error';
 	@override String get pickCategory => 'Pick a category';
+	@override String get categoryPickerSubtitle => 'Tap a category to save';
+	@override String get pickTags => 'Tags';
+	@override String tagPickerSubtitle({required Object count}) => 'Select multiple · ${count} selected';
+	@override String get tagSearchHint => 'Search or create a tag';
+	@override String get tagRecent => 'Recently used';
+	@override String pickerMatches({required Object count}) => 'Matches · ${count}';
+	@override String createTag({required Object name}) => 'Create “${name}”';
 	@override String get noCategory => 'No category';
 	@override String get migrationTitle => 'Upgrade data migration';
 	@override String get migrationIntro => 'Version 2.8.0 uses a new data engine and editor. A one-time migration is required before you can continue.';

@@ -5,8 +5,8 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
+import '../widget/manager_search_field.dart';
 import 'place_editor.dart';
 import 'place_merge_sheet.dart';
 
@@ -78,7 +78,10 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
             }
             return Column(
               children: [
-                _SearchField(onChanged: (v) => setState(() => _query = v)),
+                ManagerSearchField(
+                  hint: context.l10n.diary.placeSearchHint,
+                  onChanged: (v) => setState(() => _query = v),
+                ),
                 Expanded(
                   child: _buildList(filtered, counts, canReorder: q.isEmpty),
                 ),
@@ -270,33 +273,6 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
   }
 }
 
-class _SearchField extends StatelessWidget {
-  final ValueChanged<String> onChanged;
-
-  const _SearchField({required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const .fromLTRB(12, 12, 12, 6),
-      child: TextField(
-        onChanged: onChanged,
-        textInputAction: .search,
-        decoration: InputDecoration(
-          hintText: context.l10n.diary.placeSearchHint,
-          prefixIcon: const Icon(LucideIcons.search),
-          filled: true,
-          isDense: true,
-          border: const OutlineInputBorder(
-            borderRadius: AppBorderRadius.mediumBorderRadius,
-            borderSide: .none,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _NoMatch extends StatelessWidget {
   const _NoMatch();
 
@@ -368,86 +344,41 @@ class _PlaceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    return Card.filled(
-      margin: const .symmetric(vertical: 4),
-      color: selected ? colors.secondaryContainer : colors.surfaceContainerLow,
-      clipBehavior: .antiAlias,
-      child: ListTile(
-        selected: selected,
-        onTap: selecting ? onToggle : onEdit,
-        onLongPress: selecting ? null : onLongPress,
-        leading: PlaceBadge(place: place),
-        title: Text(
-          place.name,
-          maxLines: 1,
-          overflow: .ellipsis,
-          style: context.theme.typography.titleMedium.onSurface,
+    return MetaTile<String>(
+      selected: selected,
+      onTap: selecting ? onToggle : onEdit,
+      onLongPress: selecting ? null : onLongPress,
+      leading: PlaceBadge(place: place),
+      title: place.name,
+      subtitle: placeCountLabel(context, count),
+      dragIndex: dragIndex,
+      entries: [
+        MMenuEntry(
+          value: 'edit',
+          label: context.l10n.diary.edit,
+          icon: LucideIcons.squarePen,
         ),
-        subtitle: Text(
-          placeCountLabel(context, count),
-          style: context.theme.typography.labelSmall.onSurfaceVariant,
+        MMenuEntry(
+          value: 'delete',
+          label: context.l10n.common.delete,
+          icon: LucideIcons.trash2,
+          isDestructive: true,
         ),
-        trailing: selecting
-            ? SizedBox.square(
-                dimension: 48,
-                child: Center(
-                  child: SizedBox.square(
-                    dimension: 22,
-                    child: ExcludeSemantics(
-                      child: MSelectMark(selected: selected),
-                    ),
+      ],
+      onSelected: (key) => key == 'edit' ? onEdit() : onDelete(),
+      trailing: selecting
+          ? SizedBox.square(
+              dimension: 48,
+              child: Center(
+                child: SizedBox.square(
+                  dimension: 22,
+                  child: ExcludeSemantics(
+                    child: MSelectMark(selected: selected),
                   ),
                 ),
-              )
-            : Row(
-                mainAxisSize: .min,
-                children: [
-                  MMenuButton<String>(
-                    tooltip: context.l10n.common.more,
-                    onSelected: (key) {
-                      switch (key) {
-                        case 'edit':
-                          onEdit();
-                        case 'delete':
-                          onDelete();
-                      }
-                    },
-                    entries: [
-                      MMenuEntry(
-                        value: 'edit',
-                        label: context.l10n.diary.edit,
-                        icon: LucideIcons.squarePen,
-                      ),
-                      MMenuEntry(
-                        value: 'delete',
-                        label: context.l10n.common.delete,
-                        icon: LucideIcons.trash2,
-                        isDestructive: true,
-                      ),
-                    ],
-                    child: Padding(
-                      padding: const .all(12),
-                      child: Icon(
-                        LucideIcons.ellipsisVertical,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  if (dragIndex != null)
-                    ReorderableDragStartListener(
-                      index: dragIndex!,
-                      child: Padding(
-                        padding: const .only(left: 4),
-                        child: Icon(
-                          LucideIcons.gripHorizontal,
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                ],
               ),
-      ),
+            )
+          : null,
     );
   }
 }

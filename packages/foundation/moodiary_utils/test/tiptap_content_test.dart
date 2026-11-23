@@ -1061,6 +1061,14 @@ void main() {
   });
 
   group('MediaMarkup', () {
+    test('leading excerpt keeps whole media markers and counts runes', () {
+      final marker = MediaMarkup.mark(.attachment, '😀' * 130);
+      final text = '苹果\n$marker';
+      expect(MediaMarkup.leadingExcerpt(text, 120), text);
+      expect(MediaMarkup.leadingExcerpt('$text\n后文', 120), '$text…');
+      expect(MediaMarkup.leadingExcerpt('😀😀', 1), '😀…');
+    });
+
     String desc(List<MarkupRun> runs) => runs
         .map(
           (r) => switch (r) {

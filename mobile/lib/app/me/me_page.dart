@@ -48,6 +48,7 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final stats = ref.watch(dashboardControllerProvider).value;
+    final catalog = ref.watch(tagCatalogProvider);
     final moodState = ref.watch(moodInsightsControllerProvider);
     final moods = moodState.value;
     final moodLoading = moodState.isLoading;
@@ -98,6 +99,9 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
           _SectionLabel(context.l10n.app.meSectionManage),
           _ManageRows(
             categoryCount: stats?.categoryCount,
+            tagCount: catalog.isLoading
+                ? null
+                : catalog.value?.usage.where((tag) => tag.count > 0).length,
             placeCount: ref.watch(placeControllerProvider).value?.length,
           ),
         ],
@@ -456,9 +460,14 @@ class _RecallTile extends StatelessWidget {
 
 class _ManageRows extends StatelessWidget {
   final int? categoryCount;
+  final int? tagCount;
   final int? placeCount;
 
-  const _ManageRows({required this.categoryCount, required this.placeCount});
+  const _ManageRows({
+    required this.categoryCount,
+    required this.tagCount,
+    required this.placeCount,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -489,6 +498,12 @@ class _ManageRows extends StatelessWidget {
             leading: lead(LucideIcons.folders),
             trailing: countChevron(categoryCount),
             onTap: () => const CategoryManagerRoute().push(context),
+          ),
+          SettingListTile(
+            title: l10n.diary.tagManagerTitle,
+            leading: lead(LucideIcons.tags),
+            trailing: countChevron(tagCount),
+            onTap: () => const TagManagerRoute(manageOnly: true).push(context),
           ),
           SettingListTile(
             title: l10n.app.placeManager,

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart'
     show ApplyInterceptor, QueryExecutor, QueryInterceptor, Value;
 import 'package:drift/native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -104,9 +105,10 @@ void main() {
   late MoodiaryDatabase db;
   late DiaryRepository repo;
 
-  setUpAll(() {
+  setUp(() {
     getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
   });
+  tearDown(getIt.reset);
 
   MoodiaryDatabase openDb() => MoodiaryDatabase.forTesting(
     NativeDatabase.memory(
@@ -137,6 +139,89 @@ void main() {
 
   group('检索', () {
     freshDatabasePerTest();
+
+    test(
+      'tag filter intersects keyword, category and date across live ids',
+      () async {
+        final tags = TagRepository(db);
+        for (final id in ['first', 'second', 'deleted']) {
+          await tags.insertATag(
+            Tag.legacy('Travel').copyWith(id: id, deleted: id == 'deleted'),
+          );
+        }
+        await repo.insertDiaries([
+          makeDiary('a', '苹果', categoryId: 'c1', tagIds: ['first', 'second']),
+          makeDiary('b', '苹果', categoryId: 'c2', tagIds: ['second']),
+          makeDiary(
+            'c',
+            '香蕉',
+            categoryId: 'c1',
+            tagIds: ['first'],
+            time: DateTime.utc(2026, 2),
+          ),
+          makeDiary('d', '苹果', tagIds: ['deleted']),
+          makeDiary('e', '苹果', tagIds: ['first'], show: false),
+          makeDiary('f', '苹果'),
+        ]);
+
+        Future<void> check(
+          String query,
+          List<String> expected, {
+          String? categoryId,
+          DateTime? start,
+          String? tagName = 'Travel',
+        }) async {
+          expect(
+            await repo.countSearchDiaries(
+              query: query,
+              tagName: tagName,
+              categoryId: categoryId,
+              start: start,
+            ),
+            expected.length,
+          );
+          final hits = await repo.searchDiaries(
+            query: query,
+            tagName: tagName,
+            categoryId: categoryId,
+            start: start,
+            sort: .timeAsc,
+          );
+          expect(hits.map((hit) => hit.diary.id), expected);
+        }
+
+        await check('苹果', ['a', 'b']);
+        await check('苹果', ['a'], categoryId: 'c1');
+        await check('', ['a', 'c'], categoryId: 'c1');
+        await check('', ['c'], start: DateTime.utc(2026, 2));
+        await check(' \uFDD1\uFDD0 ', ['a', 'b', 'c']);
+        await check('', [], tagName: null);
+
+        for (final sort in SearchSort.values) {
+          final pages = [
+            for (var offset = 0; offset < 4; offset += 2)
+              ...await repo.searchDiaries(
+                query: '',
+                tagName: 'Travel',
+                sort: sort,
+                limit: 2,
+                offset: offset,
+              ),
+          ];
+          expect(
+            pages.length,
+            await repo.countSearchDiaries(query: '', tagName: 'Travel'),
+          );
+          expect(
+            pages.map((hit) => hit.diary.id),
+            sort == .timeAsc ? ['a', 'b', 'c'] : ['c', 'b', 'a'],
+          );
+          final hit = pages.singleWhere((hit) => hit.diary.id == 'a');
+          expect(hit.titleHighlight, 'title-a');
+          expect(hit.excerpt, '苹果');
+        }
+      },
+    );
 
     test(
       'late, renamed and deleted tags update FTS without editing the diary',
@@ -743,6 +828,111 @@ void main() {
         offset: 2,
       );
       expect([...page1, ...page2].map((d) => d.id), fromDb.map((d) => d.id));
+    });
+
+    test('标签按活跃名称筛选，分页和月计数不重复计算日记', () async {
+      const name = "Sam's trips";
+      final tags = TagRepository(db);
+      final first = Tag.create(name);
+      final second = Tag.create(name);
+      final deleted = Tag.create(name).copyWith(deleted: true);
+      for (final tag in [first, second, deleted]) {
+        await tags.insertATag(tag);
+      }
+      final january = DateTime(2026, 1, 15);
+      final february = DateTime(2026, 2, 15);
+      final matching = [
+        makeDiary('a', '一', tagIds: [first.id], time: january),
+        makeDiary('b', '二', tagIds: [second.id], time: january),
+        makeDiary('c', '三', tagIds: [first.id, second.id], time: february),
+      ];
+      await repo.insertDiaries([
+        ...matching,
+        makeDiary('d', '四', tagIds: [deleted.id], time: february),
+        makeDiary('e', '五', tagIds: [first.id], show: false, time: february),
+        makeDiary('f', '六', time: february),
+      ]);
+      for (final sort in DiarySort.values) {
+        final pages = [
+          for (final offset in [0, 2])
+            ...await repo.getDiaryByCategory(
+              tagName: name,
+              sort: sort,
+              limit: 2,
+              offset: offset,
+            ),
+        ];
+        final ordered = [...matching]..sort(diarySortComparator(sort));
+        expect(
+          pages.map((diary) => diary.id),
+          ordered.map((diary) => diary.id),
+        );
+        expect(await repo.diaryCountByMonth(tagName: name, sort: sort), {
+          DateTime(2026, 1): 2,
+          DateTime(2026, 2): 1,
+        });
+      }
+    });
+
+    test('标签列表跟随日记和标签事件更新', () async {
+      final tags = TagRepository(db);
+      final first = Tag.create('Trip');
+      final second = Tag.create('Trip');
+      await tags.insertATag(first);
+      await tags.insertATag(second);
+      final diary = makeDiary('a', '一');
+      await repo.insertADiary(diary);
+      getIt.registerSingleton<DiaryRepository>(repo);
+      getIt.registerSingleton<TagRepository>(tags);
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final provider = diaryControllerProvider(tagName: 'Trip');
+      container.listen(provider, (_, _) {});
+      expect(await container.read(provider.future), isEmpty);
+
+      Future<List<String>> ids() async {
+        await Future<void>.delayed(Duration.zero);
+        await container.pump();
+        return (await container.read(provider.future))
+            .map((d) => d.id)
+            .toList();
+      }
+
+      await repo.updateADiary(newDiary: diary.copyWith(tagIds: [second.id]));
+      expect(await ids(), ['a']);
+      await repo.updateADiary(newDiary: diary);
+      expect(await ids(), isEmpty);
+      await repo.updateADiary(newDiary: diary.copyWith(tagIds: [first.id]));
+      expect(await ids(), ['a']);
+      await tags.renameTag('Trip', 'Travel');
+      expect(await ids(), isEmpty);
+      await tags.renameTag('Travel', 'Trip');
+      expect(await ids(), ['a']);
+    });
+
+    test('unrelated tag events preserve loaded diary pages', () async {
+      final tags = TagRepository(db);
+      final trip = Tag.create('Trip');
+      await tags.insertATag(trip);
+      await repo.insertDiaries([
+        for (var index = 0; index < 31; index++)
+          makeDiary('extra-$index', '二', tagIds: [trip.id]),
+      ]);
+      getIt.registerSingleton<DiaryRepository>(repo);
+      getIt.registerSingleton<TagRepository>(tags);
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final provider = diaryControllerProvider(tagName: trip.name);
+      container.listen(provider, (_, _) {});
+      expect(await container.read(provider.future), hasLength(30));
+      await container.read(provider.notifier).loadMore();
+      final pages = await container.read(provider.future);
+      expect(pages, hasLength(31));
+      await tags.insertATag(Tag.create('Unrelated'));
+      await Future<void>.delayed(Duration.zero);
+      await tags.getAllTags();
+      await container.pump();
+      expect(await container.read(provider.future), same(pages));
     });
 
     test('未分类过滤与分类计数', () async {

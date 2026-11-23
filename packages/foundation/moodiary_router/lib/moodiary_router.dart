@@ -115,6 +115,18 @@ class CategoryManagerRoute extends MoodiaryRouteBase {
   const CategoryManagerRoute() : super(path);
 }
 
+class TagManagerRoute extends MoodiaryRouteBase {
+  static const String path = '/tag_manager';
+
+  /// 从「我的」进入时只管理，点标签不改首页筛选（那里看不到首页）。
+  final bool manageOnly;
+
+  const TagManagerRoute({this.manageOnly = false}) : super(path);
+
+  @override
+  Map<String, dynamic>? get params => manageOnly ? {'manage_only': true} : null;
+}
+
 class PlaceManagerRoute extends MoodiaryRouteBase {
   static const String path = '/place_manager';
 

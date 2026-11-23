@@ -1,12 +1,22 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
-class SearchResultCard extends StatelessWidget {
-  const SearchResultCard({super.key, required this.hit, this.onTap});
+class SearchResultCard extends ConsumerWidget {
+  const SearchResultCard({
+    super.key,
+    required this.hit,
+    this.query = '',
+    this.tagName,
+    this.onTap,
+  });
 
   final DiarySearchHit hit;
+  final String query;
+  final String? tagName;
 
   final VoidCallback? onTap;
 
@@ -35,11 +45,16 @@ class SearchResultCard extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final scheme = theme.colors;
     final typography = theme.typography;
     final diary = hit.diary;
+    final tags = resolveTagNames(
+      diary.tagIds,
+      ref.watch(tagCatalogProvider).value?.byId ?? const {},
+    );
+    final keyword = query.trim().toLowerCase();
     final title = hit.titleHighlight.removeLineBreaks();
     final excerpt = hit.excerpt.removeLineBreaks();
 
@@ -83,6 +98,27 @@ class SearchResultCard extends StatelessWidget {
                 overflow: .ellipsis,
               ),
               const SizedBox(height: 10),
+              if (tags.isNotEmpty) ...[
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final tag in tags)
+                      Text(
+                        '#${tag.name}',
+                        style:
+                            tag.name == tagName ||
+                                (keyword.isNotEmpty &&
+                                    tag.name.toLowerCase().contains(keyword))
+                            ? typography.labelSmall.onPrimaryContainer.copyWith(
+                                backgroundColor: scheme.primaryContainer,
+                              )
+                            : typography.labelSmall.onSurfaceVariant,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+              ],
               Row(
                 children: [
                   Icon(LucideIcons.clock, size: 13, color: scheme.outline),

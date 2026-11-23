@@ -29,6 +29,7 @@ class DiaryTimelineView extends ConsumerWidget {
     final provider = diaryControllerProvider(
       categoryId: filter.categoryId,
       uncategorized: filter.uncategorized,
+      tagName: filter.tagName,
     );
     final diaryAsync = ref.watch(provider);
     final selection = ref.watch(diarySelectionProvider);
@@ -53,6 +54,7 @@ class DiaryTimelineView extends ConsumerWidget {
                     timelineMonthCountsProvider(
                       categoryId: filter.categoryId,
                       uncategorized: filter.uncategorized,
+                      tagName: filter.tagName,
                       sort: sort,
                     ),
                   )

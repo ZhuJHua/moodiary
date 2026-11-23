@@ -28,6 +28,7 @@ class DiaryFeedView extends ConsumerWidget {
     final provider = diaryControllerProvider(
       categoryId: filter.categoryId,
       uncategorized: filter.uncategorized,
+      tagName: filter.tagName,
     );
     final diaryAsync = ref.watch(provider);
     final selection = ref.watch(diarySelectionProvider);
