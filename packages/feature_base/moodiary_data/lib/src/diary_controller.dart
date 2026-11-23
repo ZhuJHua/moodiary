@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -7,6 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'category_repository.dart';
 import 'diary_repository.dart';
 import 'loadmore.dart';
+import 'tag_repository.dart';
 
 part 'diary_controller.g.dart';
 
@@ -53,7 +55,9 @@ List<Diary> applyDiaryEvent(
 class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   late final _repository = getIt<DiaryRepository>();
   late final _categories = getIt<CategoryRepository>();
+  late final _tags = getIt<TagRepository>();
   Set<String> _activeCategories = {};
+  Set<String> _tagIdsForName = {};
 
   DiarySort get _sort => .getType(MoodiaryKVs.homeSortMode.get()!);
 
@@ -61,6 +65,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   FutureOr<List<Diary>> build({
     String? categoryId,
     bool uncategorized = false,
+    String? tagName,
   }) async {
     final sub = _repository.diaryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
@@ -79,6 +84,28 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
       _activeCategories = {for (final c in active) c.id};
       return init(refreshFirst: true);
     }
+    if (tagName != null) {
+      final buildRef = ref;
+      Future<Set<String>> liveIds() async => {
+        for (final tag in await _tags.getAllTags())
+          if (tag.name == tagName) tag.id,
+      };
+
+      final initialIds = liveIds();
+      final sub = _tags.tagEvents.listen((_) async {
+        await initialIds;
+        if (!buildRef.mounted) return;
+        final ids = await liveIds();
+        if (buildRef.mounted && !setEquals(ids, _tagIdsForName)) {
+          buildRef.invalidateSelf();
+        }
+      });
+      buildRef.onDispose(sub.cancel);
+      final ids = await initialIds;
+      if (!buildRef.mounted) return [];
+      _tagIdsForName = ids;
+      return init(refreshFirst: true);
+    }
     return init();
   }
 
@@ -87,6 +114,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
     return _repository.getDiaryByCategory(
       categoryId: categoryId,
       uncategorized: uncategorized,
+      tagName: tagName,
       limit: limit,
       offset: offset,
       sort: _sort,
@@ -105,7 +133,9 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
         event,
         belongs: (d) =>
             d.show &&
-            (uncategorized
+            (tagName != null
+                ? d.tagIds.any(_tagIdsForName.contains)
+                : uncategorized
                 ? !_activeCategories.contains(d.categoryId)
                 : categoryId == null || d.categoryId == categoryId),
         compare: diarySortComparator(_sort),

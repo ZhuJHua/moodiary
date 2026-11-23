@@ -453,20 +453,41 @@ class DiaryRepository {
     'WHERE c.id = diaries.category_id AND c.deleted = 0))',
   );
 
+  Expression<bool>? _homeFilter(
+    String? categoryId,
+    bool uncategorized,
+    String? tagName,
+  ) {
+    assert(!(uncategorized && categoryId != null));
+    assert(tagName == null || (!uncategorized && categoryId == null));
+    if (uncategorized) return _uncategorized;
+    if (categoryId != null) return _db.diaries.categoryId.equals(categoryId);
+    return tagName == null ? null : _hasLiveTag(tagName);
+  }
+
+  Expression<bool> _hasLiveTag(String tagName) {
+    final links = _db.diaryTags;
+    final tags = _db.tags;
+    final matchingDiaries = _db.selectOnly(links)
+      ..addColumns([links.diaryId])
+      ..join([
+        innerJoin(tags, tags.id.equalsExp(links.tagId), useColumns: false),
+      ])
+      ..where(tags.name.equals(tagName) & tags.deleted.equals(0));
+    return _db.diaries.id.isInQuery(matchingDiaries);
+  }
+
   Future<List<Diary>> getDiaryByCategory({
     String? categoryId,
     bool uncategorized = false,
+    String? tagName,
     int? offset,
     int? limit,
     DiarySort sort = .timeDesc,
   }) async {
-    assert(!(uncategorized && categoryId != null));
     final q = _visible();
-    if (uncategorized) {
-      q.where((_) => _uncategorized);
-    } else if (categoryId != null) {
-      q.where((d) => d.categoryId.equals(categoryId));
-    }
+    final filter = _homeFilter(categoryId, uncategorized, tagName);
+    if (filter != null) q.where((_) => filter);
     _orderBy(q, sort);
     if (limit != null) q.limit(limit, offset: offset);
     return _assemble(await q.get());
@@ -475,20 +496,17 @@ class DiaryRepository {
   Future<Map<DateTime, int>> diaryCountByMonth({
     String? categoryId,
     bool uncategorized = false,
+    String? tagName,
     DiarySort sort = .timeDesc,
   }) async {
-    assert(!(uncategorized && categoryId != null));
     final col = sort == .lastModifiedDesc
         ? _db.diaries.lastModified
         : _db.diaries.time;
     final q = _db.selectOnly(_db.diaries)
       ..addColumns([col])
       ..where(_db.diaries.show.equals(1));
-    if (uncategorized) {
-      q.where(_uncategorized);
-    } else if (categoryId != null) {
-      q.where(_db.diaries.categoryId.equals(categoryId));
-    }
+    final filter = _homeFilter(categoryId, uncategorized, tagName);
+    if (filter != null) q.where(filter);
     final counts = <DateTime, int>{};
     for (final row in await q.get()) {
       final local = dbToTime(row.read(col)!).toLocal();
@@ -786,14 +804,14 @@ class DiaryRepository {
       _db.customSelect("SELECT jieba_query('预热')").getSingle();
 
   Expression<bool> _searchPredicate(
-    DiaryFts fts,
     Diaries d,
-    String match,
     String? categoryId,
+    String? tagName,
     DateTime? start,
     DateTime? end,
   ) {
-    var where = fts.match(match) & d.show.equals(1);
+    var where = d.show.equals(1);
+    if (tagName != null) where = where & _hasLiveTag(tagName);
     if (categoryId != null) where = where & d.categoryId.equals(categoryId);
     if (start != null) {
       where = where & d.time.isBiggerOrEqualValue(dbTime(start));
@@ -806,18 +824,24 @@ class DiaryRepository {
   Future<int> countSearchDiaries({
     required String query,
     String? categoryId,
+    String? tagName,
     DateTime? start,
     DateTime? end,
   }) async {
     final match = await _matchExpression(query);
-    if (match.isEmpty) return 0;
+    if (match.isEmpty && tagName == null) return 0;
     final fts = _db.diaryFts;
     final d = _db.diaries;
     final count = countAll();
-    final select = _db.selectOnly(fts)
+    final predicate = _searchPredicate(d, categoryId, tagName, start, end);
+    final select = _db.selectOnly(d)
       ..addColumns([count])
-      ..join([innerJoin(d, d.rid.equalsExp(_ftsRowId), useColumns: false)])
-      ..where(_searchPredicate(fts, d, match, categoryId, start, end));
+      ..where(predicate);
+    if (match.isNotEmpty) {
+      select
+        ..join([innerJoin(fts, d.rid.equalsExp(_ftsRowId), useColumns: false)])
+        ..where(fts.match(match));
+    }
     return (await select.getSingle()).read(count) ?? 0;
   }
 
@@ -825,6 +849,7 @@ class DiaryRepository {
   Future<List<DiarySearchHit>> searchDiaries({
     required String query,
     String? categoryId,
+    String? tagName,
     DateTime? start,
     DateTime? end,
     SearchSort sort = .relevance,
@@ -832,10 +857,27 @@ class DiaryRepository {
     int offset = 0,
   }) async {
     final match = await _matchExpression(query);
-    if (match.isEmpty) return const [];
-
     final fts = _db.diaryFts;
     final d = _db.diaries;
+    final predicate = _searchPredicate(d, categoryId, tagName, start, end);
+    if (match.isEmpty) {
+      if (tagName == null) return const [];
+      const excerptLength = 120;
+      final select = _db.select(d)..where((_) => predicate);
+      _orderBy(select, sort == .timeAsc ? .timeAsc : .timeDesc);
+      if (limit >= 0 || offset > 0) select.limit(limit, offset: offset);
+      return [
+        for (final diary in await _assemble(await select.get()))
+          DiarySearchHit(
+            diary: diary,
+            titleHighlight: diary.title,
+            excerpt: MediaMarkup.leadingExcerpt(
+              diary.contentText,
+              excerptLength,
+            ),
+          ),
+      ];
+    }
     final titleHit = fts.highlight(
       fts.title,
       before: searchHitStart,
@@ -852,7 +894,7 @@ class DiaryRepository {
     final select = _db.selectOnly(fts)
       ..addColumns([titleHit, bodyHit])
       ..join([innerJoin(d, d.rid.equalsExp(_ftsRowId), useColumns: true)])
-      ..where(_searchPredicate(fts, d, match, categoryId, start, end));
+      ..where(fts.match(match) & predicate);
 
     select.orderBy(switch (sort) {
       .relevance => [

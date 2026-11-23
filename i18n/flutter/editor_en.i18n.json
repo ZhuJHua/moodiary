@@ -1,6 +1,13 @@
 {
   "audioFileError": "Audio file error",
   "pickCategory": "Pick a category",
+  "categoryPickerSubtitle": "Tap a category to save",
+  "pickTags": "Tags",
+  "tagPickerSubtitle": "Select multiple · {count} selected",
+  "tagSearchHint": "Search or create a tag",
+  "tagRecent": "Recently used",
+  "pickerMatches": "Matches · {count}",
+  "createTag": "Create “{name}”",
   "noCategory": "No category",
   "migrationTitle": "Upgrade data migration",
   "migrationIntro": "Version 2.8.0 uses a new data engine and editor. A one-time migration is required before you can continue.",

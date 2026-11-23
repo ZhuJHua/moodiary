@@ -14,6 +14,8 @@ void main() {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
     await db.customStatement('PRAGMA foreign_keys = ON');
     final repository = DiaryRepository(db);
+    final tag = Tag.legacy('Travel');
+    await TagRepository(db).insertATag(tag);
     await repository.insertDiaries([
       for (var i = 0; i < 40; i++)
         Diary.create(
@@ -24,6 +26,7 @@ void main() {
           imageName: const [],
           audioName: const [],
           videoName: const [],
+          tagIds: i < 35 ? [tag.id] : [],
           type: .tiptap,
         ),
     ]);
@@ -57,4 +60,35 @@ void main() {
       hasLength(40),
     );
   });
+
+  test(
+    'tag-only pagination retains the filter and drops stale pages',
+    () async {
+      final controller = container.read(diarySearchControllerProvider.notifier);
+      await controller.setTag('Travel');
+      expect(container.read(diarySearchControllerProvider).totalCount, 35);
+      expect(
+        container.read(diarySearchControllerProvider).results,
+        hasLength(30),
+      );
+      await controller.loadMore();
+      final results = container.read(diarySearchControllerProvider).results;
+      expect(results, hasLength(35));
+      expect(
+        results.every(
+          (hit) => hit.diary.tagIds.contains(Tag.legacyId('Travel')),
+        ),
+        isTrue,
+      );
+
+      await controller.setTag('Travel');
+      final pending = controller.loadMore();
+      await controller.setTag(null);
+      await pending;
+      final state = container.read(diarySearchControllerProvider);
+      expect(state.results, isEmpty);
+      expect(state.totalCount, 0);
+      expect(state.isLoadingMore, isFalse);
+    },
+  );
 }

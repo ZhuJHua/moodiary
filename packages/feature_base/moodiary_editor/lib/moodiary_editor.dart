@@ -17,6 +17,7 @@ export 'src/presentation/widget/category_picker_sheet.dart';
 export 'src/presentation/widget/editor_body.dart';
 export 'src/presentation/widget/moodiary_editor_view.dart';
 export 'src/presentation/widget/record_sheet.dart';
+export 'src/presentation/widget/tag_picker_sheet.dart';
 export 'src/toolbar/editor_command.dart';
 export 'src/toolbar/editor_state.dart';
 

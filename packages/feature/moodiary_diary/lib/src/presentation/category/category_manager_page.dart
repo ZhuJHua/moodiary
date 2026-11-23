@@ -5,7 +5,8 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
+
+import '../widget/manager_search_field.dart';
 
 class CategoryManagerPage extends ConsumerStatefulWidget {
   const CategoryManagerPage({super.key});
@@ -46,7 +47,10 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
                     .toList();
           return Column(
             children: [
-              _SearchField(onChanged: (v) => setState(() => _query = v)),
+              ManagerSearchField(
+                hint: context.l10n.diary.categorySearchHint,
+                onChanged: (v) => setState(() => _query = v),
+              ),
               Expanded(
                 child: _buildList(filtered, counts, canReorder: q.isEmpty),
               ),
@@ -213,33 +217,6 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
   }
 }
 
-class _SearchField extends StatelessWidget {
-  final ValueChanged<String> onChanged;
-
-  const _SearchField({required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const .fromLTRB(12, 12, 12, 6),
-      child: TextField(
-        onChanged: onChanged,
-        textInputAction: .search,
-        decoration: InputDecoration(
-          hintText: context.l10n.diary.categorySearchHint,
-          prefixIcon: const Icon(LucideIcons.search),
-          filled: true,
-          isDense: true,
-          border: const OutlineInputBorder(
-            borderRadius: AppBorderRadius.mediumBorderRadius,
-            borderSide: .none,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _NoMatch extends StatelessWidget {
   const _NoMatch();
 
@@ -303,222 +280,33 @@ class _CategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
     final color = categoryColorOf(colorValue: category.color, id: category.id);
-    final onColor = onCategoryColor(color);
-    return Card.filled(
-      margin: const .symmetric(vertical: 4),
-      color: colors.surfaceContainerLow,
-      clipBehavior: .antiAlias,
-      child: ListTile(
-        onTap: onRename,
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(color: color, borderRadius: .circular(13)),
-          child: Icon(LucideIcons.folder, size: 21, color: onColor),
-        ),
-        title: Text(
-          category.categoryName,
-          maxLines: 1,
-          overflow: .ellipsis,
-          style: context.theme.typography.titleMedium.onSurface,
-        ),
-        subtitle: Text(
-          count > 0
-              ? context.l10n.diary.categoryDiaryCount(count: count)
-              : context.l10n.diary.categoryNoDiary,
-          style: context.theme.typography.labelSmall.onSurfaceVariant,
-        ),
-        trailing: Row(
-          mainAxisSize: .min,
-          children: [
-            MMenuButton<String>(
-              tooltip: context.l10n.common.more,
-              onSelected: (key) {
-                switch (key) {
-                  case 'rename':
-                    onRename();
-                  case 'delete':
-                    onDelete();
-                }
-              },
-              entries: [
-                MMenuEntry(
-                  value: 'rename',
-                  label: context.l10n.diary.rename,
-                  icon: LucideIcons.squarePen,
-                ),
-                MMenuEntry(
-                  value: 'delete',
-                  label: context.l10n.common.delete,
-                  icon: LucideIcons.trash2,
-                  isDestructive: true,
-                ),
-              ],
-              child: Padding(
-                padding: const .all(12),
-                child: Icon(
-                  LucideIcons.ellipsisVertical,
-                  color: colors.onSurfaceVariant,
-                ),
-              ),
-            ),
-            if (dragIndex != null)
-              ReorderableDragStartListener(
-                index: dragIndex!,
-                child: Padding(
-                  padding: const .only(left: 4),
-                  child: Icon(
-                    LucideIcons.gripHorizontal,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ),
-          ],
-        ),
+    return MetaTile<String>(
+      leading: MetaBadge(
+        icon: LucideIcons.folder,
+        background: color,
+        foreground: onCategoryColor(color),
       ),
-    );
-  }
-}
-
-class CategoryDraft {
-  final String name;
-  final int? color;
-
-  const CategoryDraft({required this.name, required this.color});
-}
-
-String get _emptyNameError => l10n.diary.categoryNameEmpty;
-
-Future<CategoryDraft?> showCategoryEditor(
-  BuildContext context, {
-  required String initialName,
-  required int? initialColor,
-}) async {
-  final draft = _CategoryDraft(name: initialName, color: initialColor);
-  final contentKey = GlobalKey<_CategoryEditorContentState>();
-  final confirmed = await MAlert.show<bool>(
-    context,
-    content: _CategoryEditorContent(key: contentKey, draft: draft),
-    actions: [
-      MAction(label: context.l10n.common.cancel, value: false),
-      MAction(
-        label: context.l10n.common.ok,
-        value: true,
-        isPrimary: true,
-        onIntercept: () => contentKey.currentState?.validate() ?? false,
-      ),
-    ],
-  );
-  if (confirmed != true) return null;
-  return CategoryDraft(name: draft.name.trim(), color: draft.color);
-}
-
-class _CategoryDraft {
-  String name;
-  int? color;
-
-  _CategoryDraft({required this.name, required this.color});
-}
-
-class _CategoryEditorContent extends StatefulWidget {
-  final _CategoryDraft draft;
-
-  const _CategoryEditorContent({super.key, required this.draft});
-
-  @override
-  State<_CategoryEditorContent> createState() => _CategoryEditorContentState();
-}
-
-class _CategoryEditorContentState extends State<_CategoryEditorContent> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.draft.name,
-  );
-
-  bool _edited = false;
-
-  bool validate() {
-    final ok = widget.draft.name.trim().isNotEmpty;
-    if (!ok && !_edited) setState(() => _edited = true);
-    return ok;
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    OutlineInputBorder border([BorderSide side = .none]) => OutlineInputBorder(
-      borderRadius: AppBorderRadius.mediumBorderRadius,
-      borderSide: side,
-    );
-
-    return Column(
-      mainAxisSize: .min,
-      crossAxisAlignment: .start,
-      children: [
-        TextField(
-          controller: _controller,
-          autofocus: true,
-          textInputAction: .done,
-          onChanged: (value) => setState(() {
-            _edited = true;
-            widget.draft.name = value;
-          }),
-          style: context.theme.typography.bodyLarge.onSurface,
-          decoration: InputDecoration(
-            hintText: context.l10n.diary.categoryNameHint,
-            errorText: _edited && widget.draft.name.trim().isEmpty
-                ? _emptyNameError
-                : null,
-            filled: true,
-            isDense: true,
-            fillColor: colors.surfaceContainerHighest,
-            contentPadding: const .symmetric(horizontal: 16, vertical: 13),
-            border: border(),
-            enabledBorder: border(),
-            focusedBorder: border(
-              BorderSide(color: colors.primary, width: 1.5),
-            ),
-          ),
+      title: category.categoryName,
+      subtitle: count > 0
+          ? context.l10n.diary.categoryDiaryCount(count: count)
+          : context.l10n.diary.categoryNoDiary,
+      dragIndex: dragIndex,
+      onTap: onRename,
+      entries: [
+        MMenuEntry(
+          value: 'rename',
+          label: context.l10n.diary.rename,
+          icon: LucideIcons.squarePen,
         ),
-        const SizedBox(height: 16),
-        Text(
-          context.l10n.diary.categoryColorLabel,
-          style: context.theme.typography.labelMedium.onSurfaceVariant,
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final c in kCategoryPalette)
-              GestureDetector(
-                key: ValueKey('category-swatch-${c.toARGB32()}'),
-                onTap: () => setState(() => widget.draft.color = c.toARGB32()),
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: c,
-                    shape: .circle,
-                    border: .all(
-                      color: widget.draft.color == c.toARGB32()
-                          ? colors.onSurface
-                          : Colors.transparent,
-                      width: 2,
-                    ),
-                  ),
-                ),
-              ),
-          ],
+        MMenuEntry(
+          value: 'delete',
+          label: context.l10n.common.delete,
+          icon: LucideIcons.trash2,
+          isDestructive: true,
         ),
       ],
+      onSelected: (key) => key == 'rename' ? onRename() : onDelete(),
     );
   }
 }

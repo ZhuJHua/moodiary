@@ -114,8 +114,8 @@ class Translations$app$zh {
 	/// zh: '分类已被删除，已切回全部'
 	String get categoryDeletedReset => '分类已被删除，已切回全部';
 
-	/// zh: '设置'
-	String get homeNavigatorSetting => '设置';
+	/// zh: '标签已改名或删除，已切回全部'
+	String get tagFilterReset => '标签已改名或删除，已切回全部';
 
 	/// zh: '跟随系统'
 	String get languageSystem => '跟随系统';
@@ -1737,6 +1737,9 @@ class Translations$diary$zh {
 	/// zh: '全部分类'
 	String get allCategories => '全部分类';
 
+	/// zh: '全部标签'
+	String get allTags => '全部标签';
+
 	/// zh: '全部'
 	String get categoryAll => '全部';
 
@@ -1878,8 +1881,77 @@ class Translations$diary$zh {
 	/// zh: '搜索分类'
 	String get categorySearchHint => '搜索分类';
 
+	/// zh: '搜索分类和标签'
+	String get drawerSearchHint => '搜索分类和标签';
+
+	/// zh: '没有匹配的分类或标签'
+	String get drawerNoMatch => '没有匹配的分类或标签';
+
+	/// zh: '还没有分类，点右侧图标新建'
+	String get drawerNoCategories => '还没有分类，点右侧图标新建';
+
+	/// zh: '还没有标签，点右侧图标新建'
+	String get drawerNoTags => '还没有标签，点右侧图标新建';
+
 	/// zh: '全部日记'
 	String get categoryAllDiary => '全部日记';
+
+	/// zh: '标签'
+	String get tags => '标签';
+
+	/// zh: '标签管理'
+	String get tagManagerTitle => '标签管理';
+
+	/// zh: '搜索标签'
+	String get tagSearchHint => '搜索标签';
+
+	/// zh: '还没有标签'
+	String get tagEmpty => '还没有标签';
+
+	/// zh: '在上面输入名称即可新建，之后会出现在这里方便复用'
+	String get tagEmptyBody => '在上面输入名称即可新建，之后会出现在这里方便复用';
+
+	/// zh: '移除 {name}'
+	String tagRemove({required Object name}) => '移除 ${name}';
+
+	/// zh: '全部 {count} 个'
+	String tagShowAll({required Object count}) => '全部 ${count} 个';
+
+	/// zh: '新建标签'
+	String get tagNew => '新建标签';
+
+	/// zh: '没有匹配的标签'
+	String get tagNoMatch => '没有匹配的标签';
+
+	/// zh: '(other) {{count} 篇 · 最近 {date}}'
+	String tagUsage({required num count, required Object date}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 篇 · 最近 ${date}',
+	);
+
+	/// zh: '标签已存在'
+	String get tagExists => '标签已存在';
+
+	/// zh: '合并标签'
+	String get tagMergeTitle => '合并标签';
+
+	/// zh: '(other) {#{target} 已存在。确认后「{source}」的 {count} 篇日记会合并到 #{target}。}'
+	String tagMergeMessage({required num count, required Object target, required Object source}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '#${target} 已存在。确认后「${source}」的 ${count} 篇日记会合并到 #${target}。',
+	);
+
+	/// zh: '删除标签？'
+	String get tagDeleteTitle => '删除标签？';
+
+	/// zh: '(other) {{count} 篇日记将不再显示 #{name}，回收站里的日记也一样。}'
+	String tagDeleteMessage({required num count, required Object name}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 篇日记将不再显示 #${name}，回收站里的日记也一样。',
+	);
+
+	/// zh: '删除后无法恢复此标签。'
+	String get tagDeleteUnused => '删除后无法恢复此标签。';
+
+	/// zh: '标签名称不能为空'
+	String get tagNameEmpty => '标签名称不能为空';
 
 	/// zh: '没有匹配的分类'
 	String get categoryNoMatch => '没有匹配的分类';
@@ -1889,6 +1961,12 @@ class Translations$diary$zh {
 
 	/// zh: '管理分类'
 	String get categoryManageEntry => '管理分类';
+
+	/// zh: '管理标签'
+	String get tagManageEntry => '管理标签';
+
+	/// zh: '更多 {count}'
+	String drawerMoreTags({required Object count}) => '更多 ${count}';
 
 	/// zh: '排序'
 	String get sortTitle => '排序';
@@ -2061,15 +2139,6 @@ class Translations$diary$zh {
 
 	/// zh: '地图加载失败'
 	String get mapLoadFailed => '地图加载失败';
-
-	/// zh: '添加标签'
-	String get addTag => '添加标签';
-
-	/// zh: '标签名'
-	String get tagNameHint => '标签名';
-
-	/// zh: '添加'
-	String get add => '添加';
 
 	/// zh: '获取天气失败，请稍后重试'
 	String get weatherFailed => '获取天气失败，请稍后重试';
@@ -2293,8 +2362,29 @@ class Translations$editor$zh {
 	/// zh: '选择分类'
 	String get pickCategory => '选择分类';
 
-	/// zh: '不分类'
-	String get noCategory => '不分类';
+	/// zh: '无分类'
+	String get noCategory => '无分类';
+
+	/// zh: '点选即保存'
+	String get categoryPickerSubtitle => '点选即保存';
+
+	/// zh: '选择标签'
+	String get pickTags => '选择标签';
+
+	/// zh: '可多选 · 已选 {count} 个'
+	String tagPickerSubtitle({required Object count}) => '可多选 · 已选 ${count} 个';
+
+	/// zh: '搜索或新建标签'
+	String get tagSearchHint => '搜索或新建标签';
+
+	/// zh: '最近使用'
+	String get tagRecent => '最近使用';
+
+	/// zh: '匹配 · {count}'
+	String pickerMatches({required Object count}) => '匹配 · ${count}';
+
+	/// zh: '新建「{name}」'
+	String createTag({required Object name}) => '新建「${name}」';
 
 	/// zh: '升级数据迁移'
 	String get migrationTitle => '升级数据迁移';

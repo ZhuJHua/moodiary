@@ -63,8 +63,8 @@ class TimeFormat {
   static String mediumDate(DateTime time) =>
       DateFormat.yMMMd().format(time.toLocal());
 
-  static String monthDay(DateTime time) =>
-      DateFormat.MMMd().format(time.toLocal());
+  static String monthDay(DateTime time, {String? locale}) =>
+      DateFormat.MMMd(locale).format(time.toLocal());
 
   static String yearMonth(DateTime time) =>
       DateFormat('y.MM').format(time.toLocal());

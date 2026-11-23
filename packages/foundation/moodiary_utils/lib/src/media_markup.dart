@@ -42,6 +42,22 @@ abstract final class MediaMarkup {
   static String sanitizeName(String name) =>
       strip(name).replaceAll(_lineBreaks, ' ').replaceAll(_edgeSpace, '');
 
+  static String leadingExcerpt(String text, int length) {
+    final runes = text.runes.toList();
+    if (runes.length <= length) return text;
+    var end = length;
+    final lastOpen = runes.lastIndexWhere(
+      (rune) => rune >= _firstOpen && rune <= _lastOpen,
+      end - 1,
+    );
+    if (lastOpen > runes.lastIndexOf(_close, end - 1)) {
+      final close = runes.indexOf(_close, end);
+      end = close < 0 ? runes.length : close + 1;
+    }
+    if (end == runes.length) return text;
+    return '${String.fromCharCodes(runes.take(end))}…';
+  }
+
   static List<MarkupRun> parse(String text) {
     final runs = <MarkupRun>[];
     final buf = StringBuffer();

@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_diary/src/presentation/category/category_manager_page.dart';
-import 'package:mui/mui.dart';
 
 import '../support/pump.dart';
 

@@ -10,6 +10,8 @@ import 'package:mui/mui.dart';
 
 const int _kSearchThreshold = 8;
 
+const int _kTopTags = 8;
+
 class CategoryDrawer extends ConsumerStatefulWidget {
   const CategoryDrawer({super.key});
 
@@ -27,12 +29,20 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
     Navigator.of(context).pop();
   }
 
+  void _open(MoodiaryRouteBase route) {
+    Navigator.of(context).pop();
+    route.push(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final filter = ref.watch(homeDiaryFilterProvider);
-    final categories = ref.watch(orderedCategoriesProvider).value ?? const [];
-    final counts = ref.watch(categoryDiaryCountsProvider).value;
+    final categoryState = ref.watch(orderedCategoriesProvider);
+    final categoryList = categoryState.value;
+    final categories = categoryList ?? const [];
+    final countState = ref.watch(categoryDiaryCountsProvider);
+    final counts = countState.value;
     final total = counts?.total;
     final uncategorized = counts == null
         ? null
@@ -41,11 +51,29 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
               .clamp(0, counts.total);
 
     final query = _query.trim().toLowerCase();
-    final visible = query.isEmpty
+    final tagState = ref.watch(tagCatalogProvider);
+    final catalog = tagState.value;
+    final usage = catalog?.usage ?? const <TagUsage>[];
+    final usedCount = usage.where((tag) => tag.count > 0).length;
+    final visibleTags = [
+      for (final (index, tag) in usage.indexed)
+        if ((tag.count > 0 || tag.name == filter.tagName) &&
+            (query.isEmpty
+                ? index < _kTopTags || tag.name == filter.tagName
+                : tag.name.toLowerCase().contains(query)))
+          tag,
+    ];
+    final more = usedCount - visibleTags.where((tag) => tag.count > 0).length;
+    final visibleCategories = query.isEmpty
         ? categories
         : categories
               .where((c) => c.categoryName.toLowerCase().contains(query))
               .toList();
+    final uncategorizedLabel = context.l10n.diary.categoryNoCategory;
+    final showUncategorized = query.isEmpty
+        ? filter.uncategorized ||
+              (categories.isNotEmpty && (uncategorized ?? 0) > 0)
+        : uncategorizedLabel.toLowerCase().contains(query);
 
     return Drawer(
       child: SafeArea(
@@ -55,34 +83,13 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
             return Column(
               crossAxisAlignment: .stretch,
               children: [
-                _Header(total: total),
-                Padding(
-                  padding: const .fromLTRB(16, 4, 16, 6),
-                  child: Row(
-                    children: [
-                      Text(
-                        context.l10n.common.category,
-                        style: context
-                            .theme
-                            .typography
-                            .labelMedium
-                            .onSurfaceVariant,
-                      ),
-                      const Spacer(),
-                      Text(
-                        context.l10n.common.categoryCount(
-                          count: categories.length,
-                        ),
-                        style: context.theme.typography.labelSmall.outline,
-                      ),
-                    ],
-                  ),
-                ),
-                if (categories.length >= _kSearchThreshold)
+                if (_query.isNotEmpty ||
+                    categories.length >= _kSearchThreshold ||
+                    usedCount > _kTopTags)
                   Padding(
                     padding: const .fromLTRB(12, 0, 12, 8),
                     child: SearchBar(
-                      hintText: context.l10n.diary.categorySearchHint,
+                      hintText: context.l10n.diary.drawerSearchHint,
                       leading: const Icon(LucideIcons.search, size: 20),
                       constraints: const BoxConstraints(minHeight: 42),
                       elevation: const WidgetStatePropertyAll(0),
@@ -94,44 +101,110 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                   ),
                 Expanded(
                   child: ListView(
-                    padding: const .only(bottom: 8),
+                    padding: .only(
+                      bottom: 8 + MediaQuery.viewInsetsOf(context).bottom,
+                    ),
                     children: [
-                      if (query.isEmpty)
+                      if (query.isEmpty) ...[
                         _Tile(
                           label: context.l10n.diary.categoryAllDiary,
                           count: total,
                           selected: filter.isAll,
-                          leading: _Swatch.all(scheme: colors),
+                          height: 48,
+                          leading: const Icon(LucideIcons.bookOpen, size: 18),
                           onTap: () => _pick(const .all()),
                         ),
-                      for (final c in visible)
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          indent: 28,
+                          endIndent: 28,
+                          color: colors.outlineVariant,
+                        ),
+                      ],
+                      _SectionHeader(
+                        label: context.l10n.common.category,
+                        tooltip: context.l10n.diary.categoryManageEntry,
+                        onManage: () => _open(const CategoryManagerRoute()),
+                      ),
+                      for (final c in visibleCategories)
                         _Tile(
                           label: c.categoryName,
                           count: counts?.byCategory[c.id],
                           selected: filter.categoryId == c.id,
-                          leading: _Swatch(
-                            color: categoryColorOf(
-                              colorValue: c.color,
-                              id: c.id,
-                            ),
-                          ),
+                          color: categoryColorOf(colorValue: c.color, id: c.id),
                           syncing: pending.updateCategoryIds.contains(c.id),
                           onTap: () => _pick(.category(c.id)),
                         ),
-                      if (query.isEmpty)
+                      if (query.isEmpty) ...[
                         for (var i = 0; i < pending.newCategoryIds.length; i++)
                           _PendingTile(
                             label:
                                 context.l10n.diary.categorySyncingPlaceholder,
                           ),
-                      if (visible.isEmpty && query.isNotEmpty)
+                        if (categoryList?.isEmpty == true &&
+                            pending.newCategoryIds.isEmpty)
+                          _EmptyHint(
+                            label: context.l10n.diary.drawerNoCategories,
+                          ),
+                      ],
+                      if (showUncategorized)
+                        _Tile(
+                          label: uncategorizedLabel,
+                          count: uncategorized,
+                          selected: filter.uncategorized,
+                          onTap: () => _pick(const .uncategorized()),
+                        ),
+                      _SectionHeader(
+                        label: context.l10n.diary.tags,
+                        tooltip: context.l10n.diary.tagManageEntry,
+                        onManage: () => _open(const TagManagerRoute()),
+                      ),
+                      if (visibleTags.isNotEmpty)
+                        Padding(
+                          padding: const .symmetric(horizontal: 16),
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              for (final tag in visibleTags)
+                                MChip(
+                                  label: '#${tag.name}',
+                                  semanticLabel: '#${tag.name}, ${tag.count}',
+                                  trailing: Text('${tag.count}'),
+                                  selected: filter.tagName == tag.name,
+                                  onTap: () => _pick(.tag(tag.name)),
+                                ),
+                              if (query.isEmpty && more > 0)
+                                MChip(
+                                  label: context.l10n.diary.drawerMoreTags(
+                                    count: more,
+                                  ),
+                                  variant: .ghost,
+                                  trailing: const Icon(
+                                    LucideIcons.chevronRight,
+                                    size: 16,
+                                  ),
+                                  onTap: () => _open(const TagManagerRoute()),
+                                ),
+                            ],
+                          ),
+                        ),
+                      if (query.isEmpty && catalog?.usage.isEmpty == true)
+                        _EmptyHint(label: context.l10n.diary.drawerNoTags),
+                      if (query.isNotEmpty &&
+                          categoryList != null &&
+                          catalog != null &&
+                          visibleCategories.isEmpty &&
+                          visibleTags.isEmpty &&
+                          !showUncategorized)
                         Padding(
                           padding: const .symmetric(
                             horizontal: 16,
                             vertical: 12,
                           ),
                           child: Text(
-                            context.l10n.diary.categoryNoMatch,
+                            context.l10n.diary.drawerNoMatch,
                             style: context
                                 .theme
                                 .typography
@@ -139,58 +212,6 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                                 .onSurfaceVariant,
                           ),
                         ),
-                    ],
-                  ),
-                ),
-                Divider(height: 1, color: colors.outlineVariant),
-                _Tile(
-                  label: context.l10n.diary.categoryNoCategory,
-                  count: uncategorized,
-                  selected: filter.uncategorized,
-                  leading: _Swatch.none(scheme: colors),
-                  onTap: () => _pick(const .uncategorized()),
-                ),
-                Padding(
-                  padding: .fromLTRB(
-                    12,
-                    4,
-                    12,
-                    12 + MediaQuery.viewInsetsOf(context).bottom,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.tonalIcon(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            const CategoryManagerRoute().push(context);
-                          },
-                          icon: const Icon(
-                            LucideIcons.slidersHorizontal,
-                            size: 18,
-                          ),
-                          label: Align(
-                            alignment: .centerLeft,
-                            child: Text(context.l10n.diary.categoryManageEntry),
-                          ),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const .fromHeight(44),
-                            alignment: .centerLeft,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton.filledTonal(
-                        tooltip: context.l10n.app.homeNavigatorSetting,
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          const SettingRoute().push(context);
-                        },
-                        icon: const Icon(LucideIcons.settings, size: 20),
-                        style: IconButton.styleFrom(
-                          minimumSize: const Size(48, 44),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -203,34 +224,47 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
   }
 }
 
-class _Header extends StatelessWidget {
-  final int? total;
+class _SectionHeader extends StatelessWidget {
+  final String label;
+  final String tooltip;
+  final VoidCallback onManage;
 
-  const _Header({required this.total});
+  const _SectionHeader({
+    required this.label,
+    required this.tooltip,
+    required this.onManage,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const .fromLTRB(20, 20, 20, 14),
-      child: Column(
-        crossAxisAlignment: .start,
-        children: [
-          Text(
-            context.l10n.common.appName,
-            style: context.theme.typography.titleLarge.emphasized.onSurface,
+  Widget build(BuildContext context) => Padding(
+    padding: const .fromLTRB(16, 4, 16, 6),
+    child: Row(
+      children: [
+        Text(label, style: context.theme.typography.labelMedium.outline),
+        const Spacer(),
+        SizedBox.square(
+          dimension: 40,
+          child: IconButton(
+            tooltip: tooltip,
+            icon: const Icon(LucideIcons.slidersHorizontal, size: 16),
+            onPressed: onManage,
           ),
-          if (total != null)
-            Padding(
-              padding: const .only(top: 2),
-              child: Text(
-                context.l10n.diary.searchResult(count: total!),
-                style: context.theme.typography.labelMedium.onSurfaceVariant,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
+class _EmptyHint extends StatelessWidget {
+  final String label;
+
+  const _EmptyHint({required this.label});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const .fromLTRB(28, 0, 28, 8),
+    child: Text(label, style: context.theme.typography.bodySmall.outline),
+  );
 }
 
 class _Tile extends StatelessWidget {
@@ -238,7 +272,9 @@ class _Tile extends StatelessWidget {
 
   final int? count;
   final bool selected;
-  final Widget leading;
+  final double height;
+  final Widget? leading;
+  final Color? color;
   final bool syncing;
   final VoidCallback onTap;
 
@@ -246,7 +282,9 @@ class _Tile extends StatelessWidget {
     required this.label,
     required this.count,
     required this.selected,
-    required this.leading,
+    this.height = 44,
+    this.leading,
+    this.color,
     this.syncing = false,
     required this.onTap,
   });
@@ -256,48 +294,69 @@ class _Tile extends StatelessWidget {
     final colors = context.theme.colors;
     final typo = context.theme.typography;
     return Padding(
-      padding: const .symmetric(horizontal: 12, vertical: 1),
-      child: Material(
-        color: selected ? colors.secondaryContainer : Colors.transparent,
-        borderRadius: const .all(.circular(28)),
-        clipBehavior: .antiAlias,
+      padding: const .symmetric(horizontal: 12),
+      child: Semantics(
+        selected: selected,
         child: MInkWell(
+          borderRadius: MuiRadius.md,
           onTap: onTap,
-          child: Padding(
-            padding: const .symmetric(horizontal: 14, vertical: 12),
-            child: Row(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: height),
+            child: Stack(
+              alignment: .centerStart,
               children: [
-                leading,
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: .ellipsis,
-                    style: selected
-                        ? typo.bodyLarge.emphasized.onSecondaryContainer
-                        : typo.bodyLarge.onSurface,
+                if (selected)
+                  Container(
+                    width: 3,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: color ?? colors.onSurface,
+                      borderRadius: const .all(.circular(1.5)),
+                    ),
+                  ),
+                Padding(
+                  padding: const .symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        child: leading ?? Center(child: _Swatch(color: color)),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: .ellipsis,
+                          style: selected
+                              ? typo.bodyLarge.emphasized.onSurface
+                              : typo.bodyLarge.onSurfaceVariant,
+                        ),
+                      ),
+                      if (syncing) ...[
+                        const SizedBox(width: 6),
+                        Icon(
+                          LucideIcons.cloudUpload,
+                          size: 14,
+                          color: colors.primary,
+                        ),
+                      ],
+                      if (count != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          '$count',
+                          style:
+                              (selected
+                                      ? typo.labelMedium.emphasized.onSurface
+                                      : typo.labelMedium.outline)
+                                  .copyWith(
+                                    fontFeatures: const [.tabularFigures()],
+                                  ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                if (syncing) ...[
-                  const SizedBox(width: 6),
-                  Icon(
-                    LucideIcons.cloudUpload,
-                    size: 14,
-                    color: colors.primary,
-                  ),
-                ],
-                if (count != null) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    '$count',
-                    style:
-                        (selected
-                                ? typo.labelMedium.onSecondaryContainer
-                                : typo.labelMedium.onSurfaceVariant)
-                            .copyWith(fontFeatures: const [.tabularFigures()]),
-                  ),
-                ],
               ],
             ),
           ),
@@ -340,32 +399,19 @@ class _PendingTile extends StatelessWidget {
 
 class _Swatch extends StatelessWidget {
   final Color? color;
-  final Gradient? gradient;
-  final bool hollow;
 
-  const _Swatch({this.color}) : gradient = null, hollow = false;
-
-  _Swatch.all({required ColorScheme scheme})
-    : color = null,
-      hollow = false,
-      gradient = LinearGradient(colors: [scheme.primary, scheme.tertiary]);
-
-  const _Swatch.none({required ColorScheme scheme})
-    : color = null,
-      gradient = null,
-      hollow = true;
+  const _Swatch({required this.color});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     return Container(
-      width: 12,
-      height: 12,
+      width: 10,
+      height: 10,
       decoration: BoxDecoration(
         color: color,
-        gradient: gradient,
         shape: .circle,
-        border: hollow ? .all(color: colors.outline, width: 1.4) : null,
+        border: color == null ? .all(color: colors.outline, width: 1.4) : null,
       ),
     );
   }
