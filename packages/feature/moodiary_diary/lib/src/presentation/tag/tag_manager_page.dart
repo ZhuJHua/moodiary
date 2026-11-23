@@ -6,13 +6,19 @@ import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import '../../application/diary_filter.dart';
 import '../../application/diary_selection.dart';
 
 class TagManagerPage extends ConsumerStatefulWidget {
-  const TagManagerPage({super.key});
+  const TagManagerPage({super.key, this.manageOnly = false});
+
+  factory TagManagerPage.fromRoute(GoRouterState state) =>
+      TagManagerPage(manageOnly: state.params['manage_only'] as bool? ?? false);
+
+  final bool manageOnly;
 
   @override
   ConsumerState<TagManagerPage> createState() => _TagManagerPageState();
@@ -134,11 +140,13 @@ class _TagManagerPageState extends ConsumerState<TagManagerPage> {
               count: tag.count,
               date: dates.format(tag.lastUsed!.toLocal()),
             ),
-      onTap: () {
-        ref.read(homeDiaryFilterProvider.notifier).select(.tag(tag.name));
-        ref.read(diarySelectionProvider.notifier).clear();
-        Navigator.of(context).pop();
-      },
+      onTap: widget.manageOnly
+          ? null
+          : () {
+              ref.read(homeDiaryFilterProvider.notifier).select(.tag(tag.name));
+              ref.read(diarySelectionProvider.notifier).clear();
+              Navigator.of(context).pop();
+            },
       entries: [
         MMenuEntry(
           value: 'rename',

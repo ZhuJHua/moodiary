@@ -62,9 +62,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            orderedCategoriesProvider.overrideWithValue(const AsyncData([])),
-            categoryDiaryCountsProvider.overrideWith(
-              (ref) async => (byCategory: <String, int>{}, total: 0),
+            orderedCategoriesProvider.overrideWithValue(
+              AsyncData([
+                for (var index = 0; index < 8; index++)
+                  Category.create(categoryName: 'Category $index'),
+              ]),
             ),
           ],
           child: TranslationProvider(
@@ -93,11 +95,27 @@ void main() {
       );
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
+      expect(
+        tester.getSize(find.widgetWithText(MChip, 'Category 0')).height,
+        36,
+      );
       await tester.enterText(find.byType(EditableText), ' Travel ');
       await tester.pumpAndSettle();
-      await tester.tap(find.text(l10n.editor.createCategory(name: 'Travel')));
+      await tester.tap(find.text(l10n.diary.categoryNew));
       await tester.pumpAndSettle();
-      expect(repository.saved.single.categoryName, 'Travel');
+      final nameField = find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField &&
+            widget.decoration?.hintText == l10n.diary.categoryNameHint,
+      );
+      expect(tester.widget<TextField>(nameField).controller!.text, 'Travel');
+      await tester.enterText(nameField, ' Trip ');
+      final color = kCategoryPalette[2].toARGB32();
+      await tester.tap(find.byKey(ValueKey('category-swatch-$color')));
+      await tester.tap(find.widgetWithText(FilledButton, l10n.common.ok));
+      await tester.pumpAndSettle();
+      expect(repository.saved.single.categoryName, 'Trip');
+      expect(repository.saved.single.color, color);
       expect(result, (true, repository.saved.single));
     },
   );

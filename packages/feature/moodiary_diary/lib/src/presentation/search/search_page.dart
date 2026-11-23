@@ -155,7 +155,10 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           const SizedBox(width: 8),
           _categoryChip(context, state),
           const SizedBox(width: 8),
-          MInkWell(
+          _filterChip(
+            icon: LucideIcons.hash,
+            label: state.tagName ?? context.l10n.diary.allTags,
+            active: state.tagName != null,
             onTap: () async {
               final (picked, name) = await TagPickerSheet.pickOne(
                 context,
@@ -163,11 +166,6 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
               );
               if (picked && mounted) await _controller.setTag(name);
             },
-            child: _FilterChip(
-              icon: LucideIcons.hash,
-              label: state.tagName ?? context.l10n.diary.allTags,
-              active: state.tagName != null,
-            ),
           ),
           const SizedBox(width: 8),
           _sortChip(context, state),
@@ -177,7 +175,10 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 
   Widget _dateChip(BuildContext context, DiarySearchState state) {
-    return MMenuButton<DateRangePreset>(
+    return _menuChip<DateRangePreset>(
+      icon: LucideIcons.calendar,
+      label: _dateChipLabel(context, state),
+      active: state.datePreset != .all,
       selected: state.datePreset,
       onSelected: (preset) async {
         if (preset == .custom) {
@@ -205,11 +206,6 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
         for (final p in DateRangePreset.values)
           MMenuEntry(value: p, label: _dateLabel(context, p)),
       ],
-      child: _FilterChip(
-        icon: LucideIcons.calendar,
-        label: _dateChipLabel(context, state),
-        active: state.datePreset != .all,
-      ),
     );
   }
 
@@ -227,7 +223,10 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                   .firstWhereOrNull((c) => c.id == state.categoryId)
                   ?.categoryName ??
               context.l10n.diary.allCategories);
-    return MMenuButton<String>(
+    return _menuChip<String>(
+      icon: LucideIcons.folder,
+      label: label,
+      active: state.categoryId != null,
       // 空串 = 全部分类，null = 未选择
       selected: state.categoryId ?? '',
       onSelected: (id) => _controller.setCategory(id.isEmpty ? null : id),
@@ -236,27 +235,20 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
         for (final c in categories)
           MMenuEntry(value: c.id, label: c.categoryName),
       ],
-      child: _FilterChip(
-        icon: LucideIcons.folder,
-        label: label,
-        active: state.categoryId != null,
-      ),
     );
   }
 
   Widget _sortChip(BuildContext context, DiarySearchState state) {
-    return MMenuButton<SearchSort>(
+    return _menuChip<SearchSort>(
+      icon: LucideIcons.arrowUpDown,
+      label: _sortLabel(context, state.sort),
+      active: state.sort != .relevance,
       selected: state.sort,
       onSelected: _controller.setSort,
       entries: [
         for (final s in SearchSort.values)
           MMenuEntry(value: s, label: _sortLabel(context, s)),
       ],
-      child: _FilterChip(
-        icon: LucideIcons.arrowUpDown,
-        label: _sortLabel(context, state.sort),
-        active: state.sort != .relevance,
-      ),
     );
   }
 
@@ -495,45 +487,39 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
+Widget _menuChip<T>({
+  required IconData icon,
+  required String label,
+  required bool active,
+  required T selected,
+  required List<MMenuEntry<T>> entries,
+  required ValueChanged<T> onSelected,
+}) => Builder(
+  builder: (context) => _filterChip(
+    icon: icon,
+    label: label,
+    active: active,
+    onTap: () async {
+      final result = await MMenu.show<T>(
+        anchorContext: context,
+        entries: entries,
+        selected: selected,
+      );
+      if (result != null && context.mounted) onSelected(result);
+    },
+  ),
+);
 
-  const _FilterChip({
-    required this.icon,
-    required this.label,
-    required this.active,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final scheme = theme.colors;
-    final bg = active
-        ? scheme.secondaryContainer
-        : scheme.surfaceContainerHighest;
-    final fg = active ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
-    return AnimatedContainer(
-      duration: Durations.short3,
-      curve: Curves.easeOut,
-      padding: const .fromLTRB(14, 9, 10, 9),
-      decoration: ShapeDecoration(color: bg, shape: const StadiumBorder()),
-      child: Row(
-        mainAxisSize: .min,
-        children: [
-          Icon(icon, size: 18, color: fg),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: theme.typography.labelLarge.emphasized.onSurface.copyWith(
-              color: fg,
-            ),
-          ),
-          const SizedBox(width: 1),
-          Icon(LucideIcons.chevronDown, size: 18, color: fg),
-        ],
-      ),
-    );
-  }
-}
+Widget _filterChip({
+  required IconData icon,
+  required String label,
+  required bool active,
+  required VoidCallback onTap,
+}) => MChip(
+  size: .medium,
+  leading: Icon(icon, size: 18),
+  label: label,
+  selected: active,
+  trailing: const Icon(LucideIcons.chevronDown, size: 18),
+  onTap: onTap,
+);

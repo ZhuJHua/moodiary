@@ -9,9 +9,30 @@ class CategoryPickerSheet extends ConsumerWidget {
 
   const CategoryPickerSheet({super.key, required this.currentCategoryId});
 
+  Future<Category?> _create(
+    BuildContext context,
+    WidgetRef ref,
+    String query,
+  ) async {
+    final draft = await showCategoryEditor(
+      context,
+      initialName: query,
+      initialColor: null,
+    );
+    if (draft == null || !context.mounted) return null;
+    final category = Category.create(
+      categoryName: draft.name,
+      color: draft.color,
+    );
+    final saved = await ref
+        .read(categoryControllerProvider.notifier)
+        .upsertCategory(category);
+    if (!saved) toast.error(message: l10n.diary.categoryCreateFailed);
+    return saved ? category : null;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final counts = ref.watch(categoryDiaryCountsProvider).value;
     final async = ref.watch(orderedCategoriesProvider);
     if (!async.hasValue) {
       return MSheetScaffold<MetaPickerResult<Category?>>(
@@ -27,22 +48,13 @@ class CategoryPickerSheet extends ConsumerWidget {
         Category? selected;
         for (final category in <Category?>[null, ...categories]) {
           if (category?.id == currentCategoryId) selected = category;
-          final count = counts == null
-              ? null
-              : category == null
-              ? counts.total -
-                    counts.byCategory.values.fold(
-                      0,
-                      (sum, value) => sum + value,
-                    )
-              : counts.byCategory[category.id] ?? 0;
           options.add(
             MSheetOption(
               value: category,
               label: category?.categoryName ?? context.l10n.editor.noCategory,
               leading: Container(
-                width: 12,
-                height: 12,
+                width: 10,
+                height: 10,
                 decoration: BoxDecoration(
                   shape: .circle,
                   color: category == null
@@ -59,22 +71,19 @@ class CategoryPickerSheet extends ConsumerWidget {
                       : null,
                 ),
               ),
-              subtitle: count == null
-                  ? null
-                  : count > 0
-                  ? context.l10n.diary.categoryDiaryCount(count: count)
-                  : context.l10n.diary.categoryNoDiary,
             ),
           );
         }
-        return MetaPickerSheet<Category?>.list(
+        return MetaPickerSheet<Category?>.single(
+          chipSize: .medium,
           title: context.l10n.editor.pickCategory,
           subtitle: context.l10n.editor.categoryPickerSubtitle,
           icon: LucideIcons.folder,
           searchHint: context.l10n.diary.categorySearchHint,
           matchesLabel: (count) =>
               context.l10n.editor.pickerMatches(count: count),
-          createLabel: (name) => context.l10n.editor.createCategory(name: name),
+          createLabel: context.l10n.diary.categoryNew,
+          onCreate: (query) => _create(context, ref, query),
           options: options,
           selected: selected,
         );
@@ -91,16 +100,6 @@ class CategoryPickerSheet extends ConsumerWidget {
       builder: (_) => CategoryPickerSheet(currentCategoryId: currentCategoryId),
     );
     if (result == null) return (false, null);
-    if (result.created.isNotEmpty) {
-      if (!context.mounted) return (false, null);
-      final category = Category.create(categoryName: result.created.single);
-      final saved = await ProviderScope.containerOf(
-        context,
-        listen: false,
-      ).read(categoryControllerProvider.notifier).upsertCategory(category);
-      if (!saved) toast.error(message: l10n.diary.categoryCreateFailed);
-      return saved ? (true, category) : (false, null);
-    }
     final category = result.selected.single;
     return category?.id == currentCategoryId ? (false, null) : (true, category);
   }

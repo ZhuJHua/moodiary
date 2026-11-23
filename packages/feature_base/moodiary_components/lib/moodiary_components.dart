@@ -8,6 +8,7 @@ export 'src/common/app_auth.dart';
 export 'src/common/async_value.dart';
 export 'src/common/audio/audio_player_page.dart';
 export 'src/common/audio_player.dart';
+export 'src/common/category_editor_dialog.dart';
 export 'src/common/code_theme.dart';
 export 'src/common/diary_citation_card.dart';
 export 'src/common/diary_share.dart';

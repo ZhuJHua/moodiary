@@ -691,6 +691,9 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get tagManagerTitle => 'Tags';
 	@override String get tagSearchHint => 'Search tags';
 	@override String get tagEmpty => 'No tags yet';
+	@override String get tagEmptyBody => 'Enter a name above to create a tag. It will appear here for you to use again.';
+	@override String tagRemove({required Object name}) => 'Remove ${name}';
+	@override String tagShowAll({required Object count}) => 'Show all ${count}';
 	@override String get tagNew => 'New tag';
 	@override String get tagNoMatch => 'No matching tags';
 	@override String tagUsage({required num count, required Object date}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
@@ -713,6 +716,8 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get categoryNoMatch => 'No matching categories';
 	@override String get categorySyncingPlaceholder => 'Syncing category…';
 	@override String get categoryManageEntry => 'Manage categories';
+	@override String get tagManageEntry => 'Manage tags';
+	@override String drawerMoreTags({required Object count}) => '${count} more';
 	@override String get sortTitle => 'Sort';
 	@override String get sortNewestFirst => 'Newest first';
 	@override String get sortOldestFirst => 'Oldest first';
@@ -856,15 +861,12 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String get audioFileError => 'Audio file error';
 	@override String get pickCategory => 'Pick a category';
 	@override String get categoryPickerSubtitle => 'Tap a category to save';
-	@override String createCategory({required Object name}) => 'Create category “${name}”';
 	@override String get pickTags => 'Tags';
 	@override String tagPickerSubtitle({required Object count}) => 'Select multiple · ${count} selected';
 	@override String get tagSearchHint => 'Search or create a tag';
-	@override String get tagSelected => 'Selected';
 	@override String get tagRecent => 'Recently used';
 	@override String pickerMatches({required Object count}) => 'Matches · ${count}';
-	@override String createTag({required Object name}) => 'Create tag “${name}”';
-	@override String get createTagHint => 'Saved when you tap Done';
+	@override String createTag({required Object name}) => 'Create “${name}”';
 	@override String get noCategory => 'No category';
 	@override String get migrationTitle => 'Upgrade data migration';
 	@override String get migrationIntro => 'Version 2.8.0 uses a new data engine and editor. A one-time migration is required before you can continue.';

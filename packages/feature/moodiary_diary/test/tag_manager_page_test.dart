@@ -41,6 +41,7 @@ void main() {
   Future<ProviderContainer> open(
     WidgetTester tester, {
     bool drawer = false,
+    bool manageOnly = false,
   }) async {
     final key = GlobalKey<ScaffoldState>();
     final router = GoRouter(
@@ -52,7 +53,8 @@ void main() {
             key: key,
             drawer: const CategoryDrawer(),
             body: FilledButton(
-              onPressed: () => const TagManagerRoute().push(context),
+              onPressed: () =>
+                  TagManagerRoute(manageOnly: manageOnly).push(context),
               child: const Text('home'),
             ),
           ),
@@ -78,7 +80,7 @@ void main() {
       key.currentState!.openDrawer();
       await tester.pumpAndSettle();
     }
-    await tester.tap(find.text(drawer ? '全部标签' : 'home'));
+    await tester.tap(drawer ? find.byTooltip('管理标签') : find.text('home'));
     await tester.pumpAndSettle();
     expect(find.text('标签管理'), findsOneWidget);
     expect(key.currentState!.isDrawerOpen, isFalse);
@@ -160,6 +162,17 @@ void main() {
       const DiaryFilter.tag('Frequent'),
     );
     expect(container.read(diarySelectionProvider), isEmpty);
+  });
+
+  testWidgets('manage-only mode does not touch the home filter', (
+    tester,
+  ) async {
+    await tags.ensureTags(['Work']);
+    final container = await open(tester, manageOnly: true);
+    await tester.tap(find.text('Work'));
+    await tester.pumpAndSettle();
+    expect(find.text('标签管理'), findsOneWidget);
+    expect(container.read(homeDiaryFilterProvider), const DiaryFilter.all());
   });
 
   testWidgets(

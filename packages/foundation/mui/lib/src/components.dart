@@ -5,6 +5,7 @@ export 'components/basic/alert.dart';
 export 'components/basic/bubble.dart';
 export 'components/basic/button.dart';
 export 'components/basic/button_size.dart';
+export 'components/basic/chip.dart';
 export 'components/basic/circle_button.dart';
 export 'components/basic/circle_button_group.dart';
 export 'components/basic/clipper.dart';

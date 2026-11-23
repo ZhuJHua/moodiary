@@ -57,31 +57,19 @@ abstract final class TagPickerSheet {
   }) async {
     final catalog = await _catalog(context);
     if (catalog == null || !context.mounted) return (false, null);
-    const icon = Icon(LucideIcons.hash, size: 18);
     final result = await MSheet.show<MetaPickerResult<String?>>(
       context,
-      builder: (context) => MetaPickerSheet<String?>.list(
+      builder: (context) => MetaPickerSheet<String?>.single(
         title: context.l10n.editor.pickTags,
-        subtitle: null,
         icon: LucideIcons.hash,
-        searchHint: context.l10n.editor.tagSearchHint,
+        searchHint: context.l10n.diary.tagSearchHint,
         matchesLabel: (count) =>
             context.l10n.editor.pickerMatches(count: count),
         selected: current,
         options: [
-          MSheetOption(
-            value: null,
-            label: context.l10n.diary.allTags,
-            leading: icon,
-          ),
+          MSheetOption(value: null, label: context.l10n.diary.allTags),
           for (final tag in catalog.usage)
-            if (tag.count > 0)
-              MSheetOption(
-                value: tag.name,
-                label: tag.name,
-                leading: icon,
-                subtitle: context.l10n.diary.searchResult(count: tag.count),
-              ),
+            if (tag.count > 0) MSheetOption(value: tag.name, label: tag.name),
         ],
       ),
     );
@@ -115,7 +103,7 @@ abstract final class TagPickerSheet {
     final names = {...usage.map((tag) => tag.name), ...initial};
     final result = await MSheet.show<MetaPickerResult<String>>(
       context,
-      builder: (context) => MetaPickerSheet<String>.wrap(
+      builder: (context) => MetaPickerSheet<String>.multi(
         title: context.l10n.editor.pickTags,
         selectionSubtitle: (count) =>
             context.l10n.editor.tagPickerSubtitle(count: count),
@@ -123,10 +111,8 @@ abstract final class TagPickerSheet {
         searchHint: context.l10n.editor.tagSearchHint,
         matchesLabel: (count) =>
             context.l10n.editor.pickerMatches(count: count),
-        selectedLabel: context.l10n.editor.tagSelected,
         recentLabel: context.l10n.editor.tagRecent,
         createLabel: (name) => context.l10n.editor.createTag(name: name),
-        createHint: context.l10n.editor.createTagHint,
         normalizeName: Tag.normalize,
         initial: initial,
         options: [

@@ -58,6 +58,9 @@
   "tagManagerTitle": "Tags",
   "tagSearchHint": "Search tags",
   "tagEmpty": "No tags yet",
+  "tagEmptyBody": "Enter a name above to create a tag. It will appear here for you to use again.",
+  "tagRemove": "Remove {name}",
+  "tagShowAll": "Show all {count}",
   "tagNew": "New tag",
   "tagNoMatch": "No matching tags",
   "tagUsage(plural, param=count)": {
@@ -80,6 +83,8 @@
   "categoryNoMatch": "No matching categories",
   "categorySyncingPlaceholder": "Syncing category…",
   "categoryManageEntry": "Manage categories",
+  "tagManageEntry": "Manage tags",
+  "drawerMoreTags": "{count} more",
   "sortTitle": "Sort",
   "sortNewestFirst": "Newest first",
   "sortOldestFirst": "Oldest first",

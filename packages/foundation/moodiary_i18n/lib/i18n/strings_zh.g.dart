@@ -1908,6 +1908,15 @@ class Translations$diary$zh {
 	/// zh: '还没有标签'
 	String get tagEmpty => '还没有标签';
 
+	/// zh: '在上面输入名称即可新建，之后会出现在这里方便复用'
+	String get tagEmptyBody => '在上面输入名称即可新建，之后会出现在这里方便复用';
+
+	/// zh: '移除 {name}'
+	String tagRemove({required Object name}) => '移除 ${name}';
+
+	/// zh: '全部 {count} 个'
+	String tagShowAll({required Object count}) => '全部 ${count} 个';
+
 	/// zh: '新建标签'
 	String get tagNew => '新建标签';
 
@@ -1952,6 +1961,12 @@ class Translations$diary$zh {
 
 	/// zh: '管理分类'
 	String get categoryManageEntry => '管理分类';
+
+	/// zh: '管理标签'
+	String get tagManageEntry => '管理标签';
+
+	/// zh: '更多 {count}'
+	String drawerMoreTags({required Object count}) => '更多 ${count}';
 
 	/// zh: '排序'
 	String get sortTitle => '排序';
@@ -2353,9 +2368,6 @@ class Translations$editor$zh {
 	/// zh: '点选即保存'
 	String get categoryPickerSubtitle => '点选即保存';
 
-	/// zh: '新建分类「{name}」'
-	String createCategory({required Object name}) => '新建分类「${name}」';
-
 	/// zh: '选择标签'
 	String get pickTags => '选择标签';
 
@@ -2365,20 +2377,14 @@ class Translations$editor$zh {
 	/// zh: '搜索或新建标签'
 	String get tagSearchHint => '搜索或新建标签';
 
-	/// zh: '已选'
-	String get tagSelected => '已选';
-
 	/// zh: '最近使用'
 	String get tagRecent => '最近使用';
 
 	/// zh: '匹配 · {count}'
 	String pickerMatches({required Object count}) => '匹配 · ${count}';
 
-	/// zh: '新建标签「{name}」'
-	String createTag({required Object name}) => '新建标签「${name}」';
-
-	/// zh: '点完成后保存'
-	String get createTagHint => '点完成后保存';
+	/// zh: '新建「{name}」'
+	String createTag({required Object name}) => '新建「${name}」';
 
 	/// zh: '升级数据迁移'
 	String get migrationTitle => '升级数据迁移';

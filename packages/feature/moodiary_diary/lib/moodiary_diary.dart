@@ -47,7 +47,7 @@ List<RouteBase> diaryRoutes() => [
   ),
   GoRoute(
     path: TagManagerRoute.path,
-    builder: (_, _) => const TagManagerPage(),
+    builder: (_, state) => TagManagerPage.fromRoute(state),
   ),
   GoRoute(
     path: PlaceManagerRoute.path,

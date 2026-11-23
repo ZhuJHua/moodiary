@@ -87,6 +87,10 @@ class _Places extends PlaceController {
   Future<List<Place>> build() async => [];
 }
 
+final _emptyCatalog = tagCatalogProvider.overrideWithValue(
+  const AsyncData((byId: <String, Tag>{}, usage: <TagUsage>[])),
+);
+
 GoRouter _host(Widget child) => GoRouter(
   routes: [
     GoRoute(
@@ -96,6 +100,10 @@ GoRouter _host(Widget child) => GoRouter(
     GoRoute(
       path: MoodInsightsRoute.path,
       builder: (_, _) => const Scaffold(body: Text('insights-destination')),
+    ),
+    GoRoute(
+      path: TagManagerRoute.path,
+      builder: (_, _) => const Scaffold(body: Text('tag-manager-destination')),
     ),
   ],
 );
@@ -127,6 +135,52 @@ void main() {
   });
   tearDown(getIt.reset);
 
+  testWidgets('Me shows the used tag group count and opens tag management', (
+    tester,
+  ) async {
+    final usage = Completer<List<TagUsage>>();
+    final router = _host(const MePage());
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          dashboardControllerProvider.overrideWith(_Dashboard.new),
+          moodInsightsControllerProvider.overrideWith(_FailedMoods.new),
+          placeControllerProvider.overrideWith(_Places.new),
+          tagCatalogProvider.overrideWith(
+            (ref) async => (byId: <String, Tag>{}, usage: await usage.future),
+          ),
+        ],
+        child: _app(router),
+      ),
+    );
+    final tile = find.widgetWithText(
+      SettingListTile,
+      l10n.diary.tagManagerTitle,
+    );
+    await tester.scrollUntilVisible(
+      tile,
+      250,
+      scrollable: find.byWidgetPredicate(
+        (widget) => widget is Scrollable && widget.axisDirection == .down,
+      ),
+    );
+    expect(
+      find.descendant(of: tile, matching: find.byType(Text)),
+      findsOneWidget,
+    );
+    usage.complete([
+      (name: 'Trip', ids: {'a', 'b'}, count: 4, lastUsed: null),
+      (name: 'Home', ids: {'c'}, count: 1, lastUsed: null),
+      (name: 'Unused', ids: {'d'}, count: 0, lastUsed: null),
+    ]);
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: tile, matching: find.text('2')), findsOneWidget);
+    await tester.tap(tile);
+    await tester.pumpAndSettle();
+    expect(find.text('tag-manager-destination'), findsOneWidget);
+  });
+
   testWidgets(
     'Me retains the rolling 53-week level heatmap and day selection',
     (tester) async {
@@ -140,6 +194,7 @@ void main() {
         ProviderScope(
           overrides: [
             dashboardControllerProvider.overrideWith(_ReadyDashboard.new),
+            _emptyCatalog,
             placeControllerProvider.overrideWith(_Places.new),
           ],
           child: _app(router),
@@ -200,6 +255,7 @@ void main() {
           ProviderScope(
             overrides: [
               dashboardControllerProvider.overrideWith(_Dashboard.new),
+              _emptyCatalog,
               placeControllerProvider.overrideWith(_Places.new),
             ],
             child: _app(router),
@@ -285,6 +341,7 @@ void main() {
       ProviderScope(
         overrides: [
           dashboardControllerProvider.overrideWith(_Dashboard.new),
+          _emptyCatalog,
           placeControllerProvider.overrideWith(_Places.new),
         ],
         child: _app(router),
@@ -313,6 +370,7 @@ void main() {
         overrides: [
           dashboardControllerProvider.overrideWith(_Dashboard.new),
           moodInsightsControllerProvider.overrideWith(_FailedMoods.new),
+          _emptyCatalog,
           placeControllerProvider.overrideWith(_Places.new),
         ],
         child: _app(router),

@@ -58,6 +58,9 @@
   "tagManagerTitle": "标签管理",
   "tagSearchHint": "搜索标签",
   "tagEmpty": "还没有标签",
+  "tagEmptyBody": "在上面输入名称即可新建，之后会出现在这里方便复用",
+  "tagRemove": "移除 {name}",
+  "tagShowAll": "全部 {count} 个",
   "tagNew": "新建标签",
   "tagNoMatch": "没有匹配的标签",
   "tagUsage(plural, param=count)": {
@@ -77,6 +80,8 @@
   "categoryNoMatch": "没有匹配的分类",
   "categorySyncingPlaceholder": "正在同步分类…",
   "categoryManageEntry": "管理分类",
+  "tagManageEntry": "管理标签",
+  "drawerMoreTags": "更多 {count}",
   "sortTitle": "排序",
   "sortNewestFirst": "最新在前",
   "sortOldestFirst": "最早在前",

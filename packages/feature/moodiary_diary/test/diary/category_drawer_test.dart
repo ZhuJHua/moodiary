@@ -52,8 +52,9 @@ void main() {
     );
     await t.pumpAndSettle();
     expect(find.text('旅行'), findsOneWidget);
-    // 没有标签时仍保留「全部标签」入口，才能新建第一个标签。
-    expect(find.text('全部标签'), findsOneWidget);
+    expect(find.byTooltip('管理标签'), findsOneWidget);
+    expect(find.text('标签 · 0'), findsOneWidget);
+    expect(find.text('分类 · 3'), findsOneWidget);
     expect(find.text('日常'), findsOneWidget);
     expect(find.text('阅读'), findsOneWidget);
     expect(find.text('4'), findsOneWidget);
@@ -106,7 +107,7 @@ void main() {
       const DiaryFilter.category('tr'),
     );
     expect(container.read(diarySelectionProvider), isEmpty);
-    expect(find.text('管理分类'), findsNothing);
+    expect(key.currentState!.isDrawerOpen, isFalse);
 
     key.currentState!.openDrawer();
     await t.pumpAndSettle();
@@ -151,19 +152,30 @@ void main() {
     );
     key.currentState!.openDrawer();
     await t.pumpAndSettle();
-    expect(find.text('标签'), findsOneWidget);
-    expect(find.text('11 个'), findsOneWidget);
-    expect(find.byIcon(LucideIcons.hash), findsNWidgets(8));
+    expect(find.text('标签 · 11'), findsOneWidget);
+    expect(find.text('更多 2'), findsOneWidget);
+    final tags = find.byWidgetPredicate(
+      (widget) => widget is MChip && widget.variant == .tonal,
+    );
+    expect(tags, findsNWidgets(8));
     final top = find
-        .ancestor(of: find.text('Tag 0'), matching: find.byType(Row))
+        .ancestor(of: find.text('#Tag 0'), matching: find.byType(Row))
         .first;
     expect(find.descendant(of: top, matching: find.text('10')), findsOneWidget);
-    expect(find.text('Tag 8'), findsNothing);
+    expect(find.text('#Tag 8'), findsNothing);
     await t.enterText(find.byType(SearchBar), 'tAG');
     await t.pumpAndSettle();
-    expect(find.byIcon(LucideIcons.hash), findsNWidgets(10));
-    expect(find.text('Tag 10'), findsNothing);
-    await t.tap(find.text('Tag 9'));
+    expect(tags, findsNWidgets(10));
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is MChip && widget.variant == .ghost,
+      ),
+      findsNothing,
+    );
+    expect(find.text('全部日记'), findsNothing);
+    expect(find.text('无分类'), findsOneWidget);
+    expect(find.text('#Tag 10'), findsNothing);
+    await t.tap(find.text('#Tag 9'));
     await t.pumpAndSettle();
     final container = ProviderScope.containerOf(
       t.element(find.byType(MaterialApp)),
@@ -175,12 +187,11 @@ void main() {
     );
     key.currentState!.openDrawer();
     await t.pumpAndSettle();
-    expect(find.text('Tag 8'), findsNothing);
-    final label = find.text('Tag 9');
-    final surface = t.widget<Material>(
-      find.ancestor(of: label, matching: find.byType(Material)).first,
-    );
-    expect(surface.color, t.element(label).theme.colors.secondaryContainer);
+    expect(find.text('#Tag 8'), findsNothing);
+    expect(find.text('更多 1'), findsOneWidget);
+    final chip = find.widgetWithText(MChip, '#Tag 9');
+    expect(t.widget<MChip>(chip).selected, isTrue);
+    expect(t.getSize(chip).height, 32);
   });
 
   testWidgets('a selected unused tag keeps the tag section visible', (t) async {
@@ -205,17 +216,18 @@ void main() {
       ),
     );
     await t.pumpAndSettle();
-    expect(find.text('标签'), findsOneWidget);
-    expect(find.text('全部标签'), findsOneWidget);
+    expect(find.text('标签 · 1'), findsOneWidget);
+    expect(find.byTooltip('管理标签'), findsOneWidget);
+    expect(find.byType(MChip), findsNothing);
     final container = ProviderScope.containerOf(
       t.element(find.byType(MaterialApp)),
       listen: false,
     );
     container.read(homeDiaryFilterProvider.notifier).select(.tag(tag.name));
     await t.pumpAndSettle();
-    expect(find.text('标签'), findsOneWidget);
+    expect(find.text('标签 · 1'), findsOneWidget);
     final row = find
-        .ancestor(of: find.text(tag.name), matching: find.byType(Row))
+        .ancestor(of: find.text('#${tag.name}'), matching: find.byType(Row))
         .first;
     expect(find.descendant(of: row, matching: find.text('0')), findsOneWidget);
   });
@@ -239,12 +251,6 @@ void main() {
     expect(find.text('0'), findsNothing);
   });
 
-  testWidgets('the manage entry is always reachable', (t) async {
-    await t.pumpWidget(wrap(categories: three, byCategory: const {}, total: 0));
-    await t.pumpAndSettle();
-    expect(find.text('管理分类'), findsOneWidget);
-  });
-
   testWidgets('search box only appears once categories pile up', (t) async {
     await t.pumpWidget(wrap(categories: three, byCategory: const {}, total: 0));
     await t.pumpAndSettle();
@@ -259,5 +265,26 @@ void main() {
     );
     await t.pumpAndSettle();
     expect(find.byType(SearchBar), findsOneWidget);
+    getIt<SyncPendingTracker>().begin(
+      newDiaryIds: {},
+      updateDiaryIds: {},
+      newCategoryIds: {'new'},
+      updateCategoryIds: {'c0'},
+    );
+    await t.enterText(find.byType(SearchBar), '分类0');
+    await t.pump();
+    expect(
+      find.descendant(of: find.byType(ListView), matching: find.text('分类0')),
+      findsOneWidget,
+    );
+    expect(find.byIcon(LucideIcons.cloudUpload), findsOneWidget);
+    expect(find.text('分类1'), findsNothing);
+    expect(find.text('正在同步分类…'), findsNothing);
+    expect(find.text('全部日记'), findsNothing);
+    expect(find.text('无分类'), findsOneWidget);
+    await t.enterText(find.byType(SearchBar), 'missing');
+    await t.pump();
+    expect(find.text('没有匹配的分类或标签'), findsOneWidget);
+    expect(find.text('无分类'), findsOneWidget);
   });
 }

@@ -62,7 +62,7 @@ void main() {
     );
     await tester.tap(find.text('全部标签'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Travel'));
+    await tester.tap(find.widgetWithText(MChip, 'Travel'));
     await tester.pumpAndSettle();
     expect(find.text('Travel'), findsOneWidget);
     expect(find.byType(SearchResultCard), findsOneWidget);
@@ -77,7 +77,7 @@ void main() {
 
     await tester.tap(find.text('Travel'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('全部标签'));
+    await tester.tap(find.widgetWithText(MChip, '全部标签'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('history')), findsOneWidget);
   });

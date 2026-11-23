@@ -159,9 +159,40 @@ ThemeData buildMuiTheme({
     ),
 
     chipTheme: ChipThemeData(
-      shape: StadiumBorder(
-        side: BorderSide(color: cs.outlineVariant, width: borders.hairline),
+      // 设了 color 后 RawChip 不再画悬停层，交互态只能在这里叠；用 fromMap 保住 ThemeData 的值相等。
+      color: WidgetStateProperty.fromMap({
+        WidgetState.disabled: cs.onSurface.withValues(alpha: 0.12),
+        WidgetState.selected &
+            (WidgetState.pressed | WidgetState.focused): Color.alphaBlend(
+          cs.onPrimaryContainer.withValues(alpha: 0.10),
+          cs.primaryContainer,
+        ),
+        WidgetState.selected & WidgetState.hovered: Color.alphaBlend(
+          cs.onPrimaryContainer.withValues(alpha: 0.08),
+          cs.primaryContainer,
+        ),
+        WidgetState.selected: cs.primaryContainer,
+        WidgetState.pressed | WidgetState.focused: Color.alphaBlend(
+          cs.onSurfaceVariant.withValues(alpha: 0.10),
+          cs.surfaceContainerHighest,
+        ),
+        WidgetState.hovered: Color.alphaBlend(
+          cs.onSurfaceVariant.withValues(alpha: 0.08),
+          cs.surfaceContainerHighest,
+        ),
+        WidgetState.any: cs.surfaceContainerHighest,
+      }),
+      labelStyle: text.labelLarge?.copyWith(
+        color: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) return cs.onSurface;
+          return states.contains(WidgetState.selected)
+              ? cs.onPrimaryContainer
+              : cs.onSurfaceVariant;
+        }),
       ),
+      side: BorderSide.none,
+      shape: const StadiumBorder(),
+      checkmarkColor: cs.onPrimaryContainer,
       elevation: 0,
       pressElevation: 0,
     ),
