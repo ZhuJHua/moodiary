@@ -22,6 +22,7 @@ void main() {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
     getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
     getIt.registerSingleton<DiaryRepository>(DiaryRepository(db));
+    getIt.registerSingleton<TagRepository>(TagRepository(db));
     getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
     getIt.registerSingleton<MoodInsightsRepository>(MoodInsightsRepository(db));
     getIt.registerSingleton<MemoryRepository>(MemoryRepository(db));

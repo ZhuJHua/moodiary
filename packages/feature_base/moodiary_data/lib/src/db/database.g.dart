@@ -170,6 +170,18 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _tagsTextMeta = const VerificationMeta(
+    'tagsText',
+  );
+  late final GeneratedColumn<String> tagsText = GeneratedColumn<String>(
+    'tags_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'\'',
+    defaultValue: const CustomExpression('\'\''),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     rid,
@@ -188,6 +200,7 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
     weatherIcon,
     weatherTemp,
     weatherText,
+    tagsText,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -325,6 +338,12 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
         ),
       );
     }
+    if (data.containsKey('tags_text')) {
+      context.handle(
+        _tagsTextMeta,
+        tagsText.isAcceptableOrUnknown(data['tags_text']!, _tagsTextMeta),
+      );
+    }
     return context;
   }
 
@@ -398,6 +417,10 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
         DriftSqlType.string,
         data['${effectivePrefix}weather_text'],
       ),
+      tagsText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tags_text'],
+      )!,
     );
   }
 
@@ -427,6 +450,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
   final String? weatherIcon;
   final String? weatherTemp;
   final String? weatherText;
+  final String tagsText;
   const DiaryRow({
     required this.rid,
     required this.id,
@@ -444,6 +468,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     this.weatherIcon,
     this.weatherTemp,
     this.weatherText,
+    required this.tagsText,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -478,6 +503,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     if (!nullToAbsent || weatherText != null) {
       map['weather_text'] = Variable<String>(weatherText);
     }
+    map['tags_text'] = Variable<String>(tagsText);
     return map;
   }
 
@@ -513,6 +539,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       weatherText: weatherText == null && nullToAbsent
           ? const Value.absent()
           : Value(weatherText),
+      tagsText: Value(tagsText),
     );
   }
 
@@ -538,6 +565,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       weatherIcon: serializer.fromJson<String?>(json['weather_icon']),
       weatherTemp: serializer.fromJson<String?>(json['weather_temp']),
       weatherText: serializer.fromJson<String?>(json['weather_text']),
+      tagsText: serializer.fromJson<String>(json['tags_text']),
     );
   }
   @override
@@ -560,6 +588,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       'weather_icon': serializer.toJson<String?>(weatherIcon),
       'weather_temp': serializer.toJson<String?>(weatherTemp),
       'weather_text': serializer.toJson<String?>(weatherText),
+      'tags_text': serializer.toJson<String>(tagsText),
     };
   }
 
@@ -580,6 +609,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     Value<String?> weatherIcon = const Value.absent(),
     Value<String?> weatherTemp = const Value.absent(),
     Value<String?> weatherText = const Value.absent(),
+    String? tagsText,
   }) => DiaryRow(
     rid: rid ?? this.rid,
     id: id ?? this.id,
@@ -597,6 +627,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     weatherIcon: weatherIcon.present ? weatherIcon.value : this.weatherIcon,
     weatherTemp: weatherTemp.present ? weatherTemp.value : this.weatherTemp,
     weatherText: weatherText.present ? weatherText.value : this.weatherText,
+    tagsText: tagsText ?? this.tagsText,
   );
   DiaryRow copyWithCompanion(DiariesCompanion data) {
     return DiaryRow(
@@ -628,6 +659,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       weatherText: data.weatherText.present
           ? data.weatherText.value
           : this.weatherText,
+      tagsText: data.tagsText.present ? data.tagsText.value : this.tagsText,
     );
   }
 
@@ -649,7 +681,8 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
           ..write('placeId: $placeId, ')
           ..write('weatherIcon: $weatherIcon, ')
           ..write('weatherTemp: $weatherTemp, ')
-          ..write('weatherText: $weatherText')
+          ..write('weatherText: $weatherText, ')
+          ..write('tagsText: $tagsText')
           ..write(')'))
         .toString();
   }
@@ -672,6 +705,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     weatherIcon,
     weatherTemp,
     weatherText,
+    tagsText,
   );
   @override
   bool operator ==(Object other) =>
@@ -692,7 +726,8 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
           other.placeId == this.placeId &&
           other.weatherIcon == this.weatherIcon &&
           other.weatherTemp == this.weatherTemp &&
-          other.weatherText == this.weatherText);
+          other.weatherText == this.weatherText &&
+          other.tagsText == this.tagsText);
 }
 
 class DiariesCompanion extends UpdateCompanion<DiaryRow> {
@@ -712,6 +747,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
   final Value<String?> weatherIcon;
   final Value<String?> weatherTemp;
   final Value<String?> weatherText;
+  final Value<String> tagsText;
   const DiariesCompanion({
     this.rid = const Value.absent(),
     this.id = const Value.absent(),
@@ -729,6 +765,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     this.weatherIcon = const Value.absent(),
     this.weatherTemp = const Value.absent(),
     this.weatherText = const Value.absent(),
+    this.tagsText = const Value.absent(),
   });
   DiariesCompanion.insert({
     this.rid = const Value.absent(),
@@ -747,6 +784,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     this.weatherIcon = const Value.absent(),
     this.weatherTemp = const Value.absent(),
     this.weatherText = const Value.absent(),
+    this.tagsText = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
        content = Value(content),
@@ -772,6 +810,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     Expression<String>? weatherIcon,
     Expression<String>? weatherTemp,
     Expression<String>? weatherText,
+    Expression<String>? tagsText,
   }) {
     return RawValuesInsertable({
       if (rid != null) 'rid': rid,
@@ -790,6 +829,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
       if (weatherIcon != null) 'weather_icon': weatherIcon,
       if (weatherTemp != null) 'weather_temp': weatherTemp,
       if (weatherText != null) 'weather_text': weatherText,
+      if (tagsText != null) 'tags_text': tagsText,
     });
   }
 
@@ -810,6 +850,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     Value<String?>? weatherIcon,
     Value<String?>? weatherTemp,
     Value<String?>? weatherText,
+    Value<String>? tagsText,
   }) {
     return DiariesCompanion(
       rid: rid ?? this.rid,
@@ -828,6 +869,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
       weatherIcon: weatherIcon ?? this.weatherIcon,
       weatherTemp: weatherTemp ?? this.weatherTemp,
       weatherText: weatherText ?? this.weatherText,
+      tagsText: tagsText ?? this.tagsText,
     );
   }
 
@@ -882,6 +924,9 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     if (weatherText.present) {
       map['weather_text'] = Variable<String>(weatherText.value);
     }
+    if (tagsText.present) {
+      map['tags_text'] = Variable<String>(tagsText.value);
+    }
     return map;
   }
 
@@ -903,7 +948,8 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
           ..write('placeId: $placeId, ')
           ..write('weatherIcon: $weatherIcon, ')
           ..write('weatherTemp: $weatherTemp, ')
-          ..write('weatherText: $weatherText')
+          ..write('weatherText: $weatherText, ')
+          ..write('tagsText: $tagsText')
           ..write(')'))
         .toString();
   }
@@ -5079,6 +5125,18 @@ class Categories extends Table with TableInfo<Categories, CategoryRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  late final GeneratedColumn<int> deleted = GeneratedColumn<int>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5086,6 +5144,7 @@ class Categories extends Table with TableInfo<Categories, CategoryRow> {
     lastModified,
     parentId,
     color,
+    deleted,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5135,6 +5194,12 @@ class Categories extends Table with TableInfo<Categories, CategoryRow> {
         color.isAcceptableOrUnknown(data['color']!, _colorMeta),
       );
     }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
     return context;
   }
 
@@ -5164,6 +5229,10 @@ class Categories extends Table with TableInfo<Categories, CategoryRow> {
         DriftSqlType.int,
         data['${effectivePrefix}color'],
       ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted'],
+      )!,
     );
   }
 
@@ -5182,12 +5251,14 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
   final int lastModified;
   final String? parentId;
   final int? color;
+  final int deleted;
   const CategoryRow({
     required this.id,
     required this.name,
     required this.lastModified,
     this.parentId,
     this.color,
+    required this.deleted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5201,6 +5272,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     if (!nullToAbsent || color != null) {
       map['color'] = Variable<int>(color);
     }
+    map['deleted'] = Variable<int>(deleted);
     return map;
   }
 
@@ -5215,6 +5287,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
       color: color == null && nullToAbsent
           ? const Value.absent()
           : Value(color),
+      deleted: Value(deleted),
     );
   }
 
@@ -5229,6 +5302,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
       lastModified: serializer.fromJson<int>(json['last_modified']),
       parentId: serializer.fromJson<String?>(json['parent_id']),
       color: serializer.fromJson<int?>(json['color']),
+      deleted: serializer.fromJson<int>(json['deleted']),
     );
   }
   @override
@@ -5240,6 +5314,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
       'last_modified': serializer.toJson<int>(lastModified),
       'parent_id': serializer.toJson<String?>(parentId),
       'color': serializer.toJson<int?>(color),
+      'deleted': serializer.toJson<int>(deleted),
     };
   }
 
@@ -5249,12 +5324,14 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     int? lastModified,
     Value<String?> parentId = const Value.absent(),
     Value<int?> color = const Value.absent(),
+    int? deleted,
   }) => CategoryRow(
     id: id ?? this.id,
     name: name ?? this.name,
     lastModified: lastModified ?? this.lastModified,
     parentId: parentId.present ? parentId.value : this.parentId,
     color: color.present ? color.value : this.color,
+    deleted: deleted ?? this.deleted,
   );
   CategoryRow copyWithCompanion(CategoriesCompanion data) {
     return CategoryRow(
@@ -5265,6 +5342,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
           : this.lastModified,
       parentId: data.parentId.present ? data.parentId.value : this.parentId,
       color: data.color.present ? data.color.value : this.color,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
     );
   }
 
@@ -5275,13 +5353,15 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
           ..write('name: $name, ')
           ..write('lastModified: $lastModified, ')
           ..write('parentId: $parentId, ')
-          ..write('color: $color')
+          ..write('color: $color, ')
+          ..write('deleted: $deleted')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, lastModified, parentId, color);
+  int get hashCode =>
+      Object.hash(id, name, lastModified, parentId, color, deleted);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5290,7 +5370,8 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
           other.name == this.name &&
           other.lastModified == this.lastModified &&
           other.parentId == this.parentId &&
-          other.color == this.color);
+          other.color == this.color &&
+          other.deleted == this.deleted);
 }
 
 class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
@@ -5299,6 +5380,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
   final Value<int> lastModified;
   final Value<String?> parentId;
   final Value<int?> color;
+  final Value<int> deleted;
   final Value<int> rowid;
   const CategoriesCompanion({
     this.id = const Value.absent(),
@@ -5306,6 +5388,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     this.lastModified = const Value.absent(),
     this.parentId = const Value.absent(),
     this.color = const Value.absent(),
+    this.deleted = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CategoriesCompanion.insert({
@@ -5314,6 +5397,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     required int lastModified,
     this.parentId = const Value.absent(),
     this.color = const Value.absent(),
+    this.deleted = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -5324,6 +5408,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     Expression<int>? lastModified,
     Expression<String>? parentId,
     Expression<int>? color,
+    Expression<int>? deleted,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5332,6 +5417,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
       if (lastModified != null) 'last_modified': lastModified,
       if (parentId != null) 'parent_id': parentId,
       if (color != null) 'color': color,
+      if (deleted != null) 'deleted': deleted,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5342,6 +5428,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     Value<int>? lastModified,
     Value<String?>? parentId,
     Value<int?>? color,
+    Value<int>? deleted,
     Value<int>? rowid,
   }) {
     return CategoriesCompanion(
@@ -5350,6 +5437,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
       lastModified: lastModified ?? this.lastModified,
       parentId: parentId ?? this.parentId,
       color: color ?? this.color,
+      deleted: deleted ?? this.deleted,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5372,6 +5460,9 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     if (color.present) {
       map['color'] = Variable<int>(color.value);
     }
+    if (deleted.present) {
+      map['deleted'] = Variable<int>(deleted.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5386,6 +5477,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
           ..write('lastModified: $lastModified, ')
           ..write('parentId: $parentId, ')
           ..write('color: $color, ')
+          ..write('deleted: $deleted, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6449,6 +6541,319 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
   }
 }
 
+class Tags extends Table with TableInfo<Tags, TagRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Tags(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  late final GeneratedColumn<int> deleted = GeneratedColumn<int>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _lastModifiedMeta = const VerificationMeta(
+    'lastModified',
+  );
+  late final GeneratedColumn<int> lastModified = GeneratedColumn<int>(
+    'last_modified',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, deleted, lastModified];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tags';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TagRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('last_modified')) {
+      context.handle(
+        _lastModifiedMeta,
+        lastModified.isAcceptableOrUnknown(
+          data['last_modified']!,
+          _lastModifiedMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastModifiedMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TagRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TagRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted'],
+      )!,
+      lastModified: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_modified'],
+      )!,
+    );
+  }
+
+  @override
+  Tags createAlias(String alias) {
+    return Tags(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class TagRow extends DataClass implements Insertable<TagRow> {
+  final String id;
+  final String name;
+  final int deleted;
+  final int lastModified;
+  const TagRow({
+    required this.id,
+    required this.name,
+    required this.deleted,
+    required this.lastModified,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['deleted'] = Variable<int>(deleted);
+    map['last_modified'] = Variable<int>(lastModified);
+    return map;
+  }
+
+  TagsCompanion toCompanion(bool nullToAbsent) {
+    return TagsCompanion(
+      id: Value(id),
+      name: Value(name),
+      deleted: Value(deleted),
+      lastModified: Value(lastModified),
+    );
+  }
+
+  factory TagRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TagRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      deleted: serializer.fromJson<int>(json['deleted']),
+      lastModified: serializer.fromJson<int>(json['last_modified']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'deleted': serializer.toJson<int>(deleted),
+      'last_modified': serializer.toJson<int>(lastModified),
+    };
+  }
+
+  TagRow copyWith({
+    String? id,
+    String? name,
+    int? deleted,
+    int? lastModified,
+  }) => TagRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    deleted: deleted ?? this.deleted,
+    lastModified: lastModified ?? this.lastModified,
+  );
+  TagRow copyWithCompanion(TagsCompanion data) {
+    return TagRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      lastModified: data.lastModified.present
+          ? data.lastModified.value
+          : this.lastModified,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TagRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('deleted: $deleted, ')
+          ..write('lastModified: $lastModified')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, deleted, lastModified);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TagRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.deleted == this.deleted &&
+          other.lastModified == this.lastModified);
+}
+
+class TagsCompanion extends UpdateCompanion<TagRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<int> deleted;
+  final Value<int> lastModified;
+  final Value<int> rowid;
+  const TagsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.lastModified = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TagsCompanion.insert({
+    required String id,
+    required String name,
+    this.deleted = const Value.absent(),
+    required int lastModified,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       lastModified = Value(lastModified);
+  static Insertable<TagRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<int>? deleted,
+    Expression<int>? lastModified,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (deleted != null) 'deleted': deleted,
+      if (lastModified != null) 'last_modified': lastModified,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TagsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<int>? deleted,
+    Value<int>? lastModified,
+    Value<int>? rowid,
+  }) {
+    return TagsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      deleted: deleted ?? this.deleted,
+      lastModified: lastModified ?? this.lastModified,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<int>(deleted.value);
+    }
+    if (lastModified.present) {
+      map['last_modified'] = Variable<int>(lastModified.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TagsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('deleted: $deleted, ')
+          ..write('lastModified: $lastModified, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class DiaryTags extends Table with TableInfo<DiaryTags, DiaryTagRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -6474,9 +6879,9 @@ class DiaryTags extends Table with TableInfo<DiaryTags, DiaryTagRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _tagMeta = const VerificationMeta('tag');
-  late final GeneratedColumn<String> tag = GeneratedColumn<String>(
-    'tag',
+  static const VerificationMeta _tagIdMeta = const VerificationMeta('tagId');
+  late final GeneratedColumn<String> tagId = GeneratedColumn<String>(
+    'tag_id',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -6484,7 +6889,7 @@ class DiaryTags extends Table with TableInfo<DiaryTags, DiaryTagRow> {
     $customConstraints: 'NOT NULL',
   );
   @override
-  List<GeneratedColumn> get $columns => [diaryId, seq, tag];
+  List<GeneratedColumn> get $columns => [diaryId, seq, tagId];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -6513,13 +6918,13 @@ class DiaryTags extends Table with TableInfo<DiaryTags, DiaryTagRow> {
     } else if (isInserting) {
       context.missing(_seqMeta);
     }
-    if (data.containsKey('tag')) {
+    if (data.containsKey('tag_id')) {
       context.handle(
-        _tagMeta,
-        tag.isAcceptableOrUnknown(data['tag']!, _tagMeta),
+        _tagIdMeta,
+        tagId.isAcceptableOrUnknown(data['tag_id']!, _tagIdMeta),
       );
     } else if (isInserting) {
-      context.missing(_tagMeta);
+      context.missing(_tagIdMeta);
     }
     return context;
   }
@@ -6538,9 +6943,9 @@ class DiaryTags extends Table with TableInfo<DiaryTags, DiaryTagRow> {
         DriftSqlType.int,
         data['${effectivePrefix}seq'],
       )!,
-      tag: attachedDatabase.typeMapping.read(
+      tagId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}tag'],
+        data['${effectivePrefix}tag_id'],
       )!,
     );
   }
@@ -6559,18 +6964,18 @@ class DiaryTags extends Table with TableInfo<DiaryTags, DiaryTagRow> {
 class DiaryTagRow extends DataClass implements Insertable<DiaryTagRow> {
   final String diaryId;
   final int seq;
-  final String tag;
+  final String tagId;
   const DiaryTagRow({
     required this.diaryId,
     required this.seq,
-    required this.tag,
+    required this.tagId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['diary_id'] = Variable<String>(diaryId);
     map['seq'] = Variable<int>(seq);
-    map['tag'] = Variable<String>(tag);
+    map['tag_id'] = Variable<String>(tagId);
     return map;
   }
 
@@ -6578,7 +6983,7 @@ class DiaryTagRow extends DataClass implements Insertable<DiaryTagRow> {
     return DiaryTagsCompanion(
       diaryId: Value(diaryId),
       seq: Value(seq),
-      tag: Value(tag),
+      tagId: Value(tagId),
     );
   }
 
@@ -6590,7 +6995,7 @@ class DiaryTagRow extends DataClass implements Insertable<DiaryTagRow> {
     return DiaryTagRow(
       diaryId: serializer.fromJson<String>(json['diary_id']),
       seq: serializer.fromJson<int>(json['seq']),
-      tag: serializer.fromJson<String>(json['tag']),
+      tagId: serializer.fromJson<String>(json['tag_id']),
     );
   }
   @override
@@ -6599,20 +7004,21 @@ class DiaryTagRow extends DataClass implements Insertable<DiaryTagRow> {
     return <String, dynamic>{
       'diary_id': serializer.toJson<String>(diaryId),
       'seq': serializer.toJson<int>(seq),
-      'tag': serializer.toJson<String>(tag),
+      'tag_id': serializer.toJson<String>(tagId),
     };
   }
 
-  DiaryTagRow copyWith({String? diaryId, int? seq, String? tag}) => DiaryTagRow(
-    diaryId: diaryId ?? this.diaryId,
-    seq: seq ?? this.seq,
-    tag: tag ?? this.tag,
-  );
+  DiaryTagRow copyWith({String? diaryId, int? seq, String? tagId}) =>
+      DiaryTagRow(
+        diaryId: diaryId ?? this.diaryId,
+        seq: seq ?? this.seq,
+        tagId: tagId ?? this.tagId,
+      );
   DiaryTagRow copyWithCompanion(DiaryTagsCompanion data) {
     return DiaryTagRow(
       diaryId: data.diaryId.present ? data.diaryId.value : this.diaryId,
       seq: data.seq.present ? data.seq.value : this.seq,
-      tag: data.tag.present ? data.tag.value : this.tag,
+      tagId: data.tagId.present ? data.tagId.value : this.tagId,
     );
   }
 
@@ -6621,51 +7027,51 @@ class DiaryTagRow extends DataClass implements Insertable<DiaryTagRow> {
     return (StringBuffer('DiaryTagRow(')
           ..write('diaryId: $diaryId, ')
           ..write('seq: $seq, ')
-          ..write('tag: $tag')
+          ..write('tagId: $tagId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(diaryId, seq, tag);
+  int get hashCode => Object.hash(diaryId, seq, tagId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DiaryTagRow &&
           other.diaryId == this.diaryId &&
           other.seq == this.seq &&
-          other.tag == this.tag);
+          other.tagId == this.tagId);
 }
 
 class DiaryTagsCompanion extends UpdateCompanion<DiaryTagRow> {
   final Value<String> diaryId;
   final Value<int> seq;
-  final Value<String> tag;
+  final Value<String> tagId;
   final Value<int> rowid;
   const DiaryTagsCompanion({
     this.diaryId = const Value.absent(),
     this.seq = const Value.absent(),
-    this.tag = const Value.absent(),
+    this.tagId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DiaryTagsCompanion.insert({
     required String diaryId,
     required int seq,
-    required String tag,
+    required String tagId,
     this.rowid = const Value.absent(),
   }) : diaryId = Value(diaryId),
        seq = Value(seq),
-       tag = Value(tag);
+       tagId = Value(tagId);
   static Insertable<DiaryTagRow> custom({
     Expression<String>? diaryId,
     Expression<int>? seq,
-    Expression<String>? tag,
+    Expression<String>? tagId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (diaryId != null) 'diary_id': diaryId,
       if (seq != null) 'seq': seq,
-      if (tag != null) 'tag': tag,
+      if (tagId != null) 'tag_id': tagId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6673,13 +7079,13 @@ class DiaryTagsCompanion extends UpdateCompanion<DiaryTagRow> {
   DiaryTagsCompanion copyWith({
     Value<String>? diaryId,
     Value<int>? seq,
-    Value<String>? tag,
+    Value<String>? tagId,
     Value<int>? rowid,
   }) {
     return DiaryTagsCompanion(
       diaryId: diaryId ?? this.diaryId,
       seq: seq ?? this.seq,
-      tag: tag ?? this.tag,
+      tagId: tagId ?? this.tagId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6693,8 +7099,8 @@ class DiaryTagsCompanion extends UpdateCompanion<DiaryTagRow> {
     if (seq.present) {
       map['seq'] = Variable<int>(seq.value);
     }
-    if (tag.present) {
-      map['tag'] = Variable<String>(tag.value);
+    if (tagId.present) {
+      map['tag_id'] = Variable<String>(tagId.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -6707,7 +7113,7 @@ class DiaryTagsCompanion extends UpdateCompanion<DiaryTagRow> {
     return (StringBuffer('DiaryTagsCompanion(')
           ..write('diaryId: $diaryId, ')
           ..write('seq: $seq, ')
-          ..write('tag: $tag, ')
+          ..write('tagId: $tagId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6740,8 +7146,19 @@ class DiaryFts extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _tagsTextMeta = const VerificationMeta(
+    'tagsText',
+  );
+  late final GeneratedColumn<String> tagsText = GeneratedColumn<String>(
+    'tags_text',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
-  List<GeneratedColumn> get $columns => [title, contentText];
+  List<GeneratedColumn> get $columns => [title, contentText, tagsText];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -6769,6 +7186,12 @@ class DiaryFts extends Table
         ),
       );
     }
+    if (data.containsKey('tags_text')) {
+      context.handle(
+        _tagsTextMeta,
+        tagsText.isAcceptableOrUnknown(data['tags_text']!, _tagsTextMeta),
+      );
+    }
     return context;
   }
 
@@ -6786,6 +7209,10 @@ class DiaryFts extends Table
         DriftSqlType.string,
         data['${effectivePrefix}content_text'],
       ),
+      tagsText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tags_text'],
+      ),
     );
   }
 
@@ -6798,13 +7225,14 @@ class DiaryFts extends Table
   bool get dontWriteConstraints => true;
   @override
   String get moduleAndArgs =>
-      'fts5(title, content_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')';
+      'fts5(title, content_text, tags_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')';
 }
 
 class DiaryFt extends DataClass implements Insertable<DiaryFt> {
   final String? title;
   final String? contentText;
-  const DiaryFt({this.title, this.contentText});
+  final String? tagsText;
+  const DiaryFt({this.title, this.contentText, this.tagsText});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -6813,6 +7241,9 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
     }
     if (!nullToAbsent || contentText != null) {
       map['content_text'] = Variable<String>(contentText);
+    }
+    if (!nullToAbsent || tagsText != null) {
+      map['tags_text'] = Variable<String>(tagsText);
     }
     return map;
   }
@@ -6825,6 +7256,9 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
       contentText: contentText == null && nullToAbsent
           ? const Value.absent()
           : Value(contentText),
+      tagsText: tagsText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tagsText),
     );
   }
 
@@ -6836,6 +7270,7 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
     return DiaryFt(
       title: serializer.fromJson<String?>(json['title']),
       contentText: serializer.fromJson<String?>(json['content_text']),
+      tagsText: serializer.fromJson<String?>(json['tags_text']),
     );
   }
   @override
@@ -6844,15 +7279,18 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
     return <String, dynamic>{
       'title': serializer.toJson<String?>(title),
       'content_text': serializer.toJson<String?>(contentText),
+      'tags_text': serializer.toJson<String?>(tagsText),
     };
   }
 
   DiaryFt copyWith({
     Value<String?> title = const Value.absent(),
     Value<String?> contentText = const Value.absent(),
+    Value<String?> tagsText = const Value.absent(),
   }) => DiaryFt(
     title: title.present ? title.value : this.title,
     contentText: contentText.present ? contentText.value : this.contentText,
+    tagsText: tagsText.present ? tagsText.value : this.tagsText,
   );
   DiaryFt copyWithCompanion(DiaryFtsCompanion data) {
     return DiaryFt(
@@ -6860,6 +7298,7 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
       contentText: data.contentText.present
           ? data.contentText.value
           : this.contentText,
+      tagsText: data.tagsText.present ? data.tagsText.value : this.tagsText,
     );
   }
 
@@ -6867,43 +7306,50 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
   String toString() {
     return (StringBuffer('DiaryFt(')
           ..write('title: $title, ')
-          ..write('contentText: $contentText')
+          ..write('contentText: $contentText, ')
+          ..write('tagsText: $tagsText')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(title, contentText);
+  int get hashCode => Object.hash(title, contentText, tagsText);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DiaryFt &&
           other.title == this.title &&
-          other.contentText == this.contentText);
+          other.contentText == this.contentText &&
+          other.tagsText == this.tagsText);
 }
 
 class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
   final Value<String?> title;
   final Value<String?> contentText;
+  final Value<String?> tagsText;
   final Value<int> rowid;
   const DiaryFtsCompanion({
     this.title = const Value.absent(),
     this.contentText = const Value.absent(),
+    this.tagsText = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DiaryFtsCompanion.insert({
     this.title = const Value.absent(),
     this.contentText = const Value.absent(),
+    this.tagsText = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   static Insertable<DiaryFt> custom({
     Expression<String>? title,
     Expression<String>? contentText,
+    Expression<String>? tagsText,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (title != null) 'title': title,
       if (contentText != null) 'content_text': contentText,
+      if (tagsText != null) 'tags_text': tagsText,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6911,11 +7357,13 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
   DiaryFtsCompanion copyWith({
     Value<String?>? title,
     Value<String?>? contentText,
+    Value<String?>? tagsText,
     Value<int>? rowid,
   }) {
     return DiaryFtsCompanion(
       title: title ?? this.title,
       contentText: contentText ?? this.contentText,
+      tagsText: tagsText ?? this.tagsText,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6929,6 +7377,9 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
     if (contentText.present) {
       map['content_text'] = Variable<String>(contentText.value);
     }
+    if (tagsText.present) {
+      map['tags_text'] = Variable<String>(tagsText.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6940,6 +7391,7 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
     return (StringBuffer('DiaryFtsCompanion(')
           ..write('title: $title, ')
           ..write('contentText: $contentText, ')
+          ..write('tagsText: $tagsText, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7228,10 +7680,23 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     'idx_diary_media_file',
     'CREATE INDEX idx_diary_media_file ON diary_media (file_name)',
   );
+  late final Tags tags = Tags(this);
+  late final Index idxTagsName = Index(
+    'idx_tags_name',
+    'CREATE INDEX idx_tags_name ON tags (name)',
+  );
   late final DiaryTags diaryTags = DiaryTags(this);
   late final Index idxDiaryTagsTag = Index(
     'idx_diary_tags_tag',
-    'CREATE INDEX idx_diary_tags_tag ON diary_tags (tag)',
+    'CREATE INDEX idx_diary_tags_tag ON diary_tags (tag_id)',
+  );
+  late final Trigger tagsAi = Trigger(
+    'CREATE TRIGGER tags_ai AFTER INSERT ON tags BEGIN UPDATE diaries SET tags_text = COALESCE((SELECT group_concat(name, \' \') FROM (SELECT t.name FROM diary_tags AS dt JOIN tags AS t ON t.id = dt.tag_id WHERE dt.diary_id = diaries.id AND t.deleted = 0 ORDER BY dt.seq)), \'\') WHERE id IN (SELECT diary_id FROM diary_tags WHERE tag_id = new.id);END',
+    'tags_ai',
+  );
+  late final Trigger tagsAu = Trigger(
+    'CREATE TRIGGER tags_au AFTER UPDATE OF name, deleted ON tags BEGIN UPDATE diaries SET tags_text = COALESCE((SELECT group_concat(name, \' \') FROM (SELECT t.name FROM diary_tags AS dt JOIN tags AS t ON t.id = dt.tag_id WHERE dt.diary_id = diaries.id AND t.deleted = 0 ORDER BY dt.seq)), \'\') WHERE id IN (SELECT diary_id FROM diary_tags WHERE tag_id = new.id);END',
+    'tags_au',
   );
   late final Index idxDiaryLinksDst = Index(
     'idx_diary_links_dst',
@@ -7239,21 +7704,21 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
   );
   late final DiaryFts diaryFts = DiaryFts(this);
   late final Trigger diaryFtsAi = Trigger(
-    'CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN INSERT INTO diary_fts ("rowid", title, content_text) VALUES (new.rid, new.title, new.content_text);END',
+    'CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN INSERT INTO diary_fts ("rowid", title, content_text, tags_text) VALUES (new.rid, new.title, new.content_text, new.tags_text);END',
     'diary_fts_ai',
   );
   late final Trigger diaryFtsAd = Trigger(
-    'CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text) VALUES (\'delete\', old.rid, old.title, old.content_text);END',
+    'CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text, tags_text) VALUES (\'delete\', old.rid, old.title, old.content_text, old.tags_text);END',
     'diary_fts_ad',
   );
   late final Trigger diaryFtsAu = Trigger(
-    'CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text) VALUES (\'delete\', old.rid, old.title, old.content_text);INSERT INTO diary_fts ("rowid", title, content_text) VALUES (new.rid, new.title, new.content_text);END',
+    'CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text, tags_text ON diaries WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text OR old.tags_text IS NOT new.tags_text BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text, tags_text) VALUES (\'delete\', old.rid, old.title, old.content_text, old.tags_text);INSERT INTO diary_fts ("rowid", title, content_text, tags_text) VALUES (new.rid, new.title, new.content_text, new.tags_text);END',
     'diary_fts_au',
   );
   late final LegacyMoodScenes legacyMoodScenes = LegacyMoodScenes(this);
   Selectable<BacklinksResult> backlinks(String toId) {
     return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood_level" AS "nested_0.mood_level", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.src_id WHERE l.dst_id = ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
+      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood_level" AS "nested_0.mood_level", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text", "d"."tags_text" AS "nested_0.tags_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.src_id WHERE l.dst_id = ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
       variables: [Variable<String>(toId)],
       readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
@@ -7265,7 +7730,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
 
   Selectable<ForwardLinksResult> forwardLinks(String fromId) {
     return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood_level" AS "nested_0.mood_level", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.dst_id WHERE l.src_id = ?1 AND d.id != ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
+      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood_level" AS "nested_0.mood_level", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text", "d"."tags_text" AS "nested_0.tags_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.dst_id WHERE l.src_id = ?1 AND d.id != ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
       variables: [Variable<String>(fromId)],
       readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
@@ -7358,8 +7823,12 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     diaryMedia,
     idxDiaryMediaKind,
     idxDiaryMediaFile,
+    tags,
+    idxTagsName,
     diaryTags,
     idxDiaryTagsTag,
+    tagsAi,
+    tagsAu,
     idxDiaryLinksDst,
     diaryFts,
     diaryFtsAi,
@@ -7403,6 +7872,20 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('diary_tags', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'tags',
+        limitUpdateKind: UpdateKind.insert,
+      ),
+      result: [TableUpdate('diaries', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'tags',
+        limitUpdateKind: UpdateKind.update,
+      ),
+      result: [TableUpdate('diaries', kind: UpdateKind.update)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -7452,6 +7935,7 @@ typedef $DiariesCreateCompanionBuilder = DiariesCompanion Function({
   Value<String?> weatherIcon,
   Value<String?> weatherTemp,
   Value<String?> weatherText,
+  Value<String> tagsText,
 });
 typedef $DiariesUpdateCompanionBuilder = DiariesCompanion Function({
   Value<int> rid,
@@ -7470,6 +7954,7 @@ typedef $DiariesUpdateCompanionBuilder = DiariesCompanion Function({
   Value<String?> weatherIcon,
   Value<String?> weatherTemp,
   Value<String?> weatherText,
+  Value<String> tagsText,
 });
 
 final class $DiariesReferences
@@ -7638,6 +8123,11 @@ class $DiariesFilterComposer extends Composer<_$MoodiaryDatabase, Diaries> {
 
   ColumnFilters<String> get weatherText => $composableBuilder(
     column: $table.weatherText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tagsText => $composableBuilder(
+    column: $table.tagsText,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7829,6 +8319,11 @@ class $DiariesOrderingComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     column: $table.weatherText,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get tagsText => $composableBuilder(
+    column: $table.tagsText,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $DiariesAnnotationComposer extends Composer<_$MoodiaryDatabase, Diaries> {
@@ -7898,6 +8393,9 @@ class $DiariesAnnotationComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     column: $table.weatherText,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get tagsText =>
+      $composableBuilder(column: $table.tagsText, builder: (column) => column);
 
   Expression<T> diaryLinksRefs<T extends Object>(
     Expression<T> Function($DiaryLinksAnnotationComposer a) f,
@@ -8049,6 +8547,7 @@ class $DiariesTableManager
                 Value<String?> weatherIcon = const Value.absent(),
                 Value<String?> weatherTemp = const Value.absent(),
                 Value<String?> weatherText = const Value.absent(),
+                Value<String> tagsText = const Value.absent(),
               }) => DiariesCompanion(
                 rid: rid,
                 id: id,
@@ -8066,6 +8565,7 @@ class $DiariesTableManager
                 weatherIcon: weatherIcon,
                 weatherTemp: weatherTemp,
                 weatherText: weatherText,
+                tagsText: tagsText,
               ),
           createCompanionCallback:
               ({
@@ -8085,6 +8585,7 @@ class $DiariesTableManager
                 Value<String?> weatherIcon = const Value.absent(),
                 Value<String?> weatherTemp = const Value.absent(),
                 Value<String?> weatherText = const Value.absent(),
+                Value<String> tagsText = const Value.absent(),
               }) => DiariesCompanion.insert(
                 rid: rid,
                 id: id,
@@ -8102,6 +8603,7 @@ class $DiariesTableManager
                 weatherIcon: weatherIcon,
                 weatherTemp: weatherTemp,
                 weatherText: weatherText,
+                tagsText: tagsText,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -10927,6 +11429,7 @@ typedef $CategoriesCreateCompanionBuilder = CategoriesCompanion Function({
   required int lastModified,
   Value<String?> parentId,
   Value<int?> color,
+  Value<int> deleted,
   Value<int> rowid,
 });
 typedef $CategoriesUpdateCompanionBuilder = CategoriesCompanion Function({
@@ -10935,6 +11438,7 @@ typedef $CategoriesUpdateCompanionBuilder = CategoriesCompanion Function({
   Value<int> lastModified,
   Value<String?> parentId,
   Value<int?> color,
+  Value<int> deleted,
   Value<int> rowid,
 });
 
@@ -10969,6 +11473,11 @@ class $CategoriesFilterComposer
 
   ColumnFilters<int> get color => $composableBuilder(
     column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deleted => $composableBuilder(
+    column: $table.deleted,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -11006,6 +11515,11 @@ class $CategoriesOrderingComposer
     column: $table.color,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $CategoriesAnnotationComposer
@@ -11033,6 +11547,9 @@ class $CategoriesAnnotationComposer
 
   GeneratedColumn<int> get color =>
       $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<int> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
 }
 
 class $CategoriesTableManager
@@ -11071,6 +11588,7 @@ class $CategoriesTableManager
                 Value<int> lastModified = const Value.absent(),
                 Value<String?> parentId = const Value.absent(),
                 Value<int?> color = const Value.absent(),
+                Value<int> deleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CategoriesCompanion(
                 id: id,
@@ -11078,6 +11596,7 @@ class $CategoriesTableManager
                 lastModified: lastModified,
                 parentId: parentId,
                 color: color,
+                deleted: deleted,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11087,6 +11606,7 @@ class $CategoriesTableManager
                 required int lastModified,
                 Value<String?> parentId = const Value.absent(),
                 Value<int?> color = const Value.absent(),
+                Value<int> deleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CategoriesCompanion.insert(
                 id: id,
@@ -11094,6 +11614,7 @@ class $CategoriesTableManager
                 lastModified: lastModified,
                 parentId: parentId,
                 color: color,
+                deleted: deleted,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -11829,16 +12350,197 @@ typedef $DiaryMediaProcessedTableManager =
       DiaryMediaRow,
       PrefetchHooks Function({bool diaryId})
     >;
+typedef $TagsCreateCompanionBuilder = TagsCompanion Function({
+  required String id,
+  required String name,
+  Value<int> deleted,
+  required int lastModified,
+  Value<int> rowid,
+});
+typedef $TagsUpdateCompanionBuilder = TagsCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<int> deleted,
+  Value<int> lastModified,
+  Value<int> rowid,
+});
+
+class $TagsFilterComposer extends Composer<_$MoodiaryDatabase, Tags> {
+  $TagsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $TagsOrderingComposer extends Composer<_$MoodiaryDatabase, Tags> {
+  $TagsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $TagsAnnotationComposer extends Composer<_$MoodiaryDatabase, Tags> {
+  $TagsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => column,
+  );
+}
+
+class $TagsTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          Tags,
+          TagRow,
+          $TagsFilterComposer,
+          $TagsOrderingComposer,
+          $TagsAnnotationComposer,
+          $TagsCreateCompanionBuilder,
+          $TagsUpdateCompanionBuilder,
+          (TagRow, BaseReferences<_$MoodiaryDatabase, Tags, TagRow>),
+          TagRow,
+          PrefetchHooks Function()
+        > {
+  $TagsTableManager(_$MoodiaryDatabase db, Tags table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $TagsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $TagsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $TagsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> deleted = const Value.absent(),
+                Value<int> lastModified = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TagsCompanion(
+                id: id,
+                name: name,
+                deleted: deleted,
+                lastModified: lastModified,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                Value<int> deleted = const Value.absent(),
+                required int lastModified,
+                Value<int> rowid = const Value.absent(),
+              }) => TagsCompanion.insert(
+                id: id,
+                name: name,
+                deleted: deleted,
+                lastModified: lastModified,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<Tags, TagRow>(table),
+                  BaseReferences<_$MoodiaryDatabase, Tags, TagRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $TagsProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      Tags,
+      TagRow,
+      $TagsFilterComposer,
+      $TagsOrderingComposer,
+      $TagsAnnotationComposer,
+      $TagsCreateCompanionBuilder,
+      $TagsUpdateCompanionBuilder,
+      (TagRow, BaseReferences<_$MoodiaryDatabase, Tags, TagRow>),
+      TagRow,
+      PrefetchHooks Function()
+    >;
 typedef $DiaryTagsCreateCompanionBuilder = DiaryTagsCompanion Function({
   required String diaryId,
   required int seq,
-  required String tag,
+  required String tagId,
   Value<int> rowid,
 });
 typedef $DiaryTagsUpdateCompanionBuilder = DiaryTagsCompanion Function({
   Value<String> diaryId,
   Value<int> seq,
-  Value<String> tag,
+  Value<String> tagId,
   Value<int> rowid,
 });
 
@@ -11877,8 +12579,8 @@ class $DiaryTagsFilterComposer extends Composer<_$MoodiaryDatabase, DiaryTags> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get tag => $composableBuilder(
-    column: $table.tag,
+  ColumnFilters<String> get tagId => $composableBuilder(
+    column: $table.tagId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11920,8 +12622,8 @@ class $DiaryTagsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get tag => $composableBuilder(
-    column: $table.tag,
+  ColumnOrderings<String> get tagId => $composableBuilder(
+    column: $table.tagId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -11961,8 +12663,8 @@ class $DiaryTagsAnnotationComposer
   GeneratedColumn<int> get seq =>
       $composableBuilder(column: $table.seq, builder: (column) => column);
 
-  GeneratedColumn<String> get tag =>
-      $composableBuilder(column: $table.tag, builder: (column) => column);
+  GeneratedColumn<String> get tagId =>
+      $composableBuilder(column: $table.tagId, builder: (column) => column);
 
   $DiariesAnnotationComposer get diaryId {
     final $DiariesAnnotationComposer composer = $composerBuilder(
@@ -12018,24 +12720,24 @@ class $DiaryTagsTableManager
               ({
                 Value<String> diaryId = const Value.absent(),
                 Value<int> seq = const Value.absent(),
-                Value<String> tag = const Value.absent(),
+                Value<String> tagId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DiaryTagsCompanion(
                 diaryId: diaryId,
                 seq: seq,
-                tag: tag,
+                tagId: tagId,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String diaryId,
                 required int seq,
-                required String tag,
+                required String tagId,
                 Value<int> rowid = const Value.absent(),
               }) => DiaryTagsCompanion.insert(
                 diaryId: diaryId,
                 seq: seq,
-                tag: tag,
+                tagId: tagId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -12105,11 +12807,13 @@ typedef $DiaryTagsProcessedTableManager =
 typedef $DiaryFtsCreateCompanionBuilder = DiaryFtsCompanion Function({
   Value<String?> title,
   Value<String?> contentText,
+  Value<String?> tagsText,
   Value<int> rowid,
 });
 typedef $DiaryFtsUpdateCompanionBuilder = DiaryFtsCompanion Function({
   Value<String?> title,
   Value<String?> contentText,
+  Value<String?> tagsText,
   Value<int> rowid,
 });
 
@@ -12128,6 +12832,11 @@ class $DiaryFtsFilterComposer extends Composer<_$MoodiaryDatabase, DiaryFts> {
 
   ColumnFilters<String> get contentText => $composableBuilder(
     column: $table.contentText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tagsText => $composableBuilder(
+    column: $table.tagsText,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -12149,6 +12858,11 @@ class $DiaryFtsOrderingComposer extends Composer<_$MoodiaryDatabase, DiaryFts> {
     column: $table.contentText,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get tagsText => $composableBuilder(
+    column: $table.tagsText,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $DiaryFtsAnnotationComposer
@@ -12167,6 +12881,9 @@ class $DiaryFtsAnnotationComposer
     column: $table.contentText,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get tagsText =>
+      $composableBuilder(column: $table.tagsText, builder: (column) => column);
 }
 
 class $DiaryFtsTableManager
@@ -12199,20 +12916,24 @@ class $DiaryFtsTableManager
               ({
                 Value<String?> title = const Value.absent(),
                 Value<String?> contentText = const Value.absent(),
+                Value<String?> tagsText = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DiaryFtsCompanion(
                 title: title,
                 contentText: contentText,
+                tagsText: tagsText,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 Value<String?> title = const Value.absent(),
                 Value<String?> contentText = const Value.absent(),
+                Value<String?> tagsText = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DiaryFtsCompanion.insert(
                 title: title,
                 contentText: contentText,
+                tagsText: tagsText,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -12538,6 +13259,7 @@ class $MoodiaryDatabaseManager {
   $PlacesTableManager get places => $PlacesTableManager(_db, _db.places);
   $DiaryMediaTableManager get diaryMedia =>
       $DiaryMediaTableManager(_db, _db.diaryMedia);
+  $TagsTableManager get tags => $TagsTableManager(_db, _db.tags);
   $DiaryTagsTableManager get diaryTags =>
       $DiaryTagsTableManager(_db, _db.diaryTags);
   $DiaryFtsTableManager get diaryFts =>

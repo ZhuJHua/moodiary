@@ -543,9 +543,6 @@ class Translations$app$zh {
 	/// zh: '· 媒体引用 {count} 篇'
 	String repairFixedMedia({required Object count}) => '· 媒体引用 ${count} 篇';
 
-	/// zh: '· 失效分类 {count} 篇'
-	String repairFixedOrphan({required Object count}) => '· 失效分类 ${count} 篇';
-
 	/// zh: '搜索索引已重建（{count} 篇）。'
 	String repairReindexed({required Object count}) => '搜索索引已重建（${count} 篇）。';
 
@@ -1931,14 +1928,13 @@ class Translations$diary$zh {
 	/// zh: '删除分类？'
 	String get categoryDeleteTitle => '删除分类？';
 
-	/// zh: '「{name}」下仍有日记（含回收站）时不可删除，日记本身不受影响。'
-	String categoryDeleteMessage({required Object name}) => '「${name}」下仍有日记（含回收站）时不可删除，日记本身不受影响。';
+	/// zh: '(other) {「{name}」下的 {count} 篇日记将变为未分类。}'
+	String categoryDeleteMessage({required num count, required Object name}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '「${name}」下的 ${count} 篇日记将变为未分类。',
+	);
 
 	/// zh: '已删除'
 	String get categoryDeleted => '已删除';
-
-	/// zh: '仍有日记（含回收站），无法删除'
-	String get categoryDeleteBlocked => '仍有日记（含回收站），无法删除';
 
 	/// zh: '暂无分类'
 	String get categoryEmpty => '暂无分类';
@@ -2261,9 +2257,6 @@ class Translations$diary$zh {
 	/// zh: '保存失败'
 	String get saveFailed => '保存失败';
 
-	/// zh: '未知分类'
-	String get unknownCategory => '未知分类';
-
 	/// zh: '升级后需重建索引，旧日记正文才能被搜索到'
 	String get searchReindexHint => '升级后需重建索引，旧日记正文才能被搜索到';
 
@@ -2463,8 +2456,8 @@ class Translations$export$zh {
 	/// zh: '恢复完成：{summary}'
 	String restoreDone({required Object summary}) => '恢复完成：${summary}';
 
-	/// zh: '日记 {diary} 条 / 分类 {category} 条 / 媒体 {media} 个'
-	String restoreSummary({required Object diary, required Object category, required Object media}) => '日记 ${diary} 条 / 分类 ${category} 条 / 媒体 ${media} 个';
+	/// zh: '日记 {diary} 条 / 分类 {category} 条 / 标签 {tag} 条 / 媒体 {media} 个'
+	String restoreSummary({required Object diary, required Object category, required Object tag, required Object media}) => '日记 ${diary} 条 / 分类 ${category} 条 / 标签 ${tag} 条 / 媒体 ${media} 个';
 
 	/// zh: '{base}，跳过 {skipped} 条（本机内容更新）'
 	String restoreSummarySkipped({required Object base, required Object skipped}) => '${base}，跳过 ${skipped} 条（本机内容更新）';
@@ -3625,11 +3618,20 @@ class Translations$sync$zh {
 	/// zh: '上传分类'
 	String get kindCategoryUpload => '上传分类';
 
+	/// zh: '上传标签'
+	String get kindTagUpload => '上传标签';
+
 	/// zh: '下载分类'
 	String get kindCategoryDownload => '下载分类';
 
+	/// zh: '下载标签'
+	String get kindTagDownload => '下载标签';
+
 	/// zh: '跳过分类'
 	String get kindCategorySkip => '跳过分类';
+
+	/// zh: '跳过标签'
+	String get kindTagSkip => '跳过标签';
 
 	/// zh: '推送分类删除'
 	String get kindCategoryTombstonePush => '推送分类删除';
@@ -3784,6 +3786,9 @@ class Translations$sync$zh {
 	/// zh: '分类'
 	String get rowCategory => '分类';
 
+	/// zh: '标签'
+	String get rowTag => '标签';
+
 	/// zh: '媒体'
 	String get rowMedia => '媒体';
 
@@ -3841,6 +3846,36 @@ class Translations$sync$zh {
 	/// zh: '等待对方保存…'
 	String get lanApplying => '等待对方保存…';
 
+	/// zh: '对方已是最新，无需发送'
+	String get lanSendUpToDate => '对方已是最新，无需发送';
+
+	/// zh: '发送完成，对方已是最新'
+	String get lanSendCompletedUpToDate => '发送完成，对方已是最新';
+
+	/// zh: '发送完成：{diaries} · {categories} · {tags}'
+	String lanSendCompleted({required Object diaries, required Object categories, required Object tags}) => '发送完成：${diaries} · ${categories} · ${tags}';
+
+	/// zh: '(other) {日记 {count} 条}'
+	String lanSentDiaries({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '日记 ${count} 条',
+	);
+
+	/// zh: '(other) {分类 {count} 条}'
+	String lanSentCategories({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '分类 ${count} 条',
+	);
+
+	/// zh: '(other) {标签 {count} 条}'
+	String lanSentTags({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '标签 ${count} 条',
+	);
+
+	/// zh: '；'
+	String get lanSendDetailsSeparator => '；';
+
+	/// zh: '{base}（{details}）'
+	String lanSendCompletedWithDetails({required Object base, required Object details}) => '${base}（${details}）';
+
 	/// zh: '局域网接收'
 	String get lanReceiveTitle => '局域网接收';
 
@@ -3859,8 +3894,8 @@ class Translations$sync$zh {
 	/// zh: '内容已是最新，没有变更'
 	String get lanUpToDate => '内容已是最新，没有变更';
 
-	/// zh: '日记 {diary} 条 · 分类 {category} 条'
-	String lanReceived({required Object diary, required Object category}) => '日记 ${diary} 条 · 分类 ${category} 条';
+	/// zh: '日记 {diary} 条 · 分类 {category} 条 · 标签 {tag} 条'
+	String lanReceived({required Object diary, required Object category, required Object tag}) => '日记 ${diary} 条 · 分类 ${category} 条 · 标签 ${tag} 条';
 
 	/// zh: '{base}（{failed} 条失败）'
 	String lanReceivedFailed({required Object base, required Object failed}) => '${base}（${failed} 条失败）';
@@ -4225,8 +4260,8 @@ class Translations$sync$zh {
 	/// zh: '{count} 条失败'
 	String warnFailedCount({required Object count}) => '${count} 条失败';
 
-	/// zh: '日记 {diary} + 分类 {category} + 媒体 {media}（耗时 {ms}ms）'
-	String reCipherSummary({required Object diary, required Object category, required Object media, required Object ms}) => '日记 ${diary} + 分类 ${category} + 媒体 ${media}（耗时 ${ms}ms）';
+	/// zh: '日记 {diary} + 分类 {category} + 标签 {tag} + 媒体 {media}（耗时 {ms}ms）'
+	String reCipherSummary({required Object diary, required Object category, required Object tag, required Object media, required Object ms}) => '日记 ${diary} + 分类 ${category} + 标签 ${tag} + 媒体 ${media}（耗时 ${ms}ms）';
 
 	/// zh: '{base} {failed} 个对象失败已跳过'
 	String reCipherFailedSuffix({required Object base, required Object failed}) => '${base}\n${failed} 个对象失败已跳过';
@@ -4239,6 +4274,9 @@ class Translations$sync$zh {
 
 	/// zh: '分类 {id}'
 	String stepCategory({required Object id}) => '分类 ${id}';
+
+	/// zh: '标签 {id}'
+	String stepTag({required Object id}) => '标签 ${id}';
 
 	/// zh: '地点 {id}'
 	String stepPlace({required Object id}) => '地点 ${id}';
@@ -4264,11 +4302,17 @@ class Translations$sync$zh {
 	/// zh: '上传 {count} 个分类'
 	String summaryUploadedCategories({required Object count}) => '上传 ${count} 个分类';
 
+	/// zh: '上传 {count} 个标签'
+	String summaryUploadedTags({required Object count}) => '上传 ${count} 个标签';
+
 	/// zh: '下载 {count} 篇日记'
 	String summaryDownloadedDiaries({required Object count}) => '下载 ${count} 篇日记';
 
 	/// zh: '下载 {count} 个分类'
 	String summaryDownloadedCategories({required Object count}) => '下载 ${count} 个分类';
+
+	/// zh: '下载 {count} 个标签'
+	String summaryDownloadedTags({required Object count}) => '下载 ${count} 个标签';
 
 	/// zh: '媒体 {count} 个'
 	String summaryMedia({required Object count}) => '媒体 ${count} 个';

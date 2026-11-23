@@ -306,8 +306,7 @@ final List<ToolDef> diaryTools = [
     title: 'List tags',
     description: (_) =>
         'Lists the tags used by visible diaries with their usage counts, '
-        'most used first. The database has no tag index, so this aggregates '
-        'over every visible diary and is linear in the number of diaries.',
+        'most used first.',
     input: (_) => S.object(properties: {'limit': tagLimitSchema}),
     surfaces: const {ToolSurface.assistant, ToolSurface.mcp},
     effect: ToolEffect.read,
@@ -335,7 +334,7 @@ Future<void> _categoryFilter(
   CategoryRepository categories,
 ) async {
   if (id == null) return;
-  if (await categories.getCategoryById(id) == null) {
+  if ((await categories.getCategoryById(id))?.deleted != false) {
     _unknownCategory(subject, id);
   }
 }
@@ -369,8 +368,16 @@ _PageArgs _pageArgs(ToolArguments args) {
   );
 }
 
-ToolResult _mutation(Diary diary, Map<String, String> names) => ToolResult({
-  'diary': diarySummary(diary, categoryName: names[diary.categoryId]),
+Future<ToolResult> _mutation(
+  Diary diary,
+  Map<String, String> names,
+  TagRepository tags,
+) async => ToolResult({
+  'diary': diarySummary(
+    diary,
+    tags: await tags.getTagsByIds(diary.tagIds),
+    categoryName: names[diary.categoryId],
+  ),
 });
 
 DiaryContentFormat _writeFormat(String? value) => switch (value) {
@@ -428,11 +435,17 @@ Never _writeFailure(
 };
 
 Future<ToolResult> _getDiaries(_GetDiaryInput input, ToolContext ctx) async {
-  final read = await DiaryQueries(diaries: ctx.diaries).read(input.ids);
+  final read = await DiaryQueries(
+    tags: ctx.tags,
+    diaries: ctx.diaries,
+  ).read(input.ids);
   final names = await categoryNames(ctx.categories);
   final results = <Map<String, Object?>>[];
+  final tags = await ctx.tags.getTagsByIds(
+    read.found.expand((diary) => diary.tagIds),
+  );
   for (final diary in read.found) {
-    results.add(await _getDiaryPayload(diary, input, ctx, names));
+    results.add(await _getDiaryPayload(diary, input, ctx, names, tags));
   }
   return ToolResult({'diaries': results, 'missing': read.missing});
 }
@@ -442,6 +455,7 @@ Future<Map<String, Object?>> _getDiaryPayload(
   _GetDiaryInput input,
   ToolContext ctx,
   Map<String, String> names,
+  Map<String, Tag> tags,
 ) async {
   final id = diary.id;
   final (:contentFormat, :linkStyle, :includeLinks, ids: _) = input;
@@ -459,7 +473,7 @@ Future<Map<String, Object?>> _getDiaryPayload(
     );
   }
   return {
-    ...diarySummary(diary, categoryName: names[diary.categoryId]),
+    ...diarySummary(diary, tags: tags, categoryName: names[diary.categoryId]),
     'type': diary.type,
     'contentFormat': contentFormat,
     'content': projection.content,
@@ -474,7 +488,10 @@ Future<Map<String, Object?>> _getDiaryPayload(
       },
     'media': mediaLists(diary),
     if (includeLinks ?? ctx.includeLinks)
-      'links': await DiaryToolQueries(diaries: ctx.diaries).linkSummary(diary),
+      'links': await DiaryToolQueries(
+        tags: ctx.tags,
+        diaries: ctx.diaries,
+      ).linkSummary(diary),
     'uri': '$diaryUriPrefix${diary.id}',
   };
 }
@@ -488,8 +505,12 @@ Future<ToolResult> _createDiary(
       input;
   final Diary diary;
   try {
-    diary = await DiaryWrites(diaries: ctx.diaries, categories: ctx.categories)
-        .create(
+    diary =
+        await DiaryWrites(
+          tags: ctx.tags,
+          diaries: ctx.diaries,
+          categories: ctx.categories,
+        ).create(
           title: title,
           content: content,
           format: contentFormat,
@@ -502,7 +523,7 @@ Future<ToolResult> _createDiary(
   } on DiaryOpsException catch (e) {
     _writeFailure('create_diary', e, '');
   }
-  return _mutation(diary, names);
+  return _mutation(diary, names, ctx.tags);
 }
 
 Future<ToolResult> _updateDiary(
@@ -515,6 +536,7 @@ Future<ToolResult> _updateDiary(
     return await withDiaryWriteLock(id, () async {
       final next =
           await DiaryWrites(
+            tags: ctx.tags,
             diaries: ctx.diaries,
             categories: ctx.categories,
           ).update(
@@ -523,7 +545,7 @@ Future<ToolResult> _updateDiary(
             format: contentFormat,
             enforceOwnMedia: true,
           );
-      return _mutation(next, names);
+      return _mutation(next, names, ctx.tags);
     });
   } on DiaryOpsException catch (e) {
     _writeFailure('update_diary', e, id);
@@ -534,6 +556,7 @@ Future<ToolResult> _deleteDiary(String id, ToolContext ctx) async {
   return withDiaryWriteLock(id, () async {
     try {
       final result = await DiaryWrites(
+        tags: ctx.tags,
         diaries: ctx.diaries,
         categories: ctx.categories,
       ).delete(id: id);
@@ -556,7 +579,11 @@ Future<ToolResult> _searchDiaries(
   final (:query, :mode, :tag, :paging, :sort, :excerpt) = input;
   await _categoryFilter(paging.categoryId, 'search_diaries', ctx.categories);
   final result =
-      await DiaryQueries(diaries: ctx.diaries, semantic: ctx.semantic).search(
+      await DiaryQueries(
+        tags: ctx.tags,
+        diaries: ctx.diaries,
+        semantic: ctx.semantic,
+      ).search(
         query: query,
         mode: mode,
         tag: tag,
@@ -568,6 +595,9 @@ Future<ToolResult> _searchDiaries(
         offset: paging.offset,
       );
   final names = await categoryNames(ctx.categories);
+  final tags = await ctx.tags.getTagsByIds(
+    result.rows.expand((row) => row.diary.tagIds),
+  );
   return ToolResult({
     'query': query,
     'total': result.total,
@@ -584,6 +614,7 @@ Future<ToolResult> _searchDiaries(
         {
           ...diarySummary(
             row.diary,
+            tags: tags,
             categoryName: names[row.diary.categoryId],
             renderMarkdown: excerpt == 'markdown',
             includeExcerpt: excerpt != 'none',
@@ -616,13 +647,18 @@ Future<ToolResult> _getDiaryLinks(String id, ToolContext ctx) async {
   if (diary == null || !diary.show) {
     toolFailure('get_diary_links: no diary with id="$id".');
   }
-  final links = await DiaryToolQueries(diaries: ctx.diaries).linkSummary(diary);
+  final links = await DiaryToolQueries(
+    tags: ctx.tags,
+    diaries: ctx.diaries,
+  ).linkSummary(diary);
   return ToolResult({...linkRow(diary), ...links});
 }
 
 Future<ToolResult> _listTags(int limit, ToolContext ctx) async {
-  final result = await DiaryToolQueries(diaries: ctx.diaries)
-      .tags(limit: limit);
+  final result = await DiaryToolQueries(
+    tags: ctx.tags,
+    diaries: ctx.diaries,
+  ).tags(limit: limit);
   return ToolResult({
     'tags': [
       for (final entry in result.tags)
@@ -631,9 +667,7 @@ Future<ToolResult> _listTags(int limit, ToolContext ctx) async {
     'count': result.tags.length,
     'totalDistinct': result.totalDistinct,
     'scannedDiaries': result.scannedDiaries,
-    'note':
-        'The database has no tag index: these counts come from every visible '
-        'diary.',
+    'note': 'Counts include visible diaries only.',
   });
 }
 

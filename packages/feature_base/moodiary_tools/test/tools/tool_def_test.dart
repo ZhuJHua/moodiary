@@ -42,6 +42,7 @@ void main() {
       final db = openTestDatabase();
       addTearDown(db.close);
       final context = ToolContext(
+        tags: TagRepository(db),
         diaries: DiaryRepository(db),
         categories: CategoryRepository(db),
         insights: MoodInsightsRepository(db),

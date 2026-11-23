@@ -10,9 +10,4 @@ sealed class CategoryEvent with _$CategoryEvent {
     Category category, {
     @Default(false) bool fromSync,
   }) = CategoryUpserted;
-
-  const factory CategoryEvent.deleted(
-    String id, {
-    @Default(false) bool fromSync,
-  }) = CategoryDeleted;
 }

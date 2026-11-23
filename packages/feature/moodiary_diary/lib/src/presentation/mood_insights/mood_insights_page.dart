@@ -462,7 +462,6 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                           imageName: const [],
                           audioName: const [],
                           videoName: const [],
-                          tags: const [],
                           type: DiaryType.richText.value,
                         ),
                     ];

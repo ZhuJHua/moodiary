@@ -346,6 +346,7 @@ Future<ToolResult> _addDiaryImage(
   return _persistNode(
     diaries,
     categories,
+    ctx.tags,
     subject: subject,
     diary: diary,
     node: node,
@@ -393,6 +394,7 @@ Future<ToolResult> _addDiaryAttachment(
   return _persistNode(
     diaries,
     categories,
+    ctx.tags,
     subject: subject,
     diary: diary,
     node: node,
@@ -453,7 +455,8 @@ Future<SavedDiaryMedia> _saveMedia(
 
 Future<ToolResult> _persistNode(
   DiaryRepository diaries,
-  CategoryRepository categories, {
+  CategoryRepository categories,
+  TagRepository tags, {
   required String subject,
   required Diary diary,
   required Map<String, dynamic> node,
@@ -465,6 +468,7 @@ Future<ToolResult> _persistNode(
     updated = await _insertNode(
       diaries,
       categories,
+      tags,
       diaryId: diary.id,
       node: node,
       atStart: atStart,
@@ -490,7 +494,8 @@ Future<ToolResult> _persistNode(
 
 Future<Diary> _insertNode(
   DiaryRepository diaries,
-  CategoryRepository categories, {
+  CategoryRepository categories,
+  TagRepository tags, {
   required String diaryId,
   required Map<String, dynamic> node,
   required bool atStart,
@@ -511,7 +516,11 @@ Future<Diary> _insertNode(
     nodes.add(node);
   }
   document['content'] = nodes;
-  return DiaryWrites(diaries: diaries, categories: categories).update(
+  return DiaryWrites(
+    tags: tags,
+    diaries: diaries,
+    categories: categories,
+  ).update(
     id: diary.id,
     patch: DiaryPatch(content: jsonEncode(document)),
     format: DiaryContentFormat.document,

@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -63,6 +66,27 @@ final class DirArchiveSink implements ArchiveSink {
 
   @override
   Future<void> finish() async {}
+}
+
+final class _EditingTagRepository extends TagRepository {
+  _EditingTagRepository(super.db, this._diaries, this._editedDiary);
+
+  final FakeDiaryStore _diaries;
+  final Diary _editedDiary;
+
+  @override
+  Future<List<String>> adoptLegacyTags(
+    List<String> names, {
+    bool fromSync = true,
+    bool restoring = false,
+  }) async {
+    await _diaries.insertADiary(_editedDiary);
+    return super.adoptLegacyTags(
+      names,
+      fromSync: fromSync,
+      restoring: restoring,
+    );
+  }
 }
 
 void main() {
@@ -144,7 +168,7 @@ void main() {
       );
       expect(manifest.entries['d:d2']!.deleted, isTrue);
       expect(manifest.entries['c:c1']!.deleted, isFalse);
-      expect(manifest.entries['c:c2']!.deleted, isTrue);
+      expect(manifest.entries, isNot(contains('c:c2')));
 
       final diaryJson = sink.json('diary/d1.json');
       expect(diaryJson['title'], 'hello');
@@ -284,10 +308,30 @@ void main() {
     });
   });
 
+  test('tag-only LAN delta includes the changed tag object', () async {
+    final tag = Tag.legacy('work');
+    final sink = MemoryArchiveSink();
+    final count = await LocalArchive.writeArchive(
+      sink: sink,
+      diaries: [],
+      categories: [],
+      tags: [tag],
+      tombstones: [],
+      mediaBaseDir: mediaSrc(),
+      remote: SyncManifest.empty(),
+    );
+    expect(count, 1);
+    expect(sink.json(SyncKeys.tagObjectPath(tag.id)), tag.toJson());
+    expect(SyncManifest.fromJson(sink.json('manifest.json')).entries.keys, [
+      SyncKeys.tag(tag.id),
+    ]);
+  });
+
   group('importDirectory LWW', () {
     Future<String> buildArchiveDir({
       required List<Diary> diaries,
       List<Category> categories = const [],
+      List<Tag> tags = const [],
       List<SyncTombstone> tombstones = const [],
     }) async {
       final dir = p.join(tmp.path, 'archive');
@@ -295,11 +339,298 @@ void main() {
         sink: DirArchiveSink(dir),
         diaries: diaries,
         categories: categories,
+        tags: tags,
         tombstones: tombstones,
         mediaBaseDir: mediaSrc(),
       );
       return dir;
     }
+
+    test(
+      'restores tag names and only adds absent deleted catalog rows',
+      () async {
+        final first = Tag(id: 'tag', name: 'work', lastModified: atMs(100));
+        final removed = first.copyWith(id: 'gone', deleted: true);
+        final active = first.copyWith(id: 'keep');
+        final category = buildCategory(id: 'keep', modifiedMs: 100);
+        final dir = await buildArchiveDir(
+          diaries: [
+            buildDiary(
+              id: 'diary',
+              modifiedMs: 100,
+            ).copyWith(tagIds: [first.id]),
+          ],
+          tags: [first, removed, active.copyWith(deleted: true)],
+          categories: [
+            category.copyWith(deleted: true),
+            category.copyWith(id: 'gone', deleted: true),
+          ],
+        );
+        final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+        addTearDown(db.close);
+        final tags = TagRepository(db);
+        getIt.registerSingleton<TagRepository>(tags);
+        await tags.insertATag(active.copyWith(lastModified: atMs(1)));
+        final categories = FakeCategoryStore([
+          category.copyWith(lastModified: atMs(1)),
+        ]);
+        final diaries = FakeDiaryStore();
+        final report = await LocalArchive.importDirectory(
+          dir,
+          policy: const RestorePolicy(),
+          diaryStore: diaries,
+          categoryStore: categories,
+          placeStore: FakePlaceStore(),
+          tombstoneStore: diaries.tombstones,
+          mediaFiles: FakeMediaFiles(),
+          cipherProvider: () async => SyncCipher.plaintext,
+        );
+        expect(report.failed, 0);
+        expect(report.tagCount, 2);
+        final ids = diaries.diaries['diary']!.tagIds;
+        expect(
+          resolveTagNames(ids, await tags.getTagsByIds(ids)).single.name,
+          'work',
+        );
+        expect((await tags.getTagById('gone'))!.deleted, isTrue);
+        expect((await tags.getTagById('keep'))!.deleted, isFalse);
+        expect(categories.categories['keep']!.deleted, isFalse);
+        expect(categories.categories['gone']!.deleted, isTrue);
+      },
+    );
+
+    test(
+      'restore preserves archived deletion times on absent catalog rows',
+      () async {
+        final tag = Tag(
+          id: 'tag',
+          name: 'work',
+          lastModified: atMs(100),
+          deleted: true,
+        );
+        final category = buildCategory(
+          id: 'category',
+          modifiedMs: 200,
+        ).copyWith(deleted: true);
+        final dir = await buildArchiveDir(
+          diaries: [],
+          tags: [tag],
+          categories: [category],
+        );
+        final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+        addTearDown(db.close);
+        final tags = TagRepository(db);
+        final categories = CategoryRepository(db);
+        getIt.registerSingleton<TagRepository>(tags);
+        getIt.registerSingleton<CategoryRepository>(categories);
+        final diaries = FakeDiaryStore();
+
+        final report = await LocalArchive.importDirectory(
+          dir,
+          policy: const RestorePolicy(),
+          diaryStore: diaries,
+          placeStore: FakePlaceStore(),
+          tombstoneStore: diaries.tombstones,
+          mediaFiles: FakeMediaFiles(),
+        );
+
+        expect(report.failed, 0);
+        final restoredTag = await tags.getTagById(tag.id);
+        expect(restoredTag?.deleted, isTrue);
+        expect(restoredTag?.lastModified, tag.lastModified);
+        final restoredCategory = await categories.getCategoryById(category.id);
+        expect(restoredCategory?.deleted, isTrue);
+        expect(restoredCategory?.lastModified, category.lastModified);
+      },
+    );
+
+    for (final restoring in [true, false]) {
+      final policy = restoring ? const RestorePolicy() : const SyncPullPolicy();
+
+      test(
+        restoring
+            ? 'restore revives categories and tags backed up live'
+            : 'sync import keeps newer local category and tag deletions',
+        () async {
+          final archivedCategory = buildCategory(
+            id: 'category',
+            modifiedMs: 100,
+          ).copyWith(categoryName: 'Archived name');
+          final localCategory = archivedCategory.copyWith(
+            categoryName: 'Local name',
+            deleted: true,
+            lastModified: atMs(200),
+          );
+          final deletedCategory = localCategory.copyWith(id: 'deleted-in-both');
+          final archivedTag = Tag(
+            id: 'tag',
+            name: 'Archived name',
+            lastModified: atMs(100),
+          );
+          final localTag = archivedTag.copyWith(
+            name: 'Local name',
+            deleted: true,
+            lastModified: atMs(200),
+          );
+          final deletedTag = localTag.copyWith(id: 'deleted-in-both');
+          final dir = await buildArchiveDir(
+            diaries: [],
+            categories: [
+              archivedCategory,
+              archivedCategory.copyWith(id: deletedCategory.id, deleted: true),
+            ],
+            tags: [
+              archivedTag,
+              archivedTag.copyWith(id: deletedTag.id, deleted: true),
+            ],
+          );
+          final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+          addTearDown(db.close);
+          final categories = CategoryRepository(db);
+          final tags = TagRepository(db);
+          getIt.registerSingleton<CategoryRepository>(categories);
+          getIt.registerSingleton<TagRepository>(tags);
+          await categories.insertACategory(localCategory);
+          await categories.insertACategory(deletedCategory);
+          await tags.insertATag(localTag);
+          await tags.insertATag(deletedTag);
+          final diaries = FakeDiaryStore();
+
+          final report = await LocalArchive.importDirectory(
+            dir,
+            policy: policy,
+            diaryStore: diaries,
+            placeStore: FakePlaceStore(),
+            tombstoneStore: diaries.tombstones,
+            mediaFiles: FakeMediaFiles(),
+            cipherProvider: () async => SyncCipher.plaintext,
+          );
+
+          expect(report.failed, 0);
+          expect(report.categoryCount, restoring ? 1 : 0);
+          expect(report.tagCount, restoring ? 1 : 0);
+          expect(report.skipped, restoring ? 2 : 4);
+          final category = (await categories.getCategoryById(
+            archivedCategory.id,
+          ))!;
+          final tag = (await tags.getTagById(archivedTag.id))!;
+          if (restoring) {
+            expect(category.deleted, isFalse);
+            expect(category.categoryName, archivedCategory.categoryName);
+            expect(
+              category.lastModified.isAfter(localCategory.lastModified),
+              isTrue,
+            );
+            expect(tag.deleted, isFalse);
+            expect(tag.name, archivedTag.name);
+            expect(tag.lastModified.isAfter(localTag.lastModified), isTrue);
+          } else {
+            expect(category, localCategory);
+            expect(tag, localTag);
+          }
+          expect(
+            await categories.getCategoryById(deletedCategory.id),
+            deletedCategory,
+          );
+          expect(await tags.getTagById(deletedTag.id), deletedTag);
+        },
+      );
+
+      test(
+        restoring
+            ? 'restores 2.9 diary tag names to resolvable tag IDs'
+            : 'sync import keeps deleted legacy tags referenced by 2.9 diaries',
+        () async {
+          final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+          addTearDown(db.close);
+          final tags = TagRepository(db);
+          getIt.registerSingleton<TagRepository>(tags);
+          final local = Tag.legacy('travel').copyWith(
+            name: 'Local name',
+            deleted: true,
+            lastModified: atMs(200),
+          );
+          await tags.insertATag(local);
+          final diary = buildDiary(id: 'legacy-tags', modifiedMs: 1000);
+          final dir = await buildArchiveDir(diaries: [diary]);
+          final legacy = diary.toJson()
+            ..remove('tagIds')
+            ..['tags'] = ['周末', 'travel'];
+          await File(p.join(dir, SyncKeys.diaryObjectPath(diary.id)))
+              .writeAsString(jsonEncode(legacy));
+          final diaries = FakeDiaryStore();
+          final newTagEvent = tags.tagEvents.first;
+          final beforeImport = DateTime.timestamp();
+
+          final report = await LocalArchive.importDirectory(
+            dir,
+            policy: policy,
+            diaryStore: diaries,
+            categoryStore: FakeCategoryStore(),
+            placeStore: FakePlaceStore(),
+            tombstoneStore: diaries.tombstones,
+            mediaFiles: FakeMediaFiles(),
+            cipherProvider: () async => SyncCipher.plaintext,
+          );
+
+          expect(report.failed, 0);
+          final ids = diaries.diaries[diary.id]!.tagIds;
+          expect(ids, [Tag.legacyId('周末'), local.id]);
+          final imported = await tags.getTagsByIds(ids);
+          final created = imported[ids.first]!;
+          expect(created.deleted, isFalse);
+          expect(
+            resolveTagNames(ids, imported).map((tag) => tag.name),
+            restoring ? ['周末', 'travel'] : ['周末'],
+          );
+          if (restoring) {
+            expect(created.lastModified.isBefore(beforeImport), isFalse);
+            expect((await newTagEvent).fromSync, isFalse);
+            expect(
+              imported[local.id]!.lastModified.isAfter(local.lastModified),
+              isTrue,
+            );
+          } else {
+            expect(created.lastModified.millisecondsSinceEpoch, 0);
+            expect(imported[local.id], local);
+          }
+        },
+      );
+    }
+
+    test('restore skips diaries edited during legacy tag adoption', () async {
+      final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+      final archived = buildDiary(id: 'legacy-tags', modifiedMs: 200);
+      final local = archived.copyWith(lastModified: atMs(100));
+      final edited = local.copyWith(title: 'Edited', lastModified: atMs(300));
+      final diaries = FakeDiaryStore([local]);
+      getIt.registerSingleton<TagRepository>(
+        _EditingTagRepository(db, diaries, edited),
+      );
+      final dir = await buildArchiveDir(diaries: [archived]);
+      final legacy = archived.toJson()
+        ..remove('tagIds')
+        ..['tags'] = ['travel'];
+      await File(p.join(dir, SyncKeys.diaryObjectPath(archived.id)))
+          .writeAsString(jsonEncode(legacy));
+
+      final report = await LocalArchive.importDirectory(
+        dir,
+        policy: const RestorePolicy(),
+        diaryStore: diaries,
+        categoryStore: FakeCategoryStore(),
+        placeStore: FakePlaceStore(),
+        tombstoneStore: diaries.tombstones,
+        mediaFiles: FakeMediaFiles(),
+        cipherProvider: () async => SyncCipher.plaintext,
+      );
+
+      expect(report.failed, 0);
+      expect(report.diaryCount, 0);
+      expect(report.skipped, 1);
+      expect(diaries.diaries[archived.id], edited);
+    });
 
     test('缺 manifest.json 且非旧包 → errNotBackup', () async {
       final dir = p.join(tmp.path, 'empty');

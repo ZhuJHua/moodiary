@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -155,7 +156,9 @@ class MarkdownImporter {
               imageName: const [],
               audioName: const [],
               videoName: const [],
-              tags: meta.tags,
+              tagIds: meta.tags.isEmpty
+                  ? const []
+                  : await getIt<TagRepository>().ensureTags(meta.tags),
               placeId: placeId,
               type: converted.type.value,
             ),

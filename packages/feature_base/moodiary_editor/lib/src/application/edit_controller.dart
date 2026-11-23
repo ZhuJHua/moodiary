@@ -133,8 +133,8 @@ class EditController extends _$EditController {
     );
   }
 
-  void changeTags(List<String> tags) {
-    state = state.whenData((current) => current.copyWith(tags: tags));
+  void changeTags(List<String> tagIds) {
+    state = state.whenData((current) => current.copyWith(tagIds: tagIds));
   }
 
   void changePlace(String? placeId) {

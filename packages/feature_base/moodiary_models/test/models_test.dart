@@ -2,6 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 void main() {
+  test('legacy tag IDs and diary JSON are stable', () {
+    final tag = Tag.legacy('Travel');
+    expect(tag.id, '00398b23-dea3-58c6-92d5-739a939f7875');
+    expect(Tag.normalize(' ##Travel '), '#Travel');
+    expect(Tag.normalize(' # \t'), isNull);
+    expect(Tag.fromJson(tag.toJson()), tag);
+    expect(tag.lastModified.microsecondsSinceEpoch, 0);
+    final json = Diary.empty(type: .tiptap).copyWith(tagIds: [tag.id]).toJson();
+    expect(json.containsKey('tags'), isFalse);
+    expect(Diary.fromJson(json).tagIds, [tag.id]);
+    expect(Diary.fromJson(json..remove('tagIds')).tagIds, isEmpty);
+  });
   test('Category holds an optional color', () {
     final c = Category.create(categoryName: 'work', color: 0xFF42A5F5);
     expect(c.color, 0xFF42A5F5);

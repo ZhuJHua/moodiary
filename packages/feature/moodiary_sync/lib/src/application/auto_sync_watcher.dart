@@ -24,6 +24,7 @@ class AutoSyncWatcher {
     this._runner,
     this._diaries,
     this._categories,
+    this._tags,
     this._places,
     this._dirty,
     this._openDiaries,
@@ -33,6 +34,7 @@ class AutoSyncWatcher {
   final SyncRunner _runner;
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
+  final TagRepository _tags;
   final PlaceRepository _places;
   final SyncDirtyTracker _dirty;
   final OpenDiaryRegistry _openDiaries;
@@ -51,6 +53,7 @@ class AutoSyncWatcher {
 
   StreamSubscription<DiaryEvent>? _diarySub;
   StreamSubscription<CategoryEvent>? _categorySub;
+  StreamSubscription<TagEvent>? _tagSub;
   StreamSubscription<PlaceEvent>? _placeSub;
   StreamSubscription<String>? _closedSub;
   StreamSubscription<SyncEvent>? _syncSub;
@@ -91,6 +94,11 @@ class AutoSyncWatcher {
       }
     });
     _categorySub ??= _categories.categoryEvents.listen((event) {
+      if (event.fromSync) return;
+      MoodiaryKVs.syncPendingLocal.set(true);
+      _onLocalChange();
+    });
+    _tagSub ??= _tags.tagEvents.listen((event) {
       if (event.fromSync) return;
       MoodiaryKVs.syncPendingLocal.set(true);
       _onLocalChange();
@@ -151,6 +159,7 @@ class AutoSyncWatcher {
     MoodiaryKVs.syncPollInterval.getNotifier().removeListener(_schedulePoll);
     await _diarySub?.cancel();
     await _categorySub?.cancel();
+    await _tagSub?.cancel();
     await _placeSub?.cancel();
     await _closedSub?.cancel();
     await _syncSub?.cancel();
@@ -159,6 +168,7 @@ class AutoSyncWatcher {
     _lifecycle = null;
     _diarySub = null;
     _categorySub = null;
+    _tagSub = null;
     _placeSub = null;
     _closedSub = null;
     _syncSub = null;

@@ -41,7 +41,7 @@ class DiaryRepository {
     required List<String> audios,
     required List<String> videos,
     required List<String> files,
-    required List<String> tags,
+    required List<String> tagIds,
   }) {
     final icon = r.weatherIcon;
     return Diary(
@@ -65,7 +65,7 @@ class DiaryRepository {
       audioName: audios,
       videoName: videos,
       fileName: files,
-      tags: tags,
+      tagIds: tagIds,
       placeId: r.placeId,
       type: r.type,
       aspect: r.aspect,
@@ -114,7 +114,7 @@ class DiaryRepository {
                 ..orderBy([(t) => OrderingTerm(expression: t.seq)]))
               .get();
       for (final t in tags) {
-        tagsById.putIfAbsent(t.diaryId, () => []).add(t.tag);
+        tagsById.putIfAbsent(t.diaryId, () => []).add(t.tagId);
       }
     }
     return [
@@ -125,7 +125,7 @@ class DiaryRepository {
           audios: mediaById[r.id]?['audio'] ?? const [],
           videos: mediaById[r.id]?['video'] ?? const [],
           files: mediaById[r.id]?['file'] ?? const [],
-          tags: tagsById[r.id] ?? const [],
+          tagIds: tagsById[r.id] ?? const [],
         ),
     ];
   }
@@ -170,10 +170,11 @@ class DiaryRepository {
             ),
       ]);
       b.insertAll(_db.diaryTags, [
-        for (var i = 0; i < d.tags.length; i++)
-          DiaryTagsCompanion.insert(diaryId: d.id, seq: i, tag: d.tags[i]),
+        for (final (seq, id) in d.tagIds.indexed)
+          DiaryTagsCompanion.insert(diaryId: d.id, seq: seq, tagId: id),
       ]);
     });
+    await _db.refreshTagsText([d.id]);
   }
 
   Future<void> _applyLinks(String id, List<String> links) async {
@@ -195,6 +196,10 @@ class DiaryRepository {
 
   // contentText 一律由正文重新生成，不信任调用方（同步、导入）带来的值
   static (Diary, DiaryContent) _canonical(Diary d, [DiaryContent? derived]) {
+    final tagIds = d.tagIds.toSet();
+    if (tagIds.length != d.tagIds.length) {
+      d = d.copyWith(tagIds: tagIds.toList());
+    }
     derived ??= DiaryContent.of(d);
     final content = derived.normalizedContent;
     if (!identical(content, d.content)) {
@@ -443,6 +448,11 @@ class DiaryRepository {
     }
   }
 
+  static const _uncategorized = CustomExpression<bool>(
+    '(diaries.category_id IS NULL OR NOT EXISTS (SELECT 1 FROM categories c '
+    'WHERE c.id = diaries.category_id AND c.deleted = 0))',
+  );
+
   Future<List<Diary>> getDiaryByCategory({
     String? categoryId,
     bool uncategorized = false,
@@ -453,7 +463,7 @@ class DiaryRepository {
     assert(!(uncategorized && categoryId != null));
     final q = _visible();
     if (uncategorized) {
-      q.where((d) => d.categoryId.isNull());
+      q.where((_) => _uncategorized);
     } else if (categoryId != null) {
       q.where((d) => d.categoryId.equals(categoryId));
     }
@@ -475,7 +485,7 @@ class DiaryRepository {
       ..addColumns([col])
       ..where(_db.diaries.show.equals(1));
     if (uncategorized) {
-      q.where(_db.diaries.categoryId.isNull());
+      q.where(_uncategorized);
     } else if (categoryId != null) {
       q.where(_db.diaries.categoryId.equals(categoryId));
     }
@@ -490,9 +500,17 @@ class DiaryRepository {
 
   Future<({Map<String, int> byCategory, int total})>
   diaryCountByCategory() async {
-    final cat = _db.diaries.categoryId;
+    final cat = _db.categories.id;
     final count = countAll();
     final q = _db.selectOnly(_db.diaries)
+      ..join([
+        leftOuterJoin(
+          _db.categories,
+          cat.equalsExp(_db.diaries.categoryId) &
+              _db.categories.deleted.equals(0),
+          useColumns: false,
+        ),
+      ])
       ..addColumns([cat, count])
       ..where(_db.diaries.show.equals(1))
       ..groupBy([cat]);
@@ -838,7 +856,7 @@ class DiaryRepository {
 
     select.orderBy(switch (sort) {
       .relevance => [
-        OrderingTerm.asc(fts.bm25(weights: const [1.5, 1.0])),
+        OrderingTerm.asc(fts.bm25(weights: const [1.5, 1.0, 1.25])),
         OrderingTerm.desc(d.time),
         OrderingTerm.desc(d.id),
       ],
@@ -1036,6 +1054,7 @@ class DiaryRepository {
           ]);
         });
       }
+      await _db.refreshTagsText();
       await _db.customStatement(
         "INSERT INTO diary_fts(diary_fts) VALUES('rebuild')",
       );
@@ -1047,14 +1066,10 @@ class DiaryRepository {
   Future<DiaryRepairReport> repairData() async {
     final rows = await _db.select(_db.diaries).get();
     final diaries = await _assemble(rows);
-    final categoryIds = {
-      for (final row in await _db.select(_db.categories).get()) row.id,
-    };
 
     final updates = <Diary>[];
     var contentTextFixed = 0;
     var mediaFixed = 0;
-    var orphanCategoryFixed = 0;
 
     for (final diary in diaries) {
       var (next, derived) = _canonical(diary);
@@ -1080,14 +1095,6 @@ class DiaryRepository {
         changed = true;
         mediaFixed++;
       }
-      final categoryId = diary.categoryId;
-      if (categoryId != null &&
-          categoryId.isNotEmpty &&
-          !categoryIds.contains(categoryId)) {
-        next = next.copyWith(categoryId: null);
-        changed = true;
-        orphanCategoryFixed++;
-      }
       if (changed) updates.add(next);
     }
 
@@ -1099,7 +1106,7 @@ class DiaryRepository {
         }
       });
       for (final diary in updates) {
-        _events.add(DiaryUpdated(diary));
+        _events.add(DiaryUpdated(diary, fromSync: true));
       }
     }
 
@@ -1109,7 +1116,6 @@ class DiaryRepository {
       changed: updates.length,
       contentTextFixed: contentTextFixed,
       mediaFixed: mediaFixed,
-      orphanCategoryFixed: orphanCategoryFixed,
       reindexed: reindexed,
     );
   }
@@ -1193,8 +1199,6 @@ class DiaryRepairReport {
 
   final int mediaFixed;
 
-  final int orphanCategoryFixed;
-
   final int reindexed;
 
   const DiaryRepairReport({
@@ -1202,7 +1206,6 @@ class DiaryRepairReport {
     required this.changed,
     required this.contentTextFixed,
     required this.mediaFixed,
-    required this.orphanCategoryFixed,
     required this.reindexed,
   });
 

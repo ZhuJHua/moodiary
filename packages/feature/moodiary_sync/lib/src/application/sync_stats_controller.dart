@@ -13,20 +13,24 @@ class SyncStats {
   final int localDiaries;
 
   final int localCategories;
+  final int localTags;
 
   final int localMedia;
 
   final int? remoteDiaries;
   final int? remoteCategories;
+  final int? remoteTags;
   final int? remoteMedia;
   final String? remoteError;
 
   const SyncStats({
     required this.localDiaries,
     required this.localCategories,
+    required this.localTags,
     required this.localMedia,
     this.remoteDiaries,
     this.remoteCategories,
+    this.remoteTags,
     this.remoteMedia,
     this.remoteError,
   });
@@ -37,7 +41,10 @@ Future<SyncStats> syncStats(Ref ref) async {
   final diaries = await getIt<DiaryRepository>().getAllDiaries();
   final localDiaries = diaries.length;
   final localCategories =
-      (await getIt<CategoryRepository>().getAllCategories()).length;
+      (await getIt<CategoryRepository>().getAllCategoriesForSync()).length;
+  final localTags = (await getIt<TagRepository>().getAllTags(
+    includeDeleted: true,
+  )).length;
   final localMedia = {
     for (final d in diaries)
       for (final e in collectDiaryMediaEntries(d))
@@ -46,6 +53,7 @@ Future<SyncStats> syncStats(Ref ref) async {
 
   int? remoteDiaries;
   int? remoteCategories;
+  int? remoteTags;
   int? remoteMedia;
   String? remoteError;
 
@@ -58,6 +66,7 @@ Future<SyncStats> syncStats(Ref ref) async {
       if (bytes == null) {
         remoteDiaries = 0;
         remoteCategories = 0;
+        remoteTags = 0;
         remoteMedia = 0;
       } else {
         final decoded = await (await SyncCipher.current()).decode(bytes);
@@ -70,6 +79,7 @@ Future<SyncStats> syncStats(Ref ref) async {
               .length;
           remoteDiaries = countByPrefix(SyncKeys.diaryPrefix);
           remoteCategories = countByPrefix(SyncKeys.categoryPrefix);
+          remoteTags = countByPrefix(SyncKeys.tagPrefix);
           remoteMedia = manifest.referencedMedia().length;
         }
       }
@@ -83,9 +93,11 @@ Future<SyncStats> syncStats(Ref ref) async {
   return SyncStats(
     localDiaries: localDiaries,
     localCategories: localCategories,
+    localTags: localTags,
     localMedia: localMedia,
     remoteDiaries: remoteDiaries,
     remoteCategories: remoteCategories,
+    remoteTags: remoteTags,
     remoteMedia: remoteMedia,
     remoteError: remoteError,
   );

@@ -25,7 +25,6 @@ Diary _diary({
   audioName: audioName,
   videoName: videoName,
   fileName: fileName,
-  tags: const [],
   type: type.value,
 );
 
@@ -254,7 +253,6 @@ void main() {
       imageName: const [],
       audioName: const [],
       videoName: const [],
-      tags: const [],
       type: 'text',
     );
     expect(DiaryContent.of(diary).plainText, '');

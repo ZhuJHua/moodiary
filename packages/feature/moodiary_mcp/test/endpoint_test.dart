@@ -52,6 +52,7 @@ void main() {
         final server = buildMoodiaryServer(
           diaries: diaries,
           categories: CategoryRepository(db),
+          tags: TagRepository(db),
           insights: MoodInsightsRepository(db),
           appVersion: 'test',
           iconUri: iconUri,
@@ -307,6 +308,7 @@ void main() {
     final service = McpService(
       DiaryRepository(db),
       CategoryRepository(db),
+      TagRepository(db),
       MoodInsightsRepository(db),
     );
     addTearDown(() async {

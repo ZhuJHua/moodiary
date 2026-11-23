@@ -33,6 +33,7 @@ class EngineMigrationService {
     void Function(int done, int total)? onProgress,
     MoodiaryDatabase? database,
     DiaryRepository? diaryRepository,
+    TagRepository? tagRepository,
     CategoryRepository? categoryRepository,
     PlaceRepository? placeRepository,
     FontRepository? fontRepository,
@@ -41,6 +42,7 @@ class EngineMigrationService {
   }) async {
     final watch = Stopwatch()..start();
     final db = database ?? getIt<MoodiaryDatabase>();
+    final tagRepo = tagRepository ?? getIt<TagRepository>();
     final diaryRepo = diaryRepository ?? getIt<DiaryRepository>();
     final categoryRepo = categoryRepository ?? getIt<CategoryRepository>();
     final placeRepo = placeRepository ?? getIt<PlaceRepository>();
@@ -170,7 +172,7 @@ class EngineMigrationService {
               imageName: d.imageName,
               audioName: d.audioName,
               videoName: d.videoName,
-              tags: d.tags,
+              tagIds: await tagRepo.adoptLegacyTags(d.tags, fromSync: true),
               placeId: placeId,
               type: d.type,
               aspect: d.aspect,
@@ -193,14 +195,37 @@ class EngineMigrationService {
 
       // 墓碑必须最后搬：日记/分类/媒体插入会顺手清同 id 墓碑，先搬会被误清
       final tombstones = await isar.syncTombstones.where().findAllAsync();
-      await tombstoneRepo.putAll([
-        for (final t in tombstones)
-          SyncTombstone(
-            key: t.key,
-            timeMs: t.timeMs,
-            pushedBackends: t.pushedBackends,
+      var addedCategories = 0;
+      final retained = <SyncTombstone>[];
+      for (final t in tombstones) {
+        final tombstone = SyncTombstone(
+          key: t.key,
+          timeMs: t.timeMs,
+          pushedBackends: t.pushedBackends,
+        );
+        if (tombstone.kind != .category) {
+          retained.add(tombstone);
+          continue;
+        }
+        final id = tombstone.entityId;
+        final existing = await categoryRepo.getCategoryById(id);
+        if (existing == null) addedCategories++;
+        await categoryRepo.insertACategory(
+          Category(
+            id: id,
+            categoryName: existing?.categoryName ?? '',
+            parentId: existing?.parentId,
+            color: existing?.color,
+            lastModified: DateTime.fromMillisecondsSinceEpoch(
+              t.timeMs,
+              isUtc: true,
+            ),
+            deleted: true,
           ),
-      ]);
+          fromSync: true,
+        );
+      }
+      await tombstoneRepo.putAll(retained);
       tick(tombstones.length);
 
       // 会话先于消息、消息先于工具调用插入（外键约束）
@@ -325,10 +350,13 @@ class EngineMigrationService {
 
       final checks = <String, (int, int)>{
         'diaries': (diaryCount, await sqliteCount(db.diaries)),
-        'categories': (categoryCount, await sqliteCount(db.categories)),
+        'categories': (
+          categoryCount + addedCategories,
+          await sqliteCount(db.categories),
+        ),
         'places': (placesByName.length, await sqliteCount(db.places)),
         'fonts': (fontCount, await sqliteCount(db.fonts)),
-        'tombstones': (tombstoneCount, await sqliteCount(db.tombstones)),
+        'tombstones': (retained.length, await sqliteCount(db.tombstones)),
         'llm_providers': (providerCount, await sqliteCount(db.llmProviders)),
         'chat_sessions': (sessionCount, await sqliteCount(db.chatSessions)),
         'chat_messages': (

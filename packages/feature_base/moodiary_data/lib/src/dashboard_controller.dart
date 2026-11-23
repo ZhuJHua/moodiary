@@ -8,6 +8,7 @@ part 'dashboard_controller.g.dart';
 
 @riverpod
 class DashboardController extends _$DashboardController {
+  late final _tags = getIt<TagRepository>();
   bool _stale = false;
 
   @override
@@ -18,6 +19,8 @@ class DashboardController extends _$DashboardController {
     );
     ref.onDispose(diarySub.cancel);
     ref.onDispose(catSub.cancel);
+    final tags = _tags.tagEvents.listen(_markStale);
+    ref.onDispose(tags.cancel);
 
     _stale = false;
     return _compute();
@@ -47,7 +50,7 @@ class DashboardController extends _$DashboardController {
       categoryCount: cats.length,
       streakDays: _streakDays(byDay.keys),
       thisMonthCount: _thisMonthCount(visible),
-      tagCount: _tagCount(visible),
+      tagCount: (await _tags.getTagUsage()).where((t) => t.count > 0).length,
       byDay: byDay,
       lastYearCount: _lastYearCount(byDay),
     );
@@ -141,14 +144,6 @@ class DashboardController extends _$DashboardController {
       if (!day.isBefore(from)) sum += w.count;
     });
     return sum;
-  }
-
-  int _tagCount(List<Diary> diaries) {
-    final unique = <String>{};
-    for (final d in diaries) {
-      unique.addAll(d.tags);
-    }
-    return unique.length;
   }
 
   static DateTime _dayBefore(DateTime day) =>

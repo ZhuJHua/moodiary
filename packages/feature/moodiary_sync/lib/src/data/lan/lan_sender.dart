@@ -24,6 +24,7 @@ class LanSendResult {
   final int entryCount;
   final int diaryCount;
   final int categoryCount;
+  final int tagCount;
   final int failed;
   final String? warning;
 
@@ -31,6 +32,7 @@ class LanSendResult {
     required this.entryCount,
     this.diaryCount = 0,
     this.categoryCount = 0,
+    this.tagCount = 0,
     this.failed = 0,
     this.warning,
   });
@@ -38,16 +40,22 @@ class LanSendResult {
   bool get upToDate => entryCount == 0;
 
   String describe() {
-    if (upToDate) return '对方已是最新，无需发送';
-    if (diaryCount == 0 && categoryCount == 0 && failed == 0) {
-      return '发送完成，对方已是最新';
+    if (upToDate) return l10n.sync.lanSendUpToDate;
+    if (diaryCount == 0 && categoryCount == 0 && tagCount == 0 && failed == 0) {
+      return l10n.sync.lanSendCompletedUpToDate;
     }
-    final base = '发送完成：日记 $diaryCount 条 · 分类 $categoryCount 条';
+    final base = l10n.sync.lanSendCompleted(
+      diaries: l10n.sync.lanSentDiaries(count: diaryCount),
+      categories: l10n.sync.lanSentCategories(count: categoryCount),
+      tags: l10n.sync.lanSentTags(count: tagCount),
+    );
     final extra = [
       if (failed > 0) l10n.sync.warnFailedCount(count: failed),
       ?warning,
-    ].join('；');
-    return extra.isEmpty ? base : '$base（$extra）';
+    ].join(l10n.sync.lanSendDetailsSeparator);
+    return extra.isEmpty
+        ? base
+        : l10n.sync.lanSendCompletedWithDetails(base: base, details: extra);
   }
 }
 
@@ -150,6 +158,7 @@ class LanSender {
         categoryCount: report['categoryCount'] is int
             ? report['categoryCount'] as int
             : 0,
+        tagCount: report['tagCount'] is int ? report['tagCount'] as int : 0,
         failed: report['failed'] is int ? report['failed'] as int : 0,
         warning: report['warning'] as String?,
       );

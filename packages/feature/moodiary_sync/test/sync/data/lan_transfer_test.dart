@@ -273,7 +273,7 @@ void main() {
         applierGotPassword = password;
         applierGotBytes = await io.File(zipPath).readAsBytes();
         return const SyncReport(
-          pulled: SyncCounts(diaries: 3, categories: 1),
+          pulled: SyncCounts(tags: 1),
           elapsed: .zero,
           warning: '1 个条目同步失败已跳过',
           failed: 1,
@@ -291,7 +291,7 @@ void main() {
         builderGotPassword = password;
         final file = io.File(p.join(tmp.path, 'delta.zip'));
         await file.writeAsBytes(archiveBytes);
-        return (file.path, 4);
+        return (file.path, 1);
       },
     );
 
@@ -307,9 +307,10 @@ void main() {
     expect(builderGotManifest!.entries['d:existing']!.timeMs, 12345);
     expect(builderGotPassword, applierGotPassword);
     expect(listEquals(applierGotBytes, archiveBytes), isTrue);
-    expect(result.entryCount, 4);
-    expect(result.diaryCount, 3);
-    expect(result.categoryCount, 1);
+    expect(result.entryCount, 1);
+    expect(result.diaryCount, 0);
+    expect(result.categoryCount, 0);
+    expect(result.tagCount, 1);
     expect(result.failed, 1);
     expect(result.warning, '1 个条目同步失败已跳过');
     expect(
@@ -421,7 +422,7 @@ void main() {
       await _rawStatus(
         url,
         await lanBuildAuthToken(crypto, key, lanManifestPath),
-        proto: '${lanProtoVersion + 1}',
+        proto: '${lanProtoVersion - 1}',
       ),
       426,
     );
@@ -439,7 +440,7 @@ void main() {
       await _rawStatus(
         url,
         await lanBuildAuthToken(crypto, wrongKey, lanManifestPath),
-        proto: '${lanProtoVersion + 1}',
+        proto: '${lanProtoVersion - 1}',
       ),
       401,
     );

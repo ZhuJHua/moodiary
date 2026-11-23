@@ -75,8 +75,6 @@ class _DataRepairTileState extends State<DataRepairTile> {
           l10n.app.repairFixedPreview(count: report.contentTextFixed),
         if (report.mediaFixed > 0)
           l10n.app.repairFixedMedia(count: report.mediaFixed),
-        if (report.orphanCategoryFixed > 0)
-          l10n.app.repairFixedOrphan(count: report.orphanCategoryFixed),
       ],
       l10n.app.repairReindexed(count: report.reindexed),
     ];

@@ -15,7 +15,6 @@ void main() {
     imageName: const [],
     audioName: const [],
     videoName: const [],
-    tags: const [],
     type: DiaryType.tiptap.value,
   );
 

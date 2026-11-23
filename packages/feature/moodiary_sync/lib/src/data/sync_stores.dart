@@ -27,8 +27,18 @@ abstract interface class SyncCategoryStore {
   Future<Category?> getCategoryById(String id);
 
   Future<void> insertACategory(Category category, {bool fromSync = false});
+}
 
-  Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false});
+abstract interface class SyncTagStore {
+  Future<List<Tag>> getAllTagsForSync();
+  Future<Tag?> getTagById(String id);
+  Future<void> insertATag(Tag tag, {bool fromSync = false});
+
+  Future<List<String>> adoptLegacyTags(
+    List<String> names, {
+    bool fromSync = true,
+    bool restoring = false,
+  });
 }
 
 abstract interface class SyncPlaceStore {
@@ -82,7 +92,8 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   late final _repo = getIt<CategoryRepository>();
 
   @override
-  Future<List<Category>> getAllCategoriesForSync() => _repo.getAllCategories();
+  Future<List<Category>> getAllCategoriesForSync() =>
+      _repo.getAllCategoriesForSync();
 
   @override
   Future<Category?> getCategoryById(String id) => _repo.getCategoryById(id);
@@ -90,10 +101,30 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   @override
   Future<void> insertACategory(Category category, {bool fromSync = false}) =>
       _repo.insertACategory(category, fromSync: fromSync);
+}
+
+class RepoSyncTagStore implements SyncTagStore {
+  late final _repo = getIt<TagRepository>();
 
   @override
-  Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false}) =>
-      _repo.tombstoneCategoryForSync(id, fromSync: fromSync);
+  Future<List<Tag>> getAllTagsForSync() =>
+      _repo.getAllTags(includeDeleted: true);
+
+  @override
+  Future<Tag?> getTagById(String id) => _repo.getTagById(id);
+
+  @override
+  Future<void> insertATag(Tag tag, {bool fromSync = false}) =>
+      _repo.insertATag(tag, fromSync: fromSync);
+
+  @override
+  Future<List<String>> adoptLegacyTags(
+    List<String> names, {
+    bool fromSync = true,
+    bool restoring = false,
+  }) async => names.isEmpty
+      ? []
+      : _repo.adoptLegacyTags(names, fromSync: fromSync, restoring: restoring);
 }
 
 class RepoSyncPlaceStore implements SyncPlaceStore {

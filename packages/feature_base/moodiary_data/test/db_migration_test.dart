@@ -1,16 +1,19 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_lint/testing.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:sqlite3_simple/sqlite3_simple.dart';
 
 import 'drift/moodiary/generated/schema.dart';
 import 'drift/moodiary/generated/schema_v1.dart' as v1;
 import 'drift/moodiary/generated/schema_v2.dart' as v2;
+import 'drift/moodiary/generated/schema_v3.dart' as v3;
 
 String marked(String word) => '$searchHitStart$word$searchHitEnd';
 
@@ -50,10 +53,14 @@ void main() {
     placeName: Value(placeName),
   );
 
-  test('新库直接建到 v3，且与 v3 快照一致', () async {
-    final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
-    await verifier.migrateAndValidate(db, 3);
-    expect(await userVersion(db), 3);
+  test('新库直接建到 v4，且与 v4 快照一致', () async {
+    final db = MoodiaryDatabase.forTesting(
+      NativeDatabase.memory(
+        setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
+      ),
+    );
+    await verifier.migrateAndValidate(db, 4);
+    expect(await userVersion(db), 4);
     await db.close();
   });
 
@@ -109,7 +116,7 @@ void main() {
     await old.close();
 
     final db = MoodiaryDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(db, 3);
+    await verifier.migrateAndValidate(db, 4);
     final message = await db
         .customSelect("SELECT provider_id FROM chat_messages WHERE id = 'm1'")
         .getSingle();
@@ -144,7 +151,7 @@ void main() {
     await old.close();
 
     final db = MoodiaryDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(db, 3);
+    await verifier.migrateAndValidate(db, 4);
     final places = await PlaceRepository(
       db,
       DiaryRepository(db),
@@ -188,7 +195,7 @@ void main() {
     await old.close();
 
     final db = MoodiaryDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(db, 3);
+    await verifier.migrateAndValidate(db, 4);
     final hit = (await DiaryRepository(db).searchDiaries(query: '苹果')).single;
     expect(hit.diary.id, 'd1', reason: "'rebuild' 从 diaries 重灌了整个索引");
     expect(hit.titleHighlight, '关于${marked('苹果')}的日记');
@@ -265,7 +272,7 @@ void main() {
     await old.close();
 
     final db = MoodiaryDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(db, 3);
+    await verifier.migrateAndValidate(db, 4);
     final row = await db
         .customSelect(
           "SELECT content, last_modified FROM diaries WHERE id = 'd1'",
@@ -342,7 +349,7 @@ void main() {
           );
       await old.close();
       final db = MoodiaryDatabase.forTesting(schema.newConnection());
-      await verifier.migrateAndValidate(db, 3);
+      await verifier.migrateAndValidate(db, 4);
       final columns = await db.customSelect('PRAGMA table_info(diaries)').get();
       expect(
         columns.map((r) => r.read<String>('name')),
@@ -354,7 +361,7 @@ void main() {
         expect(diary.mood, entry.value, reason: entry.key);
         expect(diary.lastModified, dbToTime(7));
       }
-      expect((await repo.getDiaryByBusinessId('study'))!.tags, isEmpty);
+      expect((await repo.getDiaryByBusinessId('study'))!.tagIds, isEmpty);
       expect(await db.select(db.legacyMoodScenes).get(), hasLength(6));
       await expectLater(
         db.applyLegacyMoodScenes((scene) {
@@ -365,11 +372,11 @@ void main() {
         }),
         throwsStateError,
       );
-      expect((await repo.getDiaryByBusinessId('study'))!.tags, isEmpty);
+      expect((await repo.getDiaryByBusinessId('study'))!.tagIds, isEmpty);
       expect(await db.select(db.legacyMoodScenes).get(), hasLength(6));
       await db.applyLegacyMoodScenes(
         (scene) => switch (scene) {
-          .study => 'Study',
+          .study => 'Research',
           .work => 'Work',
           .travel => 'Travel',
           .sports => 'Sports',
@@ -377,18 +384,27 @@ void main() {
           .slacking => 'Slacking',
         },
       );
-      expect((await repo.getDiaryByBusinessId('travel'))!.tags, ['Travel']);
-      expect((await repo.getDiaryByBusinessId('work'))!.tags, [
-        'existing',
-        'Work',
+      expect((await repo.getDiaryByBusinessId('travel'))!.tagIds, [
+        Tag.legacyId('Travel'),
       ]);
-      expect((await repo.getDiaryByBusinessId('study'))!.tags, ['Study']);
+      expect((await repo.getDiaryByBusinessId('work'))!.tagIds, [
+        Tag.legacyId('existing'),
+        Tag.legacyId('Work'),
+      ]);
+      expect((await repo.getDiaryByBusinessId('study'))!.tagIds, [
+        Tag.legacyId('Research'),
+      ]);
       expect(await db.select(db.legacyMoodScenes).get(), isEmpty);
       await db.applyLegacyMoodScenes((_) => 'wrong locale');
-      expect((await repo.getDiaryByBusinessId('travel'))!.tags, ['Travel']);
+      expect((await repo.getDiaryByBusinessId('travel'))!.tagIds, [
+        Tag.legacyId('Travel'),
+      ]);
       final study = (await repo.getDiaryByBusinessId('study'))!;
       expect(study.lastModified, dbToTime(7));
-      expect(await repo.searchDiaries(query: 'study'), isNotEmpty);
+      expect(
+        (await repo.searchDiaries(query: 'Research')).single.diary.id,
+        'study',
+      );
       // SQLite itself rejects invalid scores.
       await expectLater(
         db.customStatement(
@@ -399,6 +415,113 @@ void main() {
       await db.close();
     },
   );
+
+  test('v3 tags and category tombstones migrate with released triggers installed', () async {
+    final schema = await verifier.schemaAt(3);
+    final old = v3.DatabaseAtV3(schema.newConnection());
+    final snapshot = jsonDecode(
+      await File(
+        '$repoRoot/packages/feature_base/moodiary_data/drift_schemas/moodiary/drift_schema_v3.json',
+      ).readAsString(),
+    ) as Map;
+    for (final entity in snapshot['entities'] as List) {
+      if (entity['type'] == 'trigger') {
+        await old.customStatement(entity['data']['sql'] as String);
+      }
+    }
+    for (final (id, show) in [('a', 1), ('b', 0)]) {
+      await old
+          .into(old.diaries)
+          .insert(
+            v3.DiariesCompanion.insert(
+              id: id,
+              title: '',
+              content: '',
+              contentText: '',
+              time: 0,
+              lastModified: 123,
+              show: show,
+              type: 'tiptap',
+            ),
+          );
+    }
+    for (final (diary, seq, name) in [
+      ('a', 8, 'two words'),
+      ('a', 2, ' # Voyager '),
+      ('a', 4, '#'),
+      ('a', 6, ' two\t words '),
+      ('b', 5, 'Voyager'),
+    ]) {
+      await old
+          .into(old.diaryTags)
+          .insert(
+            v3.DiaryTagsCompanion.insert(diaryId: diary, seq: seq, tag: name),
+          );
+    }
+    await old
+        .into(old.categories)
+        .insert(
+          v3.CategoriesCompanion.insert(
+            id: 'known',
+            name: 'Keep',
+            lastModified: 1,
+          ),
+        );
+    for (final key in ['c:known', 'c:missing', 'd:other']) {
+      await old
+          .into(old.tombstones)
+          .insert(v3.TombstonesCompanion.insert(key: key, timeMs: 1234));
+    }
+    await old.close();
+    final db = MoodiaryDatabase.forTesting(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 4);
+    expect(
+      await TagRepository(db).getAllTags(),
+      unorderedEquals([Tag.legacy('Voyager'), Tag.legacy('two words')]),
+    );
+    final refs = await db
+        .customSelect(
+          'SELECT diary_id, seq, tag_id FROM diary_tags ORDER BY diary_id, seq',
+        )
+        .get();
+    expect(
+      refs.map(
+        (r) => (
+          r.read<String>('diary_id'),
+          r.read<int>('seq'),
+          r.read<String>('tag_id'),
+        ),
+      ),
+      [
+        ('a', 0, Tag.legacyId('Voyager')),
+        ('a', 1, Tag.legacyId('two words')),
+        ('b', 0, Tag.legacyId('Voyager')),
+      ],
+    );
+    final diaries = await (db.select(
+      db.diaries,
+    )..orderBy([(d) => OrderingTerm.asc(d.id)])).get();
+    expect(diaries.map((d) => (d.tagsText, d.lastModified)), [
+      ('Voyager two words', 123),
+      ('Voyager', 123),
+    ]);
+    expect(
+      (await DiaryRepository(db).searchDiaries(query: 'Voyager'))
+          .single
+          .diary
+          .id,
+      'a',
+    );
+    final categories = await CategoryRepository(db).getAllCategoriesForSync();
+    expect(
+      categories.map(
+        (c) => (c.categoryName, c.deleted, dbTime(c.lastModified)),
+      ),
+      [('Keep', true, 1234000), ('', true, 1234000)],
+    );
+    expect((await TombstoneRepository(db).getAll()).single.key, 'd:other');
+  });
 
   group('逐档迁移', () {
     const versions = GeneratedHelper.versions;

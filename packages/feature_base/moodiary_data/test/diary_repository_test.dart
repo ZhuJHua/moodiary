@@ -22,7 +22,7 @@ Diary makeDiary(
   List<String> audios = const [],
   List<String> videos = const [],
   List<String> files = const [],
-  List<String> tags = const [],
+  List<String> tagIds = const [],
   DateTime? time,
   String? categoryId,
   bool show = true,
@@ -74,7 +74,7 @@ Diary makeDiary(
     audioName: audios,
     videoName: videos,
     fileName: files,
-    tags: tags,
+    tagIds: tagIds,
     type: 'tiptap',
   );
 }
@@ -137,6 +137,29 @@ void main() {
 
   group('检索', () {
     freshDatabasePerTest();
+
+    test(
+      'late, renamed and deleted tags update FTS without editing the diary',
+      () async {
+        final tags = TagRepository(db);
+        final diary = makeDiary('document', 'ordinary', tagIds: ['late']);
+        await repo.insertADiary(diary);
+        await tags.insertATag(
+          Tag.legacy('Voyager').copyWith(id: 'late'),
+          fromSync: true,
+        );
+        expect((await search('Voyager')).single.id, diary.id);
+        await tags.renameTag('Voyager', 'Astronaut');
+        expect(await search('Voyager'), isEmpty);
+        expect((await search('Astronaut')).single.id, diary.id);
+        await tags.deleteTag('Astronaut');
+        expect(await search('Astronaut'), isEmpty);
+        final row = await db.select(db.diaries).getSingle();
+        expect(row.tagsText, '');
+        expect(row.lastModified, dbTime(diary.lastModified));
+        expect((await repo.getDiaryByBusinessId(diary.id))!.tagIds, ['late']);
+      },
+    );
 
     test('多词是 AND：每个词都要命中', () async {
       await repo.insertDiaries([
@@ -329,14 +352,14 @@ void main() {
         images: ['image-b.jpg', 'image-a.jpg'],
         audios: ['audio-1.m4a'],
         videos: ['video-1.mp4'],
-        tags: ['旅行', '随笔'],
+        tagIds: ['tag-b', 'tag-a', 'tag-b'],
       );
       await repo.insertADiary(d);
       final got = (await repo.getDiaryByBusinessId('d1'))!;
       expect(got.imageName, ['image-b.jpg', 'image-a.jpg']);
       expect(got.audioName, ['audio-1.m4a']);
       expect(got.videoName, ['video-1.mp4']);
-      expect(got.tags, ['旅行', '随笔']);
+      expect(got.tagIds, ['tag-b', 'tag-a']);
     });
 
     test('placeId/weather 往返（含 null）', () async {
@@ -723,6 +746,10 @@ void main() {
     });
 
     test('未分类过滤与分类计数', () async {
+      final categories = CategoryRepository(db);
+      await categories.insertACategory(
+        Category.create(categoryName: 'test').copyWith(id: 'c1'),
+      );
       await repo.insertDiaries([
         makeDiary('a', '一', categoryId: 'c1'),
         makeDiary('b', '二'),
@@ -734,6 +761,16 @@ void main() {
       final counts = await repo.diaryCountByCategory();
       expect(counts.byCategory, {'c1': 2});
       expect(counts.total, 3);
+      await categories.deleteACategory('c1');
+      expect(
+        (await repo.getDiaryByCategory(uncategorized: true)).map((d) => d.id),
+        unorderedEquals(['a', 'b', 'c']),
+      );
+      expect((await repo.diaryCountByCategory()).byCategory, isEmpty);
+      expect(
+        (await repo.diaryCountByMonth(uncategorized: true)).values.single,
+        3,
+      );
     });
 
     test('月份计数按本地时区分桶', () async {
@@ -911,17 +948,17 @@ void main() {
       expect((await repo.getBacklinks('b')).map((d) => d.id), ['a']);
     });
 
-    test('repairData 重推派生并修孤儿分类', () async {
+    test('repairData preserves unresolved category references', () async {
       final broken = makeDiary(
         'd1',
         '正文 内容',
       ).copyWith(contentText: '陈旧 纯文本', categoryId: 'ghost-category');
       await repo.updateADiary(newDiary: broken, index: .skip);
       final report = await repo.repairData();
-      expect(report.hasFix, isTrue);
+      expect(report.changed, 0);
       final fixed = (await repo.getDiaryByBusinessId('d1'))!;
       expect(fixed.contentText, '正文 内容');
-      expect(fixed.categoryId, isNull);
+      expect(fixed.categoryId, 'ghost-category');
     });
 
     test('repairData 补回纯文本里缺的媒体名', () async {

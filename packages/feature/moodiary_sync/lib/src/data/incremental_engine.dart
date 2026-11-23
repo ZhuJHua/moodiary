@@ -40,6 +40,7 @@ class IncrementalSyncEngine {
   final SyncDiaryStore _diaryStore;
   final SyncCategoryStore _categoryStore;
   final SyncPlaceStore _placeStore;
+  final SyncTagStore _tagStore;
   final SyncTombstoneStore _tombstoneStore;
   final SyncMediaFiles _mediaFiles;
 
@@ -68,6 +69,7 @@ class IncrementalSyncEngine {
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
     SyncPlaceStore? placeStore,
+    SyncTagStore? tagStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
@@ -85,6 +87,7 @@ class IncrementalSyncEngine {
       diaryStore ?? RepoSyncDiaryStore(),
       categoryStore ?? RepoSyncCategoryStore(),
       placeStore ?? RepoSyncPlaceStore(),
+      tagStore ?? RepoSyncTagStore(),
       tombstoneStore ?? RepoSyncTombstoneStore(),
       mediaFiles ?? DiskSyncMediaFiles(),
       cipherProvider ?? SyncCipher.current,
@@ -102,6 +105,7 @@ class IncrementalSyncEngine {
     this._diaryStore,
     this._categoryStore,
     this._placeStore,
+    this._tagStore,
     this._tombstoneStore,
     this._mediaFiles,
     this._cipherProvider,
@@ -163,9 +167,9 @@ class IncrementalSyncEngine {
   Future<SyncReport> _pull() async => (await _pullCore()).$1;
 
   Future<(SyncReport, SyncManifest?, Uint8List?)> _pullCore() async {
-    await _uploadPendingKeyfile();
     final sw = Stopwatch()..start();
-    final (manifest, manifestBytes) = await _readManifestBytes();
+    final (manifest, manifestBytes) = await _readCurrentManifest();
+    await _uploadPendingKeyfile();
     if (manifest == null) {
       sw.stop();
       _logger.info(
@@ -180,6 +184,7 @@ class IncrementalSyncEngine {
           'direction': 'pull',
           'diaryCount': 0,
           'categoryCount': 0,
+          'tagCount': 0,
           'failed': 0,
           'elapsedMs': sw.elapsedMilliseconds,
         },
@@ -199,6 +204,7 @@ class IncrementalSyncEngine {
       diaryStore: _diaryStore,
       categoryStore: _categoryStore,
       placeStore: _placeStore,
+      tagStore: _tagStore,
       tombstoneStore: _tombstoneStore,
       mediaFiles: _mediaFiles,
       cipherProvider: _cipher,
@@ -271,7 +277,6 @@ class IncrementalSyncEngine {
     SyncManifest? preloaded,
     Uint8List? preloadedBytes,
   }) async {
-    await _uploadPendingKeyfile();
     _distrustRemoteMedia = SyncKeyManager.hasForceMediaReupload(
       backend.persistentBackendId,
     );
@@ -285,9 +290,10 @@ class IncrementalSyncEngine {
     var baseBytes = preloadedBytes;
     var virginRemote = false;
     if (read == null) {
-      (read, baseBytes) = await _readManifestBytes();
+      (read, baseBytes) = await _readCurrentManifest();
       virginRemote = read == null;
     }
+    await _uploadPendingKeyfile();
     final manifest = read ?? .empty();
     if (virginRemote && (await _cipher()).encrypted) {
       await _ensureKeyfileOnVirginRemote();
@@ -307,10 +313,12 @@ class IncrementalSyncEngine {
         .toList();
     final skippedOpen = allDiaries.length - diaries.length;
     final categories = await _categoryStore.getAllCategoriesForSync();
+    final tags = await _tagStore.getAllTagsForSync();
     final places = await _placeStore.getAllPlacesForSync();
 
     int diaryChanged = 0;
     int categoryChanged = 0;
+    int tagChanged = 0;
     int placeChanged = 0;
     int failed = 0;
 
@@ -394,6 +402,38 @@ class IncrementalSyncEngine {
       }
     }
 
+    Future<void> pushOneTag(Tag tag) async {
+      if (_cancellation.isRequested) return;
+      final key = SyncKeys.tag(tag.id);
+      final remoteEntry = manifest.entries[key];
+      final remoteMs = remoteEntry?.timeMs;
+      if (remoteMs != null &&
+          tag.lastModified.millisecondsSinceEpoch <= remoteMs) {
+        _logger.info(.tagSkip, reason: .upToDate, payload: {'tagId': tag.id});
+        return;
+      }
+      try {
+        final bytes = await (await _cipher()).encode(tag.toJson());
+        await backend.writeObject(SyncKeys.tagObjectPath(tag.id), bytes);
+        updated.entries[key] = ManifestEntry(
+          timeMs: tag.lastModified.millisecondsSinceEpoch,
+        );
+        tagChanged++;
+        _logger.info(
+          .tagUpload,
+          payload: {'tagId': tag.id, 'bytes': bytes.length},
+        );
+      } catch (e) {
+        failed++;
+        _logger.error(
+          .tagUpload,
+          payload: {'tagId': tag.id, 'detail': e.toString()},
+        );
+      }
+    }
+
+    await runPooled(tags, concurrency, pushOneTag);
+
     await runPooled(diaries, concurrency, pushOneDiary);
 
     Future<void> pushOneCategory(Category category) async {
@@ -401,8 +441,12 @@ class IncrementalSyncEngine {
       final key = SyncKeys.category(category.id);
       final remoteEntry = manifest.entries[key];
       final remoteMs = remoteEntry?.timeMs;
-      if (remoteMs != null &&
-          category.lastModified.millisecondsSinceEpoch <= remoteMs) {
+      final localMs = category.lastModified.millisecondsSinceEpoch;
+      final replacesTombstone =
+          remoteEntry?.deleted == true &&
+          category.deleted &&
+          localMs == remoteMs;
+      if (remoteMs != null && localMs <= remoteMs && !replacesTombstone) {
         _logger.info(
           .categorySkip,
           reason: .upToDate,
@@ -483,23 +527,18 @@ class IncrementalSyncEngine {
         _logger.warn(.error, reason: .unknownTombstone, payload: {'key': key});
         return;
       }
-      final (skipKind, pushKind, idKey) = switch (kind) {
-        .diary => (
-          SyncEventKind.diarySkip,
-          SyncEventKind.diaryTombstonePush,
-          'diaryId',
-        ),
-        .category => (
-          SyncEventKind.categorySkip,
-          SyncEventKind.categoryTombstonePush,
-          'categoryId',
-        ),
-        .place => (
-          SyncEventKind.placeSkip,
-          SyncEventKind.placeTombstonePush,
-          'placeId',
-        ),
-      };
+      if (kind == .category) return;
+      final (skipKind, pushKind, idKey) = kind == .diary
+          ? (
+              SyncEventKind.diarySkip,
+              SyncEventKind.diaryTombstonePush,
+              'diaryId',
+            )
+          : (
+              SyncEventKind.placeSkip,
+              SyncEventKind.placeTombstonePush,
+              'placeId',
+            );
       if (remoteEntry == null || remoteEntry.deleted) {
         if (trackingId != null) tombstones.markPushed(key, trackingId);
         scheduleCleanup(key);
@@ -518,21 +557,17 @@ class IncrementalSyncEngine {
         return;
       }
       updated.entries[key] = ManifestEntry(timeMs: t.timeMs, deleted: true);
-      switch (kind) {
-        case .diary:
-          deferredObjectDeletes.add(SyncKeys.diaryObjectPath(t.entityId));
-          final staleRefs = remoteEntry.media
-              .where((r) => !stillReferenced(r))
-              .toList();
-          deferredMediaDeletes.addAll(staleRefs);
-          remoteMedia.removeAll(staleRefs);
-          diaryChanged++;
-        case .category:
-          deferredObjectDeletes.add(SyncKeys.categoryObjectPath(t.entityId));
-          categoryChanged++;
-        case .place:
-          deferredObjectDeletes.add(SyncKeys.placeObjectPath(t.entityId));
-          placeChanged++;
+      if (kind == .diary) {
+        deferredObjectDeletes.add(SyncKeys.diaryObjectPath(t.entityId));
+        final staleRefs = remoteEntry.media
+            .where((r) => !stillReferenced(r))
+            .toList();
+        deferredMediaDeletes.addAll(staleRefs);
+        remoteMedia.removeAll(staleRefs);
+        diaryChanged++;
+      } else {
+        deferredObjectDeletes.add(SyncKeys.placeObjectPath(t.entityId));
+        placeChanged++;
       }
       if (trackingId != null) tombstones.markPushed(key, trackingId);
       _logger.info(
@@ -547,29 +582,11 @@ class IncrementalSyncEngine {
       pushOneTombstone(t);
     }
 
-    if (diaryChanged > 0 || categoryChanged > 0 || placeChanged > 0) {
-      final token = _newWriteToken();
-      final manifestBytes = await (await _cipher()).encode(
-        updated.withWriteToken(token).toJson(),
-      );
-      if (!listEquals(
-        await backend.readObject(SyncKeys.manifestPath),
-        baseBytes,
-      )) {
-        throw SyncException(l10n.sync.errManifestRacePush, kind: .manifestRace);
-      }
-      await backend.writeObject(SyncKeys.manifestPath, manifestBytes);
-      final readback = await _readManifest();
-      if (readback?.writeToken != token) {
-        throw SyncException(l10n.sync.errManifestRacePush, kind: .manifestRace);
-      }
-      _logger.info(
-        .manifestWrite,
-        payload: {
-          'entries': updated.entries.length,
-          'bytes': manifestBytes.length,
-        },
-      );
+    if (diaryChanged > 0 ||
+        categoryChanged > 0 ||
+        tagChanged > 0 ||
+        placeChanged > 0) {
+      await _commitManifest(updated, baseBytes);
     }
 
     await _deleteRemoteObjects(deferredObjectDeletes);
@@ -599,6 +616,7 @@ class IncrementalSyncEngine {
         'direction': 'push',
         'diaryCount': diaryChanged,
         'categoryCount': categoryChanged,
+        'tagCount': tagChanged,
         'placeCount': placeChanged,
         'mediaCount': _mediaUploaded,
         'failed': failed,
@@ -615,6 +633,7 @@ class IncrementalSyncEngine {
       pushed: SyncCounts(
         diaries: diaryChanged,
         categories: categoryChanged,
+        tags: tagChanged,
         places: placeChanged,
         mediaFiles: _mediaUploaded,
       ),
@@ -624,6 +643,36 @@ class IncrementalSyncEngine {
       cancelled: stopped,
       skippedOpen: skippedOpen,
     );
+  }
+
+  Future<Uint8List> _commitManifest(
+    SyncManifest updated,
+    Uint8List? baseBytes, {
+    SyncCipher? cipher,
+  }) async {
+    final token = _newWriteToken();
+    final manifestBytes = await (cipher ?? await _cipher()).encode(
+      updated.withWriteToken(token).toJson(),
+    );
+    if (!listEquals(
+      await backend.readObject(SyncKeys.manifestPath),
+      baseBytes,
+    )) {
+      throw SyncException(l10n.sync.errManifestRacePush, kind: .manifestRace);
+    }
+    await backend.writeObject(SyncKeys.manifestPath, manifestBytes);
+    final readback = await _readManifest();
+    if (readback?.writeToken != token) {
+      throw SyncException(l10n.sync.errManifestRacePush, kind: .manifestRace);
+    }
+    _logger.info(
+      .manifestWrite,
+      payload: {
+        'entries': updated.entries.length,
+        'bytes': manifestBytes.length,
+      },
+    );
+    return manifestBytes;
   }
 
   Future<void> _ensureKeyfileOnVirginRemote() async {
@@ -663,6 +712,19 @@ class IncrementalSyncEngine {
         payload: {..._backendPayload(), 'detail': e.toString()},
       );
     }
+  }
+
+  Future<(SyncManifest?, Uint8List?)> _readCurrentManifest() async {
+    final (manifest, bytes) = await _readManifestBytes();
+    if (manifest == null || manifest.version == SyncManifest.currentVersion) {
+      return (manifest, bytes);
+    }
+    final upgraded = manifest.copyForUpdate();
+    // Encryption changes belong to CloudReCipher, so the version bump keeps the stored encoding.
+    final cipher = SyncCipher.isCipherText(bytes!)
+        ? null
+        : SyncCipher.plaintext;
+    return (upgraded, await _commitManifest(upgraded, bytes, cipher: cipher));
   }
 
   Future<(SyncManifest?, Uint8List?)> _readManifestBytes() async {

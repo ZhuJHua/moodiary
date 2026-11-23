@@ -36,11 +36,8 @@ void main() {
   late Directory root;
   late MarkdownImporter importer;
 
-  setUpAll(() {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-  });
-
   setUp(() {
+    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
     db = MoodiaryDatabase.forTesting(
       NativeDatabase.memory(
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
@@ -48,6 +45,7 @@ void main() {
     );
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
+    getIt.registerSingleton<TagRepository>(TagRepository(db));
     places = PlaceRepository(db, diaries);
     root = Directory.systemTemp.createTempSync('md-importer');
     importer = MarkdownImporter(
@@ -59,6 +57,7 @@ void main() {
     );
   });
 
+  tearDown(getIt.reset);
   tearDown(() async {
     await db.close();
     if (root.existsSync()) root.deleteSync(recursive: true);
@@ -99,7 +98,13 @@ tags: ["a"]
     expect(first.time, DateTime.utc(2026, 9, 1, 8));
     expect(first.mood, isNull);
     expect(first.weather?.temp, '26');
-    expect(first.tags, ['a', l10n.common.legacySceneTravel]);
+    expect(
+      resolveTagNames(
+        first.tagIds,
+        await getIt<TagRepository>().getTagsByIds(first.tagIds),
+      ).map((entry) => entry.name),
+      ['a', l10n.common.legacySceneTravel],
+    );
     expect(first.type, DiaryType.tiptap.value);
     expect(first.contentText, '出发');
     expect(first.lastModified, DateTime.utc(2026, 9, 6, 12));

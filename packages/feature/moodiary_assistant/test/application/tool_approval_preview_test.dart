@@ -20,6 +20,7 @@ void main() {
     getIt.registerSingleton<DiaryRepository>(diaries);
     getIt.registerSingleton<CategoryRepository>(categories);
     await DiaryWrites(
+      tags: TagRepository(db),
       diaries: diaries,
       categories: categories,
     ).create(title: 'Original', content: 'Original body', time: originalTime);

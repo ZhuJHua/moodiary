@@ -39,6 +39,7 @@ void main() {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
     repo = DiaryRepository(db);
     getIt.registerSingleton<DiaryRepository>(repo);
+    getIt.registerSingleton<TagRepository>(TagRepository(db));
     getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
     getIt.registerSingleton<MoodInsightsRepository>(MoodInsightsRepository(db));
   });
@@ -53,7 +54,6 @@ void main() {
     imageName: const [],
     audioName: const [],
     videoName: const [],
-    tags: const [],
     type: .richText,
   ).copyWith(id: id, time: DateTime.utc(2026, 1, day));
   Future<Map<String, dynamic>> search(Map<String, dynamic> args) async =>

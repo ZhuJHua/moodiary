@@ -33,7 +33,9 @@ _Diary _$DiaryFromJson(Map<String, dynamic> json) => _Diary(
   fileName:
       (json['fileName'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const <String>[],
-  tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
+  tagIds:
+      (json['tagIds'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const <String>[],
   placeId: json['placeId'] as String?,
   type: json['type'] as String,
   aspect: (json['aspect'] as num?)?.toDouble(),
@@ -54,7 +56,7 @@ Map<String, dynamic> _$DiaryToJson(_Diary instance) => <String, dynamic>{
   'audioName': instance.audioName,
   'videoName': instance.videoName,
   'fileName': instance.fileName,
-  'tags': instance.tags,
+  'tagIds': instance.tagIds,
   'placeId': instance.placeId,
   'type': instance.type,
   'aspect': instance.aspect,

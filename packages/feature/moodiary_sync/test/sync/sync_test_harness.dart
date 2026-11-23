@@ -273,16 +273,43 @@ final class FakeCategoryStore implements SyncCategoryStore {
     categories[category.id] = category;
     tombstones.rows.remove(SyncTombstone.categoryKey(category.id));
   }
+}
+
+final class FakeTagStore implements SyncTagStore {
+  final Map<String, Tag> tags;
+
+  FakeTagStore([List<Tag> seed = const []])
+    : tags = {for (final tag in seed) tag.id: tag};
 
   @override
-  Future<SyncTombstone> tombstoneCategory(
-    String id, {
-    bool fromSync = false,
+  Future<List<Tag>> getAllTagsForSync() async => tags.values.toList();
+
+  @override
+  Future<Tag?> getTagById(String id) async => tags[id];
+
+  @override
+  Future<void> insertATag(Tag tag, {bool fromSync = false}) async {
+    tags[tag.id] = tag;
+  }
+
+  @override
+  Future<List<String>> adoptLegacyTags(
+    List<String> names, {
+    bool fromSync = true,
+    bool restoring = false,
   }) async {
-    categories.remove(id);
-    final row = SyncTombstone.forCategory(id, at: .timestamp());
-    tombstones.rows[row.key] = row;
-    return row;
+    final ids = <String>[];
+    for (final name in names.map(Tag.normalize).nonNulls.toSet()) {
+      final legacy = Tag.legacy(name);
+      final local = tags[legacy.id];
+      if (local == null || (restoring && local.deleted)) {
+        tags[legacy.id] = restoring
+            ? legacy.copyWith(lastModified: DateTime.timestamp())
+            : legacy;
+      }
+      ids.add(legacy.id);
+    }
+    return ids;
   }
 }
 
@@ -481,7 +508,7 @@ Diary buildDiary({
     audioName: audios,
     videoName: videos,
     fileName: files,
-    tags: const [],
+
     type: 'tiptap',
   );
 }

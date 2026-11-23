@@ -30,7 +30,7 @@ class CategoryOps {
       throw DiaryOpsException(DiaryOpsFailure.noChanges, id: id);
     }
     final existing = await categories.getCategoryById(id);
-    if (existing == null) {
+    if (existing == null || existing.deleted) {
       throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
     }
     var next = existing;
@@ -43,7 +43,7 @@ class CategoryOps {
 
   Future<({bool deleted, Category category})> delete(String id) async {
     final existing = await categories.getCategoryById(id);
-    if (existing == null) {
+    if (existing == null || existing.deleted) {
       throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
     }
     final removed = await categories.deleteACategory(id);

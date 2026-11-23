@@ -16,13 +16,19 @@ Future<Map<DateTime, int>> timelineMonthCounts(
 }) async {
   final repository = getIt<DiaryRepository>();
   Timer? debounce;
-  final sub = repository.diaryEvents.listen((_) {
+  void invalidate(Object _) {
     debounce?.cancel();
     debounce = Timer(const Duration(milliseconds: 300), ref.invalidateSelf);
-  });
+  }
+
+  final sub = repository.diaryEvents.listen(invalidate);
+  final categories = uncategorized
+      ? getIt<CategoryRepository>().categoryEvents.listen(invalidate)
+      : null;
   ref.onDispose(() {
     debounce?.cancel();
     sub.cancel();
+    categories?.cancel();
   });
   return repository.diaryCountByMonth(
     categoryId: categoryId,
