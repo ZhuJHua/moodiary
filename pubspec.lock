@@ -752,10 +752,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_onnxruntime
-      sha256: "94565ad2a3f6f92b2e09c1b274c8e5f47f7c0cda0675c5484d5e16a2c4761123"
+      sha256: "1e0f72a806808c73ea38231ffe14af8db4d27c535ffadadac4b66c29893148bd"
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.0"
+    version: "1.9.1"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
