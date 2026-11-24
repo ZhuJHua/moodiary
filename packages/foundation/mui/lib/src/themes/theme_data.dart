@@ -31,6 +31,8 @@ class MuiThemeData with MuiValue {
   Color get overlay => colors.surfaceContainerLowest.withValues(alpha: 0.9);
 
   Color get success => tokens.success;
+  Color get info => tokens.info;
+  Color get warning => tokens.warning;
 
   MuiFontConfig get font => tokens.font;
   MuiRadii get radii => tokens.radii;

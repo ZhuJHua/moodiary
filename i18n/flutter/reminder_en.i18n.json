@@ -23,6 +23,7 @@
     }
   },
   "notificationsOff": "Notifications are off",
+  "notificationsOffHint": "Reminders won't show up in the notification shade.",
   "enableNotifications": "Enable",
   "enable": "Remind me to write",
   "off": "Off",
@@ -46,8 +47,7 @@
   "test": "Send a test notification",
   "testSent": "Sent. Check your notifications.",
   "notificationSettings": "Notification settings",
-  "backgroundActivity": "Background activity",
-  "backgroundActivityHint": "Allow auto-start and background activity so reminders arrive after the app is cleared",
+  "autostartHint": "Some Android phones only deliver reminders on time after auto-start is allowed in system settings.",
   "create": "New reminder",
   "edit": "Edit reminder",
   "delete": "Delete reminder",

@@ -1213,6 +1213,7 @@ class _Translations$reminder$en extends Translations$reminder$zh {
 	@override String get title => 'Diary reminders';
 	@override late final _Translations$reminder$copy$en copy = _Translations$reminder$copy$en._(_root);
 	@override String get notificationsOff => 'Notifications are off';
+	@override String get notificationsOffHint => 'Reminders won\'t show up in the notification shade.';
 	@override String get enableNotifications => 'Enable';
 	@override String get enable => 'Remind me to write';
 	@override String get off => 'Off';
@@ -1252,8 +1253,7 @@ class _Translations$reminder$en extends Translations$reminder$zh {
 	@override String get test => 'Send a test notification';
 	@override String get testSent => 'Sent. Check your notifications.';
 	@override String get notificationSettings => 'Notification settings';
-	@override String get backgroundActivity => 'Background activity';
-	@override String get backgroundActivityHint => 'Allow auto-start and background activity so reminders arrive after the app is cleared';
+	@override String get autostartHint => 'Some Android phones only deliver reminders on time after auto-start is allowed in system settings.';
 	@override String get create => 'New reminder';
 	@override String get edit => 'Edit reminder';
 	@override String get delete => 'Delete reminder';

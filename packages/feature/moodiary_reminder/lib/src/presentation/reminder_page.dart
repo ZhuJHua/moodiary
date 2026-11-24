@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
@@ -94,26 +93,22 @@ class _ReminderPageState extends State<ReminderPage> {
         padding: const .symmetric(horizontal: 16),
         child: CustomScrollView(
           slivers: [
-            if (_service.enabled && !_service.notificationsEnabled) ...[
-              MSliverSettingGroup(
-                children: [
-                  SettingListTile(
+            if (_service.enabled && !_service.notificationsEnabled)
+              SliverPadding(
+                padding: const .only(bottom: 12),
+                sliver: SliverToBoxAdapter(
+                  child: MCallout(
+                    level: .error,
+                    icon: LucideIcons.bellOff,
                     title: l10n.reminder.notificationsOff,
-                    leading: Icon(
-                      LucideIcons.bellOff,
-                      color: theme.colors.error,
-                    ),
-                    trailing: TextButton(
-                      onPressed: () => _run(() async {
-                        await ensureReminderPermission(context, _service);
-                      }),
-                      child: Text(l10n.reminder.enableNotifications),
-                    ),
+                    message: l10n.reminder.notificationsOffHint,
+                    actionLabel: l10n.reminder.enableNotifications,
+                    onAction: () => _run(() async {
+                      await ensureReminderPermission(context, _service);
+                    }),
                   ),
-                ],
+                ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            ],
             MSliverSettingGroup(
               children: [
                 SettingSwitchListTile(
@@ -171,6 +166,13 @@ class _ReminderPageState extends State<ReminderPage> {
                 ),
               ],
             ),
+            if (Platform.isAndroid)
+              SliverPadding(
+                padding: const .only(top: 12),
+                sliver: SliverToBoxAdapter(
+                  child: MCallout(message: l10n.reminder.autostartHint),
+                ),
+              ),
             MSliverSettingGroup(
               title: l10n.reminder.notifications,
               children: [
@@ -230,14 +232,6 @@ class _ReminderPageState extends State<ReminderPage> {
                   trailing: const Icon(LucideIcons.externalLink, size: 20),
                   onTap: () => _run(_service.permission.openSettings),
                 ),
-                if (Platform.isAndroid)
-                  SettingListTile(
-                    title: l10n.reminder.backgroundActivity,
-                    subtitle: l10n.reminder.backgroundActivityHint,
-                    leading: const Icon(LucideIcons.activity),
-                    trailing: const Icon(LucideIcons.externalLink, size: 20),
-                    onTap: () => _run(BackgroundKeepAliveApi().openAppSettings),
-                  ),
               ],
             ),
             SliverToBoxAdapter(

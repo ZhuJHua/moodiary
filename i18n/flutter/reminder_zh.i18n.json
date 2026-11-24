@@ -23,6 +23,7 @@
     }
   },
   "notificationsOff": "通知未开启",
+  "notificationsOffHint": "提醒不会出现在通知栏。",
   "enableNotifications": "去开启",
   "enable": "提醒我写日记",
   "off": "已关闭",
@@ -46,8 +47,7 @@
   "test": "发送测试通知",
   "testSent": "已发送，留意通知栏",
   "notificationSettings": "通知设置",
-  "backgroundActivity": "后台运行",
-  "backgroundActivityHint": "允许自启动和后台活动，清理后台后也能按时提醒",
+  "autostartHint": "部分安卓手机需要在系统设置里允许自启动，提醒才能按时送达。",
   "create": "新建提醒",
   "edit": "编辑提醒",
   "delete": "删除提醒",

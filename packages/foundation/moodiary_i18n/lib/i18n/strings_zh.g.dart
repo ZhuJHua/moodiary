@@ -3270,6 +3270,9 @@ class Translations$reminder$zh {
 	/// zh: '通知未开启'
 	String get notificationsOff => '通知未开启';
 
+	/// zh: '提醒不会出现在通知栏。'
+	String get notificationsOffHint => '提醒不会出现在通知栏。';
+
 	/// zh: '去开启'
 	String get enableNotifications => '去开启';
 
@@ -3352,11 +3355,8 @@ class Translations$reminder$zh {
 	/// zh: '通知设置'
 	String get notificationSettings => '通知设置';
 
-	/// zh: '后台运行'
-	String get backgroundActivity => '后台运行';
-
-	/// zh: '允许自启动和后台活动，清理后台后也能按时提醒'
-	String get backgroundActivityHint => '允许自启动和后台活动，清理后台后也能按时提醒';
+	/// zh: '部分安卓手机需要在系统设置里允许自启动，提醒才能按时送达。'
+	String get autostartHint => '部分安卓手机需要在系统设置里允许自启动，提醒才能按时送达。';
 
 	/// zh: '新建提醒'
 	String get create => '新建提醒';
