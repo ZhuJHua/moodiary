@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show ValueKey;
+import 'package:flutter/widgets.dart' show TextScaler, TextStyle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_media/src/media_layout.dart';
@@ -7,6 +8,15 @@ MediaItem _item(String name, String diary, DateTime t) =>
     MediaItem(fileName: name, diaryId: diary, time: t);
 
 void main() {
+  test('audio and file row extent fits two scaled lines', () {
+    const title = TextStyle(fontSize: 14, height: 1.43);
+    const subtitle = TextStyle(fontSize: 12, height: 1.33);
+    expect(mediaListTileExtent(TextScaler.noScaling, title, subtitle), 66);
+    expect(
+      mediaListTileExtent(const TextScaler.linear(1.3), title, subtitle),
+      74,
+    );
+  });
   final d1 = DateTime(2026, 9, 2, 10).toUtc();
   final d2 = DateTime(2026, 9, 1, 22).toUtc();
 

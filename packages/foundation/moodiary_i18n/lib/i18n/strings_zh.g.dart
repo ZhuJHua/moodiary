@@ -1566,6 +1566,9 @@ class Translations$common$zh {
 	/// zh: '确认'
 	String get ok => '确认';
 
+	/// zh: '没有可以打开它的应用'
+	String get openFailed => '没有可以打开它的应用';
+
 	/// zh: '晴'
 	String get weatherSunny => '晴';
 
@@ -3175,14 +3178,29 @@ class Translations$media$zh {
 	/// zh: '图片'
 	String get typeImage => '图片';
 
-	/// zh: '附件'
-	String get typeFile => '附件';
+	/// zh: '文件'
+	String get typeFile => '文件';
 
-	/// zh: '这里还没有媒体'
-	String get empty => '这里还没有媒体';
+	/// zh: '这里还没有图片'
+	String get emptyImage => '这里还没有图片';
 
-	/// zh: '这里还没有附件'
-	String get emptyFiles => '这里还没有附件';
+	/// zh: '这里还没有视频'
+	String get emptyVideo => '这里还没有视频';
+
+	/// zh: '这里还没有音频'
+	String get emptyAudio => '这里还没有音频';
+
+	/// zh: '这里还没有文件'
+	String get emptyFile => '这里还没有文件';
+
+	/// zh: '用其他应用打开'
+	String get openWith => '用其他应用打开';
+
+	/// zh: '等待同步'
+	String get waitingSync => '等待同步';
+
+	/// zh: '无法分享这个文件'
+	String get shareFailed => '无法分享这个文件';
 
 	/// zh: '重命名'
 	String get rename => '重命名';
@@ -3202,9 +3220,9 @@ class Translations$media$zh {
 		other: '${count} 段视频',
 	);
 
-	/// zh: '(other) {{count} 个附件}'
+	/// zh: '(other) {{count} 个文件}'
 	String fileCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
-		other: '${count} 个附件',
+		other: '${count} 个文件',
 	);
 }
 
@@ -3360,8 +3378,8 @@ class Translations$storage$zh {
 	/// zh: '字体'
 	String get font => '字体';
 
-	/// zh: '附件'
-	String get file => '附件';
+	/// zh: '文件'
+	String get file => '文件';
 
 	/// zh: '建议清理'
 	String get recommended => '建议清理';
@@ -4892,9 +4910,6 @@ class Translations$editor$toolbar$zh {
 
 	/// zh: '附件保存失败'
 	String get attachmentFailed => '附件保存失败';
-
-	/// zh: '没有可以打开它的应用'
-	String get openFailed => '没有可以打开它的应用';
 
 	/// zh: '插入失败'
 	String get insertFailed => '插入失败';

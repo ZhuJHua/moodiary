@@ -2,6 +2,7 @@ class MediaItem {
   final String fileName;
 
   final String? name;
+  final String? mime;
 
   final String diaryId;
 
@@ -10,6 +11,7 @@ class MediaItem {
   const MediaItem({
     required this.fileName,
     this.name,
+    this.mime,
     required this.diaryId,
     required this.time,
   });

@@ -50,7 +50,7 @@ final class MediaItemsProvider
   }
 }
 
-String _$mediaItemsHash() => r'a8a29012507ce47f47c78b5ac24c33aefbb26c97';
+String _$mediaItemsHash() => r'6a3fcb2f61fd85706c7c56ab09efd3c8c548e5ba';
 
 final class MediaItemsFamily extends $Family
     with
@@ -152,7 +152,7 @@ final class AudioDurationProvider
   }
 }
 
-String _$audioDurationHash() => r'113f724b62004ff3b02d3bc7358648e8f75adf5c';
+String _$audioDurationHash() => r'a37c40c814c5c53ad2094cfa205a8df4d22e3c29';
 
 final class AudioDurationFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Duration?>, String> {
@@ -170,4 +170,73 @@ final class AudioDurationFamily extends $Family
 
   @override
   String toString() => r'audioDurationProvider';
+}
+
+@ProviderFor(attachmentSize)
+final attachmentSizeProvider = AttachmentSizeFamily._();
+
+final class AttachmentSizeProvider
+    extends $FunctionalProvider<AsyncValue<int?>, int?, FutureOr<int?>>
+    with $FutureModifier<int?>, $FutureProvider<int?> {
+  AttachmentSizeProvider._({
+    required AttachmentSizeFamily super.from,
+    required (String, {bool audio}) super.argument,
+  }) : super(
+         retry: null,
+         name: r'attachmentSizeProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$attachmentSizeHash();
+
+  @override
+  String toString() {
+    return r'attachmentSizeProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<int?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<int?> create(Ref ref) {
+    final argument = this.argument as (String, {bool audio});
+    return attachmentSize(ref, argument.$1, audio: argument.audio);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AttachmentSizeProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$attachmentSizeHash() => r'411ddb436bb08a90b3285449b66cf5a7a795fdaf';
+
+final class AttachmentSizeFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<int?>, (String, {bool audio})> {
+  AttachmentSizeFamily._()
+    : super(
+        retry: null,
+        name: r'attachmentSizeProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AttachmentSizeProvider call(String fileName, {bool audio = false}) =>
+      AttachmentSizeProvider._(argument: (fileName, audio: audio), from: this);
+
+  @override
+  String toString() => r'attachmentSizeProvider';
 }

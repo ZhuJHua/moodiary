@@ -142,7 +142,39 @@ class MapRoute extends MoodiaryRouteBase {
 class MediaRoute extends MoodiaryRouteBase {
   static const String path = '/media';
 
-  const MediaRoute() : super(path);
+  final String? type;
+
+  const MediaRoute({this.type}) : super(path);
+
+  @override
+  Map<String, dynamic>? get params => type == null ? null : {'type': type};
+}
+
+class MediaDetailRoute extends MoodiaryRouteBase {
+  static const path = '/media/detail';
+
+  final String type;
+  final String name;
+  final String? diaryId;
+  final String? label;
+  final int date;
+
+  const MediaDetailRoute({
+    required this.type,
+    required this.name,
+    this.diaryId,
+    this.label,
+    required this.date,
+  }) : super(path);
+
+  @override
+  Map<String, dynamic> get params => {
+    'type': type,
+    'name': name,
+    'diary_id': diaryId,
+    'label': label,
+    'date': date,
+  };
 }
 
 class MoodInsightsRoute extends MoodiaryRouteBase {

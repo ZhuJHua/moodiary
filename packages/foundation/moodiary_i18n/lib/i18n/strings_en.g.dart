@@ -571,6 +571,7 @@ class _Translations$common$en extends Translations$common$zh {
 
 	// Translations
 	@override String get ok => 'OK';
+	@override String get openFailed => 'No app can open this file';
 	@override String get weatherSunny => 'Sunny';
 	@override String get weatherCloudy => 'Cloudy';
 	@override String get weatherOvercast => 'Overcast';
@@ -1159,9 +1160,14 @@ class _Translations$media$en extends Translations$media$zh {
 	// Translations
 	@override String get title => 'Library';
 	@override String get typeImage => 'Image';
-	@override String get typeFile => 'Attachment';
-	@override String get empty => 'No media yet';
-	@override String get emptyFiles => 'No attachments yet';
+	@override String get typeFile => 'File';
+	@override String get emptyImage => 'No photos yet';
+	@override String get emptyVideo => 'No videos yet';
+	@override String get emptyAudio => 'No audio yet';
+	@override String get emptyFile => 'No files yet';
+	@override String get openWith => 'Open with…';
+	@override String get waitingSync => 'Waiting for sync';
+	@override String get shareFailed => 'Could not share this file';
 	@override String get rename => 'Rename';
 	@override String imageCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
 		one: '${count} Photo',
@@ -1176,8 +1182,8 @@ class _Translations$media$en extends Translations$media$zh {
 		other: '${count} Videos',
 	);
 	@override String fileCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
-		one: '${count} Attachment',
-		other: '${count} Attachments',
+		one: '${count} File',
+		other: '${count} Files',
 	);
 }
 
@@ -1248,7 +1254,7 @@ class _Translations$storage$en extends Translations$storage$zh {
 	@override String get database => 'Diary data';
 	@override String get other => 'Other';
 	@override String get font => 'Fonts';
-	@override String get file => 'Attachments';
+	@override String get file => 'Files';
 	@override String get recommended => 'Recommended';
 	@override String get careful => 'Review first';
 	@override String get retiredMood => 'Old mood suggestion model';
@@ -1784,7 +1790,6 @@ class _Translations$editor$toolbar$en extends Translations$editor$toolbar$zh {
 	@override String get remove => 'Remove';
 	@override String get addToToolbar => 'Add to toolbar';
 	@override String get attachmentFailed => 'Could not save the file';
-	@override String get openFailed => 'No app can open this file';
 	@override String get insertFailed => 'Could not insert';
 }
 

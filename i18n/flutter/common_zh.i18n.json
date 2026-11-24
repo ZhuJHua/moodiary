@@ -1,5 +1,6 @@
 {
   "ok": "确认",
+  "openFailed": "没有可以打开它的应用",
   "weatherSunny": "晴",
   "weatherCloudy": "多云",
   "weatherOvercast": "阴",

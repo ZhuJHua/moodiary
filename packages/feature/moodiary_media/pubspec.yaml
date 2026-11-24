@@ -1,5 +1,5 @@
 name: moodiary_media
-description: "Media and attachment library: browse images, audio, video and attachments."
+description: "Attachment library: browse images, video, audio and files from diaries."
 version: 0.0.1
 publish_to: none
 
@@ -25,6 +25,9 @@ dependencies:
   moodiary_utils: 0.0.1
 
   flutter_riverpod: 3.4.3
+  mime: 2.1.0
+  path: 1.9.1
+  share_plus: 13.3.0
   riverpod_annotation: 4.0.7
 
 dev_dependencies:

@@ -367,9 +367,14 @@ class TiptapContent {
     return _doc != null && (v is! int || v < _schemaVersion);
   }
 
-  late final Map<String, String> mediaNames = _mediaNames();
+  late final Map<String, String> mediaNames = _mediaAttributes(_mediaName);
 
-  Map<String, String> _mediaNames() {
+  late final Map<String, String> mediaMimes = _mediaAttributes((attrs) {
+    final mime = attrs['mime'];
+    return mime is String ? mime.trim() : '';
+  });
+
+  Map<String, String> _mediaAttributes(String Function(Map attrs) read) {
     final doc = _v2;
     if (doc == null) return const {};
     final out = <String, String>{};
@@ -378,8 +383,10 @@ class TiptapContent {
       final attrs = node['attrs'];
       if (_mediaKinds.containsKey(node['type']) && attrs is Map) {
         final src = attrs['src'];
-        final name = _mediaName(attrs);
-        if (src is String && name.isNotEmpty) out.putIfAbsent(src, () => name);
+        final value = read(attrs);
+        if (src is String && value.isNotEmpty) {
+          out.putIfAbsent(src, () => value);
+        }
       }
       final content = node['content'];
       if (content is List) content.forEach(walk);
