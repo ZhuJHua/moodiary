@@ -275,7 +275,7 @@
   "errKeyfileNoLocalCache": "本机没有密钥文件（keys.json）缓存，无法初始化加密远端。请在密钥管理里重设密码后重试。",
   "errMediaNameInvalid": "媒体名不合法，已跳过该条目：{name}",
   "errNotBackup": "不是有效的 Moodiary 备份文件",
-  "errLegacyBackup": "这是 2.8.0 之前版本的备份，新版不支持导入；请先在旧版本中恢复，再升级到新版",
+  "errLegacyBackup": "这是 2.7.3 及更早版本的备份，2.10.0 无法导入。请用 2.7.3 导入后升级到 2.9.2 完成迁移。",
   "errBackupParse": "备份文件解析失败：{error}",
   "errNotReceiver": "对方不是 Moodiary 局域网接收端",
   "errVersionMismatchDetail": "版本不兼容：发送方 {sender}，接收方 {receiver}。请将两台设备的 Moodiary 升级到同一版本",

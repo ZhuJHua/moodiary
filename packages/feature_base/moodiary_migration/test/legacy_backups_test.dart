@@ -2,14 +2,17 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
 void main() {
   late Directory root;
+  late Directory support;
   setUp(() {
-    root = Directory.systemTemp.createTempSync('legacy-backups-');
+    support = Directory.systemTemp.createTempSync('legacy-backups-');
+    root = Directory('${support.path}/database')..createSync();
     getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
     for (final name in [
       'default.isar.pre-sqlite.bak',
@@ -20,7 +23,7 @@ void main() {
     }
   });
   tearDown(() async {
-    root.deleteSync(recursive: true);
+    support.deleteSync(recursive: true);
     await getIt.reset();
   });
 
@@ -33,6 +36,24 @@ void main() {
     );
     expect(File(path).existsSync(), isFalse);
     expect(File('${root.path}/default.isar.v273bak').existsSync(), isTrue);
+  });
+
+  test('quarantine cleanup honors the journal and the file snapshot', () async {
+    final quarantine = Directory('${support.path}/$legacyAbandonedDirName');
+    final image = Directory('${quarantine.path}/20261124-120000/image')
+      ..createSync(recursive: true);
+    final first = File('${image.path}/first')..writeAsStringSync('123');
+    final second = File('${image.path}/second')..writeAsStringSync('45678');
+    final backups = LegacyBackups(databasePath: root.path);
+    MoodiaryKVs.dbEngineMigrated.set(true);
+    MoodiaryKVs.legacyAbandonJournal.set(image.parent.path);
+    expect(await backups.delete(), 0);
+    MoodiaryKVs.legacyAbandonJournal.remove();
+    expect(await backups.delete(filePaths: {first.path}), 3);
+    expect(first.existsSync(), isFalse);
+    expect(second.existsSync(), isTrue);
+    expect(await backups.delete(filePaths: {second.path}), 5);
+    expect(quarantine.existsSync(), isFalse);
   });
 
   test(

@@ -8,8 +8,6 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_migration/moodiary_migration.dart'
-    show EngineMigrationService;
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -28,10 +26,8 @@ class EditorMigrationService {
     final repo = getIt<DiaryRepository>();
     hasLegacyDiaries = await repo.hasLegacyFormatDiaries();
     requiresContentUpgrade = MoodiaryKVs.contentSchemaV2.get() != true;
-    // 空库无需升级，除非引擎迁移马上要往里灌数据
     if (requiresContentUpgrade &&
         !hasLegacyDiaries &&
-        !EngineMigrationService.requiresMigration &&
         await repo.countAllDiaries() == 0) {
       MoodiaryKVs.contentSchemaV2.set(true);
       requiresContentUpgrade = false;

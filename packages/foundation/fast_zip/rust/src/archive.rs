@@ -135,6 +135,46 @@ mod tests {
     use super::*;
 
     #[test]
+    fn default_file_entries_are_deflated_and_preserve_bytes() {
+        use std::io::Read;
+
+        let dir = std::env::temp_dir().join(format!("moodiary-zip-deflate-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let source = dir.join("source");
+        let path = dir.join("backup.zip");
+        let mut writer = Zip::new(path.to_str().unwrap().to_owned()).unwrap();
+        let entries = [
+            ("123.isar", b"database".as_slice()),
+            ("image/nested/照片", b"image"),
+            ("audio/empty", b""),
+        ];
+        for (name, bytes) in entries {
+            std::fs::write(&source, bytes).unwrap();
+            writer
+                .add_file(
+                    source.to_str().unwrap().to_owned(),
+                    name.to_owned(),
+                    None,
+                    None,
+                )
+                .unwrap();
+        }
+        writer.finish().unwrap();
+        let mut archive = ZipArchive::new(File::open(&path).unwrap()).unwrap();
+        assert_eq!(archive.len(), entries.len());
+        for (name, bytes) in entries {
+            let mut entry = archive.by_name(name).unwrap();
+            assert!(entry.is_file());
+            assert_eq!(entry.compression(), CompressionMethod::Deflated);
+            let mut decoded = Vec::new();
+            entry.read_to_end(&mut decoded).unwrap();
+            assert_eq!(decoded, bytes);
+        }
+        drop(archive);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
     fn roundtrip_bytes_and_stored_file() {
         let dir = std::env::temp_dir().join(format!("moodiary-zip-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();

@@ -3,18 +3,22 @@ import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter/widgets.dart';
+import 'package:moodiary_components/moodiary_components.dart'
+    show LegacyMoodSceneLabel;
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
 import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart' show McpKeepAlive, McpService;
 import 'package:moodiary_migration/moodiary_migration.dart'
-    show EngineMigrationService;
+    show VersionMigrator;
 import 'package:moodiary_ml/moodiary_ml.dart' show EmbeddingModelManager;
 import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_reminder/moodiary_reminder.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 
@@ -27,6 +31,56 @@ Future<void> bootstrapPlatform() async {
     log: logger.d,
   );
   AppLogger.configure(logFilePath: AppFiles.getErrorLogPath());
+}
+
+Future<void> resumeDataStartup() async {
+  try {
+    await VersionMigrator.run();
+  } catch (e, s) {
+    logger.e('version migration failed', error: e, stackTrace: s);
+  }
+
+  final migrationGateFuture = () async {
+    try {
+      await EditorMigrationService.refreshRequiresMigration();
+    } catch (e, s) {
+      logger.e('migration gate probe failed', error: e, stackTrace: s);
+    }
+  }();
+  final syncBackendFuture = () async {
+    try {
+      await activateSyncProvider();
+    } catch (e, s) {
+      logger.e('sync provider activation failed', error: e, stackTrace: s);
+    }
+  }();
+
+  await migrationGateFuture;
+  final reminderFuture = () async {
+    try {
+      await getIt<ReminderService>().initialize();
+    } catch (error, stack) {
+      logger.e(
+        'Reminder initialization failed',
+        error: error,
+        stackTrace: stack,
+      );
+    }
+  }();
+  await getIt<MoodiaryDatabase>().applyLegacyMoodScenes(
+    (scene) => scene.labelOf(l10n),
+  );
+  await syncBackendFuture;
+  if (getIt<MoodiaryDatabase>().upgradedFrom != null) {
+    MoodiaryKVs.syncPendingLocal.set(true);
+  }
+  getIt<AutoSyncWatcher>().start();
+  runStartupMaintenance();
+  await reminderFuture;
+  final upgradedFrom = getIt<MoodiaryDatabase>().upgradedFrom;
+  if (upgradedFrom != null && upgradedFrom < 3) {
+    MoodiaryKVs.pendingMoodNotice.set(true);
+  }
 }
 
 void runStartupMaintenance() {
@@ -88,25 +142,19 @@ Future<void> resetAllData() async {
       'models.delete',
       () => AppFiles.deleteDir(EmbeddingModelManager.modelsDirPath),
     ),
-    step(
-      'isarBackup.delete',
-      () => AppFiles.deleteFile(
-        AppFiles.getRealPath('database', 'default.isar.v273bak'),
+    for (final name in {
+      'default.isar',
+      'default.isar.lock',
+      ...legacyDatabaseBackupNames,
+    })
+      step(
+        'legacy.delete.$name',
+        () => AppFiles.deleteFile(AppFiles.getRealPath('database', name)),
       ),
-    ),
     step(
-      'isar.delete',
+      'legacyAbandoned.delete',
       () =>
-          AppFiles.deleteFile(AppFiles.getRealPath('database', 'default.isar')),
-    ),
-    step(
-      'legacyBackup.delete',
-      () => AppFiles.deleteFile(
-        AppFiles.getRealPath(
-          'database',
-          EngineMigrationService.legacyBackupFileName,
-        ),
-      ),
+          AppFiles.deleteDir(AppFiles.getRealPath(legacyAbandonedDirName, '')),
     ),
   ]);
   if (failed.isNotEmpty) {

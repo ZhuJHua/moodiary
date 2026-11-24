@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_mobile/app/router/route_error_page.dart';
 import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:mui/mui.dart';
@@ -44,6 +45,25 @@ void main() {
       expect(migrationGateRedirect(EditorMigrationRoute.path), isNull);
       expect(migrationGateRedirect(LockRoute.path), isNull);
     });
+
+    for (final state in LegacyDatabaseState.values.where(
+      (state) => state != LegacyDatabaseState.none,
+    )) {
+      test('旧库状态 $state 保留锁屏和迁移入口', () {
+        expect(
+          migrationGateRedirect('/', legacyState: state),
+          EditorMigrationRoute.path,
+        );
+        expect(
+          migrationGateRedirect(LockRoute.path, legacyState: state),
+          isNull,
+        );
+        expect(
+          migrationGateRedirect(EditorMigrationRoute.path, legacyState: state),
+          isNull,
+        );
+      });
+    }
 
     test('无待迁移时不重定向', () {
       EditorMigrationService.requiresMigration = false;

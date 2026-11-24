@@ -137,6 +137,89 @@ void main() {
     });
   });
 
+  group('MAlert acknowledgeLabel', () {
+    bool enabledOf(WidgetTester tester, String label) => tester
+        .widget<FilledButton>(
+          find.ancestor(
+            of: find.text(label),
+            matching: find.byType(FilledButton),
+          ),
+        )
+        .enabled;
+
+    testWidgets('未勾选时确认禁用，勾选后才可确认', (tester) async {
+      bool? result;
+      await tester.pumpWidget(
+        host((context) async {
+          result = await MAlert.confirm(
+            context,
+            title: '放弃旧数据？',
+            confirmLabel: '放弃',
+            isDestructive: true,
+            acknowledgeLabel: '我了解',
+          );
+        }),
+      );
+      await open(tester);
+
+      expect(find.byType(MSelectMark), findsOneWidget);
+      expect(enabledOf(tester, '放弃'), isFalse);
+      expect(enabledOf(tester, '取消'), isTrue);
+
+      await tester.tap(find.text('放弃'));
+      await tester.pumpAndSettle();
+      expect(find.text('放弃旧数据？'), findsOneWidget);
+
+      await tester.tap(find.text('我了解'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<MSelectMark>(find.byType(MSelectMark)).selected,
+        isTrue,
+      );
+      expect(enabledOf(tester, '放弃'), isTrue);
+
+      await tester.tap(find.text('我了解'));
+      await tester.pumpAndSettle();
+      expect(enabledOf(tester, '放弃'), isFalse);
+
+      await tester.tap(find.text('我了解'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('放弃'));
+      await tester.pumpAndSettle();
+      expect(result, isTrue);
+    });
+
+    testWidgets('不给 acknowledgeLabel 时没有勾选行', (tester) async {
+      await tester.pumpWidget(
+        host(
+          (context) =>
+              MAlert.confirm(context, title: '删除？', confirmLabel: '删除'),
+        ),
+      );
+      await open(tester);
+
+      expect(find.byType(MSelectMark), findsNothing);
+      expect(enabledOf(tester, '删除'), isTrue);
+    });
+
+    testWidgets('勾选状态通过语义暴露', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        host(
+          (context) =>
+              MAlert.confirm(context, title: '放弃？', acknowledgeLabel: '我了解'),
+        ),
+      );
+      await open(tester);
+
+      expect(
+        tester.getSemantics(find.text('我了解')),
+        isSemantics(label: '我了解', hasCheckedState: true, isChecked: false),
+      );
+      handle.dispose();
+    });
+  });
+
   group('MAlert.prompt', () {
     testWidgets('返回输入值，取消返回 null', (tester) async {
       String? result = 'sentinel';

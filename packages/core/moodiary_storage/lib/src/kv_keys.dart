@@ -8,6 +8,7 @@ enum MoodiaryKVs<T extends Object> {
   searchIndexBackfilled<bool>(defaultValue: false),
 
   dbEngineMigrated<bool>(defaultValue: false),
+  legacyAbandonJournal<String>(),
 
   contentSchemaV2<bool>(defaultValue: false),
 

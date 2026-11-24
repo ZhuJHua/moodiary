@@ -9,8 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_editor/moodiary_editor.dart'
-    show EditorMigrationService;
 import 'package:moodiary_export/moodiary_export.dart' show showDiaryShareSheet;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
@@ -25,9 +23,7 @@ import 'package:moodiary_mobile/app/lifecycle/reminder_navigation.dart';
 import 'package:moodiary_mobile/app/locale.dart';
 import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
-import 'package:moodiary_reminder/moodiary_reminder.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
@@ -38,14 +34,27 @@ Future<void> _initSystem() async {
   await configureDependencies();
   await AppLockPin.load();
 
-  try {
-    await VersionMigrator.run();
-  } catch (e, s) {
-    logger.e('version migration failed', error: e, stackTrace: s);
+  await LegacyDatabaseGuard.probe();
+  if (LegacyDatabaseGuard.state == LegacyDatabaseState.abandoning) {
+    try {
+      await LegacyDatabaseGuard.abandon();
+    } catch (error, stack) {
+      logger.e(
+        'legacy quarantine interrupted',
+        error: error,
+        stackTrace: stack,
+      );
+    }
   }
 
   unawaited(_platFormOption());
 
+  try {
+    await setupPluralResolvers();
+    await applyStoredLanguage();
+  } catch (e, s) {
+    logger.e('locale init failed, staying on base', error: e, stackTrace: s);
+  }
   final themeFuture = () async {
     try {
       final font = await getIt<FontRepository>().getActiveFont();
@@ -63,65 +72,12 @@ Future<void> _initSystem() async {
       }
     }
   }();
-
-  final localeFuture = () async {
-    try {
-      await setupPluralResolvers();
-      await applyStoredLanguage();
-    } catch (e, s) {
-      logger.e('locale init failed, staying on base', error: e, stackTrace: s);
-    }
-  }();
-  final migrationGateFuture = () async {
-    try {
-      await EngineMigrationService.refresh();
-      await EditorMigrationService.refreshRequiresMigration();
-    } catch (e, s) {
-      logger.e('migration gate probe failed', error: e, stackTrace: s);
-    }
-  }();
-  final syncBackendFuture = () async {
-    try {
-      await activateSyncProvider();
-    } catch (e, s) {
-      logger.e('sync provider activation failed', error: e, stackTrace: s);
-    }
-  }();
-
-  await localeFuture;
-  final reminderFuture = () async {
-    try {
-      await getIt<ReminderService>().initialize();
-    } catch (error, stack) {
-      logger.e(
-        'Reminder initialization failed',
-        error: error,
-        stackTrace: stack,
-      );
-    }
-  }();
-  await getIt<MoodiaryDatabase>().applyLegacyMoodScenes(
-    (scene) => scene.labelOf(l10n),
-  );
-  await syncBackendFuture;
-  if (getIt<MoodiaryDatabase>().upgradedFrom != null) {
-    MoodiaryKVs.syncPendingLocal.set(true);
-  }
-  getIt<AutoSyncWatcher>().start();
-  DiaryShare.register(showDiaryShareSheet);
-  runStartupMaintenance();
   await Future.wait([
     themeFuture,
-    localeFuture,
-    migrationGateFuture,
-    reminderFuture,
+    if (LegacyDatabaseGuard.state == LegacyDatabaseState.none)
+      resumeDataStartup(),
   ]);
-  final upgradedFrom = getIt<MoodiaryDatabase>().upgradedFrom;
-  if (upgradedFrom != null &&
-      upgradedFrom < 3 &&
-      !EngineMigrationService.requiresMigration) {
-    MoodiaryKVs.pendingMoodNotice.set(true);
-  }
+  DiaryShare.register(showDiaryShareSheet);
 
   SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(

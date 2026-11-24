@@ -6,7 +6,8 @@ import 'package:moodiary_export/moodiary_export.dart' show exportRoutes;
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_media/moodiary_media.dart' show mediaRoutes;
 import 'package:moodiary_migration/moodiary_migration.dart'
-    show EngineMigrationService;
+    show LegacyDatabaseGuard, LegacyDatabaseState;
+import 'package:moodiary_mobile/app/di/bootstrap.dart' show resumeDataStartup;
 import 'package:moodiary_mobile/app/router/route_error_page.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
 import 'package:moodiary_mobile/app/shell/root_shell.dart' show MobileRootShell;
@@ -46,8 +47,11 @@ bool isGateRoute(String path) =>
     path == EditorMigrationRoute.path || path == LockRoute.path;
 
 @visibleForTesting
-String? migrationGateRedirect(String matchedLocation) {
-  if (!EngineMigrationService.requiresMigration &&
+String? migrationGateRedirect(
+  String matchedLocation, {
+  LegacyDatabaseState? legacyState,
+}) {
+  if ((legacyState ?? LegacyDatabaseGuard.state) == LegacyDatabaseState.none &&
       !EditorMigrationService.requiresMigration) {
     return null;
   }
@@ -69,6 +73,6 @@ List<RouteBase> _mobileRoutes() => [
   ...syncRoutes(),
   ...exportRoutes(),
   ...lockRoutes(),
-  ...editorRoutes(),
+  ...editorRoutes(resumeStartup: resumeDataStartup),
   ...assistantRoutes(),
 ];

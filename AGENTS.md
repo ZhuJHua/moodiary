@@ -35,7 +35,7 @@ fvm dart tool/task.dart gen            # gen-rust + i18n + pigeon
 
 # Lint & Test
 fvm dart tool/task.dart analyze        # generated-binding checks + layer checks + flutter analyze
-fvm dart tool/task.dart test           # affected packages only: changed vs --diff=<ref> (default: the merge-base with origin/develop, so the whole branch, plus uncommitted and untracked) plus transitive dependents; root pubspec change or --all runs everything (CI). Only the legacy-database migration tests need ISAR_TEST_DYLIB
+fvm dart tool/task.dart test           # affected packages only: changed vs --diff=<ref> (default: the merge-base with origin/develop, so the whole branch, plus uncommitted and untracked) plus transitive dependents; root pubspec change or --all runs everything (CI)
 fvm dart tool/task.dart test-mobile    # mobile/ only
 for d in packages/foundation/*/rust; do (cd "$d" && cargo clippy --all-targets -- -D warnings && cargo test); done
 
@@ -73,7 +73,7 @@ core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBa
 - **`storage` below `files`**: the database and dictionary directories come from the composition root, so storage knows nothing about the file layout.
 - **`moodiary_logging` stays in foundation** because the release log path is injected via `AppLogger.configure`; reading `AppFiles` directly would float the package above core, out of reach of almost everyone.
 
-**core knows no domain type** (`Diary` / `Category` / `Font`): domain models live in `moodiary_models`, schema tables in `moodiary_data`, and orphan-media cleanup in `moodiary_migration`. `moodiary_i18n` belongs in foundation even though its namespaces carry feature names: that knowledge is JSON keys, not type dependencies.
+**core knows no domain type** (`Diary` / `Category` / `Font`): domain models live in `moodiary_models`, schema tables in `moodiary_data`. `moodiary_i18n` belongs in foundation even though its namespaces carry feature names: that knowledge is JSON keys, not type dependencies.
 
 ### Package barrels: bare exports, visibility in the file
 

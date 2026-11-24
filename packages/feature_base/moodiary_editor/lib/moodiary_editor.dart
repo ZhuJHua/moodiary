@@ -21,10 +21,12 @@ export 'src/presentation/widget/tag_picker_sheet.dart';
 export 'src/toolbar/editor_command.dart';
 export 'src/toolbar/editor_state.dart';
 
-List<RouteBase> editorRoutes() => [
+List<RouteBase> editorRoutes({
+  required Future<void> Function() resumeStartup,
+}) => [
   GoRoute(
     path: EditorMigrationRoute.path,
-    builder: (_, _) => const EditorMigrationPage(),
+    builder: (_, _) => EditorMigrationPage(resumeStartup: resumeStartup),
   ),
   GoRoute(
     path: EditorToolbarSettingRoute.path,

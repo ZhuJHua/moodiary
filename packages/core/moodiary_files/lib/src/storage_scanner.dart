@@ -270,6 +270,8 @@ class StorageScanner {
   }
 }
 
+const legacyAbandonedDirName = 'legacy_abandoned';
+
 const legacyDatabaseBackupNames = {
   'default.isar.pre-sqlite.bak',
   'default.isar.v273bak',
@@ -431,6 +433,11 @@ void _scan((SendPort, String, String, StorageScanInput) args) {
             kind: input.includeLegacyBackups ? .legacyBackup : null,
           );
         }
+        walk(
+          Directory(p.join(support, legacyAbandonedDirName)),
+          area,
+          kind: input.includeLegacyBackups ? .legacyBackup : null,
+        );
         walk(Directory(p.join(support, 'migration_backup')), area);
       } else if (area == StorageArea.logs || area == StorageArea.other) {
         final directory = Directory(support);
@@ -444,6 +451,7 @@ void _scan((SendPort, String, String, StorageScanInput) args) {
             'video',
             'file',
             'migration_backup',
+            legacyAbandonedDirName,
             ...AppFiles.supportCacheEntries,
           };
           for (final child in directory.listSync(followLinks: false)) {

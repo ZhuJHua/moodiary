@@ -1206,22 +1206,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
-  isar_plus:
-    dependency: transitive
-    description:
-      name: isar_plus
-      sha256: "9e4ade18f2bf51dd0261c0841fa90501021d3c27a786778dc6ca2a6de843a9f3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.9"
-  isar_plus_flutter_libs:
-    dependency: transitive
-    description:
-      name: isar_plus_flutter_libs
-      sha256: "4de2ad5ed4e8f601aa8b26e949d2fc8c0a5ea7ec1ac83c3d245871b8c1a6bb06"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.9"
   isolate_channel:
     dependency: transitive
     description:
