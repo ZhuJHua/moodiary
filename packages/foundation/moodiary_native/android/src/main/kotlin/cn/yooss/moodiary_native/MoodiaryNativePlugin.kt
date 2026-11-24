@@ -1,14 +1,18 @@
 package cn.yooss.moodiary_native
 
-import android.app.Activity
+import android.content.Intent
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.plugin.common.PluginRegistry
 
-class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
+class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewIntentListener {
     private var keyboard: KeyboardHeight? = null
     private var keepAlive: BackgroundKeepAlive? = null
     private var keepAliveEvents: BackgroundKeepAliveEvents? = null
+    private var permission: NotificationPermission? = null
+    private var reminders: ReminderNotifications? = null
+    private var activityBinding: ActivityPluginBinding? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = binding.binaryMessenger
@@ -21,6 +25,12 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
         keepAlive = BackgroundKeepAlive(binding.applicationContext).also {
             BackgroundKeepAliveApi.setUp(messenger, it)
         }
+        permission = NotificationPermission(binding.applicationContext).also {
+            NotificationPermissionApi.setUp(messenger, it)
+        }
+        reminders = ReminderNotifications(binding.applicationContext, ReminderNotificationsEvents(messenger)).also {
+            ReminderNotificationsApi.setUp(messenger, it)
+        }
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -32,21 +42,47 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
         HtmlClipboardApi.setUp(messenger, null)
         ImageTransferApi.setUp(messenger, null)
         BackgroundKeepAliveApi.setUp(messenger, null)
-        keyboard?.activity = null
+        NotificationPermissionApi.setUp(messenger, null)
+        ReminderNotificationsApi.setUp(messenger, null)
+        onDetachedFromActivity()
+        reminders?.detach()
+        reminders = null
+        permission = null
         keyboard = null
         keepAlive = null
     }
 
-    override fun onAttachedToActivity(binding: ActivityPluginBinding) = setActivity(binding.activity)
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        setActivity(binding)
+        binding.addOnNewIntentListener(this)
+        permission?.let { binding.addRequestPermissionsResultListener(it) }
+        binding.activity.intent?.let { onNewIntent(it) }
+    }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) =
-        setActivity(binding.activity)
+        onAttachedToActivity(binding)
 
-    override fun onDetachedFromActivityForConfigChanges() = setActivity(null)
+    override fun onDetachedFromActivityForConfigChanges() {
+        activityBinding?.removeOnNewIntentListener(this)
+        permission?.let { activityBinding?.removeRequestPermissionsResultListener(it) }
+        setActivity(null)
+    }
 
-    override fun onDetachedFromActivity() = setActivity(null)
+    override fun onDetachedFromActivity() {
+        onDetachedFromActivityForConfigChanges()
+        permission?.finish(false)
+    }
 
-    private fun setActivity(activity: Activity?) {
+    override fun onNewIntent(intent: Intent): Boolean {
+        if (reminders?.takeTap(intent) != true) return false
+        activityBinding?.activity?.intent = Intent(intent)
+        return true
+    }
+
+    private fun setActivity(binding: ActivityPluginBinding?) {
+        activityBinding = binding
+        val activity = binding?.activity
+        permission?.activity = activity
         keyboard?.activity = activity
         keepAlive?.activity = activity
     }

@@ -7,4 +7,5 @@ export 'src/app_info.dart';
 export 'src/biometric_auth.dart';
 export 'src/location_service.dart';
 export 'src/network_status.dart';
+export 'src/notification_permission.dart';
 export 'src/platform_service.dart';

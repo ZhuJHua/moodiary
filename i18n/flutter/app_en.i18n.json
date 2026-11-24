@@ -202,6 +202,7 @@
   "mcpPortInvalid": "Enter a number between 1024 and 65535",
   "mcpKeepAliveNotificationText": "MCP server running",
   "mcpKeepAliveStop": "Stop",
+  "mcpKeepAliveChannelName": "MCP server",
   "mcpKeepAlivePermissionTitle": "Background running",
   "mcpKeepAlivePermissionSummary": "{granted}/{total}",
   "mcpKeepAlivePermissionReady": "Ready",

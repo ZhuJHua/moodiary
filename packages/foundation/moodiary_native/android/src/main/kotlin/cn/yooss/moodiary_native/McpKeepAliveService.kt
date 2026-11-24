@@ -41,6 +41,8 @@ class McpKeepAliveService : Service() {
         val title = applicationInfo.loadLabel(packageManager).toString()
         val text = intent?.getStringExtra(EXTRA_TEXT).orEmpty()
         val stopLabel = intent?.getStringExtra(EXTRA_STOP_LABEL).orEmpty()
+        val channelName = intent?.getStringExtra(EXTRA_CHANNEL_NAME).orEmpty()
+        ensureChannel(channelName)
         val notification = buildNotification(title, text, stopLabel)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
@@ -61,11 +63,10 @@ class McpKeepAliveService : Service() {
     }
 
     private fun buildNotification(title: String, text: String, stopLabel: String): Notification {
-        ensureChannel()
         val builder = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(text)
-            .setSmallIcon(R.drawable.ic_mcp_keep_alive)
+            .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
@@ -75,12 +76,11 @@ class McpKeepAliveService : Service() {
         return builder.build()
     }
 
-    private fun ensureChannel() {
+    private fun ensureChannel(channelName: String) {
         val manager = getSystemService(NotificationManager::class.java) ?: return
-        if (manager.getNotificationChannel(CHANNEL_ID) != null) return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            applicationInfo.loadLabel(packageManager).toString(),
+            channelName,
             NotificationManager.IMPORTANCE_LOW,
         )
         channel.setShowBadge(false)
@@ -109,6 +109,7 @@ class McpKeepAliveService : Service() {
         internal var events: BackgroundKeepAliveEvents? = null
         const val EXTRA_TEXT = "cn.yooss.moodiary_native.keepAliveText"
         const val EXTRA_STOP_LABEL = "cn.yooss.moodiary_native.keepAliveStopLabel"
+        const val EXTRA_CHANNEL_NAME = "cn.yooss.moodiary_native.keepAliveChannelName"
 
         private const val ACTION_STOP = "cn.yooss.moodiary_native.STOP_MCP"
         private const val CHANNEL_ID = "mcp_keep_alive"

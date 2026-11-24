@@ -57,6 +57,8 @@ ThemeData buildMuiTheme({
   final tokens = MuiTokens(
     onMedia: onMedia,
     success: success ?? MuiTokens.successFor(brightness),
+    info: MuiTokens.infoFor(brightness),
+    warning: MuiTokens.warningFor(brightness),
     font: font,
     radii: radii,
     spacing: spacing,

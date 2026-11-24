@@ -26,6 +26,8 @@ import 'package:moodiary_mobile/app/media/mobile_heif_decoder.dart' as _i845;
 import 'package:moodiary_mobile/app/picker/mobile_file_picker.dart' as _i964;
 import 'package:moodiary_mobile/app/settings/data/app_update_repository.dart'
     as _i167;
+import 'package:moodiary_platform/moodiary_platform.dart' as _i861;
+import 'package:moodiary_reminder/injectable.module.dart' as _i766;
 import 'package:moodiary_storage/injectable.module.dart' as _i295;
 import 'package:moodiary_sync/injectable.module.dart' as _i412;
 import 'package:moodiary_theme/injectable.module.dart' as _i608;
@@ -43,6 +45,7 @@ extension GetItInjectableX on _i174.GetIt {
     await _i860.MoodiaryDataPackageModule().init(gh);
     await _i578.MoodiaryAssistantPackageModule().init(gh);
     await _i563.MoodiaryMcpPackageModule().init(gh);
+    await _i766.MoodiaryReminderPackageModule().init(gh);
     await _i412.MoodiarySyncPackageModule().init(gh);
     await _i565.MoodiaryEditorPackageModule().init(gh);
     await _i608.MoodiaryThemePackageModule().init(gh);
@@ -51,6 +54,9 @@ extension GetItInjectableX on _i174.GetIt {
       () => appModule.database(),
       preResolve: true,
       dispose: _i461.closeDatabase,
+    );
+    gh.lazySingleton<_i861.NotificationPermission>(
+      () => appModule.notificationPermission(),
     );
     gh.lazySingleton<_i765.IHttpClient>(() => appModule.httpClient());
     gh.lazySingleton<_i167.AppUpdateRepository>(

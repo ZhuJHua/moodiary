@@ -46,6 +46,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$lock$zh lock = Translations$lock$zh.internal(_root);
 	late final Translations$media$zh media = Translations$media$zh.internal(_root);
 	late final Translations$picker$zh picker = Translations$picker$zh.internal(_root);
+	late final Translations$reminder$zh reminder = Translations$reminder$zh.internal(_root);
 	late final Translations$share$zh share = Translations$share$zh.internal(_root);
 	late final Translations$storage$zh storage = Translations$storage$zh.internal(_root);
 	late final Translations$sync$zh sync = Translations$sync$zh.internal(_root);
@@ -668,6 +669,9 @@ class Translations$app$zh {
 
 	/// zh: '停止'
 	String get mcpKeepAliveStop => '停止';
+
+	/// zh: 'MCP 服务'
+	String get mcpKeepAliveChannelName => 'MCP 服务';
 
 	/// zh: '后台运行'
 	String get mcpKeepAlivePermissionTitle => '后台运行';
@@ -3274,6 +3278,150 @@ class Translations$picker$zh {
 	String get captureFailed => '拍摄失败';
 }
 
+// Path: reminder
+class Translations$reminder$zh {
+	Translations$reminder$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '写日记提醒'
+	String get title => '写日记提醒';
+
+	/// zh: '写日记提醒'
+	String get channelName => '写日记提醒';
+
+	late final Translations$reminder$copy$zh copy = Translations$reminder$copy$zh.internal(_root);
+
+	/// zh: '通知未开启'
+	String get notificationsOff => '通知未开启';
+
+	/// zh: '开启通知后，才能收到写日记提醒。'
+	String get notificationsOffHint => '开启通知后，才能收到写日记提醒。';
+
+	/// zh: '开启'
+	String get enableNotifications => '开启';
+
+	/// zh: '提醒写日记'
+	String get enable => '提醒写日记';
+
+	/// zh: '已关闭'
+	String get off => '已关闭';
+
+	/// zh: '没有启用的提醒时间'
+	String get noEnabledTimes => '没有启用的提醒时间';
+
+	/// zh: '添加提醒时间'
+	String get addFirst => '添加提醒时间';
+
+	/// zh: '下次提醒：{day} {time}'
+	String next({required Object day, required Object time}) => '下次提醒：${day} ${time}';
+
+	/// zh: '今天'
+	String get today => '今天';
+
+	/// zh: '明天'
+	String get tomorrow => '明天';
+
+	/// zh: '提醒时间'
+	String get times => '提醒时间';
+
+	/// zh: '添加时间'
+	String get add => '添加时间';
+
+	/// zh: '每天'
+	String get everyDay => '每天';
+
+	/// zh: '工作日'
+	String get workdays => '工作日';
+
+	/// zh: '周末'
+	String get weekend => '周末';
+
+	List<String> get weekdays => [
+		'周一',
+		'周二',
+		'周三',
+		'周四',
+		'周五',
+		'周六',
+		'周日',
+	];
+	List<String> get weekdayShort => [
+		'一',
+		'二',
+		'三',
+		'四',
+		'五',
+		'六',
+		'日',
+	];
+
+	/// zh: '、'
+	String get daySeparator => '、';
+
+	/// zh: '通知'
+	String get notifications => '通知';
+
+	/// zh: '点按通知时'
+	String get tapAction => '点按通知时';
+
+	/// zh: '打开应用'
+	String get openApp => '打开应用';
+
+	/// zh: '新建日记'
+	String get newDiary => '新建日记';
+
+	/// zh: '发送测试通知'
+	String get test => '发送测试通知';
+
+	/// zh: '测试通知已发送'
+	String get testSent => '测试通知已发送';
+
+	/// zh: '通知设置'
+	String get notificationSettings => '通知设置';
+
+	/// zh: '部分安卓手机需在系统设置中允许自启动，才能按时收到提醒。'
+	String get autostartHint => '部分安卓手机需在系统设置中允许自启动，才能按时收到提醒。';
+
+	/// zh: '新建提醒'
+	String get create => '新建提醒';
+
+	/// zh: '编辑提醒'
+	String get edit => '编辑提醒';
+
+	/// zh: '删除提醒'
+	String get delete => '删除提醒';
+
+	/// zh: '删除这条提醒？'
+	String get deleteMessage => '删除这条提醒？';
+
+	/// zh: '重复'
+	String get repeat => '重复';
+
+	/// zh: '开启通知'
+	String get primerTitle => '开启通知';
+
+	/// zh: '开启后，会在你设定的时间提醒你写日记。'
+	String get primerMessage => '开启后，会在你设定的时间提醒你写日记。';
+
+	/// zh: '暂不'
+	String get notNow => '暂不';
+
+	/// zh: '继续'
+	String get continueAction => '继续';
+
+	/// zh: '在系统设置中开启通知。'
+	String get settingsMessage => '在系统设置中开启通知。';
+
+	/// zh: '打开设置'
+	String get openSettings => '打开设置';
+
+	/// zh: '操作失败，请重试'
+	String get failed => '操作失败，请重试';
+}
+
 // Path: share
 class Translations$share$zh {
 	Translations$share$zh.internal(this._root);
@@ -4988,4 +5136,93 @@ class Translations$editor$meta$zh {
 
 	/// zh: '不记录心情'
 	String get moodClear => '不记录心情';
+}
+
+// Path: reminder.copy
+class Translations$reminder$copy$zh {
+	Translations$reminder$copy$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	late final Translations$reminder$copy$morning$zh morning = Translations$reminder$copy$morning$zh.internal(_root);
+	late final Translations$reminder$copy$noon$zh noon = Translations$reminder$copy$noon$zh.internal(_root);
+	late final Translations$reminder$copy$afternoon$zh afternoon = Translations$reminder$copy$afternoon$zh.internal(_root);
+	late final Translations$reminder$copy$evening$zh evening = Translations$reminder$copy$evening$zh.internal(_root);
+	late final Translations$reminder$copy$night$zh night = Translations$reminder$copy$night$zh.internal(_root);
+}
+
+// Path: reminder.copy.morning
+class Translations$reminder$copy$morning$zh {
+	Translations$reminder$copy$morning$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '早上好'
+	String get title => '早上好';
+
+	/// zh: '写下今早的心情。'
+	String get body => '写下今早的心情。';
+}
+
+// Path: reminder.copy.noon
+class Translations$reminder$copy$noon$zh {
+	Translations$reminder$copy$noon$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '午间片刻'
+	String get title => '午间片刻';
+
+	/// zh: '记一件上午的小事。'
+	String get body => '记一件上午的小事。';
+}
+
+// Path: reminder.copy.afternoon
+class Translations$reminder$copy$afternoon$zh {
+	Translations$reminder$copy$afternoon$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '下午好'
+	String get title => '下午好';
+
+	/// zh: '写几句此刻的感受。'
+	String get body => '写几句此刻的感受。';
+}
+
+// Path: reminder.copy.evening
+class Translations$reminder$copy$evening$zh {
+	Translations$reminder$copy$evening$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '晚上好'
+	String get title => '晚上好';
+
+	/// zh: '记下今天的一刻。'
+	String get body => '记下今天的一刻。';
+}
+
+// Path: reminder.copy.night
+class Translations$reminder$copy$night$zh {
+	Translations$reminder$copy$night$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '睡前片刻'
+	String get title => '睡前片刻';
+
+	/// zh: '睡前写几句今天的事。'
+	String get body => '睡前写几句今天的事。';
 }

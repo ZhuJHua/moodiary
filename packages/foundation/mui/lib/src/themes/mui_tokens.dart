@@ -8,6 +8,8 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   const MuiTokens({
     required this.onMedia,
     required this.success,
+    required this.info,
+    required this.warning,
     required this.font,
     required this.radii,
     required this.spacing,
@@ -20,6 +22,8 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   final Color onMedia;
 
   final Color success;
+  final Color info;
+  final Color warning;
 
   final MuiFontConfig font;
   final MuiRadii radii;
@@ -33,6 +37,8 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   List<Object?> get props => [
     onMedia,
     success,
+    info,
+    warning,
     font,
     radii,
     spacing,
@@ -46,6 +52,8 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   MuiTokens copyWith({
     Color? onMedia,
     Color? success,
+    Color? info,
+    Color? warning,
     MuiFontConfig? font,
     MuiRadii? radii,
     MuiSpacing? spacing,
@@ -56,6 +64,8 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   }) => MuiTokens(
     onMedia: onMedia ?? this.onMedia,
     success: success ?? this.success,
+    info: info ?? this.info,
+    warning: warning ?? this.warning,
     font: font ?? this.font,
     radii: radii ?? this.radii,
     spacing: spacing ?? this.spacing,
@@ -72,6 +82,8 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
     return MuiTokens(
       onMedia: Color.lerp(onMedia, other.onMedia, t)!,
       success: Color.lerp(success, other.success, t)!,
+      info: Color.lerp(info, other.info, t)!,
+      warning: Color.lerp(warning, other.warning, t)!,
       font: second.font,
       radii: second.radii,
       spacing: second.spacing,
@@ -85,9 +97,17 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   static Color successFor(Brightness brightness) =>
       brightness == .dark ? const Color(0xFF7CD992) : const Color(0xFF1E7F4F);
 
+  static Color infoFor(Brightness brightness) =>
+      brightness == .dark ? const Color(0xFFB4C5FF) : const Color(0xFF0053DB);
+
+  static Color warningFor(Brightness brightness) =>
+      brightness == .dark ? const Color(0xFFFFB95F) : const Color(0xFF855300);
+
   factory MuiTokens.fallback(Brightness brightness) => MuiTokens(
     onMedia: const Color(0xFFFFFFFF),
     success: successFor(brightness),
+    info: infoFor(brightness),
+    warning: warningFor(brightness),
     font: const MuiFontConfig(),
     radii: const MuiRadii(),
     spacing: const MuiSpacing(),

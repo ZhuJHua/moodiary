@@ -22,6 +22,7 @@ dependencies:
   network_info_plus: 8.2.1
   package_info_plus: 10.2.1
   path_provider: 2.1.6
+  moodiary_native: 0.0.1
 
 dev_dependencies:
   flutter_test:

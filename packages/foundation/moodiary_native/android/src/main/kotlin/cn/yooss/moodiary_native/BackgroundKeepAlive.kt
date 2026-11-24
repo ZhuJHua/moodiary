@@ -1,13 +1,9 @@
 package cn.yooss.moodiary_native
 
-import android.Manifest
 import android.app.Activity
-import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
@@ -33,29 +29,6 @@ class BackgroundKeepAlive(private val context: Context) : BackgroundKeepAliveApi
         }
     }
 
-    override fun isNotificationsEnabled(): Boolean = try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-        } else {
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.areNotificationsEnabled()
-        }
-    } catch (e: Exception) {
-        Log.w(TAG, "Failed to read notification permission state", e)
-        false
-    }
-
-    override fun requestNotifications() {
-        if (isNotificationsEnabled()) return
-        try {
-            openNotificationSettings()
-        } catch (e: Exception) {
-            Log.w(TAG, "Notification settings are unavailable", e)
-            openAppSettings()
-        }
-    }
-
     override fun openAppSettings() {
         startIntent(
             Intent(
@@ -69,10 +42,12 @@ class BackgroundKeepAlive(private val context: Context) : BackgroundKeepAliveApi
         enabled: Boolean,
         notificationText: String,
         stopLabel: String,
+        channelName: String,
     ) {
         val intent = Intent(context, McpKeepAliveService::class.java)
             .putExtra(McpKeepAliveService.EXTRA_TEXT, notificationText)
             .putExtra(McpKeepAliveService.EXTRA_STOP_LABEL, stopLabel)
+            .putExtra(McpKeepAliveService.EXTRA_CHANNEL_NAME, channelName)
         try {
             if (enabled) {
                 context.startForegroundService(intent)
@@ -83,13 +58,6 @@ class BackgroundKeepAlive(private val context: Context) : BackgroundKeepAliveApi
             Log.w(TAG, "Failed to toggle the keep-alive foreground service", e)
             throw e
         }
-    }
-
-    private fun openNotificationSettings() {
-        startIntent(
-            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
-        )
     }
 
     private fun startIntent(intent: Intent) {

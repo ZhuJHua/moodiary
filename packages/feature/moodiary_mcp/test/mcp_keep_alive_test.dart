@@ -7,6 +7,7 @@ import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart';
 import 'package:moodiary_native/moodiary_native.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
@@ -23,6 +24,26 @@ class _McpService extends Fake implements McpService {
   }
 }
 
+class _NotificationPermission implements NotificationPermission {
+  bool enabled = false;
+  bool fail = false;
+  int settingsCalls = 0;
+
+  @override
+  Future<bool> isEnabled() async => enabled;
+
+  @override
+  Future<bool> request() async {
+    if (fail) throw PlatformException(code: 'denied');
+    return enabled;
+  }
+
+  @override
+  Future<void> openSettings() async {
+    settingsCalls++;
+  }
+}
+
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -30,13 +51,10 @@ void main() {
     test('${permission.name} request failures reach the caller', () async {
       final service = _McpService();
       addTearDown(service.state.dispose);
-      final keepAlive = McpKeepAlive(service);
-      final method = switch (permission) {
-        .batteryOptimization => 'requestExemption',
-        .notifications => 'requestNotifications',
-      };
-      final channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.$method',
+      final notifications = _NotificationPermission()..fail = true;
+      final keepAlive = McpKeepAlive(service, notifications);
+      const channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.requestExemption',
         BackgroundKeepAliveApi.pigeonChannelCodec,
       );
       binding.defaultBinaryMessenger.setMockDecodedMessageHandler(
@@ -67,7 +85,7 @@ void main() {
   test('app settings failures reach the caller', () async {
     final service = _McpService();
     addTearDown(service.state.dispose);
-    final keepAlive = McpKeepAlive(service);
+    final keepAlive = McpKeepAlive(service, _NotificationPermission());
     const channel = BasicMessageChannel<Object?>(
       'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.openAppSettings',
       BackgroundKeepAliveApi.pigeonChannelCodec,
@@ -122,7 +140,7 @@ void main() {
         null,
       );
     });
-    final keepAlive = McpKeepAlive(service);
+    final keepAlive = McpKeepAlive(service, _NotificationPermission());
     await keepAlive.restore();
 
     final reply = Completer<Object?>();
@@ -143,6 +161,41 @@ void main() {
       true,
       l10n.app.mcpKeepAliveNotificationText,
       l10n.app.mcpKeepAliveStop,
+      l10n.app.mcpKeepAliveChannelName,
     ]);
   });
+
+  test(
+    'notification request opens settings only when still disabled',
+    () async {
+      final service = _McpService();
+      final notifications = _NotificationPermission();
+      final keepAlive = McpKeepAlive(service, notifications);
+      addTearDown(service.state.dispose);
+      addTearDown(() => BackgroundKeepAliveEvents.setUp(null));
+      await keepAlive.request(.notifications);
+      expect(notifications.settingsCalls, 1);
+      notifications.enabled = true;
+      await keepAlive.request(.notifications);
+      expect(notifications.settingsCalls, 1);
+      const channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.isExempt',
+        BackgroundKeepAliveApi.pigeonChannelCodec,
+      );
+      binding.defaultBinaryMessenger.setMockDecodedMessageHandler(
+        channel,
+        (_) async => [true],
+      );
+      addTearDown(
+        () => binding.defaultBinaryMessenger.setMockDecodedMessageHandler(
+          channel,
+          null,
+        ),
+      );
+      final statuses = await keepAlive.statuses();
+      expect(statuses.every((status) => status.granted), isTrue);
+      notifications.enabled = false;
+      expect((await keepAlive.statuses()).last.granted, isFalse);
+    },
+  );
 }

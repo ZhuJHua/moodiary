@@ -21,9 +21,11 @@ import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:moodiary_mobile/app/di/di.dart';
 import 'package:moodiary_mobile/app/licenses.dart';
 import 'package:moodiary_mobile/app/lifecycle/app_lock_observer.dart';
+import 'package:moodiary_mobile/app/lifecycle/reminder_navigation.dart';
 import 'package:moodiary_mobile/app/locale.dart';
 import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
+import 'package:moodiary_reminder/moodiary_reminder.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
@@ -87,6 +89,17 @@ Future<void> _initSystem() async {
   }();
 
   await localeFuture;
+  final reminderFuture = () async {
+    try {
+      await getIt<ReminderService>().initialize();
+    } catch (error, stack) {
+      logger.e(
+        'Reminder initialization failed',
+        error: error,
+        stackTrace: stack,
+      );
+    }
+  }();
   await getIt<MoodiaryDatabase>().applyLegacyMoodScenes(
     (scene) => scene.labelOf(l10n),
   );
@@ -97,7 +110,12 @@ Future<void> _initSystem() async {
   getIt<AutoSyncWatcher>().start();
   DiaryShare.register(showDiaryShareSheet);
   runStartupMaintenance();
-  await Future.wait([themeFuture, localeFuture, migrationGateFuture]);
+  await Future.wait([
+    themeFuture,
+    localeFuture,
+    migrationGateFuture,
+    reminderFuture,
+  ]);
   final upgradedFrom = getIt<MoodiaryDatabase>().upgradedFrom;
   if (upgradedFrom != null &&
       upgradedFrom < 3 &&
@@ -197,8 +215,10 @@ class Moodiary extends ConsumerWidget {
                   palette: MoodPalette.fromName(palette),
                   child: child!,
                 ),
-                child: AppLockObserver(
-                  child: FlutterSmartDialog.init()(context, child!),
+                child: ReminderNavigation(
+                  child: AppLockObserver(
+                    child: FlutterSmartDialog.init()(context, child!),
+                  ),
                 ),
               ),
             ),
