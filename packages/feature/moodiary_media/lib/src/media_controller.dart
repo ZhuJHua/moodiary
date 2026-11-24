@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -62,14 +64,17 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
           if (removed) state = .data(without);
           return;
         }
-        final labels = diary.type == DiaryType.tiptap.value
-            ? TiptapContent.parse(diary.content).mediaNames
-            : const <String, String>{};
+        final content = diary.type == DiaryType.tiptap.value
+            ? TiptapContent.parse(diary.content)
+            : null;
         final fresh = [
           for (final name in names)
             MediaItem(
               fileName: name,
-              name: labels[name],
+              name: content?.mediaNames[name],
+              mime: type == .audio || type == .file
+                  ? content?.mediaMimes[name]
+                  : null,
               diaryId: diary.id,
               time: diary.time,
             ),
@@ -102,6 +107,25 @@ Future<Duration?> audioDuration(Ref ref, String fileName) async {
   final duration = await probeAudioDuration(
     AppFiles.getRealPath('audio', fileName),
   );
-  if (duration != null) ref.keepAlive();
+  if (duration != null && ref.mounted) ref.keepAlive();
   return duration;
+}
+
+@riverpod
+Future<int?> attachmentSize(
+  Ref ref,
+  String fileName, {
+  bool audio = false,
+}) async {
+  try {
+    final file = audio
+        ? File(AppFiles.getRealPath('audio', fileName))
+        : AttachmentLauncher.localFile(fileName);
+    if (file == null) return null;
+    final size = await file.length();
+    if (ref.mounted) ref.keepAlive();
+    return size;
+  } on FileSystemException {
+    return null;
+  }
 }

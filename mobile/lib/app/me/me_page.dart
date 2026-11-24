@@ -374,7 +374,7 @@ class _RecallGrid extends StatelessWidget {
           children: [
             Expanded(
               child: _RecallTile(
-                icon: LucideIcons.image,
+                icon: LucideIcons.libraryBig,
                 label: l10n.media.title,
                 onTap: () => const MediaRoute().push(context),
               ),

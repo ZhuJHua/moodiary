@@ -13,7 +13,6 @@ import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -165,12 +164,8 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   }
 
   Future<void> _openAttachment(String src, String name, String? mime) async {
-    final result = await OpenFile.open(
-      AppFiles.getRealPath('file', src),
-      type: mime,
-    );
-    if (result.type != .done && mounted) {
-      toast.error(message: context.l10n.editor.toolbar.openFailed);
+    if (!await AttachmentLauncher.open(src, mime: mime) && mounted) {
+      toast.error(message: context.l10n.common.openFailed);
     }
   }
 
@@ -184,7 +179,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
         _openableSchemes.contains(uri.scheme.toLowerCase()) &&
         await launchUrl(uri, mode: .externalApplication);
     if (!opened && mounted) {
-      toast.error(message: context.l10n.editor.toolbar.openFailed);
+      toast.error(message: context.l10n.common.openFailed);
     }
   }
 

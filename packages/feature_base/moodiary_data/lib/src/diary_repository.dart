@@ -736,11 +736,27 @@ class DiaryRepository {
         OrderingTerm.asc(m.seq),
       ]);
     if (limit != null) q.limit(limit, offset: offset);
+    final rows = await q.get();
+    final mimes = <String, Map<String, String>>{};
+    if (type == .file) {
+      final ids = rows.map((row) => row.read(d.id)!).toSet().toList();
+      for (var start = 0; start < ids.length; start += _inChunk) {
+        final chunk = ids.sublist(start, min(start + _inChunk, ids.length));
+        final documents = _db.selectOnly(d)
+          ..addColumns([d.id, d.content])
+          ..where(d.id.isIn(chunk) & d.type.equals(DiaryType.tiptap.value));
+        for (final row in await documents.get()) {
+          mimes[row.read(d.id)!] = TiptapContent.parse(row.read(d.content)!)
+              .mediaMimes;
+        }
+      }
+    }
     return [
-      for (final r in await q.get())
+      for (final r in rows)
         MediaItem(
           fileName: r.read(m.fileName)!,
           name: r.read(m.name),
+          mime: mimes[r.read(d.id)]?[r.read(m.fileName)],
           diaryId: r.read(d.id)!,
           time: dbToTime(r.read(d.time)!),
         ),

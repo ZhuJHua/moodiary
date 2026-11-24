@@ -657,7 +657,11 @@ void main() {
             },
             {
               'type': 'attachment',
-              'attrs': {'src': 'file-1.pdf', 'name': '计划.pdf'},
+              'attrs': {
+                'src': 'file-1.pdf',
+                'name': '计划.pdf',
+                'mime': 'application/pdf',
+              },
             },
           ]),
           audios: ['audio-1.m4a'],
@@ -672,6 +676,11 @@ void main() {
       expect(await items(.audio), [('audio-1.m4a', '晨间')]);
       expect(await items(.image), [('image-1.jpg', null)]);
       expect(await items(.file), [('file-1.pdf', '计划.pdf')]);
+      expect(
+        (await repo.getMediaItems(type: .file)).single.mime,
+        'application/pdf',
+      );
+      expect((await repo.getMediaItems(type: .audio)).single.mime, isNull);
 
       expect(await repo.renameMedia(.image, 'image-1.jpg', '日落'), 1);
       expect(await repo.renameMedia(.file, 'file-1.pdf', '旅行.pdf'), 1);

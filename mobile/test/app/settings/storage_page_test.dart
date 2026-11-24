@@ -181,6 +181,7 @@ void main() {
         'AI 模型',
         '媒体',
         '字体',
+        '文件',
       ]);
       // 可清理量在右侧尺寸下方，不占副标题
       expect(tiles[2].title, '缓存');
@@ -197,7 +198,7 @@ void main() {
           of: group,
           matching: find.byIcon(LucideIcons.chevronRight),
         ),
-        findsNWidgets(3),
+        findsNWidgets(4),
       );
       // 总览是同组第一行：7 个分类 + 总览 = 8 行，7 条分隔线
       expect(

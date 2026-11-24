@@ -1,8 +1,14 @@
 {
-  "title": "Media",
+  "title": "Library",
   "typeImage": "Image",
-  "typeFile": "Attachment",
-  "empty": "No media yet",
+  "typeFile": "File",
+  "emptyImage": "No photos yet",
+  "emptyVideo": "No videos yet",
+  "emptyAudio": "No audio yet",
+  "emptyFile": "No files yet",
+  "openWith": "Open with…",
+  "waitingSync": "Waiting for sync",
+  "shareFailed": "Could not share this file",
   "rename": "Rename",
   "imageCount(plural, param=count)": {
     "one": "{count} Photo",
@@ -17,7 +23,7 @@
     "other": "{count} Videos"
   },
   "fileCount(plural, param=count)": {
-    "one": "{count} Attachment",
-    "other": "{count} Attachments"
+    "one": "{count} File",
+    "other": "{count} Files"
   }
 }

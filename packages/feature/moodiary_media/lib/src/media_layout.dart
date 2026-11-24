@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/rendering.dart'
@@ -8,6 +9,16 @@ import 'package:flutter/rendering.dart'
         SliverGridLayout;
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+
+double mediaListTileExtent(
+  TextScaler scaler,
+  TextStyle title,
+  TextStyle subtitle,
+) {
+  double lineHeight(TextStyle style) =>
+      (scaler.scale(style.fontSize!) * style.height!).ceilToDouble();
+  return math.max(66, 24 + lineHeight(title) + 2 + lineHeight(subtitle));
+}
 
 sealed class MediaEntry {
   const MediaEntry();
@@ -23,7 +34,9 @@ class MediaCell extends MediaEntry {
   final int group;
   final int index;
 
-  const MediaCell(this.group, this.index);
+  final String diaryId;
+
+  const MediaCell(this.group, this.index, this.diaryId);
 }
 
 class MediaFlat {
@@ -62,7 +75,7 @@ class MediaFlat {
       final g = groups.length - 1;
       groups[g].add(item.fileName);
       labels[g].add(item.name);
-      entries.add(MediaCell(g, groups[g].length - 1));
+      entries.add(MediaCell(g, groups[g].length - 1, item.diaryId));
       keys.add(ValueKey('${item.diaryId}:${item.fileName}'));
     }
     return MediaFlat._(entries, dates, groups, labels, keys);

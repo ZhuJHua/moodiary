@@ -350,6 +350,7 @@ class _Category extends ConsumerWidget {
       0 => const ServicesRoute(),
       1 => const MediaRoute(),
       5 => const FontRoute(),
+      6 => const MediaRoute(type: 'file'),
       _ => null,
     };
     // 可清理量叠在尺寸正下方，两行都右对齐，共用单行行高

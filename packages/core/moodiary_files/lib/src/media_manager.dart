@@ -4,13 +4,14 @@ import 'dart:io';
 import 'package:fast_image/fast_image.dart';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:gal/gal.dart';
-import 'package:mime/mime.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:path/path.dart';
+
+import 'mime_sniff.dart';
 
 class MediaManager {
   static final _thumbnail = FcNativeVideoThumbnail();
@@ -38,7 +39,7 @@ class MediaManager {
       return srcName;
     }
     try {
-      final mime = await _sniffMime(imageFile.path);
+      final mime = await sniffFileMime(imageFile.path);
       final String name;
       if (mime == 'image/heic' || mime == 'image/heif') {
         name = 'image-${uuidV7()}.jpg';
@@ -78,26 +79,13 @@ class MediaManager {
       return (
         name: name,
         fileName: fileName,
-        mime: file.mimeType ?? await _sniffMime(target),
+        mime: file.mimeType ?? await sniffFileMime(target),
         size: await File(target).length(),
       );
     } catch (e) {
       logger.d('saveAttachment failed: ${file.path} ($e)');
       await AppFiles.deleteFile(target);
       return null;
-    }
-  }
-
-  static Future<String?> _sniffMime(String path) async {
-    RandomAccessFile? raf;
-    try {
-      raf = await File(path).open();
-      final header = await raf.read(defaultMagicNumbersMaxLength);
-      return lookupMimeType(path, headerBytes: header);
-    } catch (_) {
-      return lookupMimeType(path);
-    } finally {
-      await raf?.close();
     }
   }
 

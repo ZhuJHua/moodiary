@@ -3,22 +3,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
+import 'attachment_details.dart';
 import 'media_controller.dart';
 import 'media_layout.dart';
 import 'media_video_viewer.dart';
 
-class MediaPage extends StatelessWidget {
-  const MediaPage({super.key});
+class MediaPage extends StatefulWidget {
+  final MediaType initialType;
+
+  const MediaPage({super.key, this.initialType = .image});
+
+  factory MediaPage.fromRoute(GoRouterState state) => MediaPage(
+    initialType: switch (state.params['type']) {
+      'image' => .image,
+      'video' => .video,
+      'audio' => .audio,
+      'file' => .file,
+      _ => .image,
+    },
+  );
 
   @override
-  Widget build(BuildContext context) {
-    return const _MobileMediaPage();
-  }
+  State<MediaPage> createState() => _MediaPageState();
 }
 
-const _galleryTypes = [MediaType.image, MediaType.audio, MediaType.video];
+const _galleryTypes = [
+  MediaType.image,
+  MediaType.video,
+  MediaType.audio,
+  MediaType.file,
+];
 
 String _typeLabel(BuildContext c, MediaType t) => switch (t) {
   .image => c.l10n.media.typeImage,
@@ -41,32 +58,38 @@ String _countLabel(BuildContext c, MediaType t, int n) => switch (t) {
   .file => c.l10n.media.fileCount(count: n),
 };
 
-class _MobileMediaPage extends ConsumerStatefulWidget {
-  const _MobileMediaPage();
+class _MediaPageState extends State<MediaPage> {
+  bool _opening = false;
 
-  @override
-  ConsumerState<_MobileMediaPage> createState() => _MobileMediaPageState();
-}
+  Future<void> _openDetail(MediaDetailRoute route) async {
+    if (_opening) return;
+    _opening = true;
+    try {
+      await route.push<void>(context);
+    } finally {
+      _opening = false;
+    }
+  }
 
-class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
-  MediaType _type = .image;
+  late MediaType _type = widget.initialType;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.media.title)),
+      appBar: AppBar(title: Text(l10n.media.title)),
       body: Column(
         children: [
           const SizedBox(height: 4),
           MChipBar<MediaType>(
             selected: _type,
-            onSelected: (t) => setState(() => _type = t),
+            onSelected: (type) => setState(() => _type = type),
             items: [
-              for (final t in _galleryTypes)
+              for (final type in _galleryTypes)
                 MChipData(
-                  value: t,
-                  label: _typeLabel(context, t),
-                  icon: _typeIcon(t),
+                  value: type,
+                  label: _typeLabel(context, type),
+                  icon: _typeIcon(type),
                 ),
             ],
           ),
@@ -74,7 +97,11 @@ class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
           Expanded(
             child: AnimatedSwitcher(
               duration: Durations.short3,
-              child: _MediaBody(key: ValueKey(_type), type: _type),
+              child: _MediaBody(
+                key: ValueKey(_type),
+                type: _type,
+                openDetail: _openDetail,
+              ),
             ),
           ),
         ],
@@ -86,13 +113,14 @@ class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
 const double _kGridPadding = 12;
 const double _kGridSpacing = 4;
 const int _kGridColumns = 3;
-const double _kAudioTileExtent = 66;
-const double _kAudioSpacing = 8;
+const double _kListSpacing = 8;
 
 class _MediaBody extends ConsumerWidget {
   final MediaType type;
 
-  const _MediaBody({super.key, required this.type});
+  final ValueChanged<MediaDetailRoute> openDetail;
+
+  const _MediaBody({super.key, required this.type, required this.openDetail});
 
   double _headerExtent(BuildContext context) =>
       18 + MediaQuery.textScalerOf(context).scale(24);
@@ -104,11 +132,15 @@ class _MediaBody extends ConsumerWidget {
     return async.buildLoading(
       data: (items) {
         final flat = MediaFlat.of(items);
-        if (flat.isEmpty) return _Empty();
-        final audio = type == .audio;
+        if (flat.isEmpty) return _Empty(type: type);
+        // 音频和附件是一行一条的列表，媒体其余类型是网格。
+        final list = type == .audio || type == .file;
         return MRefresh(
           onLoadMore: () => ref.read(provider.notifier).loadMore(),
-          onRefresh: () => ref.read(provider.notifier).refresh(),
+          onRefresh: () {
+            if (type == .file) ref.invalidate(attachmentSizeProvider);
+            return ref.read(provider.notifier).refresh();
+          },
           child: CustomScrollView(
             slivers: [
               const SliverToBoxAdapter(child: SizedBox(height: 4)),
@@ -117,10 +149,21 @@ class _MediaBody extends ConsumerWidget {
                 sliver: SliverGrid(
                   gridDelegate: GroupedGridDelegate(
                     entries: flat.entries,
-                    columns: audio ? 1 : _kGridColumns,
-                    spacing: audio ? _kAudioSpacing : _kGridSpacing,
+                    columns: list ? 1 : _kGridColumns,
+                    spacing: list ? _kListSpacing : _kGridSpacing,
                     headerExtent: _headerExtent(context),
-                    tileMainExtent: audio ? _kAudioTileExtent : null,
+                    tileMainExtent: list
+                        ? mediaListTileExtent(
+                            MediaQuery.textScalerOf(context),
+                            context
+                                .theme
+                                .typography
+                                .bodyMedium
+                                .emphasized
+                                .onSurface,
+                            context.theme.typography.bodySmall.onSurfaceVariant,
+                          )
+                        : null,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, i) => _buildEntry(flat, i),
@@ -151,8 +194,17 @@ class _MediaBody extends ConsumerWidget {
           count: flat.groups[group].length,
           type: type,
         );
-      case MediaCell(:final group, :final index):
+      case MediaCell(:final group, :final index, :final diaryId):
         final names = flat.groups[group];
+        void open() => openDetail(
+          MediaDetailRoute(
+            type: type.value,
+            diaryId: diaryId,
+            name: names[index],
+            label: flat.labels[group][index],
+            date: flat.dates[group].millisecondsSinceEpoch,
+          ),
+        );
         return switch (type) {
           .image => _ImageTile(key: key, names: names, index: index),
           .video => _VideoTile(key: key, name: names[index]),
@@ -160,9 +212,14 @@ class _MediaBody extends ConsumerWidget {
             key: key,
             name: names[index],
             label: flat.labels[group][index],
-            date: flat.dates[group],
+            onTap: open,
           ),
-          .file => throw UnsupportedError('attachments are not in the gallery'),
+          .file => _FileTile(
+            key: key,
+            name: names[index],
+            label: flat.labels[group][index],
+            onTap: open,
+          ),
         };
     }
   }
@@ -209,103 +266,157 @@ class _SectionHeader extends StatelessWidget {
 class _AudioTile extends ConsumerWidget {
   final String name;
   final String? label;
-  final DateTime date;
+  final VoidCallback onTap;
 
   const _AudioTile({
     super.key,
     required this.name,
     required this.label,
-    required this.date,
+    required this.onTap,
   });
-
-  Future<void> _rename(BuildContext context, WidgetRef ref) async {
-    final action = await MMenu.show<_AudioTileAction>(
-      anchorContext: context,
-      entries: [
-        MMenuEntry(
-          value: .rename,
-          label: context.l10n.media.rename,
-          icon: LucideIcons.pencilLine,
-        ),
-      ],
-    );
-    if (action != .rename || !context.mounted) return;
-    final input = await MAlert.prompt(
-      context,
-      title: context.l10n.media.rename,
-      initialValue: label ?? '',
-      hintText: context.l10n.common.name,
-    );
-    if (input == null) return;
-    await ref
-        .read(mediaItemsProvider(type: .audio).notifier)
-        .rename(name, input);
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final scheme = theme.colors;
-    final displayName = label ?? context.l10n.common.audio;
+    final trimmed = label?.trim() ?? '';
+    final displayName = trimmed.isEmpty ? context.l10n.common.audio : trimmed;
     final duration = ref.watch(audioDurationProvider(name)).value;
-    return Material(
-      color: scheme.surfaceContainer,
-      shape: RoundedRectangleBorder(
-        borderRadius: AppBorderRadius.largeBorderRadius,
-        side: BorderSide(color: scheme.outlineVariant),
+    final durationLabel = duration == null
+        ? null
+        : TimeFormat.mediaDuration(duration);
+    return _ListTile(
+      title: displayName,
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest,
+          borderRadius: AppBorderRadius.smallBorderRadius,
+        ),
+        child: Icon(
+          LucideIcons.music,
+          size: 20,
+          color: scheme.onSurfaceVariant,
+        ),
       ),
+      trailing: durationLabel == null
+          ? null
+          : Text(
+              durationLabel,
+              style: theme.typography.labelSmall.onSurfaceVariant.tabular,
+            ),
+      onTap: onTap,
+    );
+  }
+}
+
+class _FileTile extends ConsumerWidget {
+  final String name;
+  final String? label;
+
+  final VoidCallback onTap;
+
+  const _FileTile({
+    super.key,
+    required this.name,
+    this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trimmed = label?.trim() ?? '';
+    final displayName = trimmed.isEmpty ? context.l10n.media.typeFile : trimmed;
+    final extension = attachmentExtension(displayName, name);
+    final size = ref.watch(attachmentSizeProvider(name));
+    final subtitle = size.isLoading && !size.hasValue
+        ? null
+        : attachmentSubtitle(
+            extension,
+            size.value,
+            context.l10n.media.waitingSync,
+          );
+    return _ListTile(
+      title: displayName,
+      leading: FileTypeIcon(
+        extension,
+        size: 36,
+        color: context.theme.colors.onSurfaceVariant,
+      ),
+      subtitle: subtitle,
+      onTap: onTap,
+    );
+  }
+}
+
+class _ListTile extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final Widget leading;
+  final Widget? trailing;
+  final VoidCallback onTap;
+
+  const _ListTile({
+    required this.title,
+    required this.leading,
+    this.subtitle,
+    this.trailing,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final shape = RoundedRectangleBorder(
+      borderRadius: AppBorderRadius.largeBorderRadius,
+      side: BorderSide(color: theme.colors.outlineVariant),
+    );
+    return Material(
+      color: theme.colors.surfaceContainer,
+      shape: shape,
       child: MInkWell(
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppBorderRadius.largeBorderRadius,
-        ),
-        onTap: () => MAudioPlayerPage.showByName(
-          context,
-          name: name,
-          title: displayName,
-          subtitle: TimeFormat.fullDate(date),
-          knownDuration: duration,
-        ),
-        onLongPress: () => _rename(context, ref),
+        shape: shape,
+        onTap: onTap,
         child: Padding(
           padding: const .all(12),
           child: Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHighest,
-                  borderRadius: AppBorderRadius.smallBorderRadius,
-                ),
-                child: Icon(
-                  LucideIcons.music,
-                  size: 20,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
+              leading,
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  displayName,
-                  maxLines: 1,
-                  overflow: .ellipsis,
-                  style: theme.typography.bodyMedium.emphasized.onSurface,
+                child: Column(
+                  mainAxisSize: .min,
+                  crossAxisAlignment: .start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: .ellipsis,
+                      style: theme.typography.bodyMedium.emphasized.onSurface,
+                    ),
+                    if (subtitle case final subtitle?) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: .ellipsis,
+                        style:
+                            theme.typography.bodySmall.onSurfaceVariant.tabular,
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              if (duration != null) ...[
+              if (trailing case final trailing?) ...[
                 const SizedBox(width: 8),
-                Text(
-                  TimeFormat.mediaDuration(duration),
-                  style: theme.typography.labelSmall.onSurfaceVariant.copyWith(
-                    fontFeatures: const [.tabularFigures()],
-                  ),
-                ),
+                trailing,
               ],
               const SizedBox(width: 8),
               Icon(
                 LucideIcons.chevronRight,
                 size: 16,
-                color: scheme.onSurfaceVariant,
+                color: theme.colors.onSurfaceVariant,
               ),
             ],
           ),
@@ -314,8 +425,6 @@ class _AudioTile extends ConsumerWidget {
     );
   }
 }
-
-enum _AudioTileAction { rename }
 
 class _Thumb extends StatelessWidget {
   final ImageProvider image;
@@ -421,6 +530,10 @@ class _VideoTile extends StatelessWidget {
 }
 
 class _Empty extends StatelessWidget {
+  final MediaType type;
+
+  const _Empty({required this.type});
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -428,16 +541,14 @@ class _Empty extends StatelessWidget {
       child: Column(
         mainAxisSize: .min,
         children: [
-          Icon(
-            LucideIcons.packageOpen,
-            size: 64,
-            color: theme.colors.onSurfaceVariant,
-          ),
+          Icon(_typeIcon(type), size: 64, color: theme.colors.onSurfaceVariant),
           const SizedBox(height: 16),
-          Text(
-            context.l10n.media.empty,
-            style: theme.typography.bodyMedium.onSurfaceVariant,
-          ),
+          Text(switch (type) {
+            .file => context.l10n.media.emptyFile,
+            .image => context.l10n.media.emptyImage,
+            .audio => context.l10n.media.emptyAudio,
+            .video => context.l10n.media.emptyVideo,
+          }, style: theme.typography.bodyMedium.onSurfaceVariant),
         ],
       ),
     );
