@@ -20,7 +20,6 @@ void main() {
         AssistantTool.recallMemory: AssistantToolTier.read,
         AssistantTool.rememberFact: AssistantToolTier.write,
         AssistantTool.forgetFact: AssistantToolTier.destructive,
-        AssistantTool.runJavascript: AssistantToolTier.read,
       };
       expect(tiers.keys, unorderedEquals(AssistantTool.values));
       for (final tool in AssistantTool.values) {

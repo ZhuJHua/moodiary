@@ -710,15 +710,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.15.0"
-  flutter_js:
-    dependency: transitive
-    description:
-      path: "."
-      ref: "2dd6d4d16352888d018c81b4fb3168bac7a17650"
-      resolved-ref: "2dd6d4d16352888d018c81b4fb3168bac7a17650"
-      url: "https://github.com/ZhuJHua/flutter_js.git"
-    source: git
-    version: "0.9.0"
   flutter_lints:
     dependency: transitive
     description:
@@ -2340,14 +2331,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
-  sync_http:
-    dependency: transitive
-    description:
-      name: sync_http
-      sha256: "7f0cd72eca000d2e026bcd6f990b81d0ca06022ef4e32fb257b30d3d1014a961"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.1"
   synchronized:
     dependency: transitive
     description:

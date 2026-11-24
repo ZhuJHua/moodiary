@@ -4,7 +4,6 @@ import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 
-import 'js_sandbox.dart';
 import 'memory_repository.dart';
 
 final List<ToolDef> assistantToolDefinitions = List.unmodifiable([
@@ -118,43 +117,6 @@ final List<ToolDef> assistantOnlyTools = [
       return ToolResult({'id': id});
     }),
   ),
-  ToolDef<Map<String, Object?>>(
-    name: 'run_javascript',
-    title: 'Run JavaScript',
-    surfaces: const {ToolSurface.assistant},
-    effect: ToolEffect.read,
-    idempotent: false,
-    description: (_) =>
-        'Run JavaScript (ES2023) to compute something — arithmetic across '
-        'many numbers, date math, grouping, sorting. The result is the value '
-        'of the LAST expression, so end with the value you want; you do not '
-        'need `return`. `console.log/info/warn/error` is captured separately. '
-        'Put all of it in one script: each call gets a fresh sandbox that '
-        'remembers nothing from the last one.\n'
-        'The sandbox is bare: no network, no filesystem, no timers, no '
-        'require, and NO access to the diaries — pass any data you need in as '
-        'literals in the code, having read it with the other tools first. '
-        'Runs are capped at a couple of seconds and a few MB; an endless loop '
-        'is killed, not waited for.',
-    input: (_) => objectSchema({'code': stringOutputSchema}),
-    output: _javascriptOutput,
-    parse: (raw) {
-      if ((raw['code']! as String).trim().isEmpty) {
-        throw const ToolArgumentException(
-          'run_javascript: code must not be empty',
-        );
-      }
-      return raw;
-    },
-    run: (raw, _) async {
-      final result = await JsSandbox.run(raw['code']! as String);
-      return ToolResult({
-        'value': result.value,
-        'logs': result.logs,
-        'truncated': result.truncated,
-      });
-    },
-  ),
 ];
 
 final _factBatchOutput = batchOutputSchema(
@@ -218,12 +180,6 @@ final _recallMemoryOutput = objectSchema({
     }),
   ),
   'total': S.integer(),
-});
-
-final _javascriptOutput = objectSchema({
-  'value': stringOutputSchema,
-  'logs': S.list(items: stringOutputSchema),
-  'truncated': S.boolean(),
 });
 
 const _memoryLimit = (fallback: 8, min: 1, max: 8);

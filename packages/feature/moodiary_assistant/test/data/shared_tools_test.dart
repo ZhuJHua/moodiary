@@ -134,7 +134,6 @@ void main() {
       }),
       l10n.assistant.toolBatchOutcome(succeeded: 1, failed: 1),
     );
-    expect(summarize('run_javascript', {'value': '42'}), '42');
     expect(
       summarize('list_tags', {
         'tags': [
@@ -215,15 +214,6 @@ void main() {
         true,
         false,
       ]);
-      final script = await call('run_javascript', {
-        'code': 'console.log("hello"); 6 * 7',
-      });
-      expect(script['value'], '42');
-      expect(script['logs'], ['[LOG] hello']);
-      expect(
-        await dispatch('run_javascript', {'code': '  '}),
-        startsWith('Failed:'),
-      );
     },
   );
 }
