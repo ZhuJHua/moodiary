@@ -24,7 +24,7 @@
   "legacyGenerated": "备份已生成",
   "legacyGeneratedNote": "备份目前仅保存在应用内。请先将它保存到应用外，卸载后才能保留。",
   "legacyShare": "分享备份",
-  "legacyShareConfirmed": "我已确认文件保存成功",
+  "legacyShareConfirmed": "我已保存",
   "legacySaved": "备份已保存",
   "legacySharedVerified": "你已分享 {name}。卸载前，请确认文件已保存在应用外。",
   "legacyRecoverOne": "1. 卸载心绪日记 2.10.0，保留备份文件。",

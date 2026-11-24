@@ -84,9 +84,17 @@ void main() {
       await tester.runAsync(generate.onPressed! as Future<void> Function());
       await tester.pumpAndSettle();
       final share = find.widgetWithText(FilledButton, l10n.editor.legacyShare);
-      final confirmation = find.byType(SettingCheckboxListTile);
+      final confirmation = find.widgetWithText(
+        FilledButton,
+        l10n.editor.legacyShareConfirmed,
+      );
       expect(find.byType(FilledButton), findsOneWidget);
-      expect(find.byType(OutlinedButton), findsNothing);
+      // 唯一的描边按钮是"放弃旧数据"。
+      expect(
+        find.widgetWithText(OutlinedButton, l10n.editor.legacyAbandon),
+        findsOneWidget,
+      );
+      expect(find.byType(OutlinedButton), findsOneWidget);
       expect(confirmation, findsNothing);
       await tester.tap(share);
       await tester.pump();
@@ -99,8 +107,13 @@ void main() {
         return;
       }
       expect(confirmation, findsOneWidget);
+      // 分享过后分享降为描边按钮，可以再次分享。
+      expect(
+        find.widgetWithText(OutlinedButton, l10n.editor.legacyShare),
+        findsOneWidget,
+      );
       await tester.ensureVisible(confirmation);
-      await tester.tap(find.text(l10n.editor.legacyShareConfirmed));
+      await tester.tap(confirmation);
       await tester.pumpAndSettle();
       expect(find.text(l10n.editor.legacySaved), findsOneWidget);
       expect(

@@ -2429,8 +2429,8 @@ class Translations$editor$zh {
 	/// zh: '分享备份'
 	String get legacyShare => '分享备份';
 
-	/// zh: '我已确认文件保存成功'
-	String get legacyShareConfirmed => '我已确认文件保存成功';
+	/// zh: '我已保存'
+	String get legacyShareConfirmed => '我已保存';
 
 	/// zh: '备份已保存'
 	String get legacySaved => '备份已保存';

@@ -883,7 +883,7 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String get legacyGenerated => 'Backup generated';
 	@override String get legacyGeneratedNote => 'The backup is still inside the app. Save a copy outside the app to keep it after uninstalling.';
 	@override String get legacyShare => 'Share backup';
-	@override String get legacyShareConfirmed => 'I’ve confirmed the file was saved';
+	@override String get legacyShareConfirmed => 'I’ve saved it';
 	@override String get legacySaved => 'Backup saved';
 	@override String legacySharedVerified({required Object name}) => 'You shared ${name}. Before uninstalling, check that the file is saved outside the app.';
 	@override String get legacyRecoverOne => '1. Uninstall Moodiary 2.10.0. Keep the backup file.';

@@ -24,7 +24,7 @@
   "legacyGenerated": "Backup generated",
   "legacyGeneratedNote": "The backup is still inside the app. Save a copy outside the app to keep it after uninstalling.",
   "legacyShare": "Share backup",
-  "legacyShareConfirmed": "I’ve confirmed the file was saved",
+  "legacyShareConfirmed": "I’ve saved it",
   "legacySaved": "Backup saved",
   "legacySharedVerified": "You shared {name}. Before uninstalling, check that the file is saved outside the app.",
   "legacyRecoverOne": "1. Uninstall Moodiary 2.10.0. Keep the backup file.",

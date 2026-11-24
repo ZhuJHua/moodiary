@@ -668,9 +668,13 @@ class _LegacyDataGateState extends State<_LegacyDataGate> {
     final l10n = context.l10n;
     final version = LegacyDatabaseGuard.sourceVersion;
     final archiveName = _archive == null ? '' : p.basename(_archive!);
-    final abandon = TextButton(
+    final error = context.theme.colors.error;
+    final abandon = OutlinedButton(
       onPressed: _busy ? null : _abandon,
-      style: TextButton.styleFrom(foregroundColor: context.theme.colors.error),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: error,
+        side: BorderSide(color: error),
+      ),
       child: Text(l10n.editor.legacyAbandon),
     );
     final exit = TextButton(
@@ -746,20 +750,20 @@ class _LegacyDataGateState extends State<_LegacyDataGate> {
             ),
           ],
         ),
-        FilledButton(
-          onPressed: _busy ? null : _share,
-          child: Text(l10n.editor.legacyShare),
-        ),
-        if (_shared)
-          SettingCheckboxListTile(
-            title: l10n.editor.legacyShareConfirmed,
-            value: false,
-            isSingle: true,
-            onChanged: _busy
-                ? null
-                : (checked) {
-                    if (checked) setState(() => _phase = .saved);
-                  },
+        // 分享回来后，"我已保存"成为主操作，分享降为次要（可再次分享）。
+        if (_shared) ...[
+          FilledButton(
+            onPressed: _busy ? null : () => setState(() => _phase = .saved),
+            child: Text(l10n.editor.legacyShareConfirmed),
+          ),
+          OutlinedButton(
+            onPressed: _busy ? null : _share,
+            child: Text(l10n.editor.legacyShare),
+          ),
+        ] else
+          FilledButton(
+            onPressed: _busy ? null : _share,
+            child: Text(l10n.editor.legacyShare),
           ),
         abandon,
       ],
