@@ -261,6 +261,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get mcpPortInvalid => 'Enter a number between 1024 and 65535';
 	@override String get mcpKeepAliveNotificationText => 'MCP server running';
 	@override String get mcpKeepAliveStop => 'Stop';
+	@override String get mcpKeepAliveChannelName => 'MCP server';
 	@override String get mcpKeepAlivePermissionTitle => 'Background running';
 	@override String mcpKeepAlivePermissionSummary({required Object granted, required Object total}) => '${granted}/${total}';
 	@override String get mcpKeepAlivePermissionReady => 'Ready';
@@ -1211,14 +1212,15 @@ class _Translations$reminder$en extends Translations$reminder$zh {
 
 	// Translations
 	@override String get title => 'Diary reminders';
+	@override String get channelName => 'Diary reminders';
 	@override late final _Translations$reminder$copy$en copy = _Translations$reminder$copy$en._(_root);
 	@override String get notificationsOff => 'Notifications are off';
-	@override String get notificationsOffHint => 'Reminders won\'t show up in the notification shade.';
-	@override String get enableNotifications => 'Enable';
+	@override String get notificationsOffHint => 'Turn on notifications to get diary reminders.';
+	@override String get enableNotifications => 'Turn on';
 	@override String get enable => 'Remind me to write';
 	@override String get off => 'Off';
 	@override String get noEnabledTimes => 'No times enabled';
-	@override String get addFirst => 'Add a time first';
+	@override String get addFirst => 'Add a reminder time';
 	@override String next({required Object day, required Object time}) => 'Next: ${day} at ${time}';
 	@override String get today => 'Today';
 	@override String get tomorrow => 'Tomorrow';
@@ -1237,35 +1239,35 @@ class _Translations$reminder$en extends Translations$reminder$zh {
 		'Sunday',
 	];
 	@override List<String> get weekdayShort => [
-		'M',
-		'T',
-		'W',
-		'T',
-		'F',
-		'S',
-		'S',
+		'Mo',
+		'Tu',
+		'We',
+		'Th',
+		'Fr',
+		'Sa',
+		'Su',
 	];
 	@override String get daySeparator => ', ';
 	@override String get notifications => 'Notifications';
 	@override String get tapAction => 'When tapped';
-	@override String get openApp => 'Open app';
+	@override String get openApp => 'Open the app';
 	@override String get newDiary => 'New entry';
-	@override String get test => 'Send a test notification';
-	@override String get testSent => 'Sent. Check your notifications.';
+	@override String get test => 'Send test notification';
+	@override String get testSent => 'Test notification sent';
 	@override String get notificationSettings => 'Notification settings';
-	@override String get autostartHint => 'Some Android phones only deliver reminders on time after auto-start is allowed in system settings.';
+	@override String get autostartHint => 'On some Android phones, allow auto-start in system settings to get reminders on time.';
 	@override String get create => 'New reminder';
 	@override String get edit => 'Edit reminder';
 	@override String get delete => 'Delete reminder';
 	@override String get deleteMessage => 'Delete this reminder?';
 	@override String get repeat => 'Repeat';
-	@override String get primerTitle => 'Enable notifications';
-	@override String get primerMessage => 'Only used to remind you when it’s time to write.';
+	@override String get primerTitle => 'Turn on notifications';
+	@override String get primerMessage => 'Get a reminder to write at the times you choose.';
 	@override String get notNow => 'Not now';
 	@override String get continueAction => 'Continue';
-	@override String get settingsMessage => 'Enable notifications and diary reminders in system settings.';
+	@override String get settingsMessage => 'Turn on notifications in system settings.';
 	@override String get openSettings => 'Open settings';
-	@override String get failed => 'Something went wrong. Please try again.';
+	@override String get failed => 'Something went wrong. Try again.';
 }
 
 // Path: share
@@ -1912,7 +1914,7 @@ class _Translations$reminder$copy$morning$en extends Translations$reminder$copy$
 
 	// Translations
 	@override String get title => 'Good morning';
-	@override String get body => 'Start the day by noting how you feel.';
+	@override String get body => 'Write how you feel this morning.';
 }
 
 // Path: reminder.copy.noon
@@ -1923,7 +1925,7 @@ class _Translations$reminder$copy$noon$en extends Translations$reminder$copy$noo
 
 	// Translations
 	@override String get title => 'Midday pause';
-	@override String get body => 'Take a breather and jot down your morning.';
+	@override String get body => 'Jot down a moment from your morning.';
 }
 
 // Path: reminder.copy.afternoon
@@ -1934,7 +1936,7 @@ class _Translations$reminder$copy$afternoon$en extends Translations$reminder$cop
 
 	// Translations
 	@override String get title => 'Good afternoon';
-	@override String get body => 'Take a minute to note how it\'s going.';
+	@override String get body => 'Write a line about how you feel.';
 }
 
 // Path: reminder.copy.evening
@@ -1945,7 +1947,7 @@ class _Translations$reminder$copy$evening$en extends Translations$reminder$copy$
 
 	// Translations
 	@override String get title => 'Good evening';
-	@override String get body => 'How was your day? Write it down.';
+	@override String get body => 'Write about one moment from today.';
 }
 
 // Path: reminder.copy.night
@@ -1955,6 +1957,6 @@ class _Translations$reminder$copy$night$en extends Translations$reminder$copy$ni
 	final TranslationsEn _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'It\'s late';
-	@override String get body => 'A few lines before bed to close the day.';
+	@override String get title => 'Before bed';
+	@override String get body => 'Write a few lines about today.';
 }

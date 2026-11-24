@@ -6,40 +6,28 @@ void main() {
   final bands = [
     (
       hours: [0, 4, 23],
-      zh: (title: '夜深了', body: '睡前写几句，给今天收个尾。'),
-      en: (
-        title: "It's late",
-        body: 'A few lines before bed to close the day.',
-      ),
+      zh: (title: '睡前片刻', body: '睡前写几句今天的事。'),
+      en: (title: 'Before bed', body: 'Write a few lines about today.'),
     ),
     (
       hours: [5, 10],
-      zh: (title: '早上好', body: '新的一天，先记下此刻的心情。'),
-      en: (
-        title: 'Good morning',
-        body: 'Start the day by noting how you feel.',
-      ),
+      zh: (title: '早上好', body: '写下今早的心情。'),
+      en: (title: 'Good morning', body: 'Write how you feel this morning.'),
     ),
     (
       hours: [11, 13],
-      zh: (title: '午间小憩', body: '歇一会儿，记两句上午的事。'),
-      en: (
-        title: 'Midday pause',
-        body: 'Take a breather and jot down your morning.',
-      ),
+      zh: (title: '午间片刻', body: '记一件上午的小事。'),
+      en: (title: 'Midday pause', body: 'Jot down a moment from your morning.'),
     ),
     (
       hours: [14, 17],
-      zh: (title: '下午好', body: '抽一分钟，记下现在的状态。'),
-      en: (
-        title: 'Good afternoon',
-        body: "Take a minute to note how it's going.",
-      ),
+      zh: (title: '下午好', body: '写几句此刻的感受。'),
+      en: (title: 'Good afternoon', body: 'Write a line about how you feel.'),
     ),
     (
       hours: [18, 22],
-      zh: (title: '晚上好', body: '今天过得怎么样？写下来吧。'),
-      en: (title: 'Good evening', body: 'How was your day? Write it down.'),
+      zh: (title: '晚上好', body: '记下今天的一刻。'),
+      en: (title: 'Good evening', body: 'Write about one moment from today.'),
     ),
   ];
   for (final band in bands) {

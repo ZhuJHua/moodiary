@@ -103,6 +103,7 @@ class McpKeepAlive implements BackgroundKeepAliveEvents {
         shouldRun,
         l10n.app.mcpKeepAliveNotificationText,
         l10n.app.mcpKeepAliveStop,
+        l10n.app.mcpKeepAliveChannelName,
       );
     } catch (e, s) {
       _keepAliveRunning = null;

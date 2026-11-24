@@ -670,6 +670,9 @@ class Translations$app$zh {
 	/// zh: '停止'
 	String get mcpKeepAliveStop => '停止';
 
+	/// zh: 'MCP 服务'
+	String get mcpKeepAliveChannelName => 'MCP 服务';
+
 	/// zh: '后台运行'
 	String get mcpKeepAlivePermissionTitle => '后台运行';
 
@@ -3265,31 +3268,34 @@ class Translations$reminder$zh {
 	/// zh: '写日记提醒'
 	String get title => '写日记提醒';
 
+	/// zh: '写日记提醒'
+	String get channelName => '写日记提醒';
+
 	late final Translations$reminder$copy$zh copy = Translations$reminder$copy$zh.internal(_root);
 
 	/// zh: '通知未开启'
 	String get notificationsOff => '通知未开启';
 
-	/// zh: '提醒不会出现在通知栏。'
-	String get notificationsOffHint => '提醒不会出现在通知栏。';
+	/// zh: '开启通知后，才能收到写日记提醒。'
+	String get notificationsOffHint => '开启通知后，才能收到写日记提醒。';
 
-	/// zh: '去开启'
-	String get enableNotifications => '去开启';
+	/// zh: '开启'
+	String get enableNotifications => '开启';
 
-	/// zh: '提醒我写日记'
-	String get enable => '提醒我写日记';
+	/// zh: '提醒写日记'
+	String get enable => '提醒写日记';
 
 	/// zh: '已关闭'
 	String get off => '已关闭';
 
-	/// zh: '没有开启的时间'
-	String get noEnabledTimes => '没有开启的时间';
+	/// zh: '没有启用的提醒时间'
+	String get noEnabledTimes => '没有启用的提醒时间';
 
-	/// zh: '先添加一个时间'
-	String get addFirst => '先添加一个时间';
+	/// zh: '添加提醒时间'
+	String get addFirst => '添加提醒时间';
 
-	/// zh: '下次 {day} {time}'
-	String next({required Object day, required Object time}) => '下次 ${day} ${time}';
+	/// zh: '下次提醒：{day} {time}'
+	String next({required Object day, required Object time}) => '下次提醒：${day} ${time}';
 
 	/// zh: '今天'
 	String get today => '今天';
@@ -3337,8 +3343,8 @@ class Translations$reminder$zh {
 	/// zh: '通知'
 	String get notifications => '通知';
 
-	/// zh: '点按通知后'
-	String get tapAction => '点按通知后';
+	/// zh: '点按通知时'
+	String get tapAction => '点按通知时';
 
 	/// zh: '打开应用'
 	String get openApp => '打开应用';
@@ -3349,14 +3355,14 @@ class Translations$reminder$zh {
 	/// zh: '发送测试通知'
 	String get test => '发送测试通知';
 
-	/// zh: '已发送，留意通知栏'
-	String get testSent => '已发送，留意通知栏';
+	/// zh: '测试通知已发送'
+	String get testSent => '测试通知已发送';
 
 	/// zh: '通知设置'
 	String get notificationSettings => '通知设置';
 
-	/// zh: '部分安卓手机需要在系统设置里允许自启动，提醒才能按时送达。'
-	String get autostartHint => '部分安卓手机需要在系统设置里允许自启动，提醒才能按时送达。';
+	/// zh: '部分安卓手机需在系统设置中允许自启动，才能按时收到提醒。'
+	String get autostartHint => '部分安卓手机需在系统设置中允许自启动，才能按时收到提醒。';
 
 	/// zh: '新建提醒'
 	String get create => '新建提醒';
@@ -3367,8 +3373,8 @@ class Translations$reminder$zh {
 	/// zh: '删除提醒'
 	String get delete => '删除提醒';
 
-	/// zh: '确定删除这个提醒吗？'
-	String get deleteMessage => '确定删除这个提醒吗？';
+	/// zh: '删除这条提醒？'
+	String get deleteMessage => '删除这条提醒？';
 
 	/// zh: '重复'
 	String get repeat => '重复';
@@ -3376,8 +3382,8 @@ class Translations$reminder$zh {
 	/// zh: '开启通知'
 	String get primerTitle => '开启通知';
 
-	/// zh: '只用来按时提醒你写日记。'
-	String get primerMessage => '只用来按时提醒你写日记。';
+	/// zh: '开启后，会在你设定的时间提醒你写日记。'
+	String get primerMessage => '开启后，会在你设定的时间提醒你写日记。';
 
 	/// zh: '暂不'
 	String get notNow => '暂不';
@@ -3385,14 +3391,14 @@ class Translations$reminder$zh {
 	/// zh: '继续'
 	String get continueAction => '继续';
 
-	/// zh: '请在系统设置中开启通知和写日记提醒。'
-	String get settingsMessage => '请在系统设置中开启通知和写日记提醒。';
+	/// zh: '在系统设置中开启通知。'
+	String get settingsMessage => '在系统设置中开启通知。';
 
 	/// zh: '打开设置'
 	String get openSettings => '打开设置';
 
-	/// zh: '操作失败，请稍后重试'
-	String get failed => '操作失败，请稍后重试';
+	/// zh: '操作失败，请重试'
+	String get failed => '操作失败，请重试';
 }
 
 // Path: share
@@ -5139,8 +5145,8 @@ class Translations$reminder$copy$morning$zh {
 	/// zh: '早上好'
 	String get title => '早上好';
 
-	/// zh: '新的一天，先记下此刻的心情。'
-	String get body => '新的一天，先记下此刻的心情。';
+	/// zh: '写下今早的心情。'
+	String get body => '写下今早的心情。';
 }
 
 // Path: reminder.copy.noon
@@ -5151,11 +5157,11 @@ class Translations$reminder$copy$noon$zh {
 
 	// Translations
 
-	/// zh: '午间小憩'
-	String get title => '午间小憩';
+	/// zh: '午间片刻'
+	String get title => '午间片刻';
 
-	/// zh: '歇一会儿，记两句上午的事。'
-	String get body => '歇一会儿，记两句上午的事。';
+	/// zh: '记一件上午的小事。'
+	String get body => '记一件上午的小事。';
 }
 
 // Path: reminder.copy.afternoon
@@ -5169,8 +5175,8 @@ class Translations$reminder$copy$afternoon$zh {
 	/// zh: '下午好'
 	String get title => '下午好';
 
-	/// zh: '抽一分钟，记下现在的状态。'
-	String get body => '抽一分钟，记下现在的状态。';
+	/// zh: '写几句此刻的感受。'
+	String get body => '写几句此刻的感受。';
 }
 
 // Path: reminder.copy.evening
@@ -5184,8 +5190,8 @@ class Translations$reminder$copy$evening$zh {
 	/// zh: '晚上好'
 	String get title => '晚上好';
 
-	/// zh: '今天过得怎么样？写下来吧。'
-	String get body => '今天过得怎么样？写下来吧。';
+	/// zh: '记下今天的一刻。'
+	String get body => '记下今天的一刻。';
 }
 
 // Path: reminder.copy.night
@@ -5196,9 +5202,9 @@ class Translations$reminder$copy$night$zh {
 
 	// Translations
 
-	/// zh: '夜深了'
-	String get title => '夜深了';
+	/// zh: '睡前片刻'
+	String get title => '睡前片刻';
 
-	/// zh: '睡前写几句，给今天收个尾。'
-	String get body => '睡前写几句，给今天收个尾。';
+	/// zh: '睡前写几句今天的事。'
+	String get body => '睡前写几句今天的事。';
 }

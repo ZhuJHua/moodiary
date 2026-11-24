@@ -180,7 +180,7 @@ class ReminderService extends ChangeNotifier {
     if (_disposed) return;
     await _notifications.setSchedule(
       ReminderSchedule(
-        channelName: l10n.reminder.title,
+        channelName: l10n.reminder.channelName,
         slots: [
           if (enabled)
             for (final reminder in reminders)
@@ -234,7 +234,11 @@ class ReminderService extends ChangeNotifier {
 
   Future<void> sendTest() async {
     final copy = reminderNotificationCopy(l10n, now.hour);
-    await _notifications.showTest(copy.title, copy.body, l10n.reminder.title);
+    await _notifications.showTest(
+      copy.title,
+      copy.body,
+      l10n.reminder.channelName,
+    );
   }
 
   Future<bool> checkPermission() async {

@@ -202,6 +202,7 @@
   "mcpPortInvalid": "请输入 1024–65535 之间的数字",
   "mcpKeepAliveNotificationText": "MCP 服务运行中",
   "mcpKeepAliveStop": "停止",
+  "mcpKeepAliveChannelName": "MCP 服务",
   "mcpKeepAlivePermissionTitle": "后台运行",
   "mcpKeepAlivePermissionSummary": "{granted}/{total}",
   "mcpKeepAlivePermissionReady": "已就绪",

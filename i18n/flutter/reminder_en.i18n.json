@@ -1,34 +1,35 @@
 {
   "title": "Diary reminders",
+  "channelName": "Diary reminders",
   "copy": {
     "morning": {
       "title": "Good morning",
-      "body": "Start the day by noting how you feel."
+      "body": "Write how you feel this morning."
     },
     "noon": {
       "title": "Midday pause",
-      "body": "Take a breather and jot down your morning."
+      "body": "Jot down a moment from your morning."
     },
     "afternoon": {
       "title": "Good afternoon",
-      "body": "Take a minute to note how it's going."
+      "body": "Write a line about how you feel."
     },
     "evening": {
       "title": "Good evening",
-      "body": "How was your day? Write it down."
+      "body": "Write about one moment from today."
     },
     "night": {
-      "title": "It's late",
-      "body": "A few lines before bed to close the day."
+      "title": "Before bed",
+      "body": "Write a few lines about today."
     }
   },
   "notificationsOff": "Notifications are off",
-  "notificationsOffHint": "Reminders won't show up in the notification shade.",
-  "enableNotifications": "Enable",
+  "notificationsOffHint": "Turn on notifications to get diary reminders.",
+  "enableNotifications": "Turn on",
   "enable": "Remind me to write",
   "off": "Off",
   "noEnabledTimes": "No times enabled",
-  "addFirst": "Add a time first",
+  "addFirst": "Add a reminder time",
   "next": "Next: {day} at {time}",
   "today": "Today",
   "tomorrow": "Tomorrow",
@@ -38,26 +39,26 @@
   "workdays": "Weekdays",
   "weekend": "Weekends",
   "weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-  "weekdayShort": ["M", "T", "W", "T", "F", "S", "S"],
+  "weekdayShort": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
   "daySeparator": ", ",
   "notifications": "Notifications",
   "tapAction": "When tapped",
-  "openApp": "Open app",
+  "openApp": "Open the app",
   "newDiary": "New entry",
-  "test": "Send a test notification",
-  "testSent": "Sent. Check your notifications.",
+  "test": "Send test notification",
+  "testSent": "Test notification sent",
   "notificationSettings": "Notification settings",
-  "autostartHint": "Some Android phones only deliver reminders on time after auto-start is allowed in system settings.",
+  "autostartHint": "On some Android phones, allow auto-start in system settings to get reminders on time.",
   "create": "New reminder",
   "edit": "Edit reminder",
   "delete": "Delete reminder",
   "deleteMessage": "Delete this reminder?",
   "repeat": "Repeat",
-  "primerTitle": "Enable notifications",
-  "primerMessage": "Only used to remind you when it’s time to write.",
+  "primerTitle": "Turn on notifications",
+  "primerMessage": "Get a reminder to write at the times you choose.",
   "notNow": "Not now",
   "continueAction": "Continue",
-  "settingsMessage": "Enable notifications and diary reminders in system settings.",
+  "settingsMessage": "Turn on notifications in system settings.",
   "openSettings": "Open settings",
-  "failed": "Something went wrong. Please try again."
+  "failed": "Something went wrong. Try again."
 }

@@ -1,35 +1,36 @@
 {
   "title": "写日记提醒",
+  "channelName": "写日记提醒",
   "copy": {
     "morning": {
       "title": "早上好",
-      "body": "新的一天，先记下此刻的心情。"
+      "body": "写下今早的心情。"
     },
     "noon": {
-      "title": "午间小憩",
-      "body": "歇一会儿，记两句上午的事。"
+      "title": "午间片刻",
+      "body": "记一件上午的小事。"
     },
     "afternoon": {
       "title": "下午好",
-      "body": "抽一分钟，记下现在的状态。"
+      "body": "写几句此刻的感受。"
     },
     "evening": {
       "title": "晚上好",
-      "body": "今天过得怎么样？写下来吧。"
+      "body": "记下今天的一刻。"
     },
     "night": {
-      "title": "夜深了",
-      "body": "睡前写几句，给今天收个尾。"
+      "title": "睡前片刻",
+      "body": "睡前写几句今天的事。"
     }
   },
   "notificationsOff": "通知未开启",
-  "notificationsOffHint": "提醒不会出现在通知栏。",
-  "enableNotifications": "去开启",
-  "enable": "提醒我写日记",
+  "notificationsOffHint": "开启通知后，才能收到写日记提醒。",
+  "enableNotifications": "开启",
+  "enable": "提醒写日记",
   "off": "已关闭",
-  "noEnabledTimes": "没有开启的时间",
-  "addFirst": "先添加一个时间",
-  "next": "下次 {day} {time}",
+  "noEnabledTimes": "没有启用的提醒时间",
+  "addFirst": "添加提醒时间",
+  "next": "下次提醒：{day} {time}",
   "today": "今天",
   "tomorrow": "明天",
   "times": "提醒时间",
@@ -41,23 +42,23 @@
   "weekdayShort": ["一", "二", "三", "四", "五", "六", "日"],
   "daySeparator": "、",
   "notifications": "通知",
-  "tapAction": "点按通知后",
+  "tapAction": "点按通知时",
   "openApp": "打开应用",
   "newDiary": "新建日记",
   "test": "发送测试通知",
-  "testSent": "已发送，留意通知栏",
+  "testSent": "测试通知已发送",
   "notificationSettings": "通知设置",
-  "autostartHint": "部分安卓手机需要在系统设置里允许自启动，提醒才能按时送达。",
+  "autostartHint": "部分安卓手机需在系统设置中允许自启动，才能按时收到提醒。",
   "create": "新建提醒",
   "edit": "编辑提醒",
   "delete": "删除提醒",
-  "deleteMessage": "确定删除这个提醒吗？",
+  "deleteMessage": "删除这条提醒？",
   "repeat": "重复",
   "primerTitle": "开启通知",
-  "primerMessage": "只用来按时提醒你写日记。",
+  "primerMessage": "开启后，会在你设定的时间提醒你写日记。",
   "notNow": "暂不",
   "continueAction": "继续",
-  "settingsMessage": "请在系统设置中开启通知和写日记提醒。",
+  "settingsMessage": "在系统设置中开启通知。",
   "openSettings": "打开设置",
-  "failed": "操作失败，请稍后重试"
+  "failed": "操作失败，请重试"
 }

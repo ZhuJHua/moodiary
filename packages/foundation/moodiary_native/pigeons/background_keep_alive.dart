@@ -19,7 +19,12 @@ abstract class BackgroundKeepAliveApi {
   void requestExemption();
 
   // 通知文案由 Dart l10n 传入。
-  void setKeepAlive(bool enabled, String notificationText, String stopLabel);
+  void setKeepAlive(
+    bool enabled,
+    String notificationText,
+    String stopLabel,
+    String channelName,
+  );
 
   // 系统设置里本应用的详情页
   void openAppSettings();

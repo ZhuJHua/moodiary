@@ -42,10 +42,12 @@ class BackgroundKeepAlive(private val context: Context) : BackgroundKeepAliveApi
         enabled: Boolean,
         notificationText: String,
         stopLabel: String,
+        channelName: String,
     ) {
         val intent = Intent(context, McpKeepAliveService::class.java)
             .putExtra(McpKeepAliveService.EXTRA_TEXT, notificationText)
             .putExtra(McpKeepAliveService.EXTRA_STOP_LABEL, stopLabel)
+            .putExtra(McpKeepAliveService.EXTRA_CHANNEL_NAME, channelName)
         try {
             if (enabled) {
                 context.startForegroundService(intent)

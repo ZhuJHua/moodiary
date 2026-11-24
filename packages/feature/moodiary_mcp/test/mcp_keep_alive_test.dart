@@ -161,6 +161,7 @@ void main() {
       true,
       l10n.app.mcpKeepAliveNotificationText,
       l10n.app.mcpKeepAliveStop,
+      l10n.app.mcpKeepAliveChannelName,
     ]);
   });
 

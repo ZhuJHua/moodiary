@@ -219,7 +219,7 @@ void main() {
       await tester.ensureVisible(find.byType(MDangerRow));
       await tester.tap(find.byType(MDangerRow));
       await tester.pumpAndSettle();
-      expect(find.text('确定删除这个提醒吗？'), findsOneWidget);
+      expect(find.text('删除这条提醒？'), findsOneWidget);
       await tester.tap(find.text('取消').last);
       await tester.pumpAndSettle();
       expect(find.byType(ReminderEditSheet), findsOneWidget);

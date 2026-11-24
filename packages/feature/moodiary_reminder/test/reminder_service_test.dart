@@ -97,12 +97,12 @@ void main() {
     () async {
       await initialize();
       final schedule = notifications.schedules.single;
-      expect(schedule.channelName, l10n.reminder.title);
+      expect(schedule.channelName, l10n.reminder.channelName);
       expect(schedule.slots.map((slot) => slot.id), [1, 2]);
       final first = schedule.slots.first;
       expect((first.hour, first.minute), (8, 5));
       expect(first.weekdays, [1, 5]);
-      expect((first.title, first.body), ('早上好', '新的一天，先记下此刻的心情。'));
+      expect((first.title, first.body), ('早上好', '写下今早的心情。'));
       expect(schedule.slots.last.title, '晚上好');
 
       await service.save(morning.withEnabled(false));
@@ -130,11 +130,11 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       final schedule = notifications.schedules.last;
       expect(notifications.schedules, hasLength(3));
-      expect(schedule.channelName, l10n.reminder.title);
+      expect(schedule.channelName, l10n.reminder.channelName);
       final slot = schedule.slots.single;
       expect(
         (slot.title, slot.body),
-        ('Good morning', 'Start the day by noting how you feel.'),
+        ('Good morning', 'Write how you feel this morning.'),
       );
     },
   );
@@ -178,9 +178,9 @@ void main() {
     service.now = DateTime(2026, 11, 16, 13, 59);
     await service.sendTest();
     expect(notifications.testContent, (
-      '午间小憩',
-      '歇一会儿，记两句上午的事。',
-      l10n.reminder.title,
+      '午间片刻',
+      '记一件上午的小事。',
+      l10n.reminder.channelName,
     ));
     expect(notifications.schedules, isEmpty);
   });

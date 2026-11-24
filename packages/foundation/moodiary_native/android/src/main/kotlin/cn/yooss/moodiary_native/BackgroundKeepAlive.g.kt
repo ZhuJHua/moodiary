@@ -57,7 +57,7 @@ private open class BackgroundKeepAlivePigeonCodec : StandardMessageCodec() {
 interface BackgroundKeepAliveApi {
   fun isExempt(): Boolean
   fun requestExemption()
-  fun setKeepAlive(enabled: Boolean, notificationText: String, stopLabel: String)
+  fun setKeepAlive(enabled: Boolean, notificationText: String, stopLabel: String, channelName: String)
   fun openAppSettings()
 
   companion object {
@@ -108,8 +108,9 @@ interface BackgroundKeepAliveApi {
             val enabledArg = args[0] as Boolean
             val notificationTextArg = args[1] as String
             val stopLabelArg = args[2] as String
+            val channelNameArg = args[3] as String
             val wrapped: List<Any?> = try {
-              api.setKeepAlive(enabledArg, notificationTextArg, stopLabelArg)
+              api.setKeepAlive(enabledArg, notificationTextArg, stopLabelArg, channelNameArg)
               listOf(null)
             } catch (exception: Throwable) {
               BackgroundKeepAlivePigeonUtils.wrapError(exception)

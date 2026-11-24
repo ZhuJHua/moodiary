@@ -127,6 +127,7 @@ class BackgroundKeepAliveApi {
     bool enabled,
     String notificationText,
     String stopLabel,
+    String channelName,
   ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.setKeepAlive$pigeonVar_messageChannelSuffix';
@@ -136,7 +137,7 @@ class BackgroundKeepAliveApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[enabled, notificationText, stopLabel],
+      <Object?>[enabled, notificationText, stopLabel, channelName],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
