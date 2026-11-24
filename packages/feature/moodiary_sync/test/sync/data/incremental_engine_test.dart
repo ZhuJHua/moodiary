@@ -260,10 +260,16 @@ void main() {
       ),
     );
 
-    final report = await engineOn(backend, cipherProvider: SyncCipher.current).pull();
+    final report = await engineOn(
+      backend,
+      cipherProvider: SyncCipher.current,
+    ).pull();
 
     expect(report.failed, 0);
-    expect(SyncCipher.isCipherText(backend.objects[SyncKeys.manifestPath]!), isFalse);
+    expect(
+      SyncCipher.isCipherText(backend.objects[SyncKeys.manifestPath]!),
+      isFalse,
+    );
     expect(backend.manifest()!.version, 4);
   });
 
@@ -1331,18 +1337,24 @@ void main() {
       },
     );
 
-    test('pull reports a missing newer category and keeps the local row', () async {
-      final backend = FakeRemoteBackend();
-      final local = buildCategory(id: 'c1', modifiedMs: 100, name: 'local');
-      final categories = FakeCategoryStore([local]);
-      await seedRemote(backend, cats: [buildCategory(id: local.id, modifiedMs: 200)]);
-      await backend.deleteObject(SyncKeys.categoryObjectPath(local.id));
+    test(
+      'pull reports a missing newer category and keeps the local row',
+      () async {
+        final backend = FakeRemoteBackend();
+        final local = buildCategory(id: 'c1', modifiedMs: 100, name: 'local');
+        final categories = FakeCategoryStore([local]);
+        await seedRemote(
+          backend,
+          cats: [buildCategory(id: local.id, modifiedMs: 200)],
+        );
+        await backend.deleteObject(SyncKeys.categoryObjectPath(local.id));
 
-      final report = await engineOn(backend, categories: categories).pull();
+        final report = await engineOn(backend, categories: categories).pull();
 
-      expect(report.failed, greaterThan(0));
-      expect(categories.categories[local.id], local);
-    });
+        expect(report.failed, greaterThan(0));
+        expect(categories.categories[local.id], local);
+      },
+    );
 
     test(
       'pull counts a category local-write failure (no false success) (B)',

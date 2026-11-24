@@ -1,6 +1,4 @@
-import 'dart:async';
-
-import 'package:geolocator/geolocator.dart';
+import 'package:moodiary_native/moodiary_native.dart';
 
 enum LocationFailure {
   permissionDenied,
@@ -21,51 +19,52 @@ typedef LocationResult = ({
 abstract final class LocationService {
   static const Duration _freshEnough = Duration(minutes: 10);
 
+  static const Duration _maxFixAge = Duration(hours: 1);
+
   static const Duration _fixTimeout = Duration(seconds: 20);
 
+  static final LocationApi _api = LocationApi();
+
   static Future<LocationResult> current({bool precise = false}) async {
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    if (permission == LocationPermission.denied) {
-      return _failed(LocationFailure.permissionDenied);
-    }
-    if (permission == LocationPermission.deniedForever) {
-      return _failed(LocationFailure.permissionDeniedForever);
-    }
-    if (!await Geolocator.isLocationServiceEnabled()) {
-      return _failed(LocationFailure.serviceOff);
-    }
     try {
-      final cached = await Geolocator.getLastKnownPosition(
-        forceAndroidLocationManager: true,
-      );
+      // Before the permission: with services off iOS reports every app as denied.
+      if (!await _api.isServiceEnabled()) {
+        return _failed(LocationFailure.serviceOff);
+      }
+      switch (await _api.requestPermission()) {
+        case LocationAuthorization.granted:
+          break;
+        case LocationAuthorization.denied:
+          return _failed(LocationFailure.permissionDenied);
+        case LocationAuthorization.deniedForever:
+          return _failed(LocationFailure.permissionDeniedForever);
+      }
+      final cached = await _api.lastKnown();
       if (!precise &&
           cached != null &&
-          DateTime.now().difference(cached.timestamp) < _freshEnough) {
+          Duration(milliseconds: cached.ageMillis) < _freshEnough) {
         return _ok(cached);
       }
-      try {
-        final fresh = await Geolocator.getCurrentPosition(
-          locationSettings: AndroidSettings(
-            accuracy: LocationAccuracy.best,
-            forceLocationManager: true,
-            timeLimit: _fixTimeout,
-          ),
-        );
+      final wait = Stopwatch()..start();
+      final fresh = await _api.current(precise, _fixTimeout.inMilliseconds);
+      wait.stop();
+      if (fresh != null &&
+          Duration(milliseconds: fresh.ageMillis) < _maxFixAge) {
         return _ok(fresh);
-      } on TimeoutException {
-        if (cached != null) return _ok(cached);
-        return _failed(LocationFailure.unavailable);
       }
+      if (cached != null &&
+          Duration(milliseconds: cached.ageMillis) + wait.elapsed <
+              _maxFixAge) {
+        return _ok(cached);
+      }
+      return _failed(LocationFailure.unavailable);
     } catch (_) {
       return _failed(LocationFailure.unavailable);
     }
   }
 
-  static LocationResult _ok(Position p) =>
-      (latitude: p.latitude, longitude: p.longitude, failure: null);
+  static LocationResult _ok(LocationFix fix) =>
+      (latitude: fix.latitude, longitude: fix.longitude, failure: null);
 
   static LocationResult _failed(LocationFailure failure) =>
       (latitude: null, longitude: null, failure: failure);

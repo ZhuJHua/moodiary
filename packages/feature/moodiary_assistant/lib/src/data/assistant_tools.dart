@@ -47,7 +47,6 @@ class AssistantToolSpec {
       .listCategories ||
       .recallMemory => AssistantToolRegistry._summarizeList(output),
       .deleteDiary => AssistantToolRegistry._summarizeDelete(input),
-      .runJavascript => AssistantToolRegistry._summarizeJavascript(output),
       _ => AssistantToolRegistry._summarizeWrite(tool, input),
     };
   }
@@ -85,10 +84,6 @@ class AssistantToolSpec {
       .recallMemory => (data['facts'] as List?)?.length ?? 0,
       _ => 0,
     };
-    if (tool == AssistantTool.runJavascript) {
-      return AssistantToolRegistry._trimToNull(data['value']) ??
-          l10n.assistant.toolJsEmpty;
-    }
     if (tool == AssistantTool.getDiary) {
       return l10n.assistant.toolRead(count: count);
     }
@@ -235,17 +230,6 @@ abstract final class AssistantToolRegistry {
       .deleteCategory || .forgetFact => l10n.assistant.toolDeleted,
       _ => l10n.assistant.toolUpdated,
     };
-  }
-
-  static String _summarizeJavascript(String output) {
-    final line = output
-        .split('\n')
-        .firstWhere((e) => e.startsWith('Result: '), orElse: () => '');
-    final value = line.replaceFirst('Result: ', '').trim();
-    if (value.isEmpty || value == '(no value)') {
-      return l10n.assistant.toolJsEmpty;
-    }
-    return value;
   }
 
   static String? _trimToNull(Object? raw) {

@@ -86,39 +86,6 @@ void main() {
         '已移入回收站',
       );
     });
-
-    test('脚本：报算出来的值，不报那段代码', () {
-      final spec = specOf(AssistantTool.runJavascript);
-      expect(
-        spec.summaryOf(const {
-          'code': 'a.reduce((x,y)=>x+y,0)/a.length',
-        }, 'Result: 0.62'),
-        '0.62',
-      );
-      expect(
-        spec.summaryOf(const {
-          'code': 'console.log(1)',
-        }, 'Result: (no value)\nConsole:\n[LOG] 1'),
-        '无返回值',
-      );
-    });
-  });
-
-  group('脚本工具的契约', () {
-    AssistantToolSpec spec() =>
-        AssistantToolRegistry.byId(AssistantTool.runJavascript.id)!;
-
-    test('入参是单个 code，不是 items —— 脚本该把逻辑写在一处', () {
-      final schema = spec().jsonSchema;
-      expect((schema['properties']! as Map).keys, ['code']);
-      expect(schema['required'], ['code']);
-    });
-
-    test('描述里必须写明沙箱够不到日记', () {
-      final description = spec().description.toLowerCase();
-      expect(description, contains('no network'));
-      expect(description, contains('no access to the diaries'));
-    });
   });
 
   group('回灌给模型的工具记录', () {

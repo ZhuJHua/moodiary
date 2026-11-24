@@ -10,8 +10,8 @@ class RustHttpClient extends IHttpClient {
 
   final void Function(String message)? onError;
 
-  late final Future<rust.HttpClient> _client =
-      rust.FastCore.ensureInitialized().then(
+  late final Future<rust.HttpClient> _client = rust.FastCore.ensureInitialized()
+      .then(
         (_) => rust.HttpClient.newInstance(
           settings: const rust.ClientSettings(
             connectTimeoutMs: 5000,

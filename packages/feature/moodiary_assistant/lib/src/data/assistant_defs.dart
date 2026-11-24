@@ -33,9 +33,7 @@ enum AssistantTool {
 
   rememberFact('remember_fact'),
 
-  forgetFact('forget_fact'),
-
-  runJavascript('run_javascript');
+  forgetFact('forget_fact');
 
   final String id;
 
@@ -245,7 +243,6 @@ const Map<String, String> renamedAssistantToolIds = {
   'recallMemory': 'recall_memory',
   'rememberFact': 'remember_fact',
   'forgetFact': 'forget_fact',
-  'runJavascript': 'run_javascript',
 };
 
 String normalizeAssistantToolId(String id) => renamedAssistantToolIds[id] ?? id;

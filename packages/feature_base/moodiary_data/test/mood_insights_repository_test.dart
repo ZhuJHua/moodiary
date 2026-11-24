@@ -82,13 +82,16 @@ void main() {
     expect(await repository.hasRecordedMood(), isTrue);
   });
 
-  test('all visible entries keeps future rows and excludes hidden ones', () async {
-    await insert('hidden', DateTime(2027), mood: 3, visible: false);
-    await insert('past', DateTime(2025, 6, 1), mood: 2);
-    await insert('future', DateTime(2030, 1, 1), mood: 5);
+  test(
+    'all visible entries keeps future rows and excludes hidden ones',
+    () async {
+      await insert('hidden', DateTime(2027), mood: 3, visible: false);
+      await insert('past', DateTime(2025, 6, 1), mood: 2);
+      await insert('future', DateTime(2030, 1, 1), mood: 5);
 
-    final rows = await repository.allVisibleEntries();
+      final rows = await repository.allVisibleEntries();
 
-    expect(rows.map((e) => e.id), ['future', 'past']);
-  });
+      expect(rows.map((e) => e.id), ['future', 'past']);
+    },
+  );
 }

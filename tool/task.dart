@@ -304,20 +304,19 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   'gen-rust': (_) => _genRust(),
   'i18n': (_) => _i18n(),
   'pigeon': (_) => _pigeon(),
-  'migrations': (_) => _run(
-    'fvm',
-    ['dart', 'run', 'drift_dev', 'make-migrations'],
-    cwd: 'packages/feature_base/moodiary_data',
-  ),
+  'migrations': (_) => _run('fvm', [
+    'dart',
+    'run',
+    'drift_dev',
+    'make-migrations',
+  ], cwd: 'packages/feature_base/moodiary_data'),
   'gen': (_) async {
     await _genRust();
     await _i18n();
     await _pigeon();
   },
   'clean': (_) async {
-    for (final path in [
-      '.dart_tool/hooks_runner',
-    ]) {
+    for (final path in ['.dart_tool/hooks_runner']) {
       final dir = Directory(path);
       if (dir.existsSync()) {
         dir.deleteSync(recursive: true);

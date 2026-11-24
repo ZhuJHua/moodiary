@@ -46,23 +46,17 @@ final class StorageReportProvider
   }
 }
 
-String _$storageReportHash() => r'6582af7360fcb559306a9b1dce9243bd905ffe4f';
+String _$storageReportHash() => r'09d393344c0e5ca545f8bceffeb2bccfeae5b615';
 
-/// Rescans (after a clean, or coming back from a linked page) keep the last
-/// finished report on screen and swap it only when the new scan is done, so
-/// rows and sizes don't drop to zero and grow back.
+/// Rescans keep the last finished report on screen until the new scan completes.
 
 @ProviderFor(StorageDisplayController)
 final storageDisplayControllerProvider = StorageDisplayControllerProvider._();
 
-/// Rescans (after a clean, or coming back from a linked page) keep the last
-/// finished report on screen and swap it only when the new scan is done, so
-/// rows and sizes don't drop to zero and grow back.
+/// Rescans keep the last finished report on screen until the new scan completes.
 final class StorageDisplayControllerProvider
     extends $NotifierProvider<StorageDisplayController, StorageDisplay> {
-  /// Rescans (after a clean, or coming back from a linked page) keep the last
-  /// finished report on screen and swap it only when the new scan is done, so
-  /// rows and sizes don't drop to zero and grow back.
+  /// Rescans keep the last finished report on screen until the new scan completes.
   StorageDisplayControllerProvider._()
     : super(
         from: null,
@@ -93,9 +87,7 @@ final class StorageDisplayControllerProvider
 String _$storageDisplayControllerHash() =>
     r'ab359c6410f4ca7e0c8f47f3af9636eeb5588c6f';
 
-/// Rescans (after a clean, or coming back from a linked page) keep the last
-/// finished report on screen and swap it only when the new scan is done, so
-/// rows and sizes don't drop to zero and grow back.
+/// Rescans keep the last finished report on screen until the new scan completes.
 
 abstract class _$StorageDisplayController extends $Notifier<StorageDisplay> {
   StorageDisplay build();
@@ -188,7 +180,7 @@ final class StorageSelectionProvider
   }
 }
 
-String _$storageSelectionHash() => r'4db64bb6c8957f782671a085e7cba57e8b7550c5';
+String _$storageSelectionHash() => r'464ad37c96f94d0bc06dd675d42e1f8f25ff1d96';
 
 abstract class _$StorageSelection extends $Notifier<StorageSelectionState> {
   StorageSelectionState build();

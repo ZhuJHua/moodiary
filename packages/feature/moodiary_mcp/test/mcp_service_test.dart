@@ -77,37 +77,30 @@ void main() {
     final categories = CategoryRepository(db);
     final tags = TagRepository(db);
     final insights = MoodInsightsRepository(db);
-    service = McpService.forTesting(
-      diaries,
-      categories,
-      tags,
-      insights,
-      () {
-        final endpoint = _ControlledEndpoint(
-          now: () => now,
-          listLanHosts: lanHosts == null
-              ? null
-              : () async {
-                  interfaceReads++;
-                  return lanHosts!;
-                },
-          startGate: endpoints.isEmpty ? startGate : null,
-          startFailure: startFailure,
-          serverFactory: (iconUri) => buildMoodiaryServer(
-            diaries: diaries,
-            categories: categories,
-            tags: tags,
-            insights: insights,
-            appVersion: 'test',
-            iconUri: iconUri,
-          ),
-        );
-        endpoints.add(endpoint);
-        if (!firstEndpoint.isCompleted) firstEndpoint.complete(endpoint);
-        return endpoint;
-      },
-      networkChanges.stream,
-    );
+    service = McpService.forTesting(diaries, categories, tags, insights, () {
+      final endpoint = _ControlledEndpoint(
+        now: () => now,
+        listLanHosts: lanHosts == null
+            ? null
+            : () async {
+                interfaceReads++;
+                return lanHosts!;
+              },
+        startGate: endpoints.isEmpty ? startGate : null,
+        startFailure: startFailure,
+        serverFactory: (iconUri) => buildMoodiaryServer(
+          diaries: diaries,
+          categories: categories,
+          tags: tags,
+          insights: insights,
+          appVersion: 'test',
+          iconUri: iconUri,
+        ),
+      );
+      endpoints.add(endpoint);
+      if (!firstEndpoint.isCompleted) firstEndpoint.complete(endpoint);
+      return endpoint;
+    }, networkChanges.stream);
     http = HttpClient();
   });
 

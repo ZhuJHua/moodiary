@@ -12,6 +12,7 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
     private var keepAliveEvents: BackgroundKeepAliveEvents? = null
     private var permission: NotificationPermission? = null
     private var legacyExport: LegacyExport? = null
+    private var location: DeviceLocation? = null
     private var reminders: ReminderNotifications? = null
     private var activityBinding: ActivityPluginBinding? = null
 
@@ -30,6 +31,9 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
         permission = NotificationPermission(binding.applicationContext).also {
             NotificationPermissionApi.setUp(messenger, it)
         }
+        location = DeviceLocation(binding.applicationContext).also {
+            LocationApi.setUp(messenger, it)
+        }
         reminders = ReminderNotifications(binding.applicationContext, ReminderNotificationsEvents(messenger)).also {
             ReminderNotificationsApi.setUp(messenger, it)
         }
@@ -46,12 +50,14 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
         LegacyExportApi.setUp(messenger, null)
         BackgroundKeepAliveApi.setUp(messenger, null)
         NotificationPermissionApi.setUp(messenger, null)
+        LocationApi.setUp(messenger, null)
         ReminderNotificationsApi.setUp(messenger, null)
         onDetachedFromActivity()
         reminders?.detach()
         reminders = null
         permission = null
         legacyExport = null
+        location = null
         keyboard = null
         keepAlive = null
     }
@@ -61,6 +67,7 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
         binding.addOnNewIntentListener(this)
         permission?.let { binding.addRequestPermissionsResultListener(it) }
         legacyExport?.let { binding.addRequestPermissionsResultListener(it) }
+        location?.let { binding.addRequestPermissionsResultListener(it) }
         binding.activity.intent?.let { onNewIntent(it) }
     }
 
@@ -71,6 +78,7 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
         activityBinding?.removeOnNewIntentListener(this)
         permission?.let { activityBinding?.removeRequestPermissionsResultListener(it) }
         legacyExport?.let { activityBinding?.removeRequestPermissionsResultListener(it) }
+        location?.let { activityBinding?.removeRequestPermissionsResultListener(it) }
         setActivity(null)
     }
 
@@ -78,6 +86,7 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
         onDetachedFromActivityForConfigChanges()
         permission?.finish(false)
         legacyExport?.detach()
+        location?.finish()
     }
 
     override fun onNewIntent(intent: Intent): Boolean {
@@ -91,6 +100,7 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
         val activity = binding?.activity
         permission?.activity = activity
         legacyExport?.activity = activity
+        location?.activity = activity
         keyboard?.activity = activity
         keepAlive?.activity = activity
     }
