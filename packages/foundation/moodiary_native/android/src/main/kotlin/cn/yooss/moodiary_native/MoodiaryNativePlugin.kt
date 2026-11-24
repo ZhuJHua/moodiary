@@ -11,6 +11,7 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
     private var keepAlive: BackgroundKeepAlive? = null
     private var keepAliveEvents: BackgroundKeepAliveEvents? = null
     private var permission: NotificationPermission? = null
+    private var location: DeviceLocation? = null
     private var reminders: ReminderNotifications? = null
     private var activityBinding: ActivityPluginBinding? = null
 
@@ -28,6 +29,9 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
         permission = NotificationPermission(binding.applicationContext).also {
             NotificationPermissionApi.setUp(messenger, it)
         }
+        location = DeviceLocation(binding.applicationContext).also {
+            LocationApi.setUp(messenger, it)
+        }
         reminders = ReminderNotifications(binding.applicationContext, ReminderNotificationsEvents(messenger)).also {
             ReminderNotificationsApi.setUp(messenger, it)
         }
@@ -43,11 +47,13 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
         ImageTransferApi.setUp(messenger, null)
         BackgroundKeepAliveApi.setUp(messenger, null)
         NotificationPermissionApi.setUp(messenger, null)
+        LocationApi.setUp(messenger, null)
         ReminderNotificationsApi.setUp(messenger, null)
         onDetachedFromActivity()
         reminders?.detach()
         reminders = null
         permission = null
+        location = null
         keyboard = null
         keepAlive = null
     }
@@ -56,6 +62,7 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
         setActivity(binding)
         binding.addOnNewIntentListener(this)
         permission?.let { binding.addRequestPermissionsResultListener(it) }
+        location?.let { binding.addRequestPermissionsResultListener(it) }
         binding.activity.intent?.let { onNewIntent(it) }
     }
 
@@ -65,12 +72,14 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
     override fun onDetachedFromActivityForConfigChanges() {
         activityBinding?.removeOnNewIntentListener(this)
         permission?.let { activityBinding?.removeRequestPermissionsResultListener(it) }
+        location?.let { activityBinding?.removeRequestPermissionsResultListener(it) }
         setActivity(null)
     }
 
     override fun onDetachedFromActivity() {
         onDetachedFromActivityForConfigChanges()
         permission?.finish(false)
+        location?.finish()
     }
 
     override fun onNewIntent(intent: Intent): Boolean {
@@ -83,6 +92,7 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware, PluginRegistry.NewInt
         activityBinding = binding
         val activity = binding?.activity
         permission?.activity = activity
+        location?.activity = activity
         keyboard?.activity = activity
         keepAlive?.activity = activity
     }

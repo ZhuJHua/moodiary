@@ -15,6 +15,7 @@ public class MoodiaryNativePlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycl
     registrar.addApplicationDelegate(plugin)
     registrar.addSceneDelegate(plugin)
     NotificationPermissionApiSetup.setUp(binaryMessenger: messenger, api: NotificationPermission())
+    LocationApiSetup.setUp(binaryMessenger: messenger, api: DeviceLocation())
     ReminderNotificationsApiSetup.setUp(binaryMessenger: messenger, api: plugin.reminders)
     HtmlClipboardApiSetup.setUp(binaryMessenger: messenger, api: HtmlClipboard())
     ImageTransferApiSetup.setUp(binaryMessenger: messenger, api: ImageTransfer())
