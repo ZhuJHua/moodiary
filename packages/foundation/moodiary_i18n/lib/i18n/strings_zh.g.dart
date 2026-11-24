@@ -2426,23 +2426,17 @@ class Translations$editor$zh {
 	/// zh: '备份目前仅保存在应用内。请先将它保存到应用外，卸载后才能保留。'
 	String get legacyGeneratedNote => '备份目前仅保存在应用内。请先将它保存到应用外，卸载后才能保留。';
 
-	/// zh: '保存到“下载”'
-	String get legacySave => '保存到“下载”';
+	/// zh: '分享备份'
+	String get legacyShare => '分享备份';
 
-	/// zh: '通过其他应用分享'
-	String get legacyShare => '通过其他应用分享';
-
-	/// zh: '我已确认备份文件已保存到应用外'
-	String get legacyShareConfirmed => '我已确认备份文件已保存到应用外';
+	/// zh: '我已确认文件保存成功'
+	String get legacyShareConfirmed => '我已确认文件保存成功';
 
 	/// zh: '备份已保存'
 	String get legacySaved => '备份已保存';
 
-	/// zh: '已保存到“下载/{name}”，文件大小已核对。'
-	String legacyDownloadVerified({required Object name}) => '已保存到“下载/${name}”，文件大小已核对。';
-
-	/// zh: '你已确认 {name} 已保存到应用外。'
-	String legacySharedVerified({required Object name}) => '你已确认 ${name} 已保存到应用外。';
+	/// zh: '你已分享 {name}。卸载前，请确认文件已保存在应用外。'
+	String legacySharedVerified({required Object name}) => '你已分享 ${name}。卸载前，请确认文件已保存在应用外。';
 
 	/// zh: '1. 卸载心绪日记 2.10.0，保留备份文件。'
 	String get legacyRecoverOne => '1. 卸载心绪日记 2.10.0，保留备份文件。';
@@ -2474,14 +2468,8 @@ class Translations$editor$zh {
 	/// zh: '无法读取源文件或写入备份。请检查设备存储后重试。'
 	String get legacyExportError => '无法读取源文件或写入备份。请检查设备存储后重试。';
 
-	/// zh: '未能核实下载目录中的备份，请检查可用空间后重试。'
-	String get legacySaveFailed => '未能核实下载目录中的备份，请检查可用空间后重试。';
-
 	/// zh: '未能分享备份，请重试。'
 	String get legacyShareFailed => '未能分享备份，请重试。';
-
-	/// zh: '缓存空间不足，无法复制备份用于分享。请将备份保存到“下载”文件夹。'
-	String get legacyShareInsufficientSpace => '缓存空间不足，无法复制备份用于分享。请将备份保存到“下载”文件夹。';
 
 	/// zh: '无法打开版本下载页。'
 	String get legacyOpenFailed => '无法打开版本下载页。';

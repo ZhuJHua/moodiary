@@ -4,7 +4,6 @@ import 'package:fast_zip/fast_zip.dart';
 import 'package:injectable/injectable.dart';
 import 'package:meta/meta.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
-import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:path/path.dart' as p;
 
@@ -16,7 +15,6 @@ class SyncLegacyDataExporter implements LegacyDataExporter {
     : this.forTesting(
         support: PlatformService.get().applicationSupportDirectory,
         cache: PlatformService.get().applicationCacheDirectory,
-        availableBytes: LegacyExport.availableCacheBytes,
         openZip: (path) async {
           await FastZip.ensureInitialized();
           return Zip.newInstance(filePath: path);
@@ -27,13 +25,11 @@ class SyncLegacyDataExporter implements LegacyDataExporter {
   SyncLegacyDataExporter.forTesting({
     required this._support,
     required this._cache,
-    required this._availableBytes,
     required this._openZip,
   });
 
   final Directory _support;
   final Directory _cache;
-  final Future<int> Function() _availableBytes;
   final Future<Zip> Function(String) _openZip;
   bool _exporting = false;
 
@@ -100,6 +96,15 @@ class SyncLegacyDataExporter implements LegacyDataExporter {
         }
       }
       return await _writeArchive(onProgress, isCancelled);
+    } catch (error) {
+      if (error is FileSystemException && error.osError?.errorCode == 28 ||
+          RegExp(
+            r'No space left|os error 28\b',
+            caseSensitive: false,
+          ).hasMatch(error.toString())) {
+        throw const LegacyExportInsufficientSpace();
+      }
+      rethrow;
     } finally {
       _exporting = false;
     }
@@ -115,15 +120,10 @@ class SyncLegacyDataExporter implements LegacyDataExporter {
 
     final date = DateTime.now();
     final entries = <_Entry>[];
-    var bytes = 0;
     await for (final entry in _entries(date)) {
       checkCancellation();
       if (entry.size > 0xffffffff) throw LegacyExportFileTooLarge(entry.name);
-      bytes += entry.size;
       entries.add(entry);
-    }
-    if (await _availableBytes() < (bytes * 11 + 9) ~/ 10) {
-      throw const LegacyExportInsufficientSpace();
     }
     onProgress(0, entries.length);
     checkCancellation();

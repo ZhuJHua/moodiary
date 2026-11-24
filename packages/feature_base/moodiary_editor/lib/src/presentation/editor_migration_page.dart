@@ -9,7 +9,6 @@ import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart' show logger;
 import 'package:moodiary_migration/moodiary_migration.dart';
-import 'package:moodiary_native/moodiary_native.dart' show LegacyExport;
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
@@ -26,22 +25,6 @@ class EditorMigrationPage extends StatefulWidget {
 }
 
 enum _Phase { landing, running, failed, done }
-
-@visibleForTesting
-Future<ShareResult> shareLegacyBackup(
-  String archive, {
-  required Future<ShareResult> Function(ShareParams) share,
-  Future<int> Function() availableBytes = LegacyExport.availableCacheBytes,
-}) async {
-  final bytes = await File(archive).length();
-  final requiredBytes = bytes + (bytes + 19) ~/ 20;
-  if (await availableBytes() < requiredBytes) {
-    throw const LegacyExportInsufficientSpace();
-  }
-  return share(
-    ShareParams(files: [XFile(archive, mimeType: 'application/zip')]),
-  );
-}
 
 enum _Stage { editor, content }
 
@@ -504,7 +487,6 @@ class _LegacyDataGateState extends State<_LegacyDataGate> {
   bool _busy = false;
   bool _cancelRequested = false;
   bool _shared = false;
-  String? _downloadName;
   Object? _error;
 
   @override
@@ -607,49 +589,15 @@ class _LegacyDataGateState extends State<_LegacyDataGate> {
     }
   }
 
-  Future<void> _save() async {
-    if (_busy || !Platform.isAndroid) return;
-    setState(() => _busy = true);
-    try {
-      final archive = _archive!;
-      final saved = await LegacyExport.saveToDownloads(
-        archive,
-        p.basename(archive),
-      );
-      if (!mounted) return;
-      if (saved.uri.isEmpty ||
-          saved.displayName.isEmpty ||
-          saved.size != _archiveBytes ||
-          _archiveBytes == 0) {
-        throw StateError('Incomplete backup');
-      }
-      setState(() {
-        _downloadName = saved.displayName;
-        _phase = .saved;
-      });
-    } catch (_) {
-      if (mounted) {
-        toast.error(message: context.l10n.editor.legacySaveFailed);
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
   Future<void> _share() async {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      final result = await shareLegacyBackup(
-        _archive!,
-        share: SharePlus.instance.share,
+      final result = await SharePlus.instance.share(
+        ShareParams(files: [XFile(_archive!, mimeType: 'application/zip')]),
       );
       if (mounted && result.status != ShareResultStatus.dismissed) {
         setState(() => _shared = true);
-      }
-    } on LegacyExportInsufficientSpace {
-      if (mounted) {
-        toast.error(message: context.l10n.editor.legacyShareInsufficientSpace);
       }
     } catch (_) {
       if (mounted) {
@@ -798,12 +746,7 @@ class _LegacyDataGateState extends State<_LegacyDataGate> {
             ),
           ],
         ),
-        if (Platform.isAndroid)
-          FilledButton(
-            onPressed: _busy ? null : _save,
-            child: Text(l10n.editor.legacySave),
-          ),
-        OutlinedButton(
+        FilledButton(
           onPressed: _busy ? null : _share,
           child: Text(l10n.editor.legacyShare),
         ),
@@ -825,10 +768,7 @@ class _LegacyDataGateState extends State<_LegacyDataGate> {
           icon: LucideIcons.circleCheck,
           color: context.theme.colors.primary,
           title: l10n.editor.legacySaved,
-          subtitle: switch (_downloadName) {
-            final name? => l10n.editor.legacyDownloadVerified(name: name),
-            null => l10n.editor.legacySharedVerified(name: archiveName),
-          },
+          subtitle: l10n.editor.legacySharedVerified(name: archiveName),
         ),
         _Card(
           children: [

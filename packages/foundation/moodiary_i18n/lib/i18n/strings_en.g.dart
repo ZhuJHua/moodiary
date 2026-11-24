@@ -882,12 +882,10 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String get legacyKeepOpen => 'Keep the app open. Cancellation takes effect after the current file finishes.';
 	@override String get legacyGenerated => 'Backup generated';
 	@override String get legacyGeneratedNote => 'The backup is still inside the app. Save a copy outside the app to keep it after uninstalling.';
-	@override String get legacySave => 'Save to Downloads';
-	@override String get legacyShare => 'Share via another app';
-	@override String get legacyShareConfirmed => 'I’ve checked that the backup was saved outside the app';
+	@override String get legacyShare => 'Share backup';
+	@override String get legacyShareConfirmed => 'I’ve confirmed the file was saved';
 	@override String get legacySaved => 'Backup saved';
-	@override String legacyDownloadVerified({required Object name}) => 'Saved to Downloads/${name}. The file size has been verified.';
-	@override String legacySharedVerified({required Object name}) => 'You confirmed that ${name} was saved outside the app.';
+	@override String legacySharedVerified({required Object name}) => 'You shared ${name}. Before uninstalling, check that the file is saved outside the app.';
 	@override String get legacyRecoverOne => '1. Uninstall Moodiary 2.10.0. Keep the backup file.';
 	@override String get legacyRecoverTwo => '2. Install version 2.7.3 and import the backup ZIP.';
 	@override String get legacyRecoverThree => '3. Update to 2.9.2 without uninstalling. Open the app and finish the migration.';
@@ -898,9 +896,7 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String get legacySpaceError => 'There isn’t enough free space to create the backup. Free up space and try again.';
 	@override String legacyLargeFile({required Object name}) => '“${name}” is too large for this backup format (4 GiB limit). Save that file separately.';
 	@override String get legacyExportError => 'The app couldn’t read the source files or write the backup. Check the device storage and try again.';
-	@override String get legacySaveFailed => 'Couldn’t verify the saved copy. Check the available space in Downloads and try again.';
 	@override String get legacyShareFailed => 'Couldn’t share the backup. Please try again.';
-	@override String get legacyShareInsufficientSpace => 'There isn’t enough cache space to copy the backup for sharing. Choose “Save to Downloads” instead.';
 	@override String get legacyOpenFailed => 'Couldn’t open the releases page.';
 	@override String get legacyProbeFailed => 'Couldn’t finish checking local data';
 	@override String get legacyProbeNote => 'Retry to check your data and resume startup.';

@@ -25,7 +25,6 @@ dependencies:
   moodiary_logging: 0.0.1
   moodiary_migration: 0.0.1
   moodiary_models: 0.0.1
-  moodiary_native: 0.0.1
   moodiary_platform: 0.0.1
   moodiary_router: 0.0.1
   fast_core: 0.0.1
