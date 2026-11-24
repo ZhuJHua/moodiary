@@ -2387,14 +2387,110 @@ class Translations$editor$zh {
 	/// zh: '升级数据迁移'
 	String get migrationTitle => '升级数据迁移';
 
-	/// zh: '2.8.0 更换了数据引擎与编辑器，需要完成一次数据迁移才能继续使用。'
-	String get migrationIntro => '2.8.0 更换了数据引擎与编辑器，需要完成一次数据迁移才能继续使用。';
+	/// zh: '发现旧版本日记数据'
+	String get legacyTitle => '发现旧版本日记数据';
 
-	/// zh: '数据库引擎升级'
-	String get migrationStepEngine => '数据库引擎升级';
+	/// zh: '检测到来自 v{version} 的数据。2.10.0 已不再提供旧数据库转换功能，原始数据完整保存在本机。'
+	String legacyIntro({required Object version}) => '检测到来自 v${version} 的数据。2.10.0 已不再提供旧数据库转换功能，原始数据完整保存在本机。';
 
-	/// zh: '日记、分类、字体等全部数据搬入新数据库'
-	String get migrationStepEngineDesc => '日记、分类、字体等全部数据搬入新数据库';
+	/// zh: '检测到旧版本的数据。2.10.0 已不再提供旧数据库转换功能，原始数据完整保存在本机。'
+	String get legacyIntroUnknown => '检测到旧版本的数据。2.10.0 已不再提供旧数据库转换功能，原始数据完整保存在本机。';
+
+	/// zh: '旧数据库大小'
+	String get legacyDatabaseSize => '旧数据库大小';
+
+	/// zh: '媒体与字体'
+	String get legacyMedia => '媒体与字体';
+
+	/// zh: '{count} 个文件 · {size}'
+	String legacyMediaSummary({required Object count, required Object size}) => '${count} 个文件 · ${size}';
+
+	/// zh: '导出数据'
+	String get legacyExport => '导出数据';
+
+	/// zh: '放弃旧数据，直接使用'
+	String get legacyAbandon => '放弃旧数据，直接使用';
+
+	/// zh: '正在导出备份'
+	String get legacyExporting => '正在导出备份';
+
+	/// zh: '已处理 {done} / {total} 个文件'
+	String legacyProgress({required Object done, required Object total}) => '已处理 ${done} / ${total} 个文件';
+
+	/// zh: '请勿离开应用。取消操作会在当前文件处理完毕后生效。'
+	String get legacyKeepOpen => '请勿离开应用。取消操作会在当前文件处理完毕后生效。';
+
+	/// zh: '备份已生成'
+	String get legacyGenerated => '备份已生成';
+
+	/// zh: '备份目前仅保存在应用内。请先将它保存到应用外，卸载后才能保留。'
+	String get legacyGeneratedNote => '备份目前仅保存在应用内。请先将它保存到应用外，卸载后才能保留。';
+
+	/// zh: '分享备份'
+	String get legacyShare => '分享备份';
+
+	/// zh: '我已保存'
+	String get legacyShareConfirmed => '我已保存';
+
+	/// zh: '备份已保存'
+	String get legacySaved => '备份已保存';
+
+	/// zh: '你已分享 {name}。卸载前，请确认文件已保存在应用外。'
+	String legacySharedVerified({required Object name}) => '你已分享 ${name}。卸载前，请确认文件已保存在应用外。';
+
+	/// zh: '1. 卸载心绪日记 2.10.0，保留备份文件。'
+	String get legacyRecoverOne => '1. 卸载心绪日记 2.10.0，保留备份文件。';
+
+	/// zh: '2. 安装 2.7.3，导入刚刚保存的 ZIP 备份。'
+	String get legacyRecoverTwo => '2. 安装 2.7.3，导入刚刚保存的 ZIP 备份。';
+
+	/// zh: '3. 覆盖安装 2.9.2，打开应用并完成数据迁移。'
+	String get legacyRecoverThree => '3. 覆盖安装 2.9.2，打开应用并完成数据迁移。';
+
+	/// zh: '4. 覆盖安装 2.10.0。'
+	String get legacyRecoverFour => '4. 覆盖安装 2.10.0。';
+
+	/// zh: '打开版本下载页'
+	String get legacyOpenReleases => '打开版本下载页';
+
+	/// zh: '完成，退出应用'
+	String get legacyFinishExit => '完成，退出应用';
+
+	/// zh: '备份导出失败'
+	String get legacyExportFailed => '备份导出失败';
+
+	/// zh: '剩余空间不足，无法生成备份。请释放空间后重试。'
+	String get legacySpaceError => '剩余空间不足，无法生成备份。请释放空间后重试。';
+
+	/// zh: '“{name}”超过备份格式的 4 GiB 限制，请手动另存该文件。'
+	String legacyLargeFile({required Object name}) => '“${name}”超过备份格式的 4 GiB 限制，请手动另存该文件。';
+
+	/// zh: '无法读取源文件或写入备份。请检查设备存储后重试。'
+	String get legacyExportError => '无法读取源文件或写入备份。请检查设备存储后重试。';
+
+	/// zh: '未能分享备份，请重试。'
+	String get legacyShareFailed => '未能分享备份，请重试。';
+
+	/// zh: '无法打开版本下载页。'
+	String get legacyOpenFailed => '无法打开版本下载页。';
+
+	/// zh: '未能完成本机数据检查'
+	String get legacyProbeFailed => '未能完成本机数据检查';
+
+	/// zh: '请重试以检查数据并继续启动应用。'
+	String get legacyProbeNote => '请重试以检查数据并继续启动应用。';
+
+	/// zh: '确认放弃旧数据'
+	String get legacyAbandonConfirm => '确认放弃旧数据';
+
+	/// zh: '备份尚未确认保存到应用外。放弃后，旧日记将无法通过本应用找回。'
+	String get legacyAbandonWarning => '备份尚未确认保存到应用外。放弃后，旧日记将无法通过本应用找回。';
+
+	/// zh: '备份已保存。确定放弃旧日记并继续使用应用吗？'
+	String get legacyAbandonSaved => '备份已保存。确定放弃旧日记并继续使用应用吗？';
+
+	/// zh: '我了解'
+	String get legacyUnderstand => '我了解';
 
 	/// zh: '日记格式转换'
 	String get migrationStepEditor => '日记格式转换';
@@ -2468,9 +2564,6 @@ class Translations$editor$zh {
 	/// zh: '迁移完成'
 	String get migrationDoneTitle => '迁移完成';
 
-	/// zh: '全部数据已迁入新引擎，旧数据已自动备份保留'
-	String get migrationDoneSubtitle => '全部数据已迁入新引擎，旧数据已自动备份保留';
-
 	/// zh: '日记'
 	String get migrationSummaryDiaries => '日记';
 
@@ -2482,12 +2575,6 @@ class Translations$editor$zh {
 
 	/// zh: '{count} 个'
 	String migrationSummaryCategoriesCount({required Object count}) => '${count} 个';
-
-	/// zh: '媒体与字体'
-	String get migrationSummaryMedia => '媒体与字体';
-
-	/// zh: '已迁移'
-	String get migrationSummaryMigrated => '已迁移';
 
 	/// zh: '开始使用'
 	String get migrationEnter => '开始使用';
@@ -4429,8 +4516,8 @@ class Translations$sync$zh {
 	/// zh: '不是有效的 Moodiary 备份文件'
 	String get errNotBackup => '不是有效的 Moodiary 备份文件';
 
-	/// zh: '这是 2.8.0 之前版本的备份，新版不支持导入；请先在旧版本中恢复，再升级到新版'
-	String get errLegacyBackup => '这是 2.8.0 之前版本的备份，新版不支持导入；请先在旧版本中恢复，再升级到新版';
+	/// zh: '这是 2.7.3 及更早版本的备份，2.10.0 无法导入。请用 2.7.3 导入后升级到 2.9.2 完成迁移。'
+	String get errLegacyBackup => '这是 2.7.3 及更早版本的备份，2.10.0 无法导入。请用 2.7.3 导入后升级到 2.9.2 完成迁移。';
 
 	/// zh: '备份文件解析失败：{error}'
 	String errBackupParse({required Object error}) => '备份文件解析失败：${error}';

@@ -18,6 +18,7 @@ abstract final class MAlert {
     required List<MAction<T>> actions,
     MActionsLayout actionsLayout = .auto,
     bool barrierDismissible = true,
+    String? acknowledgeLabel,
   }) {
     return _push<T>(
       context,
@@ -30,6 +31,7 @@ abstract final class MAlert {
         isDestructive: isDestructive,
         actions: actions,
         actionsLayout: actionsLayout,
+        acknowledgeLabel: acknowledgeLabel,
       ),
     );
   }
@@ -45,6 +47,7 @@ abstract final class MAlert {
     IconData? icon,
     MActionsLayout actionsLayout = .auto,
     bool barrierDismissible = true,
+    String? acknowledgeLabel,
   }) async {
     final l10n = context.muiL10n;
     final result = await MAlert.show<bool>(
@@ -56,6 +59,7 @@ abstract final class MAlert {
       isDestructive: isDestructive,
       actionsLayout: actionsLayout,
       barrierDismissible: barrierDismissible,
+      acknowledgeLabel: acknowledgeLabel,
       actions: [
         MAction(label: cancelLabel ?? l10n.cancel, value: false),
         MAction(
@@ -372,7 +376,9 @@ class _AlertShell extends StatelessWidget {
   }
 }
 
-class _AlertBody<T> extends StatelessWidget {
+/// [acknowledgeLabel] 非空时在内容下方加一行 [MSelectMark] 勾选，
+/// 未勾选前主操作与破坏性操作保持禁用。
+class _AlertBody<T> extends StatefulWidget {
   final String? title;
   final String? message;
   final Widget? content;
@@ -380,6 +386,7 @@ class _AlertBody<T> extends StatelessWidget {
   final bool isDestructive;
   final List<MAction<T>> actions;
   final MActionsLayout actionsLayout;
+  final String? acknowledgeLabel;
 
   const _AlertBody({
     this.title,
@@ -389,21 +396,118 @@ class _AlertBody<T> extends StatelessWidget {
     required this.isDestructive,
     required this.actions,
     required this.actionsLayout,
+    this.acknowledgeLabel,
+  });
+
+  @override
+  State<_AlertBody<T>> createState() => _AlertBodyState<T>();
+}
+
+class _AlertBodyState<T> extends State<_AlertBody<T>> {
+  bool _acknowledged = false;
+
+  List<MAction<T>> _gatedActions() {
+    if (widget.acknowledgeLabel == null || _acknowledged) return widget.actions;
+    return [
+      for (final action in widget.actions)
+        if (action.isPrimary || action.isDestructive)
+          MAction<T>(
+            label: action.label,
+            value: action.value,
+            isPrimary: action.isPrimary,
+            isDestructive: action.isDestructive,
+            enabled: false,
+            busy: action.busy,
+            onPressed: action.onPressed,
+            onIntercept: action.onIntercept,
+            onSubmit: action.onSubmit,
+          )
+        else
+          action,
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label = widget.acknowledgeLabel;
+    final acknowledge = label == null
+        ? null
+        : _AcknowledgeRow(
+            label: label,
+            value: _acknowledged,
+            onChanged: (value) => setState(() => _acknowledged = value),
+          );
+    final content = widget.content;
+    return _AlertShell(
+      title: widget.title,
+      message: widget.message,
+      content: acknowledge == null
+          ? content
+          : content == null
+          ? acknowledge
+          : Column(
+              mainAxisSize: .min,
+              crossAxisAlignment: .stretch,
+              children: [content, const SizedBox(height: 8), acknowledge],
+            ),
+      icon: widget.icon,
+      isDestructive: widget.isDestructive,
+      actions: MActionBar<T>(
+        layout: widget.actionsLayout,
+        height: _kActionHeight,
+        gap: _kActionGap,
+        actions: _gatedActions(),
+      ),
+    );
+  }
+}
+
+class _AcknowledgeRow extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _AcknowledgeRow({
+    required this.label,
+    required this.value,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return _AlertShell(
-      title: title,
-      message: message,
-      content: content,
-      icon: icon,
-      isDestructive: isDestructive,
-      actions: MActionBar<T>(
-        layout: actionsLayout,
-        height: _kActionHeight,
-        gap: _kActionGap,
-        actions: actions,
+    return Center(
+      child: MergeSemantics(
+        child: Semantics(
+          checked: value,
+          child: MInkWell(
+            borderRadius: MuiRadius.sm,
+            onTap: () => onChanged(!value),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Padding(
+                padding: const .symmetric(horizontal: 8),
+                child: Row(
+                  mainAxisSize: .min,
+                  children: [
+                    ExcludeSemantics(
+                      child: SizedBox.square(
+                        dimension: 22,
+                        child: MSelectMark(selected: value),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        label,
+                        style: context.theme.typography.bodyMedium.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

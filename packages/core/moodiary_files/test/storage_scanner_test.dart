@@ -133,6 +133,7 @@ void main() {
         'database/default.isar.pre-sqlite.bak': 27,
         'database/default.isar.v273bak': 28,
         'migration_backup/keep.json': 29,
+        'legacy_abandoned/20261124-123456/image/photo.jpg': 30,
       };
       for (final entry in sizes.entries) {
         write('support/${entry.key}', entry.value);
@@ -220,8 +221,8 @@ void main() {
       });
       expect(report.candidates[StorageCleanupKind.cache]!.bytes, 31);
       expect(report.bytes[StorageArea.cache], 121);
-      expect(report.candidates[StorageCleanupKind.legacyBackup]!.bytes, 55);
-      expect(report.bytes[StorageArea.legacyBackups], 84);
+      expect(report.candidates[StorageCleanupKind.legacyBackup]!.bytes, 85);
+      expect(report.bytes[StorageArea.legacyBackups], 114);
       expect(report.total, sizes.values.fold(121, (sum, size) => sum + size));
       final disabled = await StorageScanner(
         supportPath: '${root.path}/support',

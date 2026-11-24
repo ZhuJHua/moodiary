@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart' show SystemNavigator;
@@ -7,14 +8,17 @@ import 'package:moodiary_editor/src/data/editor_migration_service.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart' show logger;
-import 'package:moodiary_migration/moodiary_migration.dart'
-    show EngineMigrationService;
+import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
+import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EditorMigrationPage extends StatefulWidget {
-  const EditorMigrationPage({super.key});
+  const EditorMigrationPage({required this.resumeStartup, super.key});
+
+  final Future<void> Function() resumeStartup;
 
   @override
   State<EditorMigrationPage> createState() => _EditorMigrationPageState();
@@ -22,16 +26,13 @@ class EditorMigrationPage extends StatefulWidget {
 
 enum _Phase { landing, running, failed, done }
 
-enum _Stage { engine, editor, content }
+enum _Stage { editor, content }
 
 class _EditorMigrationPageState extends State<EditorMigrationPage> {
   _Phase _phase = .landing;
 
   late final List<_Stage> _stages = [
-    if (EngineMigrationService.requiresMigration) .engine,
-    if (EngineMigrationService.requiresMigration ||
-        EditorMigrationService.hasLegacyDiaries)
-      .editor,
+    if (EditorMigrationService.hasLegacyDiaries) .editor,
     if (EditorMigrationService.requiresContentUpgrade) .content,
   ];
 
@@ -47,8 +48,18 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   int _summaryDiaries = 0;
   int _summaryCategories = 0;
 
-  bool get _onlyContent =>
-      !_stages.contains(_Stage.engine) && !_stages.contains(_Stage.editor);
+  late bool _legacyGate = LegacyDatabaseGuard.state != LegacyDatabaseState.none;
+  bool _homePending = false;
+
+  Future<void> _resumeStartup() async {
+    await widget.resumeStartup();
+    if (!mounted) return;
+    if (EditorMigrationService.requiresMigration) {
+      setState(() => _legacyGate = false);
+    } else {
+      setState(() => _homePending = true);
+    }
+  }
 
   void _onProgress(int done, int total) {
     if (!mounted) return;
@@ -89,14 +100,6 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       _logPath = null;
     });
     try {
-      if (EngineMigrationService.requiresMigration) {
-        _enter(.engine);
-        await EngineMigrationService.migrate(onProgress: _onProgress);
-        await EngineMigrationService.finalizeMigration();
-        await EditorMigrationService.refreshRequiresMigration();
-      }
-      _complete(.engine);
-
       final pending = await EditorMigrationService.pendingDiaries();
       if (!mounted) return;
       if (pending.isNotEmpty) _enter(.editor, total: pending.length);
@@ -202,6 +205,20 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_homePending && ModalRoute.isCurrentOf(context) == true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted ||
+            !_homePending ||
+            ModalRoute.of(context)?.isCurrent != true) {
+          return;
+        }
+        _homePending = false;
+        const DiaryHomeRoute().go(context);
+      });
+    }
+    if (_legacyGate || LegacyDatabaseGuard.state != LegacyDatabaseState.none) {
+      return _LegacyDataGate(resumeStartup: _resumeStartup);
+    }
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -218,20 +235,17 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   }
 
   static IconData _stageIcon(_Stage stage) => switch (stage) {
-    .engine => LucideIcons.database,
     .editor => LucideIcons.fileText,
     .content => LucideIcons.fileCog,
   };
 
   String _stageTitle(BuildContext context, _Stage stage) => switch (stage) {
-    .engine => context.l10n.editor.migrationStepEngine,
     .editor => context.l10n.editor.migrationStepEditor,
     .content => context.l10n.editor.migrationStepContent,
   };
 
   String _stageDescription(BuildContext context, _Stage stage) =>
       switch (stage) {
-        .engine => context.l10n.editor.migrationStepEngineDesc,
         .editor => context.l10n.editor.migrationStepEditorDesc,
         .content => context.l10n.editor.migrationStepContentDesc,
       };
@@ -246,9 +260,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
           icon: LucideIcons.database,
           color: theme.colors.primary,
           title: l10n.editor.migrationTitle,
-          subtitle: _onlyContent
-              ? l10n.editor.migrationContentIntro
-              : l10n.editor.migrationIntro,
+          subtitle: l10n.editor.migrationContentIntro,
         ),
         const SizedBox(height: 32),
         _Card(
@@ -414,9 +426,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
           icon: LucideIcons.circleCheck,
           color: theme.colors.primary,
           title: l10n.editor.migrationDoneTitle,
-          subtitle: _stages.contains(_Stage.engine)
-              ? l10n.editor.migrationDoneSubtitle
-              : l10n.editor.migrationContentDoneSubtitle,
+          subtitle: l10n.editor.migrationContentDoneSubtitle,
         ),
         const SizedBox(height: 32),
         _Card(
@@ -433,11 +443,6 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
                 count: _summaryCategories,
               ),
             ),
-            if (_stages.contains(_Stage.engine))
-              _SummaryRow(
-                label: l10n.editor.migrationSummaryMedia,
-                value: l10n.editor.migrationSummaryMigrated,
-              ),
           ],
         ),
         const Spacer(),
@@ -450,6 +455,391 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
         ),
         const SizedBox(height: 24),
       ],
+    );
+  }
+}
+
+enum _LegacyPhase {
+  landing,
+  exporting,
+  generated,
+  saved,
+  exportFailed,
+  probeFailed,
+}
+
+class _LegacyDataGate extends StatefulWidget {
+  const _LegacyDataGate({required this.resumeStartup});
+
+  final Future<void> Function() resumeStartup;
+
+  @override
+  State<_LegacyDataGate> createState() => _LegacyDataGateState();
+}
+
+class _LegacyDataGateState extends State<_LegacyDataGate> {
+  _LegacyPhase _phase = .landing;
+  LegacyExportSummary? _summary;
+  String? _archive;
+  int _archiveBytes = 0;
+  int _completed = 0;
+  int _total = 0;
+  bool _busy = false;
+  bool _cancelRequested = false;
+  bool _shared = false;
+  Object? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    if (LegacyDatabaseGuard.state == LegacyDatabaseState.pending) {
+      unawaited(_inspect());
+    } else {
+      _phase = .probeFailed;
+    }
+  }
+
+  Future<void> _inspect() async {
+    setState(() => _busy = true);
+    try {
+      final summary = await getIt<LegacyDataExporter>().inspect();
+      if (mounted) {
+        setState(() {
+          _summary = summary;
+          _phase = .landing;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _error = error;
+          _phase = .exportFailed;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _retryGuard() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await LegacyDatabaseGuard.probe();
+      if (LegacyDatabaseGuard.state == LegacyDatabaseState.abandoning) {
+        await LegacyDatabaseGuard.abandon();
+      }
+      if (!mounted) return;
+      switch (LegacyDatabaseGuard.state) {
+        case LegacyDatabaseState.none:
+          await widget.resumeStartup();
+        case LegacyDatabaseState.pending:
+          await _inspect();
+        case LegacyDatabaseState.probeFailed || LegacyDatabaseState.abandoning:
+          setState(() => _phase = .probeFailed);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _phase = .probeFailed);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _export() async {
+    if (_busy) return;
+    setState(() {
+      _phase = .exporting;
+      _busy = true;
+      _cancelRequested = false;
+      _completed = 0;
+      _total = (_summary?.mediaCount ?? 0) + 1;
+    });
+    try {
+      final archive = await getIt<LegacyDataExporter>().export(
+        onProgress: (completed, total) {
+          if (mounted) {
+            setState(() {
+              _completed = completed;
+              _total = total;
+            });
+          }
+        },
+        isCancelled: () => !mounted || _cancelRequested,
+      );
+      final size = await File(archive).length();
+      if (mounted) {
+        setState(() {
+          _archive = archive;
+          _archiveBytes = size;
+          _shared = false;
+          _phase = .generated;
+        });
+      }
+    } on LegacyExportCancelled {
+      if (mounted) setState(() => _phase = .landing);
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _error = error;
+          _phase = .exportFailed;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _share() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final result = await SharePlus.instance.share(
+        ShareParams(files: [XFile(_archive!, mimeType: 'application/zip')]),
+      );
+      if (mounted && result.status != ShareResultStatus.dismissed) {
+        setState(() => _shared = true);
+      }
+    } catch (_) {
+      if (mounted) {
+        toast.error(message: context.l10n.editor.legacyShareFailed);
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _abandon() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final saved = _phase == _LegacyPhase.saved;
+      final confirmed = await MAlert.confirm(
+        context,
+        title: context.l10n.editor.legacyAbandonConfirm,
+        message: saved
+            ? context.l10n.editor.legacyAbandonSaved
+            : context.l10n.editor.legacyAbandonWarning,
+        confirmLabel: context.l10n.editor.legacyAbandonConfirm,
+        isDestructive: true,
+        acknowledgeLabel: saved ? null : context.l10n.editor.legacyUnderstand,
+      );
+      if (!confirmed || !mounted) return;
+      await LegacyDatabaseGuard.abandon();
+      if (!mounted) return;
+      if (LegacyDatabaseGuard.state == LegacyDatabaseState.none) {
+        await widget.resumeStartup();
+      } else {
+        setState(() => _phase = .probeFailed);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _phase = .probeFailed);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _openReleases() async {
+    try {
+      if (await launchUrl(
+        Uri.parse('https://github.com/ZhuJHua/moodiary/releases'),
+        mode: LaunchMode.externalApplication,
+      )) {
+        return;
+      }
+    } catch (error, stackTrace) {
+      logger.e(
+        'Opening release downloads failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    if (mounted) {
+      toast.error(message: context.l10n.editor.legacyOpenFailed);
+    }
+  }
+
+  String _bytes(int bytes) {
+    final units = AppFiles.bytesToUnits(bytes);
+    return '${units['size']} ${units['unit']}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final version = LegacyDatabaseGuard.sourceVersion;
+    final archiveName = _archive == null ? '' : p.basename(_archive!);
+    final error = context.theme.colors.error;
+    final abandon = OutlinedButton(
+      onPressed: _busy ? null : _abandon,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: error,
+        side: BorderSide(color: error),
+      ),
+      child: Text(l10n.editor.legacyAbandon),
+    );
+    final exit = TextButton(
+      onPressed: _busy ? null : SystemNavigator.pop,
+      child: Text(l10n.editor.migrationExit),
+    );
+    final children = switch (_phase) {
+      _LegacyPhase.landing => <Widget>[
+        _Header(
+          icon: LucideIcons.circleAlert,
+          color: context.theme.colors.error,
+          title: l10n.editor.legacyTitle,
+          subtitle: version == null
+              ? l10n.editor.legacyIntroUnknown
+              : l10n.editor.legacyIntro(version: version),
+        ),
+        if (_summary case final summary?)
+          _Card(
+            children: [
+              _SummaryRow(
+                label: l10n.editor.legacyDatabaseSize,
+                value: _bytes(summary.databaseBytes),
+              ),
+              _SummaryRow(
+                label: l10n.editor.legacyMedia,
+                value: l10n.editor.legacyMediaSummary(
+                  count: summary.mediaCount,
+                  size: _bytes(summary.mediaBytes),
+                ),
+              ),
+            ],
+          )
+        else
+          const LinearProgressIndicator(),
+        FilledButton(
+          onPressed: _busy ? null : _export,
+          child: Text(l10n.editor.legacyExport),
+        ),
+        abandon,
+        exit,
+      ],
+      _LegacyPhase.exporting => <Widget>[
+        _Header(
+          icon: LucideIcons.database,
+          color: context.theme.colors.primary,
+          title: l10n.editor.legacyExporting,
+          subtitle: l10n.editor.legacyProgress(done: _completed, total: _total),
+        ),
+        LinearProgressIndicator(
+          value: _total == 0 ? null : _completed / _total,
+        ),
+        _Footnote(text: l10n.editor.legacyKeepOpen),
+        TextButton(
+          onPressed: _cancelRequested
+              ? null
+              : () => setState(() => _cancelRequested = true),
+          child: Text(l10n.common.cancel),
+        ),
+      ],
+      _LegacyPhase.generated => <Widget>[
+        _Header(
+          icon: LucideIcons.fileText,
+          color: context.theme.colors.primary,
+          title: l10n.editor.legacyGenerated,
+          subtitle: l10n.editor.legacyGeneratedNote,
+        ),
+        _Card(
+          children: [
+            _StepRow(
+              icon: LucideIcons.fileText,
+              title: archiveName,
+              subtitle: _bytes(_archiveBytes),
+            ),
+          ],
+        ),
+        // 分享回来后，"我已保存"成为主操作，分享降为次要（可再次分享）。
+        if (_shared) ...[
+          FilledButton(
+            onPressed: _busy ? null : () => setState(() => _phase = .saved),
+            child: Text(l10n.editor.legacyShareConfirmed),
+          ),
+          OutlinedButton(
+            onPressed: _busy ? null : _share,
+            child: Text(l10n.editor.legacyShare),
+          ),
+        ] else
+          FilledButton(
+            onPressed: _busy ? null : _share,
+            child: Text(l10n.editor.legacyShare),
+          ),
+        abandon,
+      ],
+      _LegacyPhase.saved => <Widget>[
+        _Header(
+          icon: LucideIcons.circleCheck,
+          color: context.theme.colors.primary,
+          title: l10n.editor.legacySaved,
+          subtitle: l10n.editor.legacySharedVerified(name: archiveName),
+        ),
+        _Card(
+          children: [
+            for (final step in [
+              l10n.editor.legacyRecoverOne,
+              l10n.editor.legacyRecoverTwo,
+              l10n.editor.legacyRecoverThree,
+              l10n.editor.legacyRecoverFour,
+            ])
+              _StepRow(icon: LucideIcons.fileText, title: step),
+          ],
+        ),
+        OutlinedButton(
+          onPressed: _openReleases,
+          child: Text(l10n.editor.legacyOpenReleases),
+        ),
+        FilledButton(
+          onPressed: _busy ? null : SystemNavigator.pop,
+          child: Text(l10n.editor.legacyFinishExit),
+        ),
+        abandon,
+      ],
+      _LegacyPhase.exportFailed => <Widget>[
+        _Header(
+          icon: LucideIcons.circleAlert,
+          color: context.theme.colors.error,
+          title: l10n.editor.legacyExportFailed,
+          subtitle: switch (_error) {
+            LegacyExportInsufficientSpace() => l10n.editor.legacySpaceError,
+            LegacyExportFileTooLarge(:final path) =>
+              l10n.editor.legacyLargeFile(name: p.basename(path)),
+            _ => l10n.editor.legacyExportError,
+          },
+        ),
+        FilledButton(
+          onPressed: _busy ? null : _export,
+          child: Text(l10n.editor.migrationRetry),
+        ),
+        abandon,
+        exit,
+      ],
+      _LegacyPhase.probeFailed => <Widget>[
+        _Header(
+          icon: LucideIcons.circleAlert,
+          color: context.theme.colors.error,
+          title: l10n.editor.legacyProbeFailed,
+          subtitle: l10n.editor.legacyProbeNote,
+        ),
+        FilledButton(
+          onPressed: _busy ? null : _retryGuard,
+          child: Text(l10n.editor.migrationRetry),
+        ),
+        exit,
+      ],
+    };
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: SafeArea(
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            itemCount: children.length,
+            itemBuilder: (context, index) => children[index],
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -30,4 +30,3 @@ if [ "$found_fast" -eq 0 ]; then
 fi
 
 embed_manifest "$frameworks_dir/sqlite3.framework" sqlite3.xcprivacy
-embed_manifest "$frameworks_dir/IsarPlusCore.framework" isar.xcprivacy

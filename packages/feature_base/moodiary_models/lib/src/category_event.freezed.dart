@@ -80,7 +80,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $CategoryCopyWith<$Res> get category {
-
+  
   return $CategoryCopyWith<$Res>(_self.category, (value) {
     return _then(_self.copyWith(category: value));
   });

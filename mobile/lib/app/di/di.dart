@@ -18,6 +18,8 @@ import 'package:moodiary_http/moodiary_http.dart' show IHttpClient, IHttpServer;
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_mcp/injectable.module.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart' show McpService;
+import 'package:moodiary_migration/moodiary_migration.dart'
+    show LegacyDataExporter;
 import 'package:moodiary_ml/injectable.module.dart';
 import 'package:moodiary_mobile/app/di/di.config.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -64,6 +66,7 @@ void _assertRequiredBindings() {
     if (!getIt.isRegistered<IFilePicker>()) 'IFilePicker',
     if (!getIt.isRegistered<IHeifDecoder>()) 'IHeifDecoder',
     if (!getIt.isRegistered<IBackupArchive>()) 'IBackupArchive',
+    if (!getIt.isRegistered<LegacyDataExporter>()) 'LegacyDataExporter',
     if (!getIt.isRegistered<AssistantService>()) 'AssistantService',
     if (!getIt.isRegistered<SyncLogger>()) 'SyncLogger',
     if (!getIt.isRegistered<AutoSyncWatcher>()) 'AutoSyncWatcher',

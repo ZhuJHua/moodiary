@@ -15,11 +15,13 @@ class LegacyBackups {
   bool get dbEngineMigrated => MoodiaryKVs.dbEngineMigrated.get() == true;
 
   Future<int> delete({Set<String>? filePaths}) async {
-    if (!dbEngineMigrated) return 0;
+    if (!dbEngineMigrated ||
+        (MoodiaryKVs.legacyAbandonJournal.get()?.isNotEmpty ?? false)) {
+      return 0;
+    }
     var freed = 0;
-    for (final name in legacyDatabaseBackupNames) {
-      final file = File(p.join(databasePath, name));
-      if (filePaths != null && !filePaths.contains(file.path)) continue;
+    Future<void> removeFile(File file) async {
+      if (filePaths != null && !filePaths.contains(file.path)) return;
       try {
         final bytes = await file.length();
         await file.delete();
@@ -27,6 +29,27 @@ class LegacyBackups {
       } on PathNotFoundException {
         // Already removed by another cleanup.
       }
+    }
+
+    for (final name in legacyDatabaseBackupNames) {
+      await removeFile(File(p.join(databasePath, name)));
+    }
+    Future<void> cleanDirectory(Directory directory) async {
+      try {
+        await for (final entry in directory.list(followLinks: false)) {
+          if (entry is File) await removeFile(entry);
+          if (entry is Directory) await cleanDirectory(entry);
+        }
+        if (await directory.list().isEmpty) await directory.delete();
+      } on PathNotFoundException {
+        return;
+      }
+    }
+
+    final abandoned = p.join(p.dirname(databasePath), legacyAbandonedDirName);
+    if (await FileSystemEntity.type(abandoned, followLinks: false) ==
+        FileSystemEntityType.directory) {
+      await cleanDirectory(Directory(abandoned));
     }
     return freed;
   }

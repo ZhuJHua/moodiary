@@ -45,7 +45,7 @@ void main() {
       expect(sorted.first.id, 'c');
     });
 
-    test('equal keys fall back to isarId deterministically', () {
+    test('equal keys fall back to the local ID deterministically', () {
       final t = DateTime(2026, 5, 1);
       final x = diary('x', time: t);
       final y = diary('y', time: t);

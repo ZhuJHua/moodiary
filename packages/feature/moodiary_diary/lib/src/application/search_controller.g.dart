@@ -42,7 +42,7 @@ final class DiarySearchControllerProvider
 }
 
 String _$diarySearchControllerHash() =>
-    r'91fcfa67799b88839fab6d52316e728387438ac1';
+    r'033bfcfcb6c25162dc5d4db84ac3a56d87efa02a';
 
 abstract class _$DiarySearchController extends $Notifier<DiarySearchState> {
   DiarySearchState build();
