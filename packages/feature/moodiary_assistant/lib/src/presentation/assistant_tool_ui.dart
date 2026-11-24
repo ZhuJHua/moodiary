@@ -10,11 +10,6 @@ import 'package:mui/mui.dart';
 ) {
   final l10n = context.l10n;
   return switch (tool) {
-    .runJavascript => (
-      icon: LucideIcons.squareTerminal,
-      title: l10n.assistant.toolJsTitle,
-      description: l10n.assistant.toolJsDes,
-    ),
     .searchDiaries => (
       icon: LucideIcons.textSearch,
       title: l10n.assistant.toolSearchTitle,

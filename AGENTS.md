@@ -47,7 +47,7 @@ For full verification, use `test --all` alongside the analysis and Rust commands
 
 **Tests are one process**: one `flutter test` at the repo root over the affected packages' `test/` dirs, so hooks and the frontend compiler run once, not once per package.
 
-- The root dev-depends on `moodiary_data` / `moodiary_assistant` only to pull `sqlite3_simple` / `sqlite3_vec` / `flutter_js` into the hook tree: a hook runs only for the cwd package's deps.
+- The root dev-depends on `moodiary_data` only to pull `sqlite3_simple` / `sqlite3_vec` into the hook tree: a hook runs only for the cwd package's deps.
 - cwd is the repo root, so tests read repo files through `repoRoot` (`moodiary_lint/testing.dart`), never a relative path, and write only into their own `createTempSync` directory.
 
 **Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.
@@ -132,7 +132,7 @@ Principle: split freely, never duplicate dependencies. http / sync / llm share o
 | fast_zip | moodiary_export / moodiary_sync (`_nativePkgOwners`) | first archive / extract |
 | fast_crypto | whole repo | facade self-initializes per call |
 
-- The license-manifest hook returns early when the target OS is the host (`flutter test`). The Rust hooks build for the host too (desktop needs it, and hooks can't tell it from a test); CI's Dart job turns them off with `hooks.user_defines.<pkg>.build_assets: false`. Dart tests never load a Rust library or the license manifest; Rust is tested by its own suites. **Three third-party code assets are needed by the tests** — `sqlite3_vec`, `sqlite3_simple` and `flutter_js` build for the host (`diary_fts` cannot even be created without the `simple` tokenizer, and the JS sandbox tests need quickjs), which is why the root pubspec dev-depends on their owners.
+- The license-manifest hook returns early when the target OS is the host (`flutter test`). The Rust hooks build for the host too (desktop needs it, and hooks can't tell it from a test); CI's Dart job turns them off with `hooks.user_defines.<pkg>.build_assets: false`. Dart tests never load a Rust library or the license manifest; Rust is tested by its own suites. **Two third-party code assets are needed by the tests** — `sqlite3_vec` and `sqlite3_simple` build for the host (`diary_fts` cannot even be created without the `simple` tokenizer), which is why the root pubspec dev-depends on their owner.
 - Initialize each native runtime before constructing its opaque handles (`CancelToken`); handles cannot cross native libraries. After touching `rust/src/api` run `fvm dart tool/task.dart gen-rust`.
 - Use FRB for the in-repo native libraries.
 - New iOS native frameworks need a required-reason check; `mobile/ios/scripts/embed_framework_privacy_manifests.sh` writes manifests from `mobile/ios/PrivacyManifests/` (`fast*` get `rust.xcprivacy` automatically; add any other framework to the script).
