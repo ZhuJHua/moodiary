@@ -20,11 +20,10 @@ val hasReleaseSigning = releaseKeystore.isFile &&
 
 android {
     namespace = "cn.yooss.moodiary"
-    compileSdk = 37
+    compileSdk = 36
     ndkVersion = "28.2.13676358"
 
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
@@ -111,6 +110,5 @@ flutter {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("com.google.android.material:material:1.14.0")
 }

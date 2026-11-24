@@ -55,9 +55,6 @@ extension GetItInjectableX on _i174.GetIt {
       preResolve: true,
       dispose: _i461.closeDatabase,
     );
-    gh.lazySingleton<_i861.LocalNotifications>(
-      () => appModule.localNotifications(),
-    );
     gh.lazySingleton<_i861.NotificationPermission>(
       () => appModule.notificationPermission(),
     );

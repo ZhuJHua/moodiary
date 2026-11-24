@@ -1,9 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_platform/moodiary_platform.dart';
 
-import '../application/reminder_scheduler.dart';
 import '../application/reminder_service.dart';
+import '../data/reminder.dart';
 
 enum ReminderPreset {
   everyDay,
@@ -47,13 +46,8 @@ String reminderStatusLabel(Translations l10n, ReminderService service) =>
     ? l10n.reminder.off
     : nextReminderLabel(l10n, service.next, service.now);
 
-String nextReminderLabel(
-  Translations l10n,
-  ReminderNotification? next,
-  TZDateTime now,
-) {
-  if (next == null) return l10n.reminder.noEnabledTimes;
-  final at = next.at;
+String nextReminderLabel(Translations l10n, DateTime? at, DateTime now) {
+  if (at == null) return l10n.reminder.noEnabledTimes;
   final days = DateTime.utc(
     at.year,
     at.month,
@@ -64,5 +58,8 @@ String nextReminderLabel(
     1 => l10n.reminder.tomorrow,
     _ => l10n.reminder.weekdays[at.weekday - 1],
   };
-  return l10n.reminder.next(day: day, time: next.reminder.time);
+  return l10n.reminder.next(
+    day: day,
+    time: formatReminderTime(at.hour, at.minute),
+  );
 }

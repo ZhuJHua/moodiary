@@ -1,439 +1,281 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/widgets.dart' show AppLifecycleState, VoidCallback;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
-import 'package:moodiary_platform/testing.dart';
 import 'package:moodiary_reminder/moodiary_reminder.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
-class _Permission implements NotificationPermission {
+class _Permission extends Fake implements NotificationPermission {
   bool enabled = true;
-  int requests = 0;
-  int reads = 0;
-  @override
-  Future<bool> isEnabled() async {
-    reads++;
-    return enabled;
-  }
 
   @override
-  Future<bool> request() async {
-    requests++;
-    return enabled;
-  }
-
-  @override
-  Future<void> openSettings() async {}
+  Future<bool> isEnabled() async => enabled;
 }
 
-class _Notifications extends Fake implements LocalNotifications {
-  TZDateTime current = TZDateTime(UTC, 2026, 11, 16, 20);
+class _Notifications implements ReminderNotifications {
+  final schedules = <ReminderSchedule>[];
   bool channelEnabled = true;
-  bool launch = false;
-  bool failNext = false;
-  int scheduled = 0;
-  int zoneUpdates = 0;
-  int pendingReads = 0;
   int channelChecks = 0;
-  Future<void>? zoneReady;
-  String? testPayload;
-  Object? scheduledContent;
-  Object? testContent;
-  final pending = <int>{777};
-  final cancelled = <int>[];
-  final times = <int, TZDateTime>{};
-  final copies = <int, ({String title, String body})>{};
-  late void Function(String?) tap;
+  final launch = Completer<bool>();
+  VoidCallback? handler;
+  (String, String, String)? testContent;
+  Completer<void>? scheduleGate;
 
   @override
-  Future<void> initialize(void Function(String?) onTap) async {
-    tap = onTap;
+  void setTapHandler(VoidCallback? handler) => this.handler = handler;
+
+  @override
+  Future<bool> consumeLaunchTap() {
+    expect(handler, isNotNull);
+    return launch.future;
   }
 
   @override
-  Future<void> updateTimeZone() async {
-    zoneUpdates++;
-    await zoneReady;
+  Future<void> setSchedule(ReminderSchedule schedule) async {
+    schedules.add(schedule);
+    await scheduleGate?.future;
   }
 
   @override
-  TZDateTime now() => current;
+  Future<void> showTest(String title, String body, String channelName) async {
+    testContent = (title, body, channelName);
+  }
+
   @override
-  Future<bool> launchedFrom(String payload) async => launch;
-  @override
-  Future<bool> isChannelEnabled(String channelId) async {
+  Future<bool> isChannelEnabled() async {
     channelChecks++;
     return channelEnabled;
   }
+}
+
+class _Service extends ReminderService {
+  _Service(super.notifications, super.permission);
 
   @override
-  Future<Set<int>> pendingIds() async {
-    pendingReads++;
-    return {...pending};
-  }
-
-  @override
-  Future<void> cancel(int id) async {
-    pending.remove(id);
-    times.remove(id);
-    copies.remove(id);
-    cancelled.add(id);
-  }
-
-  @override
-  Future<void> schedule({
-    required int id,
-    required TZDateTime at,
-    required bool weekly,
-    required String channelId,
-    required String channelName,
-    required String title,
-    required String body,
-    required String payload,
-  }) async {
-    if (failNext) {
-      failNext = false;
-      throw StateError('schedule failed');
-    }
-    expect(weekly, isTrue);
-    scheduled++;
-    scheduledContent = (channelId, channelName, title, body, payload);
-    pending.add(id);
-    times[id] = at;
-    copies[id] = (title: title, body: body);
-  }
-
-  @override
-  Future<void> show({
-    required int id,
-    required String channelId,
-    required String channelName,
-    required String title,
-    required String body,
-    required String payload,
-  }) async {
-    testPayload = payload;
-    testContent = (channelId, channelName, title, body, payload);
-  }
+  DateTime now = DateTime(2026, 11, 16, 20);
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-  setUpAll(initializeTimeZones);
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
   late _Notifications notifications;
   late _Permission permission;
-  late ReminderService service;
-  final reminder = Reminder(id: 1, hour: 21, minute: 30, weekdays: {1, 2});
+  late _Service service;
+  final morning = Reminder(id: 1, hour: 8, minute: 5, weekdays: {5, 1});
+  final evening = Reminder(id: 2, hour: 21, minute: 30, weekdays: {1, 2});
 
   Future<void> initialize() async {
+    notifications.launch.complete(false);
     await service.initialize();
-    await service.reconcile();
+    await Future<void>.delayed(Duration.zero);
   }
 
   setUp(() async {
     await LocaleSettings.setLocale(AppLocale.zh);
     getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-    MoodiaryKVs.reminders.set(Reminder.encode([reminder]));
+    MoodiaryKVs.reminders.set(Reminder.encode([morning, evening]));
     MoodiaryKVs.reminderEnabled.set(true);
     notifications = _Notifications();
     permission = _Permission();
-    service = ReminderService(notifications, permission);
+    service = _Service(notifications, permission);
   });
 
   tearDown(() async {
     service.dispose();
+    expect(notifications.handler, isNull);
     await LocaleSettings.setLocale(AppLocale.zh);
     await getIt.reset();
   });
 
-  test('cancellation only removes owned ids without initialization', () async {
-    notifications.pending.addAll({100008, 100009, 100047, 100048});
-    await cancelReminderNotifications(notifications);
-    expect(notifications.pending, {777, 100048});
-    expect(notifications.cancelled, [100008, 100009, 100047]);
-    expect(notifications.pendingReads, 1);
-    expect(notifications.zoneUpdates, 0);
-    expect(notifications.channelChecks, 0);
-    expect(notifications.scheduled, 0);
-  });
-
   test(
-    'initialization sets up taps without waiting for reconciliation',
+    'initialization sends one localized slot per enabled reminder',
     () async {
-      final ready = Completer<void>();
-      notifications.zoneReady = ready.future;
-      notifications.launch = true;
-      try {
-        await service.initialize().timeout(const Duration(seconds: 1));
-        expect(service.launchedFromNotification, isTrue);
-        expect(notifications.scheduled, 0);
-        expect(permission.requests, 0);
-      } finally {
-        ready.complete();
-        await service.reconcile();
-      }
-      expect(notifications.scheduled, 2);
+      await initialize();
+      final schedule = notifications.schedules.single;
+      expect(schedule.channelName, l10n.reminder.title);
+      expect(schedule.slots.map((slot) => slot.id), [1, 2]);
+      final first = schedule.slots.first;
+      expect((first.hour, first.minute), (8, 5));
+      expect(first.weekdays, [1, 5]);
+      expect((first.title, first.body), ('早上好', '新的一天，先记下此刻的心情。'));
+      expect(schedule.slots.last.title, '晚上好');
+
+      await service.save(morning.withEnabled(false));
+      expect(notifications.schedules.last.slots.map((slot) => slot.id), [2]);
+      await service.setEnabled(false);
+      expect(notifications.schedules.last.slots, isEmpty);
+      await service.setEnabled(true);
+      expect(notifications.schedules.last.slots.single.id, 2);
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(notifications.schedules, hasLength(4));
     },
   );
 
   test(
-    'setters reconcile once and external KV writes stay debounced',
+    'external KV edits coalesce and locale changes re-send the copy',
     () async {
       await initialize();
-      for (final action in <Future<void> Function()>[
-        () => service.save(reminder.withEnabled(false)),
-        () => service.setEnabled(false),
-        () => service.remove(reminder.id),
-      ]) {
-        final reads = notifications.pendingReads;
-        await action();
-        expect(notifications.pendingReads, reads + 1);
-        await Future<void>.delayed(const Duration(milliseconds: 400));
-        expect(notifications.pendingReads, reads + 1);
-      }
-      final reads = notifications.pendingReads;
-      MoodiaryKVs.reminders.set(Reminder.encode([reminder]));
+      MoodiaryKVs.reminderEnabled.set(false);
+      MoodiaryKVs.reminders.set(Reminder.encode([morning]));
       MoodiaryKVs.reminderEnabled.set(true);
       await Future<void>.delayed(const Duration(milliseconds: 400));
-      expect(notifications.pendingReads, reads + 1);
-      expect(notifications.pending, {777, 100009, 100010});
+      expect(notifications.schedules, hasLength(2));
+      expect(notifications.schedules.last.slots.single.id, 1);
+      await LocaleSettings.setLocale(AppLocale.en);
+      await Future<void>.delayed(Duration.zero);
+      final schedule = notifications.schedules.last;
+      expect(notifications.schedules, hasLength(3));
+      expect(schedule.channelName, l10n.reminder.title);
+      final slot = schedule.slots.single;
+      expect(
+        (slot.title, slot.body),
+        ('Good morning', 'Start the day by noting how you feel.'),
+      );
     },
   );
 
-  test(
-    'disabled reconciliation only cancels owned pending notifications',
-    () async {
-      MoodiaryKVs.reminderEnabled.set(false);
-      notifications.pending.addAll({100009, 100047, 200010, 400064});
-      await initialize();
-      expect(notifications.pending, {777, 200010, 400064});
-      expect(notifications.cancelled, unorderedEquals([100009, 100047]));
-      expect(notifications.zoneUpdates, 0);
-      expect(permission.reads, 0);
-      expect(notifications.channelChecks, 0);
-      expect(notifications.scheduled, 0);
-      expect(service.next, isNull);
-    },
-  );
-
-  test('cached reminders invalidate on KV writes and next follows the current time', () async {
+  test('a queued edit survives a failed native write', () async {
     await initialize();
-    final cached = service.reminders;
-    expect(service.reminders, same(cached));
-    expect(service.next!.at, TZDateTime(UTC, 2026, 11, 16, 21, 30));
-    notifications.current = TZDateTime(UTC, 2026, 11, 16, 22);
-    expect(service.next!.at, TZDateTime(UTC, 2026, 11, 17, 21, 30));
-    MoodiaryKVs.reminders.set(
-      Reminder.encode([
-        Reminder(id: 1, hour: 23, minute: 0, weekdays: {1}),
-      ]),
-    );
-    expect(service.reminders, isNot(same(cached)));
-    expect(service.reminders.single.time, '23:00');
-    expect(service.next!.at, TZDateTime(UTC, 2026, 11, 16, 23));
-    notifications.current = TZDateTime(UTC, 2026, 11, 17);
-    expect(service.next!.at, TZDateTime(UTC, 2026, 11, 23, 23));
-    expect(notifications.scheduled, 2);
+    final gate = notifications.scheduleGate = Completer<void>();
+    final failed = expectLater(service.setEnabled(false), throwsStateError);
+    await Future<void>.delayed(Duration.zero);
+    final following = service.setEnabled(true);
+    expect(notifications.schedules.last.slots, isEmpty);
+    notifications.scheduleGate = null;
+    gate.completeError(StateError('schedule failed'));
+    await failed;
+    await following;
+    expect(notifications.schedules, hasLength(3));
+    expect(notifications.schedules.last.slots, hasLength(2));
   });
 
-  test('status labels handle empty, off, next and no enabled times', () async {
+  for (final buffered in [false, true]) {
+    test('tap handoff preserves live taps with buffered=$buffered', () async {
+      var taps = 0;
+      final subscription = service.taps.listen((_) => taps++);
+      addTearDown(subscription.cancel);
+      final initializing = service.initialize();
+      if (!buffered) notifications.handler!();
+      notifications.launch.complete(buffered);
+      await initializing;
+      await Future<void>.delayed(Duration.zero);
+      expect(service.launchedFromNotification, isTrue);
+      expect(taps, 1);
+      service.launchedFromNotification = false;
+      notifications.handler!();
+      await Future<void>.delayed(Duration.zero);
+      expect(service.launchedFromNotification, isTrue);
+      expect(taps, 2);
+    });
+  }
+
+  test('test notification uses the current local hour', () async {
+    service.now = DateTime(2026, 11, 16, 13, 59);
+    await service.sendTest();
+    expect(notifications.testContent, (
+      '午间小憩',
+      '歇一会儿，记两句上午的事。',
+      l10n.reminder.title,
+    ));
+    expect(notifications.schedules, isEmpty);
+  });
+
+  test('resume reapplies the schedule after permission returns', () async {
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    permission.enabled = false;
+    expect(await service.checkPermission(), isFalse);
+    final gate = notifications.scheduleGate = Completer<void>();
+    await initialize();
+    final original = notifications.schedules.single;
+    gate.completeError(StateError('permission denied'));
+    await Future<void>.delayed(Duration.zero);
+    notifications.scheduleGate = null;
+    permission.enabled = true;
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await Future<void>.delayed(Duration.zero);
+    expect(service.notificationsEnabled, isTrue);
+    expect(notifications.schedules, [original, original]);
+    notifications.channelEnabled = false;
+    expect(await service.checkPermission(), isFalse);
+    notifications.channelEnabled = true;
+    permission.enabled = false;
+    final checks = notifications.channelChecks;
+    expect(await service.checkPermission(), isFalse);
+    expect(notifications.channelChecks, checks);
+    permission.enabled = true;
+    expect(await service.checkPermission(), isTrue);
+  });
+
+  test('tap action persists without changing the schedule', () {
+    expect(service.tapAction, ReminderTapAction.openApp);
+    service.setTapAction(ReminderTapAction.newDiary);
+    expect(MoodiaryKVs.reminderTapAction.get(), 'newDiary');
+    expect(service.tapAction, ReminderTapAction.newDiary);
+    expect(notifications.schedules, isEmpty);
+  });
+
+  test('next label follows the clock, selected days and switches', () async {
     final strings = AppLocale.en.translations;
     await initialize();
+    expect(service.next, DateTime(2026, 11, 16, 21, 30));
     expect(
       reminderStatusLabel(strings, service),
       strings.reminder.next(day: strings.reminder.today, time: '21:30'),
     );
+    service.now = service.next!;
+    expect(service.next, DateTime(2026, 11, 17, 21, 30));
+    expect(
+      reminderStatusLabel(strings, service),
+      strings.reminder.next(day: strings.reminder.tomorrow, time: '21:30'),
+    );
+    await service.remove(2);
+    expect(service.next, DateTime(2026, 11, 20, 8, 5));
+    expect(
+      reminderStatusLabel(strings, service),
+      strings.reminder.next(day: strings.reminder.weekdays[4], time: '08:05'),
+    );
     await service.setEnabled(false);
+    expect(service.next, isNull);
     expect(reminderStatusLabel(strings, service), strings.reminder.off);
-    await service.remove(reminder.id);
-    expect(reminderStatusLabel(strings, service), strings.reminder.addFirst);
-    await service.save(reminder.withEnabled(false));
+    await service.save(morning.withEnabled(false));
     await service.setEnabled(true);
     expect(
       reminderStatusLabel(strings, service),
       strings.reminder.noEnabledTimes,
     );
+    await service.remove(1);
+    expect(reminderStatusLabel(strings, service), strings.reminder.addFirst);
+    expect(service.enabled, isFalse);
   });
 
   test(
-    'permission checks only notify when app or channel availability changes',
+    'New York gap shifts forward and overlap uses the earlier instant',
     () async {
       await initialize();
-      var changes = 0;
-      service.addListener(() => changes++);
-      expect(await service.checkPermission(), isTrue);
-      expect(changes, 0);
-      notifications.channelEnabled = false;
-      expect(await service.checkPermission(), isFalse);
-      expect(await service.checkPermission(), isFalse);
-      expect(changes, 1);
-      permission.enabled = false;
-      notifications.channelEnabled = true;
-      expect(await service.checkPermission(), isFalse);
-      expect(changes, 1);
-      permission.enabled = true;
-      expect(await service.checkPermission(), isTrue);
-      expect(changes, 2);
+      await service.remove(2);
+      await service.save(Reminder(id: 1, hour: 2, minute: 30, weekdays: {7}));
+      service.now = DateTime(2027, 3, 14);
+      expect(service.next, DateTime(2027, 3, 14, 3, 30));
+      await service.save(Reminder(id: 1, hour: 1, minute: 30, weekdays: {7}));
+      service.now = DateTime(2027, 11, 7);
+      expect(service.next!.toUtc(), DateTime.utc(2027, 11, 7, 5, 30));
+      service.now = DateTime.utc(2027, 11, 7, 5, 45).toLocal();
+      expect(service.next, DateTime(2027, 11, 14, 1, 30));
     },
+    skip: Platform.environment['TZ'] != 'America/New_York',
   );
 
-  test('tap action defaults to open app and persists without rescheduling', () {
-    expect(MoodiaryKVs.reminderTapAction.get(), 'openApp');
-    expect(service.tapAction, ReminderTapAction.openApp);
-    var changes = 0;
-    service.addListener(() => changes++);
-    service.setTapAction(ReminderTapAction.newDiary);
-    expect(MoodiaryKVs.reminderTapAction.get(), 'newDiary');
-    expect(service.tapAction, ReminderTapAction.newDiary);
-    service.setTapAction(ReminderTapAction.openApp);
-    expect(MoodiaryKVs.reminderTapAction.get(), 'openApp');
-    expect(service.tapAction, ReminderTapAction.openApp);
-    expect(changes, 2);
-    expect(notifications.scheduled, 0);
-  });
-
-  test('reconcile diffs pending ids, changed times and switches, preserving foreign ids', () async {
-    notifications.pending.add(100047);
+  test('Nuuk sees a Saturday reminder shifted into Sunday', () async {
     await initialize();
-    expect(notifications.pending, {777, 100009, 100010});
-    expect(notifications.scheduled, 2);
-    await Future.wait([service.reconcile(), service.reconcile()]);
-    expect(notifications.scheduled, 2);
-    await service.save(Reminder(id: 1, hour: 22, minute: 15, weekdays: {1, 2}));
-    expect(notifications.scheduled, 4);
-    expect(notifications.cancelled, [100047]);
-    expect(notifications.times[100009], TZDateTime(UTC, 2026, 11, 16, 22, 15));
-    await service.setEnabled(false);
-    expect(notifications.pending, {777});
-  });
-
-  test(
-    'changed time zone reschedules and channel permission is read on reconcile',
-    () async {
-      await initialize();
-      notifications.current = TZDateTime(
-        parseFixedOffsetTimeZone('GMT+08:00'),
-        2026,
-        11,
-        16,
-        20,
-      );
-      notifications.channelEnabled = false;
-      await service.reconcile();
-      expect(notifications.scheduled, 4);
-      expect(service.notificationsEnabled, isFalse);
-      expect(permission.requests, 0);
-    },
-  );
-
-  test(
-    'gap weeks schedule the wall-time template without later rescheduling',
-    () async {
-      final location = getLocation('America/New_York');
-      notifications.current = TZDateTime(location, 2027, 3, 10, 12);
-      MoodiaryKVs.reminders.set(
-        Reminder.encode([
-          Reminder(id: 1, hour: 2, minute: 30, weekdays: {7}),
-        ]),
-      );
-      await initialize();
-      expect(service.next!.at, TZDateTime(location, 2027, 3, 14, 3, 30));
-      expect(
-        notifications.times[100015],
-        TZDateTime(location, 2027, 3, 7, 2, 30),
-      );
-      expect(notifications.scheduled, 1);
-      notifications.current = TZDateTime(location, 2027, 3, 17, 12);
-      await service.reconcile();
-      expect(service.next!.at, TZDateTime(location, 2027, 3, 21, 2, 30));
-      expect(notifications.scheduled, 1);
-    },
-  );
-
-  test('scheduled copy follows each reminder hour and reschedules on locale changes', () async {
-    MoodiaryKVs.reminders.set(
-      Reminder.encode([
-        Reminder(id: 1, hour: 8, minute: 0, weekdays: {1}),
-        Reminder(id: 2, hour: 21, minute: 0, weekdays: {1}),
-      ]),
-    );
-    await initialize();
-    expect(notifications.copies[100009], (
-      title: '早上好',
-      body: '新的一天，先记下此刻的心情。',
-    ));
-    expect(notifications.copies[100017], (title: '晚上好', body: '今天过得怎么样？写下来吧。'));
-    expect(notifications.scheduled, 2);
-    await service.reconcile();
-    expect(notifications.scheduled, 2);
-    await LocaleSettings.setLocale(AppLocale.en);
-    await service.reconcile();
-    expect(notifications.copies[100009], (
-      title: 'Good morning',
-      body: 'Start the day by noting how you feel.',
-    ));
-    expect(notifications.copies[100017], (
-      title: 'Good evening',
-      body: 'How was your day? Write it down.',
-    ));
-    expect(notifications.scheduled, 4);
-  });
-
-  test('test notification copy follows the current local hour', () async {
-    await initialize();
-    notifications.current = TZDateTime(
-      parseFixedOffsetTimeZone('GMT+08:00'),
-      2026,
-      11,
-      16,
-      13,
-      59,
-    );
-    final zoneUpdates = notifications.zoneUpdates;
-    await service.sendTest();
-    expect(notifications.zoneUpdates, zoneUpdates + 1);
-    expect(notifications.testContent, (
-      ReminderService.channelId,
-      l10n.reminder.title,
-      '午间小憩',
-      '歇一会儿，记两句上午的事。',
-      ReminderService.payload,
-    ));
-  });
-
-  test('failed apply can be retried and releases the reconcile lock', () async {
-    await initialize();
-    MoodiaryKVs.reminders.set(
-      Reminder.encode([
-        Reminder(id: 1, hour: 23, minute: 0, weekdays: {1}),
-      ]),
-    );
-    notifications.failNext = true;
-    await expectLater(service.reconcile(), throwsStateError);
-    await service.reconcile();
-    expect(notifications.pending, {777, 100009});
-    expect(notifications.scheduled, 3);
-  });
-
-  test(
-    'cold and warm taps and test notifications share the reminder payload',
-    () async {
-      notifications.launch = true;
-      await initialize();
-      expect(service.launchedFromNotification, isTrue);
-      var taps = 0;
-      final subscription = service.taps.listen((_) => taps++);
-      notifications.tap('other');
-      notifications.tap('reminder');
-      await Future<void>.delayed(Duration.zero);
-      expect(taps, 1);
-      await service.sendTest();
-      expect(notifications.testPayload, 'reminder');
-      expect(notifications.testContent, notifications.scheduledContent);
-      await subscription.cancel();
-    },
-  );
+    await service.remove(2);
+    await service.save(Reminder(id: 1, hour: 23, minute: 30, weekdays: {6}));
+    service.now = DateTime(2027, 3, 28, 0, 10);
+    expect(service.next, DateTime(2027, 3, 28, 0, 30));
+  }, skip: Platform.environment['TZ'] != 'America/Nuuk');
 }

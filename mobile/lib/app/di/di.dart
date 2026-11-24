@@ -69,7 +69,7 @@ void _assertRequiredBindings() {
     if (!getIt.isRegistered<AutoSyncWatcher>()) 'AutoSyncWatcher',
     if (!getIt.isRegistered<McpService>()) 'McpService',
     if (!getIt.isRegistered<ReminderService>()) 'ReminderService',
-    if (!getIt.isRegistered<LocalNotifications>()) 'LocalNotifications',
+    if (!getIt.isRegistered<ReminderNotifications>()) 'ReminderNotifications',
     if (!getIt.isRegistered<NotificationPermission>()) 'NotificationPermission',
     for (final t in SyncProviderType.values)
       if (!getIt.isRegistered<IRemoteSyncBackend>(instanceName: t.value))

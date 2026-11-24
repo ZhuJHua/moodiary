@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
@@ -20,8 +21,9 @@ class ReminderEditSheet extends StatefulWidget {
 }
 
 class _ReminderEditSheetState extends State<ReminderEditSheet> {
-  late int _hour = widget.reminder?.hour ?? 21;
-  late int _minute = widget.reminder?.minute ?? 30;
+  late final _now = clock.now();
+  late int _hour = widget.reminder?.hour ?? _now.hour;
+  late int _minute = widget.reminder?.minute ?? _now.minute;
   late Set<int> _days = {
     ...(widget.reminder?.weekdays ?? ReminderPreset.everyDay.days),
   };

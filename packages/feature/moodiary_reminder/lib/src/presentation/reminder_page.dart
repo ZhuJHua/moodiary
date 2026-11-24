@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
@@ -26,7 +29,7 @@ class _ReminderPageState extends State<ReminderPage> {
   void initState() {
     super.initState();
     _service.addListener(_changed);
-    _run(_service.reconcile);
+    _run(_service.checkPermission);
   }
 
   void _changed() {
@@ -227,6 +230,14 @@ class _ReminderPageState extends State<ReminderPage> {
                   trailing: const Icon(LucideIcons.externalLink, size: 20),
                   onTap: () => _run(_service.permission.openSettings),
                 ),
+                if (Platform.isAndroid)
+                  SettingListTile(
+                    title: l10n.reminder.backgroundActivity,
+                    subtitle: l10n.reminder.backgroundActivityHint,
+                    leading: const Icon(LucideIcons.activity),
+                    trailing: const Icon(LucideIcons.externalLink, size: 20),
+                    onTap: () => _run(BackgroundKeepAliveApi().openAppSettings),
+                  ),
               ],
             ),
             SliverToBoxAdapter(

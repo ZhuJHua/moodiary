@@ -3352,6 +3352,12 @@ class Translations$reminder$zh {
 	/// zh: '通知设置'
 	String get notificationSettings => '通知设置';
 
+	/// zh: '后台运行'
+	String get backgroundActivity => '后台运行';
+
+	/// zh: '允许自启动和后台活动，清理后台后也能按时提醒'
+	String get backgroundActivityHint => '允许自启动和后台活动，清理后台后也能按时提醒';
+
 	/// zh: '新建提醒'
 	String get create => '新建提醒';
 

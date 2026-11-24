@@ -1252,6 +1252,8 @@ class _Translations$reminder$en extends Translations$reminder$zh {
 	@override String get test => 'Send a test notification';
 	@override String get testSent => 'Sent. Check your notifications.';
 	@override String get notificationSettings => 'Notification settings';
+	@override String get backgroundActivity => 'Background activity';
+	@override String get backgroundActivityHint => 'Allow auto-start and background activity so reminders arrive after the app is cleared';
 	@override String get create => 'New reminder';
 	@override String get edit => 'Edit reminder';
 	@override String get delete => 'Delete reminder';

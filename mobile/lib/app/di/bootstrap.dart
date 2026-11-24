@@ -13,8 +13,8 @@ import 'package:moodiary_mcp/moodiary_mcp.dart' show McpKeepAlive, McpService;
 import 'package:moodiary_migration/moodiary_migration.dart'
     show EngineMigrationService;
 import 'package:moodiary_ml/moodiary_ml.dart' show EmbeddingModelManager;
+import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
-import 'package:moodiary_reminder/moodiary_reminder.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 
@@ -52,13 +52,7 @@ Future<void> resetAllData() async {
     }
   }
 
-  await step('reminders.cancel', () async {
-    await cancelReminderNotifications(
-      getIt.isRegistered<LocalNotifications>()
-          ? getIt<LocalNotifications>()
-          : DeviceLocalNotifications(),
-    );
-  });
+  await step('reminders.cancel', ReminderNotificationsApi().clear);
   var dbCleared = false;
   final db = getIt.maybeGet<MoodiaryDatabase>();
   if (db != null) {

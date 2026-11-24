@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_reminder/moodiary_reminder.dart';
@@ -20,8 +21,16 @@ Widget _host(Widget child) => TranslationProvider(
   ),
 );
 
-Future<void> _pump(WidgetTester tester, {Reminder? reminder}) async {
-  await tester.pumpWidget(_host(ReminderEditSheet(id: 1, reminder: reminder)));
+Future<void> _pump(
+  WidgetTester tester, {
+  Reminder? reminder,
+  DateTime? now,
+}) async {
+  await withClock(
+    Clock.fixed(now ?? DateTime(2026, 11, 24, 21, 30)),
+    () =>
+        tester.pumpWidget(_host(ReminderEditSheet(id: 1, reminder: reminder))),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -96,6 +105,11 @@ void main() {
     expect(tester.widget<MSegment>(_segment('每天')).selected, isTrue);
     expect(_segment('周一'), findsNothing);
     expect(find.byType(MDangerRow), findsNothing);
+  });
+
+  testWidgets('new reminder starts at the current time', (tester) async {
+    await _pump(tester, now: DateTime(2026, 11, 24, 8, 5, 59));
+    expect(_sheet(tester).subtitle, '每天 08:05');
   });
 
   for (final (days, label) in [

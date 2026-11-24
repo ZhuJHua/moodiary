@@ -23,7 +23,7 @@ subprojects {
             plugins.hasPlugin("com.android.library")
         ) {
             (extensions.getByName("android") as com.android.build.gradle.BaseExtension).apply {
-                compileSdkVersion(37)
+                compileSdkVersion(36)
                 buildToolsVersion = "36.0.0"
             }
         }

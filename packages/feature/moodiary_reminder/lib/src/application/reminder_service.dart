@@ -5,12 +5,13 @@ import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:synchronized/synchronized.dart';
 
 import '../data/reminder.dart';
-import 'reminder_scheduler.dart';
+import '../data/reminder_notifications.dart';
 
 enum ReminderTapAction { openApp, newDiary }
 
@@ -41,25 +42,13 @@ enum ReminderTapAction { openApp, newDiary }
   ),
 };
 
-Future<void> cancelReminderNotifications(
-  LocalNotifications notifications,
-) async {
-  final pending = await notifications.pendingIds();
-  for (final id in pending.where(ReminderScheduler.ownsId)) {
-    await notifications.cancel(id);
-  }
-}
-
 @lazySingleton
 class ReminderService extends ChangeNotifier {
   ReminderService(this._notifications, this.permission);
 
-  static const channelId = 'diary_reminder';
-  static const payload = 'reminder';
-  final LocalNotifications _notifications;
+  final ReminderNotifications _notifications;
   final NotificationPermission permission;
   final _taps = StreamController<void>.broadcast();
-  final _applied = <int, String>{};
   final _lock = Lock();
   StreamSubscription<void>? _locale;
   List<Reminder>? _reminders;
@@ -79,46 +68,80 @@ class ReminderService extends ChangeNotifier {
       MoodiaryKVs.reminderTapAction.get() == ReminderTapAction.newDiary.name
       ? ReminderTapAction.newDiary
       : ReminderTapAction.openApp;
-  TZDateTime get now => _notifications.now();
-  ReminderNotification? get next => ReminderScheduler.desired(
-    reminders: reminders,
-    enabled: enabled,
-    now: now,
-  ).firstOrNull;
+  DateTime get now => DateTime.now();
 
-  ({
-    String channelId,
-    String channelName,
-    String title,
-    String body,
-    String payload,
-  })
-  _content(int hour) {
-    final copy = reminderNotificationCopy(l10n, hour);
-    return (
-      channelId: channelId,
-      channelName: l10n.reminder.title,
-      title: copy.title,
-      body: copy.body,
-      payload: payload,
+  DateTime? get next {
+    if (!enabled) return null;
+    final reference = now;
+    DateTime? earliest;
+    for (var offset = -1; offset <= 7; offset++) {
+      final date = DateTime.utc(
+        reference.year,
+        reference.month,
+        reference.day + offset,
+      );
+      for (final reminder in reminders) {
+        if (!reminder.enabled || !reminder.weekdays.contains(date.weekday)) {
+          continue;
+        }
+        final at = _localOccurrence(date, reminder.hour, reminder.minute);
+        if (at.isAfter(reference) &&
+            (earliest == null || at.isBefore(earliest))) {
+          earliest = at;
+        }
+      }
+    }
+    return earliest;
+  }
+
+  static DateTime _localOccurrence(DateTime date, int hour, int minute) {
+    final wallTime = DateTime.utc(
+      date.year,
+      date.month,
+      date.day,
+      hour,
+      minute,
     );
+    final precedingOffset = wallTime
+        .subtract(const Duration(days: 1))
+        .toLocal()
+        .timeZoneOffset;
+    final first = wallTime.subtract(precedingOffset).toLocal();
+    if (first.timeZoneOffset == precedingOffset) return first;
+    final adjusted = wallTime.subtract(first.timeZoneOffset).toLocal();
+    return adjusted.timeZoneOffset == first.timeZoneOffset ? adjusted : first;
   }
 
   Future<void> initialize() => _initialization ??= _initialize();
 
   Future<void> _initialize() async {
-    await _notifications.initialize((value) {
-      if (value == payload && !_disposed) {
-        launchedFromNotification = true;
-        _taps.add(null);
-      }
-    });
-    launchedFromNotification = await _notifications.launchedFrom(payload);
+    _notifications.setTapHandler(_onTap);
+    if (await _notifications.consumeLaunchTap()) _onTap();
+    if (_disposed) return;
     MoodiaryKVs.reminders.getNotifier().addListener(_remindersChanged);
     MoodiaryKVs.reminderEnabled.getNotifier().addListener(_changed);
     _locale = LocaleSettings.getLocaleStream().listen((_) => _refresh());
-    _lifecycle = AppLifecycleListener(onResume: _refresh);
+    _lifecycle = AppLifecycleListener(onResume: _onResume);
     _refresh();
+  }
+
+  void _onTap() {
+    if (_disposed) return;
+    launchedFromNotification = true;
+    _taps.add(null);
+  }
+
+  Future<void> _onResume() async {
+    try {
+      await checkPermission();
+      _refresh();
+    } catch (error, stack) {
+      logger.e(
+        'Reminder permission check failed',
+        error: error,
+        stackTrace: stack,
+      );
+    }
   }
 
   void _remindersChanged() {
@@ -155,49 +178,29 @@ class ReminderService extends ChangeNotifier {
 
   Future<void> _reconcile() async {
     if (_disposed) return;
-    if (!enabled) {
-      await cancelReminderNotifications(_notifications);
-      _applied.clear();
-      if (!_disposed) notifyListeners();
-      return;
-    }
-    await _notifications.updateTimeZone();
-    await checkPermission();
-    final desired = ReminderScheduler.desired(
-      reminders: reminders,
-      enabled: enabled,
-      now: now,
+    await _notifications.setSchedule(
+      ReminderSchedule(
+        channelName: l10n.reminder.title,
+        slots: [
+          if (enabled)
+            for (final reminder in reminders)
+              if (reminder.enabled) _slot(reminder),
+        ],
+      ),
     );
-    final pending = await _notifications.pendingIds();
-    final desiredIds = desired.map((notification) => notification.id).toSet();
-    for (final id in pending.where(ReminderScheduler.ownsId)) {
-      if (!desiredIds.contains(id)) {
-        await _notifications.cancel(id);
-        _applied.remove(id);
-      }
-    }
-    for (final notification in desired) {
-      final content = _content(notification.reminder.hour);
-      final text = '${content.title}:${content.body}:${content.channelName}';
-      final signature = '${notification.signature}:$text';
-      if (pending.contains(notification.id) &&
-          _applied[notification.id] == signature) {
-        continue;
-      }
-      _applied.remove(notification.id);
-      await _notifications.schedule(
-        id: notification.id,
-        at: notification.template,
-        weekly: true,
-        channelId: content.channelId,
-        channelName: content.channelName,
-        title: content.title,
-        body: content.body,
-        payload: content.payload,
-      );
-      _applied[notification.id] = signature;
-    }
     if (!_disposed) notifyListeners();
+  }
+
+  ReminderSlot _slot(Reminder reminder) {
+    final copy = reminderNotificationCopy(l10n, reminder.hour);
+    return ReminderSlot(
+      id: reminder.id,
+      hour: reminder.hour,
+      minute: reminder.minute,
+      weekdays: reminder.weekdays.toList()..sort(),
+      title: copy.title,
+      body: copy.body,
+    );
   }
 
   Future<void> save(Reminder reminder) async {
@@ -220,11 +223,8 @@ class ReminderService extends ChangeNotifier {
 
   Future<void> _write(VoidCallback write) async {
     write();
-    try {
-      await reconcile();
-    } finally {
-      _debounce?.cancel();
-    }
+    _debounce?.cancel();
+    await reconcile();
   }
 
   void setTapAction(ReminderTapAction value) {
@@ -233,22 +233,13 @@ class ReminderService extends ChangeNotifier {
   }
 
   Future<void> sendTest() async {
-    await _notifications.updateTimeZone();
-    final content = _content(now.hour);
-    await _notifications.show(
-      id: 300000,
-      channelId: content.channelId,
-      channelName: content.channelName,
-      title: content.title,
-      body: content.body,
-      payload: content.payload,
-    );
+    final copy = reminderNotificationCopy(l10n, now.hour);
+    await _notifications.showTest(copy.title, copy.body, l10n.reminder.title);
   }
 
   Future<bool> checkPermission() async {
     final enabled =
-        await permission.isEnabled() &&
-        await _notifications.isChannelEnabled(channelId);
+        await permission.isEnabled() && await _notifications.isChannelEnabled();
     if (_notificationsEnabled != enabled) {
       _notificationsEnabled = enabled;
       if (!_disposed) notifyListeners();
@@ -260,6 +251,7 @@ class ReminderService extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    if (_initialization != null) _notifications.setTapHandler(null);
     _debounce?.cancel();
     _lifecycle?.dispose();
     unawaited(_locale?.cancel());

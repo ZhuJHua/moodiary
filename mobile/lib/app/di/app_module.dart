@@ -8,9 +8,6 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 @module
 abstract class AppModule {
   @lazySingleton
-  LocalNotifications localNotifications() => DeviceLocalNotifications();
-
-  @lazySingleton
   NotificationPermission notificationPermission() =>
       DeviceNotificationPermission();
 
