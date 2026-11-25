@@ -94,6 +94,13 @@ class _RecordSheetState extends State<RecordSheet> {
     });
   }
 
+  String? _finishedFile() {
+    final name = _fileName;
+    if (name == null) return null;
+    final file = File(AppFiles.getRealPath('audio', name));
+    return file.existsSync() && file.lengthSync() > 0 ? file.path : null;
+  }
+
   void _onAmplitude(Amplitude amp) {
     if (!mounted) return;
     // record 的振幅定时器在 pause 后仍会触发（isRecording 对 paused 也返回 true）
@@ -149,19 +156,8 @@ class _RecordSheetState extends State<RecordSheet> {
     await _ampSub?.cancel();
     _ampSub = null;
     _watch.stop();
-    // 原生层可能已自行结束录制（onStopped，如被系统打断），此时 stop() 返回 null，
-    // 但文件已经写完，按已知路径保留
-    final name0 = _fileName;
-    final expected = name0 == null
-        ? null
-        : AppFiles.getRealPath('audio', name0);
-    final path =
-        await _recorder.stop() ??
-        (expected != null &&
-                File(expected).existsSync() &&
-                File(expected).lengthSync() > 0
-            ? expected
-            : null);
+    // 原生层已自行停止（如被系统打断）时 stop() 返回 null，但文件已写完
+    final path = await _recorder.stop() ?? _finishedFile();
     if (path == null) {
       if (!mounted) return;
       Navigator.of(context).pop();

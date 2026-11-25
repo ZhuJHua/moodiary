@@ -190,8 +190,8 @@ class MediaManager {
     required MediaType type,
   }) async {
     try {
-      final hasAccess = await Gal.hasPermission(toAlbum: true);
-      if (!hasAccess) await Gal.requestPermission(toAlbum: true);
+      final granted = await Gal.hasPermission(toAlbum: true);
+      if (!granted) await Gal.requestPermission(toAlbum: true);
       if (type == .video) {
         await Gal.putVideo(path, album: 'Moodiary');
       } else {

@@ -59,6 +59,24 @@ class _Recorder extends Fake implements RecordPlatform {
   Future<void> dispose(String recorderId) async {}
 }
 
+_Recorder _installRecorder() {
+  final original = RecordPlatform.instance;
+  final recorder = _Recorder();
+  RecordPlatform.instance = recorder;
+  addTearDown(() async {
+    RecordPlatform.instance = original;
+    await recorder.states.close();
+  });
+  return recorder;
+}
+
+Widget _app(Widget home) => TranslationProvider(
+  child: MaterialApp(
+    theme: buildMuiTheme(brightness: .light),
+    home: home,
+  ),
+);
+
 void main() {
   late Directory support;
   setUpAll(() {
@@ -70,21 +88,8 @@ void main() {
   testWidgets('a native pause makes the next press resume capture', (
     tester,
   ) async {
-    final original = RecordPlatform.instance;
-    final recorder = _Recorder();
-    RecordPlatform.instance = recorder;
-    addTearDown(() async {
-      RecordPlatform.instance = original;
-      await recorder.states.close();
-    });
-    await tester.pumpWidget(
-      TranslationProvider(
-        child: MaterialApp(
-          theme: buildMuiTheme(brightness: .light),
-          home: const Scaffold(body: RecordSheet()),
-        ),
-      ),
-    );
+    final recorder = _installRecorder();
+    await tester.pumpWidget(_app(const Scaffold(body: RecordSheet())));
     await tester.tap(find.byIcon(LucideIcons.circleDot));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
@@ -105,30 +110,21 @@ void main() {
   testWidgets('saving after a native stop keeps the finished file', (
     tester,
   ) async {
-    final original = RecordPlatform.instance;
-    final recorder = _Recorder();
-    RecordPlatform.instance = recorder;
-    addTearDown(() async {
-      RecordPlatform.instance = original;
-      await recorder.states.close();
-    });
+    final recorder = _installRecorder();
     RecordSaveResult? result;
     await tester.pumpWidget(
-      TranslationProvider(
-        child: MaterialApp(
-          theme: buildMuiTheme(brightness: .light),
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: TextButton(
-                onPressed: () async {
-                  result = await Navigator.of(context).push<RecordSaveResult>(
-                    MaterialPageRoute(
-                      builder: (_) => const Scaffold(body: RecordSheet()),
-                    ),
-                  );
-                },
-                child: const Text('open'),
-              ),
+      _app(
+        Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () async {
+                result = await Navigator.of(context).push<RecordSaveResult>(
+                  MaterialPageRoute(
+                    builder: (_) => const Scaffold(body: RecordSheet()),
+                  ),
+                );
+              },
+              child: const Text('open'),
             ),
           ),
         ),
