@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -30,11 +30,11 @@ dependencies:
   moodiary_utils: 0.0.1
   mui: 0.0.1
 
-  crypto: 3.0.7
+  crypto: 3.0.8
   mime: 2.1.0
-  gap: 3.0.1
+  gap: 3.1.0
   path: 1.9.1
-  share_plus: 13.3.0
+  share_plus: 13.3.1
   yaml: 3.1.4
 
 dev_dependencies:
@@ -42,4 +42,4 @@ dev_dependencies:
     sdk: flutter
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
-  drift: 2.35.0
+  drift: 2.35.4

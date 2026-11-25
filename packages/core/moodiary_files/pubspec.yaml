@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -22,13 +22,13 @@ dependencies:
   path: 1.9.1
   path_provider: 2.1.6
   pool: 1.5.3
-  synchronized: 3.4.1+2
+  synchronized: 3.6.1+1
   cross_file: 0.3.5+5
   mime: 2.1.0
   open_file: 4.0.0
-  gal: 2.3.3
-  fc_native_video_thumbnail: 3.0.1
-  audio_metadata_reader: 1.7.1
+  gal: 3.0.1
+  fc_native_video_thumbnail: 4.0.0
+  audio_metadata_reader: 1.8.1
 
 dev_dependencies:
   flutter_test:

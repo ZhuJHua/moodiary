@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -22,7 +22,7 @@ dependencies:
   photo_manager: 3.12.0
   wechat_assets_picker: 10.1.3
   wechat_picker_library: 1.0.7
-  image_picker: 1.2.3
+  image_picker: 1.2.4
   provider: 6.1.5+1
 
 dev_dependencies:

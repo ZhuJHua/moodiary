@@ -476,7 +476,9 @@ class _AnimatedSize extends StatelessWidget {
   @override
   Widget build(BuildContext context) => TweenAnimationBuilder<double>(
     tween: Tween(end: bytes.toDouble()),
-    duration: MediaQuery.disableAnimationsOf(context)
+    duration:
+        (MediaQuery.disableAnimationsOf(context) ||
+            MediaQuery.reduceMotionOf(context))
         ? Duration.zero
         : const Duration(milliseconds: 350),
     curve: Curves.easeOutCubic,
@@ -504,7 +506,8 @@ class _PulseDotState extends State<_PulseDot>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (MediaQuery.disableAnimationsOf(context)) {
+    if (MediaQuery.disableAnimationsOf(context) ||
+        MediaQuery.reduceMotionOf(context)) {
       _controller.stop();
       _controller.value = 1;
     } else {

@@ -35,12 +35,18 @@ Map<String, String> rustCargoEnvironment(
   Uri? androidNdkRoot,
 }) {
   return switch (code.targetOS) {
-    OS.iOS => {'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0'},
-    OS.macOS => {'MACOSX_DEPLOYMENT_TARGET': '${code.macOS.targetVersion}.0'},
+    OS.iOS => {
+      'IPHONEOS_DEPLOYMENT_TARGET': _apple(code.iOS.deploymentVersion),
+    },
+    OS.macOS => {
+      'MACOSX_DEPLOYMENT_TARGET': _apple(code.macOS.deploymentVersion),
+    },
     OS.android => _androidEnvironment(code, androidNdkRoot),
     _ => const <String, String>{},
   };
 }
+
+String _apple(AppleVersion v) => '${v.major}.${v.minor}';
 
 Map<String, String> _androidEnvironment(CodeConfig code, Uri? ndkRoot) {
   final triple = switch (code.targetArchitecture) {

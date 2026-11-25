@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -21,17 +22,16 @@ class _RecordSheetState extends State<RecordSheet> {
   final _recorder = AudioRecorder();
 
   StreamSubscription<Amplitude>? _ampSub;
+  StreamSubscription<RecordState>? _stateSub;
 
   final _nameController = TextEditingController();
 
   String? _fileName;
 
   bool _started = false;
-  bool _recording = false;
+  RecordState _state = .stop;
 
   bool _finishing = false;
-
-  Duration _elapsed = .zero;
 
   final Stopwatch _watch = Stopwatch();
 
@@ -47,6 +47,7 @@ class _RecordSheetState extends State<RecordSheet> {
   void dispose() {
     _nameController.dispose();
     _ampSub?.cancel();
+    _stateSub?.cancel();
     // record 原生层 stop() 后仍持有输出路径，此时调用 cancel() 会删除已录制文件
     final name = _fileName;
     if (name != null) {
@@ -60,38 +61,45 @@ class _RecordSheetState extends State<RecordSheet> {
 
   Future<void> _start() async {
     final granted = await _recorder.hasPermission();
-    if (!granted) return;
+    if (!granted || !mounted) return;
     final name = 'audio-${uuidV7()}.m4a';
     final path = AppFiles.getRealPath('audio', name);
     MediaHolds.add(.audio, name);
+    _fileName = name;
+    _stateSub ??= _recorder.onStateChanged().listen(_onStateChanged);
     await _recorder.start(
       const RecordConfig(androidConfig: AndroidRecordConfig(useLegacy: true)),
       path: path,
     );
+    if (!mounted) return;
     _ampSub = _recorder
         .onAmplitudeChanged(_sampleInterval)
         .listen(_onAmplitude);
-    _watch
-      ..reset()
-      ..start();
-    if (!mounted) return;
     setState(() {
-      _fileName = name;
       _started = true;
-      _recording = true;
-      _elapsed = .zero;
       _amplitudes.clear();
       _amplitudeBaseline = 0;
+    });
+  }
+
+  void _onStateChanged(RecordState state) {
+    if (!mounted || _finishing) return;
+    setState(() {
+      _state = state;
+      if (state == .record) {
+        _watch.start();
+      } else {
+        _watch.stop();
+      }
     });
   }
 
   void _onAmplitude(Amplitude amp) {
     if (!mounted) return;
     // record 的振幅定时器在 pause 后仍会触发（isRecording 对 paused 也返回 true）
-    if (!_recording) return;
+    if (_state != .record) return;
     final value = amp.current;
     setState(() {
-      _elapsed += _sampleInterval;
       if (!value.isFinite) {
         _pushSample(0);
       } else if (value != amp.max) {
@@ -113,16 +121,10 @@ class _RecordSheetState extends State<RecordSheet> {
 
   Future<void> _pauseOrResume() async {
     if (_finishing) return;
-    if (_recording) {
+    if (_state == .record) {
       await _recorder.pause();
-      _watch.stop();
-      if (!mounted) return;
-      setState(() => _recording = false);
-    } else {
+    } else if (_state == .pause) {
       await _recorder.resume();
-      _watch.start();
-      if (!mounted) return;
-      setState(() => _recording = true);
     }
   }
 
@@ -147,7 +149,19 @@ class _RecordSheetState extends State<RecordSheet> {
     await _ampSub?.cancel();
     _ampSub = null;
     _watch.stop();
-    final path = await _recorder.stop();
+    // 原生层可能已自行结束录制（onStopped，如被系统打断），此时 stop() 返回 null，
+    // 但文件已经写完，按已知路径保留
+    final name0 = _fileName;
+    final expected = name0 == null
+        ? null
+        : AppFiles.getRealPath('audio', name0);
+    final path =
+        await _recorder.stop() ??
+        (expected != null &&
+                File(expected).existsSync() &&
+                File(expected).lengthSync() > 0
+            ? expected
+            : null);
     if (path == null) {
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -233,7 +247,7 @@ class _RecordSheetState extends State<RecordSheet> {
         if (_started) ...[
           const SizedBox(height: 8),
           Text(
-            _fmt(_elapsed),
+            _fmt(_watch.elapsed),
             style: context.theme.typography.titleMedium.onSurface.tabular,
           ),
           const SizedBox(height: 12),
@@ -242,12 +256,12 @@ class _RecordSheetState extends State<RecordSheet> {
             children: [
               TextButton(onPressed: _cancel, child: Text(l10n.common.cancel)),
               FilledButton(
-                onPressed: _pauseOrResume,
+                onPressed: _state == .stop ? null : _pauseOrResume,
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: Icon(
-                    _recording ? LucideIcons.pause : LucideIcons.play,
-                    key: ValueKey(_recording),
+                    _state == .record ? LucideIcons.pause : LucideIcons.play,
+                    key: ValueKey(_state),
                   ),
                 ),
               ),

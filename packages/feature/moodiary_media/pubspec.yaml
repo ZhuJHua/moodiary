@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -24,15 +24,15 @@ dependencies:
   moodiary_router: 0.0.1
   moodiary_utils: 0.0.1
 
-  flutter_riverpod: 3.4.3
+  flutter_riverpod: 3.5.0
   mime: 2.1.0
   path: 1.9.1
-  share_plus: 13.3.0
-  riverpod_annotation: 4.0.7
+  share_plus: 13.3.1
+  riverpod_annotation: 4.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
-  riverpod_generator: 4.0.9
+  riverpod_generator: 4.0.10

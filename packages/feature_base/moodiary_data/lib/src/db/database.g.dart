@@ -8632,61 +8632,59 @@ class $DiariesTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (diaryLinksRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           DiaryRow,
                           Diaries,
-                          DiaryLinkRow
+                          DiaryLinkRow,
+                          DiaryLinks
                         >(
                           currentTable: table,
                           referencedTable: $DiariesReferences
                               ._diaryLinksRefsTable(db),
                           managerFromTypedResult: (p0) =>
                               $DiariesReferences(db, table, p0).diaryLinksRefs,
-                          referencedItemsForCurrentItem: (
-                            item,
-                            referencedItems,
-                          ) => referencedItems.where((e) => e.srcId == item.id),
+                          currentColumn: 'id',
+                          referencedColumn: 'src_id',
                           typedResults: items,
                         ),
                       if (diaryMediaRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           DiaryRow,
                           Diaries,
-                          DiaryMediaRow
+                          DiaryMediaRow,
+                          DiaryMedia
                         >(
                           currentTable: table,
                           referencedTable: $DiariesReferences
                               ._diaryMediaRefsTable(db),
                           managerFromTypedResult: (p0) =>
                               $DiariesReferences(db, table, p0).diaryMediaRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.diaryId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'diary_id',
                           typedResults: items,
                         ),
                       if (diaryTagsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           DiaryRow,
                           Diaries,
-                          DiaryTagRow
+                          DiaryTagRow,
+                          DiaryTags
                         >(
                           currentTable: table,
                           referencedTable: $DiariesReferences
                               ._diaryTagsRefsTable(db),
                           managerFromTypedResult: (p0) =>
                               $DiariesReferences(db, table, p0).diaryTagsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.diaryId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'diary_id',
                           typedResults: items,
                         ),
                       if (legacyMoodScenesRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           DiaryRow,
                           Diaries,
-                          LegacyMoodSceneRow
+                          LegacyMoodSceneRow,
+                          LegacyMoodScenes
                         >(
                           currentTable: table,
                           referencedTable: $DiariesReferences
@@ -8696,10 +8694,8 @@ class $DiariesTableManager
                             table,
                             p0,
                           ).legacyMoodScenesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.diaryId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'diary_id',
                           typedResults: items,
                         ),
                     ];
@@ -10085,10 +10081,11 @@ class $ChatSessionsTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (chatMessagesRefs)
-                    await $_getPrefetchedData<
+                    await $_getPrefetchedDataByColumns<
                       ChatSessionRow,
                       ChatSessions,
-                      ChatMessageRow
+                      ChatMessageRow,
+                      ChatMessages
                     >(
                       currentTable: table,
                       referencedTable: $ChatSessionsReferences
@@ -10098,8 +10095,8 @@ class $ChatSessionsTableManager
                         table,
                         p0,
                       ).chatMessagesRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.sessionId == item.id),
+                      currentColumn: 'id',
+                      referencedColumn: 'session_id',
                       typedResults: items,
                     ),
                 ];
@@ -10632,10 +10629,11 @@ class $ChatMessagesTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (assistantToolCallsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ChatMessageRow,
                           ChatMessages,
-                          AssistantToolCallRow
+                          AssistantToolCallRow,
+                          AssistantToolCalls
                         >(
                           currentTable: table,
                           referencedTable: $ChatMessagesReferences
@@ -10646,10 +10644,8 @@ class $ChatMessagesTableManager
                                 table,
                                 p0,
                               ).assistantToolCallsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.messageId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'message_id',
                           typedResults: items,
                         ),
                     ];

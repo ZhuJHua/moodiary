@@ -59,7 +59,9 @@ class _StorageBarState extends State<StorageBar> with TickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _reduce = MediaQuery.disableAnimationsOf(context);
+    _reduce =
+        MediaQuery.disableAnimationsOf(context) ||
+        MediaQuery.reduceMotionOf(context);
     _retarget();
   }
 

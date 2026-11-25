@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
@@ -183,7 +183,7 @@ void main() {
         await tester.pumpWidget(
           CupertinoApp(
             home: MediaQuery(
-              data: MediaQueryData(disableAnimations: reduced),
+              data: MediaQueryData(reduceMotion: reduced),
               child: ft.TiptapEditor(
                 key: key,
                 controller: controller,

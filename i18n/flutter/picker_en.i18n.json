@@ -1,5 +1,6 @@
 {
   "recentAlbum": "Recent",
+  "fileLoadFailed": "Couldn't load the selected file. Please try again.",
   "done": "Done",
   "doneCount": "Done {count}/{max}",
   "limitedTip": "The app can only access selected photos and videos",

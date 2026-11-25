@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -18,9 +18,9 @@ dependencies:
   moodiary_di: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_platform: 0.0.1
-  mmkv: 2.4.2
-  shared_preferences: 2.5.5
-  flutter_secure_storage: 11.0.0
+  mmkv: 2.4.3
+  shared_preferences: 2.5.6
+  flutter_secure_storage: 11.2.0
   path: 1.9.1
   injectable: 3.0.0
 

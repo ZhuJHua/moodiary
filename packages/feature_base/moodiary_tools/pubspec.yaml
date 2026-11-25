@@ -5,8 +5,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -18,7 +18,7 @@ dependencies:
   moodiary_logging: 0.0.1
   json_schema_builder: 0.1.7
   mime: 2.1.0
-  synchronized: 3.4.1+2
+  synchronized: 3.6.1+1
 
 dev_dependencies:
   fast_image: 0.0.1
@@ -28,4 +28,4 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  drift: 2.35.0
+  drift: 2.35.4

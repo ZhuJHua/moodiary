@@ -110,7 +110,8 @@ class _MGlassNavBarCommonState extends State<_MGlassNavBarCommon>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (MediaQuery.disableAnimationsOf(context)) {
+    if (MediaQuery.disableAnimationsOf(context) ||
+        MediaQuery.reduceMotionOf(context)) {
       _position.value = widget.selectedIndex.toDouble();
     }
   }
@@ -120,7 +121,8 @@ class _MGlassNavBarCommonState extends State<_MGlassNavBarCommon>
     super.didUpdateWidget(oldWidget);
     final target = widget.selectedIndex.toDouble();
     if (oldWidget.destinations.length != widget.destinations.length ||
-        MediaQuery.disableAnimationsOf(context)) {
+        (MediaQuery.disableAnimationsOf(context) ||
+            MediaQuery.reduceMotionOf(context))) {
       _position.value = target;
     } else if (oldWidget.selectedIndex != widget.selectedIndex) {
       _position.animateWith(
@@ -406,7 +408,9 @@ class _ActionButtonState extends State<_ActionButton>
     final onPressed = action.onPressed;
     final tooltip = action.tooltip;
     final animate =
-        onPressed != null && !MediaQuery.disableAnimationsOf(context);
+        onPressed != null &&
+        !(MediaQuery.disableAnimationsOf(context) ||
+            MediaQuery.reduceMotionOf(context));
     Widget button = GestureDetector(
       excludeFromSemantics: true,
       behavior: HitTestBehavior.opaque,

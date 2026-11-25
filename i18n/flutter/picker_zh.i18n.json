@@ -1,5 +1,6 @@
 {
   "recentAlbum": "最近",
+  "fileLoadFailed": "无法读取所选文件，请重试。",
   "done": "完成",
   "doneCount": "完成 {count}/{max}",
   "limitedTip": "你只允许应用访问部分照片和视频",

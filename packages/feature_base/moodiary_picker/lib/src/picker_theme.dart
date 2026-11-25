@@ -1,3 +1,5 @@
+// wechat_assets_picker requires the SDK ThemeData for pickerTheme.
+// ignore: deprecated_member_use
 import 'package:flutter/material.dart' as legacy;
 import 'package:mui/mui.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';

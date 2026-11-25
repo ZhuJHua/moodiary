@@ -5,8 +5,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -21,7 +21,7 @@ dependencies:
   moodiary_router: 0.0.1
   moodiary_storage: 0.0.1
   mui: 0.0.1
-  synchronized: 3.4.1+2
+  synchronized: 3.6.1+1
 
 dev_dependencies:
   flutter_test:

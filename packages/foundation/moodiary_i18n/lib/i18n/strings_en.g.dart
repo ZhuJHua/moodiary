@@ -1223,6 +1223,7 @@ class _Translations$picker$en extends Translations$picker$zh {
 
 	// Translations
 	@override String get recentAlbum => 'Recent';
+	@override String get fileLoadFailed => 'Couldn\'t load the selected file. Please try again.';
 	@override String get done => 'Done';
 	@override String doneCount({required Object count, required Object max}) => 'Done ${count}/${max}';
 	@override String get limitedTip => 'The app can only access selected photos and videos';

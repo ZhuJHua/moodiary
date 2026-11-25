@@ -6,24 +6,24 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
     sdk: flutter
   clock: 1.1.3
-  liquid_glass_widgets: 1.19.0
+  liquid_glass_widgets: 1.20.0
   glassmorphism: 4.0.0
-  material_ui: 1.1.1
-  cupertino_ui: 1.0.2
-  lucide_icons_flutter: 3.1.19
-  flutter_svg: 2.3.0
-  cached_network_image_ce: 4.10.1
+  material_ui: 1.11.1
+  cupertino_ui: 1.1.7
+  lucide_icons_flutter: 4.0.3
+  flutter_svg: 2.5.0
+  cached_network_image_ce: 4.13.2
   material_color_utilities: 0.13.0
-  slang: 4.19.1
+  slang: 4.19.2
   slang_flutter: 4.19.0
-  flutter_smart_dialog: 5.3.0
+  flutter_smart_dialog: 5.3.2
   skeletonizer: 3.0.0
 
 dev_dependencies:

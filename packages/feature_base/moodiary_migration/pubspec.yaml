@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -25,7 +25,7 @@ dependencies:
   pub_semver: 2.2.1
 
 dev_dependencies:
-  drift: 2.35.0
+  drift: 2.35.4
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

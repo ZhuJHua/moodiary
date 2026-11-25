@@ -3319,6 +3319,9 @@ class Translations$picker$zh {
 	/// zh: '最近'
 	String get recentAlbum => '最近';
 
+	/// zh: '无法读取所选文件，请重试。'
+	String get fileLoadFailed => '无法读取所选文件，请重试。';
+
 	/// zh: '完成'
 	String get done => '完成';
 

@@ -6,11 +6,11 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
-  get_it: 9.2.1
+  get_it: 9.3.0
 
 dev_dependencies:
   flutter_test:

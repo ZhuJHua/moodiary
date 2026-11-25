@@ -32,9 +32,14 @@ void main() {
           targetArchitecture: architecture,
           linkModePreference: LinkModePreference.dynamic,
           iOS: os == OS.iOS
-              ? IOSCodeConfig(targetSdk: sdk, targetVersion: 15)
+              ? IOSCodeConfig(
+                  targetSdk: sdk,
+                  deploymentVersion: AppleVersion(15),
+                )
               : null,
-          macOS: os == OS.macOS ? MacOSCodeConfig(targetVersion: 12) : null,
+          macOS: os == OS.macOS
+              ? MacOSCodeConfig(deploymentVersion: AppleVersion(12))
+              : null,
           android: os == OS.android
               ? AndroidCodeConfig(targetNdkApi: 24)
               : null,

@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/semantics.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
 
@@ -203,27 +203,25 @@ void main() {
         .radii
         .lg;
 
-    List<BorderRadius> radiiOf(WidgetTester tester) => tester
-        .widgetList<ClipRRect>(
-          find.descendant(
-            of: find.byType(MSliverSettingGroup),
-            matching: find.byType(ClipRRect),
-          ),
-        )
-        .map((c) => c.borderRadius as BorderRadius)
-        .toList();
-
-    testWidgets('首项只圆上面、末项只圆下面，中间项不包', (tester) async {
-      await tester.pumpWidget(_host(itemCount: 3));
-      final radii = radiiOf(tester);
-      expect(radii.length, 2, reason: '中间那项不该多包一层');
-      expect(radii.first, BorderRadius.vertical(top: Radius.circular(lg)));
-      expect(radii.last, BorderRadius.vertical(bottom: Radius.circular(lg)));
-    });
-
-    testWidgets('只有一项时四个角都圆', (tester) async {
-      await tester.pumpWidget(_host(itemCount: 1));
-      expect(radiiOf(tester).single, BorderRadius.all(Radius.circular(lg)));
+    testWidgets('圆角跟随整组内容滚动', (tester) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _host(itemCount: 24, viewportHeight: 180, controller: controller),
+      );
+      final finder = find.byType(SliverClipRRect);
+      final clip = tester.widget<SliverClipRRect>(finder);
+      expect(clip.borderRadius, BorderRadius.all(Radius.circular(lg)));
+      final render = tester.renderObject<RenderSliverClipRRect>(finder);
+      bool hitsTopCorner() => render.hitTest(
+        SliverHitTestResult(),
+        mainAxisPosition: 1,
+        crossAxisPosition: 1,
+      );
+      expect(hitsTopCorner(), isFalse);
+      controller.jumpTo(90);
+      await tester.pump();
+      expect(hitsTopCorner(), isTrue);
     });
 
     testWidgets('按压反馈是 MInkWell 的自绘遮罩，不吃 material 水波', (tester) async {

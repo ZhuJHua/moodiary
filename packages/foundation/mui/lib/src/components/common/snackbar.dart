@@ -92,7 +92,9 @@ class _SnackbarState extends State<_Snackbar> with TickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final still = MediaQuery.disableAnimationsOf(context);
+    final still =
+        MediaQuery.disableAnimationsOf(context) ||
+        MediaQuery.reduceMotionOf(context);
     final motion = context.theme.motion;
     _appearance
       ..duration = still ? Duration.zero : motion.enter

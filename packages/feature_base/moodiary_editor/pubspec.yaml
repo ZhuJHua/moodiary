@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -33,14 +33,14 @@ dependencies:
   mui: 0.0.1
 
 
-  flutter_riverpod: 3.4.3
-  riverpod_annotation: 4.0.7
+  flutter_riverpod: 3.5.0
+  riverpod_annotation: 4.0.8
   injectable: 3.0.0
   freezed_annotation: 3.1.0
   json_annotation: 4.12.0
-  record: 7.1.1
-  share_plus: 13.3.0
-  url_launcher: 6.3.2
+  record: 7.2.0
+  share_plus: 13.3.1
+  url_launcher: 6.3.3
   latlong2: 0.10.1
   path: 1.9.1
 
@@ -49,9 +49,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  drift: 2.35.0
+  drift: 2.35.4
   build_runner: 2.16.1
   injectable_generator: 3.1.3
-  freezed: 4.0.1
-  json_serializable: 6.14.1
-  riverpod_generator: 4.0.9
+  freezed: 4.0.3
+  json_serializable: 6.15.2
+  riverpod_generator: 4.0.10

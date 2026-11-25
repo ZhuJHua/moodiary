@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -104,6 +105,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
       }
     }
     if (!mounted) return;
+    TextInput.finishAutofillContext();
     Navigator.of(context).pop(true);
   }
 
@@ -149,39 +151,44 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
           onPressed: _save,
         ),
       ],
-      child: Column(
-        crossAxisAlignment: .stretch,
-        mainAxisSize: .min,
-        spacing: 14,
-        children: [
-          MField(
-            controller: _urlCtl,
-            label: l10n.sync.webdavOptionServer,
-            errorText: _urlError,
-            enabled: !_saving,
-            keyboardType: .url,
-            textInputAction: .next,
-          ),
-          MField(
-            controller: _userCtl,
-            label: l10n.sync.webdavOptionUsername,
-            errorText: _userError,
-            enabled: !_saving,
-            textInputAction: .next,
-          ),
-          MField(
-            controller: _passCtl,
-            label: l10n.sync.webdavOptionPassword,
-            enabled: !_saving,
-            obscureText: true,
-            onSubmitted: (_) => _save(),
-          ),
-          if (_configured)
-            MDangerRow(
-              label: l10n.sync.configClear,
-              onPressed: _saving ? null : _clear,
+      child: AutofillGroup(
+        onDisposeAction: AutofillContextAction.cancel,
+        child: Column(
+          crossAxisAlignment: .stretch,
+          mainAxisSize: .min,
+          spacing: 14,
+          children: [
+            MField(
+              controller: _urlCtl,
+              label: l10n.sync.webdavOptionServer,
+              errorText: _urlError,
+              enabled: !_saving,
+              keyboardType: .url,
+              textInputAction: .next,
             ),
-        ],
+            MField(
+              controller: _userCtl,
+              autofillHints: const [AutofillHints.username],
+              label: l10n.sync.webdavOptionUsername,
+              errorText: _userError,
+              enabled: !_saving,
+              textInputAction: .next,
+            ),
+            MField(
+              controller: _passCtl,
+              autofillHints: const [AutofillHints.password],
+              label: l10n.sync.webdavOptionPassword,
+              enabled: !_saving,
+              obscureText: true,
+              onSubmitted: (_) => _save(),
+            ),
+            if (_configured)
+              MDangerRow(
+                label: l10n.sync.configClear,
+                onPressed: _saving ? null : _clear,
+              ),
+          ],
+        ),
       ),
     );
   }

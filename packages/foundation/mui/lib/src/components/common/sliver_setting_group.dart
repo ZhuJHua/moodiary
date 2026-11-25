@@ -18,21 +18,6 @@ class MSliverSettingGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final radius = Radius.circular(theme.radii.lg);
-    final last = children.length - 1;
-
-    Widget item(int i) {
-      final isFirst = i == 0;
-      final isLast = i == last;
-      if (!isFirst && !isLast) return children[i];
-      return ClipRRect(
-        borderRadius: .vertical(
-          top: isFirst ? radius : Radius.zero,
-          bottom: isLast ? radius : Radius.zero,
-        ),
-        child: children[i],
-      );
-    }
-
     return SliverMainAxisGroup(
       slivers: [
         if (title != null)
@@ -42,10 +27,14 @@ class MSliverSettingGroup extends StatelessWidget {
             color: color ?? theme.colors.surfaceContainerLow,
             shape: RoundedRectangleBorder(borderRadius: .all(radius)),
           ),
-          sliver: SliverList.separated(
-            itemCount: children.length,
-            itemBuilder: (_, i) => item(i),
-            separatorBuilder: (_, _) => const MSettingDivider(),
+          sliver: SliverClipRRect(
+            borderRadius: .all(radius),
+            clipOverlap: .none,
+            sliver: SliverList.separated(
+              itemCount: children.length,
+              itemBuilder: (_, i) => children[i],
+              separatorBuilder: (_, _) => const MSettingDivider(),
+            ),
           ),
         ),
       ],

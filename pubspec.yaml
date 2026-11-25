@@ -3,7 +3,7 @@ description: "Workspace and Melos coordinator for the Moodiary monorepo. The app
 publish_to: "none"
 
 environment:
-  sdk: ">=3.13.0"
+  sdk: ">=3.14.0"
 
 workspace:
   - mobile
@@ -46,11 +46,8 @@ hooks:
     fast_zip: {build_assets: true}
 
 dev_dependencies:
-  melos: 8.6.0
+  melos: 8.10.1
   flutter_test:
     sdk: flutter
   moodiary_data: 0.0.1
-
-dependency_overrides:
-  cli_util: 0.5.2
 

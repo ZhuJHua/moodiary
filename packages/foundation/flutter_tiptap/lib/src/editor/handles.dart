@@ -263,7 +263,8 @@ class _MagnifierState extends State<_Magnifier>
 
   void _sync() {
     final target = widget.point == null ? 0.0 : 1.0;
-    if (MediaQuery.disableAnimationsOf(context)) {
+    if (MediaQuery.disableAnimationsOf(context) ||
+        MediaQuery.reduceMotionOf(context)) {
       _controller.value = target;
     } else if (target == 1) {
       _controller.forward();

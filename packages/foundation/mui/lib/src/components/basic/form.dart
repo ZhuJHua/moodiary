@@ -21,6 +21,7 @@ class MField extends StatefulWidget {
 
   final double minHeight;
   final TextInputType? keyboardType;
+  final Iterable<String>? autofillHints;
   final TextInputAction? textInputAction;
   final List<TextInputFormatter>? inputFormatters;
   final FocusNode? focusNode;
@@ -48,6 +49,7 @@ class MField extends StatefulWidget {
     this.expands = false,
     this.minHeight = kMoodiaryFieldHeight,
     this.keyboardType,
+    this.autofillHints = const <String>[],
     this.textInputAction,
     this.inputFormatters,
     this.focusNode,
@@ -134,6 +136,7 @@ class _MFieldState extends State<MField> {
     final field = TextField(
       controller: widget.controller,
       focusNode: widget.focusNode,
+      autofillHints: widget.autofillHints,
       autofocus: widget.autofocus,
       enabled: widget.enabled,
       obscureText: _obscured,

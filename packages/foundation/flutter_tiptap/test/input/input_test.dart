@@ -1,6 +1,6 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +10,7 @@ import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 import '../support/ime.dart';
 import '../support/reference_doc.dart';
 
-// Flutter 3.47.8 InputConnectionAdaptor.handleKeyEvent, ACTION_DOWN:
+// Flutter 3.50.1 InputConnectionAdaptor.handleKeyEvent, ACTION_DOWN:
 // arrows adjust selection, multiline Enter inserts its Unicode character,
 // DEL/FORWARD_DEL have Unicode 0 and produce no fallback edit.
 class _AndroidKeyboard {

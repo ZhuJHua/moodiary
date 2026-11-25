@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -25,22 +25,23 @@ dependencies:
   moodiary_utils: 0.0.1
   mui: 0.0.1
   screen_brightness: 2.1.11
-  video_player: 2.14.0
-  volume_controller: 3.6.1
+  video_player: 2.14.1
+  volume_controller: 3.7.1
 
-  flutter_riverpod: 3.4.3
+  flutter_riverpod: 3.5.0
   path: 1.9.1
 
-  cached_network_image_ce: 4.10.1
+  cached_network_image_ce: 4.13.2
 
-  flutter_svg: 2.3.0
+  flutter_svg: 2.5.0
+  vector_graphics: 1.3.1
   re_highlight: 0.0.3
   photo_view: 0.15.0
-  dismissible_page: 1.0.2
+  dismissible_page: 2.1.1
   audioplayers: 6.8.1
 
 dev_dependencies:
-  riverpod_annotation: 4.0.7
+  riverpod_annotation: 4.0.8
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

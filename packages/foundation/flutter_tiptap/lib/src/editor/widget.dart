@@ -393,7 +393,9 @@ class TiptapEditorState extends State<TiptapEditor>
       )..addListener(_overflowScrolled);
     }
     _tickerEnabled = TickerMode.valuesOf(context).enabled;
-    _reduceMotion = MediaQuery.disableAnimationsOf(context);
+    _reduceMotion =
+        MediaQuery.disableAnimationsOf(context) ||
+        MediaQuery.reduceMotionOf(context);
     _resetBlink();
     _scheduleGeometry();
   }
