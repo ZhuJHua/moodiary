@@ -4,12 +4,12 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
 class StressTestTile extends StatefulWidget {
   final bool isFirst;

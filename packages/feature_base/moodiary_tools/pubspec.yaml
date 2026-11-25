@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  moodiary_content: 0.0.1
+  moodiary_semantic: 0.0.1
   moodiary_data: 0.0.1
   moodiary_models: 0.0.1
   moodiary_utils: 0.0.1

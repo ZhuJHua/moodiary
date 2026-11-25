@@ -6,10 +6,10 @@ import 'package:drift/drift.dart';
 import 'package:drift/extensions/fts5.dart';
 import 'package:injectable/injectable.dart';
 import 'package:meta/meta.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'db/database.dart';
 import 'db/db_codec.dart';

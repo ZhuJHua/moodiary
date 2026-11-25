@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 
 import '../prompts/diary_prompts.dart';

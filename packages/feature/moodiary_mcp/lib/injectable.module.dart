@@ -11,6 +11,7 @@ import 'package:moodiary_data/moodiary_data.dart' as _i691;
 import 'package:moodiary_mcp/src/service/mcp_keep_alive.dart' as _i833;
 import 'package:moodiary_mcp/src/service/mcp_service.dart' as _i952;
 import 'package:moodiary_platform/moodiary_platform.dart' as _i861;
+import 'package:moodiary_semantic/moodiary_semantic.dart' as _i239;
 
 class MoodiaryMcpPackageModule extends _i526.MicroPackageModule {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -22,7 +23,7 @@ class MoodiaryMcpPackageModule extends _i526.MicroPackageModule {
         gh<_i691.CategoryRepository>(),
         gh<_i691.TagRepository>(),
         gh<_i691.MoodInsightsRepository>(),
-        gh<_i691.EmbedIndexService>(),
+        gh<_i239.EmbedIndexService>(),
       ),
     );
     gh.lazySingleton<_i833.McpKeepAlive>(

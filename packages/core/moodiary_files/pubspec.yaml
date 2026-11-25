@@ -18,7 +18,6 @@ dependencies:
   moodiary_logging: 0.0.1
   moodiary_platform: 0.0.1
   moodiary_utils: 0.0.1
-  mui: 0.0.1
   path: 1.9.1
   path_provider: 2.1.6
   pool: 1.5.3

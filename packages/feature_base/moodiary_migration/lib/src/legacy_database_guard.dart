@@ -7,6 +7,7 @@ import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart' show Font;
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:path/path.dart' as p;
 
 enum LegacyDatabaseState { none, pending, abandoning, probeFailed }
@@ -112,7 +113,10 @@ abstract final class LegacyDatabaseGuard {
     // 文件本身留在 font/ 目录不动；SQLite 写入失败仍然抛出，保留 journal 重试。
     List<Font> diskFonts;
     try {
-      diskFonts = await fonts.scanDiskFonts();
+      diskFonts = [
+        for (final file in await FontManager.scanFontFiles())
+          Font(fontFileName: file.fileName, fontWghtAxisMap: file.wghtAxis),
+      ];
     } catch (error, stack) {
       logger.e('Legacy font scan failed', error: error, stackTrace: stack);
       diskFonts = const [];

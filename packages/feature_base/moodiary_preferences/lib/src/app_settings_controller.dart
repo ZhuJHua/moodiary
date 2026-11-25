@@ -6,6 +6,8 @@ import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'font_preferences.dart';
+
 part 'app_settings_controller.freezed.dart';
 part 'app_settings_controller.g.dart';
 

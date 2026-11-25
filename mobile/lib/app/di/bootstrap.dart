@@ -7,18 +7,17 @@ import 'package:moodiary_components/moodiary_components.dart'
     show LegacyMoodSceneLabel;
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_editor/moodiary_editor.dart'
-    show EditorMigrationService;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart' show McpKeepAlive, McpService;
 import 'package:moodiary_migration/moodiary_migration.dart'
-    show VersionMigrator;
+    show EditorMigrationService, VersionMigrator;
 import 'package:moodiary_ml/moodiary_ml.dart' show EmbeddingModelManager;
 import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_reminder/moodiary_reminder.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 

@@ -73,7 +73,7 @@ core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBa
 - **`storage` below `files`**: the database and dictionary directories come from the composition root, so storage knows nothing about the file layout.
 - **`moodiary_logging` stays in foundation** because the release log path is injected via `AppLogger.configure`; reading `AppFiles` directly would float the package above core, out of reach of almost everyone.
 
-**core knows no domain type** (`Diary` / `Category` / `Font`): domain models live in `moodiary_models`, schema tables in `moodiary_data`. `moodiary_i18n` belongs in foundation even though its namespaces carry feature names: that knowledge is JSON keys, not type dependencies.
+**core knows no domain type** (`Diary` / `Category` / `Font`): domain models live in `moodiary_models`, schema tables in `moodiary_data`. `moodiary_i18n` belongs in core even though its namespaces carry feature names: that knowledge is JSON keys, not type dependencies.
 
 ### Package barrels: bare exports, visibility in the file
 
@@ -98,7 +98,7 @@ Routes carry no path or query parameters, because the app never targets the web.
 - `ColorScheme` / `TextTheme` are the sources of truth; `buildMuiTheme()` is the only place that constructs `ThemeData`. Access via `context.theme.typography.titleSmall.emphasized.primary`; what `ThemeData` cannot hold goes in `MuiTokens` (token tables, `onMedia`, `success`, `MuiFontConfig` for variable-font weights).
 - mui has zero `moodiary_*` deps and ships its own slang strings.
 
-### i18n: slang, not gen-l10n (both modes in [moodiary_i18n/AGENTS.md](packages/foundation/moodiary_i18n/AGENTS.md))
+### i18n: slang, not gen-l10n (both modes in [moodiary_i18n/AGENTS.md](packages/core/moodiary_i18n/AGENTS.md))
 
 Two unrelated slang outputs: the App (default mode, `Translations` / top-level `l10n`) and mui (`locale_handling: false` + hand-written delegate, `context.muiL10n`). **i18n** is the mechanism, **l10n** the resolved strings, **Localizations** only Flutter's chain (mui alone).
 

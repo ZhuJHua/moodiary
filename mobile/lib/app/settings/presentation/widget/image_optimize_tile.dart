@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_media/moodiary_media.dart';
 
 class ImageOptimizeTile extends StatefulWidget {
   final bool isFirst;

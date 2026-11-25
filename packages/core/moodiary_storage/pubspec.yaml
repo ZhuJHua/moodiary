@@ -17,11 +17,9 @@ dependencies:
   fast_crypto: 0.0.1
   moodiary_di: 0.0.1
   moodiary_logging: 0.0.1
-  moodiary_platform: 0.0.1
   mmkv: 2.4.2
   shared_preferences: 2.5.5
   flutter_secure_storage: 11.0.0
-  path: 1.9.1
   injectable: 3.0.0
 
 dev_dependencies:

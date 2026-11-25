@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 
 import 'assistant_defs.dart';

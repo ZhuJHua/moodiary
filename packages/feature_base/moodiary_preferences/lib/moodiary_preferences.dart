@@ -2,4 +2,5 @@ library;
 
 export 'src/app_settings_controller.dart';
 export 'src/font_controller.dart';
+export 'src/font_preferences.dart';
 export 'src/language.dart';

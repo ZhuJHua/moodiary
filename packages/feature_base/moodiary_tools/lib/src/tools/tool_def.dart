@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 
 import '../media/diary_media.dart';
 import 'diary_payloads.dart';

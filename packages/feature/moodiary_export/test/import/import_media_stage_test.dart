@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_export/moodiary_export.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
 class _FakeStore implements ImportMediaStore {

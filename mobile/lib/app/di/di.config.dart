@@ -28,7 +28,9 @@ import 'package:moodiary_mobile/app/settings/data/app_update_repository.dart'
     as _i167;
 import 'package:moodiary_platform/moodiary_platform.dart' as _i861;
 import 'package:moodiary_reminder/injectable.module.dart' as _i766;
+import 'package:moodiary_semantic/injectable.module.dart' as _i792;
 import 'package:moodiary_storage/injectable.module.dart' as _i295;
+import 'package:moodiary_storage/moodiary_storage.dart' as _i877;
 import 'package:moodiary_sync/injectable.module.dart' as _i412;
 import 'package:moodiary_theme/injectable.module.dart' as _i608;
 
@@ -43,6 +45,7 @@ extension GetItInjectableX on _i174.GetIt {
     await _i545.MoodiaryHttpPackageModule().init(gh);
     await _i591.MoodiaryMlPackageModule().init(gh);
     await _i860.MoodiaryDataPackageModule().init(gh);
+    await _i792.MoodiarySemanticPackageModule().init(gh);
     await _i578.MoodiaryAssistantPackageModule().init(gh);
     await _i563.MoodiaryMcpPackageModule().init(gh);
     await _i766.MoodiaryReminderPackageModule().init(gh);
@@ -50,11 +53,6 @@ extension GetItInjectableX on _i174.GetIt {
     await _i565.MoodiaryEditorPackageModule().init(gh);
     await _i608.MoodiaryThemePackageModule().init(gh);
     final appModule = _$AppModule();
-    await gh.singletonAsync<_i691.MoodiaryDatabase>(
-      () => appModule.database(),
-      preResolve: true,
-      dispose: _i461.closeDatabase,
-    );
     gh.lazySingleton<_i861.NotificationPermission>(
       () => appModule.notificationPermission(),
     );
@@ -63,7 +61,16 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i167.AppUpdateRepository(gh<_i765.IHttpClient>()),
     );
     gh.lazySingleton<_i800.IHeifDecoder>(() => _i845.MobileHeifDecoder());
-    gh.lazySingleton<_i800.IFilePicker>(() => _i964.MobileFilePicker());
+    gh.singleton<_i800.IFilePicker>(() => _i964.MobileFilePicker());
+    await gh.singletonAsync<_i877.IKVStorage>(
+      () => appModule.kvStorage(gh<_i877.ISecureKVStorage>()),
+      preResolve: true,
+    );
+    await gh.singletonAsync<_i691.MoodiaryDatabase>(
+      () => appModule.database(gh<_i877.IKVStorage>()),
+      preResolve: true,
+      dispose: _i461.closeDatabase,
+    );
     return this;
   }
 }

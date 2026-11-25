@@ -19,10 +19,10 @@ dependencies:
   moodiary_platform: 0.0.1
   moodiary_components: 0.0.1
   moodiary_router: 0.0.1
-  mui: 0.0.1
 
 
 dev_dependencies:
+  mui: 0.0.1
   moodiary_di: 0.0.1
   flutter_test:
     sdk: flutter

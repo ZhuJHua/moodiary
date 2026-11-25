@@ -1,12 +1,16 @@
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
-import 'package:moodiary_editor/moodiary_editor.dart'
-    show EditorMigrationService, editorRoutes;
+import 'package:moodiary_editor/moodiary_editor.dart' show editorRoutes;
 import 'package:moodiary_export/moodiary_export.dart' show exportRoutes;
 import 'package:moodiary_lock/moodiary_lock.dart';
+import 'package:moodiary_mcp/moodiary_mcp.dart' show mcpRoutes;
 import 'package:moodiary_media/moodiary_media.dart' show mediaRoutes;
 import 'package:moodiary_migration/moodiary_migration.dart'
-    show LegacyDatabaseGuard, LegacyDatabaseState;
+    show
+        EditorMigrationService,
+        LegacyDatabaseGuard,
+        LegacyDatabaseState,
+        migrationRoutes;
 import 'package:moodiary_mobile/app/di/bootstrap.dart' show resumeDataStartup;
 import 'package:moodiary_mobile/app/router/route_error_page.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
@@ -73,6 +77,8 @@ List<RouteBase> _mobileRoutes() => [
   ...syncRoutes(),
   ...exportRoutes(),
   ...lockRoutes(),
-  ...editorRoutes(resumeStartup: resumeDataStartup),
+  ...editorRoutes(),
+  ...migrationRoutes(resumeStartup: resumeDataStartup),
+  ...mcpRoutes(),
   ...assistantRoutes(),
 ];

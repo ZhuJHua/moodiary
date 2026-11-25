@@ -13,7 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  fast_image: 0.0.1
+  moodiary_content: 0.0.1
   sqlite3_simple:
     git:
       url: https://github.com/ZhuJHua/sqlite3_simple.git
@@ -21,13 +21,10 @@ dependencies:
   moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_storage: 0.0.1
-  crypto: 3.0.7
   drift: 2.35.0
   injectable: 3.0.0
   sqlite3: 3.5.2
-  moodiary_theme: 0.0.1
   moodiary_logging: 0.0.1
-  moodiary_ml: 0.0.1
   moodiary_models: 0.0.1
   sqlite3_vec: 0.1.2
   moodiary_utils: 0.0.1

@@ -11,6 +11,7 @@ import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 

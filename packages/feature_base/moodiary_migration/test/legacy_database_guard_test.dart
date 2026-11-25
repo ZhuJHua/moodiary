@@ -32,11 +32,6 @@ class _Fonts extends Fake implements FontRepository {
   final registered = <String>{};
 
   @override
-  Future<List<Font>> scanDiskFonts() async {
-    return [const Font(fontFileName: 'old.ttf', fontWghtAxisMap: {})];
-  }
-
-  @override
   Future<void> insertFont(Font font) async {
     if (fail) throw StateError('insert failed');
     registered.add(font.fontFileName);
@@ -56,11 +51,12 @@ void main() {
     for (final path in [
       database,
       '$database.lock',
-      'font/old.ttf',
       for (final name in media) '$name/旧文件',
     ]) {
       file(path).writeAsStringSync(path);
     }
+    File('$repoRoot/packages/foundation/mui/assets/fonts/qweather-icons.ttf')
+        .copySync(file('font/old.ttf').path);
   }
 
   setUpAll(() {
@@ -159,7 +155,7 @@ void main() {
           '$database.lock',
         );
         expect(file('font/old.ttf').existsSync(), isTrue);
-        expect(fonts.registered, {'old.ttf'});
+        expect(fonts.registered, {'qweather-icons.ttf'});
         expect(MoodiaryKVs.dbEngineMigrated.get(), isTrue);
         expect(MoodiaryKVs.searchIndexBackfilled.get(), isTrue);
         expect(MoodiaryKVs.legacyAbandonJournal.get(), isNull);

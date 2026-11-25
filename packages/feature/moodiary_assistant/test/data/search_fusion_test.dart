@@ -6,6 +6,7 @@ import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 
 class _SemanticIndex extends Fake implements EmbedIndexService {
   _SemanticIndex(this.ids);

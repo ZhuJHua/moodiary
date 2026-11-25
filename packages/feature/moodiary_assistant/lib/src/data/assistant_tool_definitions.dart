@@ -2,6 +2,7 @@ import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 
 import 'memory_repository.dart';

@@ -46,26 +46,30 @@ const Map<String, int> _pkgLayers = {
 
 const Map<String, int> _featureBaseOrder = {
   'moodiary_models': 0,
-  'moodiary_ml': 0,
+  'moodiary_content': 0,
   'moodiary_data': 1,
-  'moodiary_tools': 2,
   'moodiary_components': 2,
   'moodiary_migration': 2,
   'moodiary_preferences': 2,
-  'moodiary_picker': 3,
-  'moodiary_editor': 4,
+  'moodiary_semantic': 2,
+  'moodiary_tools': 3,
+  'moodiary_editor': 3,
 };
 
 const Map<String, int> _coreOrder = {
-  'moodiary_platform': 0,
+  'moodiary_i18n': 0,
+  'moodiary_router': 0,
+  'moodiary_native': 0,
   'moodiary_http': 0,
-  'moodiary_storage': 1,
+  'moodiary_storage': 0,
+  'moodiary_platform': 1,
   'moodiary_files': 2,
   'moodiary_theme': 3,
+  'moodiary_ml': 3,
 };
 
 final RegExp _pkgDepRe = RegExp(
-  r'^\s{2}((?:moodiary_[a-z0-9_]+|mui)):',
+  r'^\s{2}((?:moodiary|fast)_[a-z0-9_]+|mui|flutter_tiptap|rust_hook):',
   multiLine: true,
 );
 
@@ -109,7 +113,7 @@ List<String> _checkPackageLayers() {
     for (final dst in entry.value) {
       final dstLayerName = layerOf[dst];
       if (dstLayerName == null) {
-        out.add('$src -> $dst（依赖了不在 workspace 里的 moodiary_* 包）');
+        out.add('$src -> $dst（依赖了不在 workspace 里的本地包）');
         continue;
       }
       final dstLayer = _pkgLayers[dstLayerName]!;
@@ -300,7 +304,7 @@ List<String> _checkRustFacades() {
 }
 
 const Map<String, String> _legacyMaterialAllowlist = {
-  'packages/feature_base/moodiary_picker/lib/src/picker_theme.dart':
+  'mobile/lib/app/picker/picker_theme.dart':
       'wechat_assets_picker 的 pickerTheme 只吃 legacy ThemeData',
 };
 
@@ -438,11 +442,6 @@ const Set<String> _mobileOnlyPlugins = {
 };
 
 const Map<String, String> _mobileOnlyPluginAllowlist = {
-  'packages/feature_base/moodiary_picker -> photo_manager':
-      '移动端专属实现包：全仓只有 mobile 依赖它（IFilePicker 的移动 UI）',
-  'packages/feature_base/moodiary_picker -> wechat_assets_picker': '同上',
-  'packages/feature_base/moodiary_picker -> wechat_picker_library': '同上',
-  'packages/feature_base/moodiary_picker -> image_picker': '同上（系统相机）',
   'packages/feature_base/moodiary_components -> video_player':
       '播放引擎的移动实现与唯一调用点同居；桌面经 MVideoPlayerPage 的 '
       'portFactory/ambientPorts 注入自己的端口实现，皮肤与状态机（mui）零插件',

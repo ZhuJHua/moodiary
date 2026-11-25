@@ -5,7 +5,7 @@ Composition-root details for dependency injection, bootstrap, and app mounting.
 ## Dependency injection
 
 - Put binding annotations on implementation classes (`@Singleton(as:)`, `@LazySingleton(as:)`, `@Injectable(as:)`).
-- `lib/app/di/di.dart` mounts injectable micro-package modules through `externalPackageModulesBefore`. Keep storage first; its factories use `preResolve`, and `MmkvKVStorage.create(ISecureKVStorage)` enforces secure-storage initialization before KV migration.
+- `lib/app/di/di.dart` mounts injectable micro-package modules through `externalPackageModulesBefore`. Keep storage first; it pre-resolves secure storage before `AppModule.kvStorage` injects it into MMKV migration.
 - Keep one `configureDependencies` entry point, using injectable's default initializer and generation scope to avoid duplicate registration.
 - Use `AppModule` for bindings needing app behavior: the HTTP error toast and database path. Repositories stay lazy so they can resolve these app-provided dependencies after package registration.
 - Startup belongs to `lib/main.dart` and `lib/app/di/bootstrap.dart`, not `@PostConstruct`. Activate the selected sync provider after version migration, then start `AutoSyncWatcher`.

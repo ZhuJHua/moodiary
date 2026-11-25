@@ -10,8 +10,6 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:moodiary_data/src/category_repository.dart' as _i428;
 import 'package:moodiary_data/src/db/database.dart' as _i527;
 import 'package:moodiary_data/src/diary_repository.dart' as _i1068;
-import 'package:moodiary_data/src/embed_index_service.dart' as _i768;
-import 'package:moodiary_data/src/embed_queue_watcher.dart' as _i135;
 import 'package:moodiary_data/src/font_repository.dart' as _i377;
 import 'package:moodiary_data/src/mood_insights_repository.dart' as _i504;
 import 'package:moodiary_data/src/open_diary_registry.dart' as _i107;
@@ -19,7 +17,6 @@ import 'package:moodiary_data/src/place_repository.dart' as _i925;
 import 'package:moodiary_data/src/sync_pending.dart' as _i931;
 import 'package:moodiary_data/src/tag_repository.dart' as _i521;
 import 'package:moodiary_data/src/tombstone_repository.dart' as _i952;
-import 'package:moodiary_ml/moodiary_ml.dart' as _i611;
 
 class MoodiaryDataPackageModule extends _i526.MicroPackageModule {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -28,13 +25,6 @@ class MoodiaryDataPackageModule extends _i526.MicroPackageModule {
     gh.singleton<_i107.OpenDiaryRegistry>(() => _i107.OpenDiaryRegistry());
     gh.singleton<_i931.SyncPendingTracker>(() => _i931.SyncPendingTracker());
     gh.singleton<_i931.SyncDirtyTracker>(() => _i931.SyncDirtyTracker());
-    gh.lazySingleton<_i768.EmbedIndexService>(
-      () => _i768.EmbedIndexService(
-        gh<_i527.MoodiaryDatabase>(),
-        gh<_i611.SemanticEmbedder>(),
-        gh<_i107.OpenDiaryRegistry>(),
-      ),
-    );
     gh.lazySingleton<_i428.CategoryRepository>(
       () => _i428.CategoryRepository(gh<_i527.MoodiaryDatabase>()),
     );
@@ -58,14 +48,6 @@ class MoodiaryDataPackageModule extends _i526.MicroPackageModule {
         gh<_i527.MoodiaryDatabase>(),
         gh<_i1068.DiaryRepository>(),
       ),
-    );
-    gh.lazySingleton<_i135.EmbedQueueWatcher>(
-      () => _i135.EmbedQueueWatcher(
-        gh<_i1068.DiaryRepository>(),
-        gh<_i768.EmbedIndexService>(),
-        gh<_i107.OpenDiaryRegistry>(),
-      ),
-      dispose: (i) => i.dispose(),
     );
   }
 }

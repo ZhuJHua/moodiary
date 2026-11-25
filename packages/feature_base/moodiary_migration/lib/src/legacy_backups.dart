@@ -5,7 +5,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:path/path.dart' as p;
 
 /// Only finalized engine migrations make these rollback copies disposable.
-/// Editor backups are owned by EditorMigrationService in a higher layer;
+/// Editor backups are owned by EditorMigrationService;
 /// that service already purges them once its own migration is complete.
 class LegacyBackups {
   final String databasePath;

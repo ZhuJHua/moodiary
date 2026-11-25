@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 import 'package:moodiary_components/moodiary_components.dart' as components;
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart' as models;
 import 'package:moodiary_native/moodiary_native.dart';

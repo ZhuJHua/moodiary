@@ -7,6 +7,7 @@ import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:synchronized/synchronized.dart';
 

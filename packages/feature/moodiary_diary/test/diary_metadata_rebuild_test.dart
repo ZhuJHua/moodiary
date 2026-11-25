@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/detail/diary_page.dart';
@@ -12,7 +13,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
 import 'support/pump.dart';

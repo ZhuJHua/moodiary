@@ -1,8 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_editor/moodiary_editor.dart'
-    show EditorMigrationService;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_mobile/app/router/route_error_page.dart';

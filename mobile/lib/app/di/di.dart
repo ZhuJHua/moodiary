@@ -25,6 +25,7 @@ import 'package:moodiary_mobile/app/di/di.config.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_reminder/injectable.module.dart';
 import 'package:moodiary_reminder/moodiary_reminder.dart';
+import 'package:moodiary_semantic/injectable.module.dart';
 import 'package:moodiary_storage/injectable.module.dart';
 import 'package:moodiary_storage/moodiary_storage.dart'
     show IKVStorage, ISecureKVStorage;
@@ -40,6 +41,7 @@ import 'package:moodiary_theme/injectable.module.dart';
     // AppModule 的 database / httpClient 在全部 micro-package 之后注册，包内 eager 单例不得依赖它们。
     ExternalModule(MoodiaryMlPackageModule),
     ExternalModule(MoodiaryDataPackageModule),
+    ExternalModule(MoodiarySemanticPackageModule),
     ExternalModule(MoodiaryAssistantPackageModule),
     ExternalModule(MoodiaryMcpPackageModule),
     ExternalModule(MoodiaryReminderPackageModule),

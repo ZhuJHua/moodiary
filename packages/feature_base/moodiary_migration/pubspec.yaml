@@ -13,6 +13,13 @@ dependencies:
   flutter:
     sdk: flutter
 
+  moodiary_content: 0.0.1
+  moodiary_i18n: 0.0.1
+  moodiary_router: 0.0.1
+  moodiary_theme: 0.0.1
+  mui: 0.0.1
+  share_plus: 13.3.0
+  url_launcher: 6.3.2
   moodiary_files: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_storage: 0.0.1

@@ -7,6 +7,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_mcp/src/tools/register_moodiary_tools.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';

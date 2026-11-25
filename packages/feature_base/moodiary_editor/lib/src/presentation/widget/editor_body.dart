@@ -1,9 +1,9 @@
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show MoodiaryEditorController;
 import 'package:moodiary_editor/src/presentation/widget/moodiary_editor_view.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
 class EditorBody extends StatefulWidget {

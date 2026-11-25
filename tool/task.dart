@@ -199,11 +199,11 @@ Future<void> _genRust() async {
 Future<void> _checkLayers() => _run('fvm', ['dart', 'tool/check_layers.dart']);
 
 const _slangPkgDirs = [
-  'packages/foundation/moodiary_i18n',
+  'packages/core/moodiary_i18n',
   'packages/foundation/mui',
 ];
 
-const _pigeonPkgDir = 'packages/foundation/moodiary_native';
+const _pigeonPkgDir = 'packages/core/moodiary_native';
 
 Future<void> _pigeon() async {
   final inputs =

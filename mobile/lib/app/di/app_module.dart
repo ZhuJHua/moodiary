@@ -4,9 +4,19 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:path/path.dart';
 
 @module
 abstract class AppModule {
+  @preResolve
+  @singleton
+  Future<IKVStorage> kvStorage(ISecureKVStorage secureKv) =>
+      MmkvKVStorage.create(
+        rootDir: join(PlatformService.get().applicationSupportPath, 'mmkv'),
+        secureKv: secureKv,
+      );
+
   @lazySingleton
   NotificationPermission notificationPermission() =>
       DeviceNotificationPermission();
@@ -17,7 +27,7 @@ abstract class AppModule {
 
   @preResolve
   @Singleton(dispose: closeDatabase)
-  Future<MoodiaryDatabase> database() async {
+  Future<MoodiaryDatabase> database(IKVStorage _) async {
     final db = await MoodiaryDatabase.open(
       path: AppFiles.getRealPath('database', 'moodiary.db'),
       jiebaDictDir: AppFiles.getRealPath('database', 'jieba'),
