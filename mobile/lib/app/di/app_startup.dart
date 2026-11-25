@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
@@ -108,15 +109,7 @@ Future<void> _initTheme(Ref ref) async {
 
 Future<void> _configureSystemUi() async {
   if (Platform.isAndroid) {
-    try {
-      await FlutterDisplayMode.setHighRefreshRate();
-    } catch (error, stack) {
-      logger.e(
-        'high refresh rate unavailable',
-        error: error,
-        stackTrace: stack,
-      );
-    }
+    unawaited(_enableHighRefreshRate());
   }
   await SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
@@ -126,4 +119,16 @@ Future<void> _configureSystemUi() async {
     ),
   );
   applyDeviceOrientationLock();
+}
+
+Future<void> _enableHighRefreshRate() async {
+  try {
+    await FlutterDisplayMode.setHighRefreshRate();
+  } catch (error, stack) {
+    logger.e(
+      'high refresh rate unavailable',
+      error: error,
+      stackTrace: stack,
+    );
+  }
 }

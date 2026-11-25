@@ -18,7 +18,8 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  binding.deferFirstFrame();
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
@@ -39,30 +40,52 @@ void main() {
     ProviderScope(
       retry: (_, _) => null,
       overrides: buildMobilePortOverrides(),
-      child: const AppStartupWidget(),
+      child: AppStartupWidget(onFirstFrameReady: binding.allowFirstFrame),
     ),
   );
 }
 
-class AppStartupWidget extends ConsumerWidget {
-  const AppStartupWidget({super.key});
+class AppStartupWidget extends ConsumerStatefulWidget {
+  const AppStartupWidget({super.key, this.onFirstFrameReady});
+
+  final VoidCallback? onFirstFrameReady;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => ref
-      .watch(appStartupProvider)
-      .when(
-        loading: () => const _StartupPlaceholder(),
-        error: (error, stack) => BuildBadge(
-          child: BootFailurePage(error: error, stackTrace: stack),
-        ),
-        data: (_) => MGlassApp(
-          child: BuildBadge(
-            child: TranslationProvider(
-              child: const _EagerInitialization(child: Moodiary()),
-            ),
+  ConsumerState<AppStartupWidget> createState() => _AppStartupWidgetState();
+}
+
+class _AppStartupWidgetState extends ConsumerState<AppStartupWidget> {
+  bool _firstFrameReleased = false;
+
+  void _releaseFirstFrame() {
+    if (_firstFrameReleased) return;
+    _firstFrameReleased = true;
+    widget.onFirstFrameReady?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<void>>(appStartupProvider, (_, next) {
+      if (!next.isLoading) _releaseFirstFrame();
+    });
+    final startup = ref.watch(appStartupProvider);
+    if (!startup.isLoading && !_firstFrameReleased) {
+      Future<void>.microtask(_releaseFirstFrame);
+    }
+    return startup.when(
+      loading: () => const _StartupPlaceholder(),
+      error: (error, stack) => BuildBadge(
+        child: BootFailurePage(error: error, stackTrace: stack),
+      ),
+      data: (_) => MGlassApp(
+        child: BuildBadge(
+          child: TranslationProvider(
+            child: const _EagerInitialization(child: Moodiary()),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _StartupPlaceholder extends StatelessWidget {
