@@ -16,7 +16,6 @@ dependencies:
     sdk: flutter
 
   gap: 3.0.1
-  moodiary_content: 0.0.1
   moodiary_files: 0.0.1
   moodiary_router: 0.0.1
   moodiary_semantic: 0.0.1
@@ -35,8 +34,8 @@ dependencies:
 
 dev_dependencies:
   riverpod_generator: 4.0.9
+  moodiary_content: 0.0.1
   moodiary_models: 0.0.1
-  fast_image: 0.0.1
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

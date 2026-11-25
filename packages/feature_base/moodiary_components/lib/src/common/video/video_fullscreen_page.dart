@@ -65,25 +65,31 @@ class MVideoPlayerPage extends ConsumerStatefulWidget {
     VideoSurfaceBuilder? surfaceBuilder,
     Map<VideoAmbientChannel, VideoAmbientChannelPort>? ambientPorts,
   }) {
-    final container = ProviderScope.containerOf(context, listen: false);
+    final callerScope =
+        portFactory == null || surfaceBuilder == null || ambientPorts == null
+        ? ProviderScope.containerOf(context, listen: false)
+        : null;
+    final resolvedPortFactory =
+        portFactory ?? callerScope!.read(videoPlayerPortFactoryProvider);
+    final resolvedSurfaceBuilder =
+        surfaceBuilder ?? callerScope!.read(videoSurfaceBuilderProvider);
+    final resolvedAmbientPorts =
+        ambientPorts ?? callerScope!.read(videoAmbientPortFactoryProvider)();
     return Navigator.of(context, rootNavigator: true).push(
       PageRouteBuilder<void>(
         opaque: false,
         barrierColor: Colors.black,
         transitionDuration: Durations.medium2,
         reverseTransitionDuration: Durations.medium1,
-        pageBuilder: (_, _, _) => UncontrolledProviderScope(
-          container: container,
-          child: MVideoPlayerPage(
-            videoPath: videoPath,
-            coverPath: coverPath,
-            initialAspect: initialAspect,
-            startAt: startAt,
-            onExitAt: onExitAt,
-            portFactory: portFactory,
-            surfaceBuilder: surfaceBuilder,
-            ambientPorts: ambientPorts,
-          ),
+        pageBuilder: (_, _, _) => MVideoPlayerPage(
+          videoPath: videoPath,
+          coverPath: coverPath,
+          initialAspect: initialAspect,
+          startAt: startAt,
+          onExitAt: onExitAt,
+          portFactory: resolvedPortFactory,
+          surfaceBuilder: resolvedSurfaceBuilder,
+          ambientPorts: resolvedAmbientPorts,
         ),
         transitionsBuilder: (_, animation, _, child) =>
             FadeTransition(opacity: animation, child: child),

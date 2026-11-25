@@ -1,26 +1,25 @@
 # moodiary_data: repository and state boundary conventions
 
-Repositories and cross-feature controllers both live here, so this is where the get_it and riverpod channels meet. Write new code to these rules.
-
 ## Three rules
 
-1. **get_it = the whole object graph.**
-   - `MoodiaryDatabase` is opened and registered by the composition root's `AppModule.database` (preResolve); the path comes from there because this package does not know the file layout. Repositories are `@lazySingleton` with the **DB injected through the constructor** (`DiaryRepository(this._db)`); this package is a micro-package (`lib/injectable.dart`).
+1. **Riverpod owns the database and repositories.** In `lib/src/database_provider.dart`, the keepAlive FutureProvider `moodiaryDatabaseAsyncProvider` opens and owns the database; `moodiaryDatabaseProvider` exposes its synchronous `requireValue` after startup. In `lib/src/data_providers.dart`, `@Riverpod(keepAlive: true)` repository providers such as `diaryRepositoryProvider` watch the database and inject it through constructors. Define narrow ports on the consumer side when a second implementation is needed.
+2. **Give cross-page state the right lifetime.** `openDiaryRegistryProvider`, `syncPendingStateProvider` and `syncDirtyDiaryIdsProvider` are keepAlive providers/notifiers in the app scope. Widgets watch providers or receive values from the host; do not read global KV imperatively in a shared widget.
+3. **Place providers with their responsibility.** Infrastructure, database, repository, service and cross-feature domain providers belong in `data/`, `application/` or directly under `src/`. Page controllers and view-local state belong in `presentation/` or `application/`.
+
+## Schema and migrations
+
    - The schema source of truth is split by domain in `src/db/*_tables.drift`; named queries exist only for SQL the DSL cannot express (`diary.drift` — the FTS5 search itself is Dart, via `package:drift/extensions/fts5.dart`). Changes need build_runner.
    - **Migrations are drift's step-by-step kind**: every released schema is a snapshot in `drift_schemas/moodiary/drift_schema_vN.json` (committed, never edited by hand), `database.steps.dart` is generated from them, and `onUpgrade` is one `transaction()` around `m.runMigrationSteps(steps: migrationSteps(fromNToN+1: ...))`. Steps are written against `schema.*`, the frozen table shapes of that version, never the live tables.
    - To change the schema: edit the `.drift`, bump `schemaVersion` only if the latest release tag already ships the current one (otherwise fold the change into the unreleased step and regenerate its snapshot), run `fvm dart tool/task.dart migrations`, write the new step, then `fvm dart tool/task.dart build-runner`. Remove the generated `test/drift/moodiary/migration_test.dart` scaffold; `test/db_migration_test.dart` verifies every version path lands exactly on the next snapshot and seeds real rows through the generated `DatabaseAtVN` classes to check the data survived.
    - Triggers are in neither the versioned schema nor the generated test schemas: the verifier never compares them and a snapshot-built test database has none. So only the latest step may `m.create` the live `diaryFtsXx` triggers; an older step creates its own version's triggers from frozen SQL, and a step that replaces triggers drops them with `IF EXISTS`.
-   - Always take dependencies with `getIt<XxxRepository>()`: classes inside the container (AutoSyncWatcher and the like) use constructor injection, while Riverpod Notifiers and widgets write `late final _repository = getIt<XxxRepository>()`, the `late` keeping a stubbed controller off the container. A consumer that really needs a second implementation defines a narrow port **on the consumer side** (`sync_stores.dart` in moodiary_sync) instead of port-ifying the whole repo.
-   - Tests: repositories use `XxxRepository(MoodiaryDatabase.forTesting(NativeDatabase.memory(...)))` with `PRAGMA foreign_keys = ON` in setup, which cascade delete depends on; higher layers use `getIt.registerSingleton<XxxRepository>(double)` + `tearDown(getIt.reset)`, and the double may be mocktail's `Mock implements XxxRepository`.
-2. **riverpod = read models tied to the UI lifecycle**, UI state only. Providers do not new up services, do not hold service instances, and there are no repository providers.
-3. **Process-wide, cross-page mutable holders that outlive any screen** (OpenDiaryRegistry / SyncPendingTracker / SyncDirtyTracker / SyncCancellation) are `@singleton` and are also taken with `getIt<X>()`. Widgets exported across packages must not read global KV imperatively; use a provider, or lift the value into a constructor parameter supplied by the host. A widget's reactive channel is `ref.watch`.
 
 ## Hard facts
 
-- **codegen providers are autoDispose by default**; keepAlive is the exception, currently `AppSettingsController` (holds the global theme settings) and `SyncController` (must keep sync progress across pages), whose reasons are recorded here, not in code comments. Always use codegen.
+- Generated providers auto-dispose by default. Use keepAlive for app-lifetime resources; register cleanup with `ref.onDispose`.
+- Capture `final operationRef = ref;` before an `await`. Check `operationRef.mounted` before using the result; in `LoadMoreMixin`, check again after reading `state`, since that read can flush a rebuild.
+- Test repositories directly with `XxxRepository(MoodiaryDatabase.forTesting(NativeDatabase.memory(...)))`; enable `PRAGMA foreign_keys = ON` for cascades. Above repositories, use `ProviderContainer.test(retry: (_, _) => null, overrides: [...])` with provider overrides.
 - The `key` column must be written `"key"`. The memories body column is `content`.
-- Provider retry is turned **off entirely** in `mobile/lib/main.dart` with `ProviderScope(retry: (_, _) => null)`. Expected business failures throw an `Error` subclass (such as `StateError`), not an `Exception`.
-- Provider definitions go in each package's `application/` (or the top of this package's src/), never in presentation.
+- Automatic provider retry is off in `mobile/lib/main.dart` (`retry: (_, _) => null`); surface failures rather than relying on a provider rebuild to repeat an operation.
 - **Error convention: repositories throw, callers catch as needed and at least `logger.e`**, so a library failure never masquerades as an empty list. No TaskEither, because no consumer ever read a Left.
 
 ## Three shapes of change notification (pick by table, do not mix)

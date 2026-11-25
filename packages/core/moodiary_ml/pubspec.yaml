@@ -26,4 +26,3 @@ dev_dependencies:
   build_runner: 2.16.1
   flutter_test:
     sdk: flutter
-  moodiary_lint: 0.0.1

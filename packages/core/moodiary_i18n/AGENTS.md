@@ -17,7 +17,7 @@ Two unrelated slang outputs:
 | App | `i18n/flutter/<ns>_{zh,en}.i18n.json` | default (`LocaleSettings` + `TranslationProvider`) | `Translations` / `AppLocale` / `l10n` |
 | mui | `mui/lib/src/i18n/{zh,en}.i18n.json` | `locale_handling: false` + hand-written delegate | `MuiLocalizationsData` / `MuiLocale` / `context.muiL10n` |
 
-- **App**: `TranslationProvider` is mounted in `runApp`; `applyStoredLanguage()` calls `LocaleSettings.setLocale` once. KV stores only the preference enum; `MaterialApp.locale` comes from `TranslationProvider.of(context).flutterLocale`.
+- **App**: `AppStartupWidget` mounts `TranslationProvider` after startup applies the stored language. KV stores only the preference enum; `MaterialApp.locale` comes from `TranslationProvider.of(context).flutterLocale`.
 - **mui**: its output has no `LocaleSettings`, `TranslationProvider` or top-level `muiL10n`, only `MuiLocale` and `MuiLocalizationsData`, wrapped by the hand-written `GlobalMuiLocalizations` delegate. A host adds it to `MaterialApp.localizationsDelegates`. Components write `context.muiL10n.ok` (hand-written extension).
 - mui strings always come from mui's own table, never `MaterialLocalizations`: material's wording changes with the SDK. Gate: `mui/test/i18n_test.dart`.
 
@@ -27,7 +27,7 @@ App namespaces: one file per feature, `common` plus `app` / `diary` / `assistant
 - After editing `*.i18n.json` run `fvm dart tool/task.dart i18n` (output is committed).
 - Dead-key check, inside `moodiary_i18n`: `fvm dart run slang analyze --full --source-dirs=../../../packages,../../../mobile`; it only sees `i18n/flutter`. Always write `l10n.xxx.yyy` in full, and do not end other variables with `translate_var`.
 - mui's barrel only does `show MuiLocalizationsData`.
-- Plural keys must have the same node shape in every locale, so Chinese sides are plural nodes with only `other`. `setupPluralResolvers()` (before `runApp`) falls back to `other` when zero/one forms are absent. A future plural key in mui goes through the delegate's `buildSync(cardinalResolver: ...)`.
+- Plural keys must have the same node shape in every locale, so Chinese sides are plural nodes with only `other`. `setupPluralResolvers()` (during `appStartupProvider`, before applying the stored language) falls back to `other` when zero/one forms are absent. A future plural key in mui goes through the delegate's `buildSync(cardinalResolver: ...)`.
 - Non-base locales are deferred imports (`lazy: true`), so the App uses async `setLocale`, never `setLocaleSync`. mui pins `lazy: false` because its delegate returns a `SynchronousFuture` from `buildSync`. Gate: `mui/test/i18n_test.dart` checks for no `deferred as`.
 - `timestamp` and `flat_map` are off in `slang.yaml` (noisy diffs, an extra full map).
 

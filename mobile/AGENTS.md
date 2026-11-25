@@ -4,14 +4,10 @@ Composition-root details for dependency injection, bootstrap, and app mounting.
 
 ## Dependency injection
 
-- Put binding annotations on implementation classes (`@Singleton(as:)`, `@LazySingleton(as:)`, `@Injectable(as:)`).
-- `lib/app/di/di.dart` mounts injectable micro-package modules through `externalPackageModulesBefore`. Keep storage first; it pre-resolves secure storage before `AppModule.kvStorage` injects it into MMKV migration.
-- Keep one `configureDependencies` entry point, using injectable's default initializer and generation scope to avoid duplicate registration.
-- Use `AppModule` for bindings needing app behavior: the HTTP error toast and database path. Repositories stay lazy so they can resolve these app-provided dependencies after package registration.
-- Startup belongs to `lib/main.dart` and `lib/app/di/bootstrap.dart`, not `@PostConstruct`. Activate the selected sync provider after version migration, then start `AutoSyncWatcher`.
-- After changing annotations, run `fvm dart tool/task.dart build-runner` from the repository root and include generated files. Production registrations stay generated; `activateSyncProvider()` deliberately manages the unnamed `IRemoteSyncBackend` through a session scope.
-- Maintain `_assertRequiredBindings` when required services change.
-- Import annotations from `package:injectable/injectable.dart` and declare that dependency in each package that uses them; `moodiary_di` only exports the runtime container.
+- `lib/main.dart` wraps `AppStartupWidget` in a standard Riverpod 3 `ProviderScope(retry: (_, _) => null, overrides: buildMobilePortOverrides())`, above the navigator and all routes.
+- `lib/app/di/overrides.dart` binds `filePickerProvider`, `heifDecoderProvider`, `notificationPermissionProvider`, `diaryShareHandlerProvider`, `videoPlayerPortFactoryProvider`, `videoSurfaceBuilderProvider` and `videoAmbientPortFactoryProvider`. It also wires the HTTP error toast via `httpClientProvider`, backup via `backupArchiveProvider` and legacy export via `legacyDataExporterProvider`. Verify all ten in `test/app/di/port_overrides_test.dart`, not with runtime startup assertions.
+- `lib/app/di/app_startup.dart` owns single-shot offline `appStartupProvider`. Initialize platform directories, secure storage and MMKV, load the app lock, then await the database and sync logger before probing legacy state. Initialize locale, then theme alongside migration-gated data startup, and prepare `appRouterProvider` (`lib/app/router/router.dart`). On success `_EagerInitialization` keeps the watchers subscribed and the app watches the router.
+- On failure `BootFailurePage` offers copyable error/stack details, the log path when available, and `resetAllData`, not an in-process retry. In `lib/app/di/bootstrap.dart`, reset checks `ref.exists(moodiaryDatabaseAsyncProvider)` before reading: never create a database just to erase it. If opening failed or never started, delete its files. If clearing an open database fails, dispose existing watchers, close it and delete its files. If the database still cannot be erased, throw before clearing KV or SecureKV (including the app-lock PIN).
 
 ## App theme and localization
 

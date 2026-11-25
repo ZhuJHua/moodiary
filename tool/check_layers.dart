@@ -1,32 +1,63 @@
 import 'dart:io';
 
-const List<List<String>> _layers = [
-  ['gen'],
-  ['core'],
-  ['data'],
-  ['component'],
-  ['feature'],
-  ['app'],
-  ['main.dart'],
-];
-
 const String _baselinePath = 'tool/layer_baseline.txt';
-final RegExp _importRe = RegExp(
-  r'''^\s*(?:import|export)\s+['"]package:moodiary/([^'"]+)['"]''',
+final _directiveUriRe = RegExp(
+  r'''^\s*(?:import|export)\s+['"]([^'"]+)['"]''',
   multiLine: true,
 );
 
-({int layer, String module}) _classify(String rel) {
+Iterable<String> appImportTargets(
+  String rel,
+  String content,
+  String pubName,
+) sync* {
+  final prefix = 'package:$pubName/';
+  final base = Uri(path: '/$rel');
+  for (final match in _directiveUriRe.allMatches(content)) {
+    final uri = match[1]!;
+    if (uri.startsWith(prefix)) {
+      yield uri.substring(prefix.length);
+    } else if (!uri.contains(':')) {
+      final resolved = base.resolve(uri).path;
+      yield resolved.startsWith('/') ? resolved.substring(1) : resolved;
+    }
+  }
+}
+
+({int layer, String module}) classifyAppFile(String rel) {
   final parts = rel.split('/');
-  final top = parts[0];
-  if (top == 'feature') {
-    final name = parts.length > 1 ? parts[1] : '?';
-    return (layer: 4, module: 'feature/$name');
-  }
-  for (var i = 0; i < _layers.length; i++) {
-    if (_layers[i].contains(top)) return (layer: i, module: top);
-  }
-  return (layer: -1, module: top);
+  final module = switch (parts) {
+    ['gen', _, ...] => 'gen',
+    ['app', 'di', 'bootstrap.dart' || 'bootstrap.g.dart'] => 'app/di/bootstrap',
+    ['app', 'di', 'app_startup.dart' || 'app_startup.g.dart'] =>
+      'app/di/app_startup',
+    ['app', final directory, _, ...] when directory != 'di' => 'app/$directory',
+    _ => rel,
+  };
+  final layer = switch (module) {
+    'gen' ||
+    'app/locale.dart' ||
+    'app/build_badge.dart' ||
+    'app/licenses.dart' ||
+    'app/di/bootstrap' => 0,
+    'app/media' || 'app/picker' || 'app/boot_failure_page.dart' => 1,
+    'app/home' || 'app/me' || 'app/settings' || 'app/di/overrides.dart' => 2,
+    'app/shell' => 3,
+    'app/router' => 4,
+    'app/di/app_startup' || 'app/lifecycle' => 5,
+    'main.dart' => 6,
+    _ => -1,
+  };
+  return (layer: layer, module: module);
+}
+
+List<Violation> checkAppImport(String rel, String target) {
+  final src = classifyAppFile(rel), dst = classifyAppFile(target);
+  if (src.layer >= 0 &&
+      dst.layer >= 0 &&
+      (dst.layer < src.layer || src.module == dst.module))
+    return [];
+  return [Violation(rel, dst.module)];
 }
 
 class Violation {
@@ -199,6 +230,179 @@ final Map<String, String> _appPubNames = {
 };
 
 final Map<String, List<File>> _dartFileCache = {};
+
+final _workspaceDirs = [
+  for (final layer in Directory('packages').listSync().whereType<Directory>())
+    for (final pkg in layer.listSync().whereType<Directory>())
+      if (File('${pkg.path}/pubspec.yaml').existsSync()) pkg.path,
+  ..._appPubNames.keys,
+];
+
+final _sectionHeader = RegExp(r'^([a-zA-Z0-9_-]+):');
+final _depKey = RegExp(r'^\s{2}([a-z0-9_]+):');
+
+Iterable<({String section, String name})> _pubspecDeps(String text) sync* {
+  var section = '';
+  for (final line in text.split('\n')) {
+    final header = _sectionHeader.firstMatch(line);
+    if (header != null) section = header[1]!;
+    if (!const {
+      'dependencies',
+      'dev_dependencies',
+      'dependency_overrides',
+    }.contains(section)) {
+      continue;
+    }
+    final key = _depKey.firstMatch(line);
+    if (key != null) yield (section: section, name: key[1]!);
+  }
+}
+
+const _legacyDi = {
+  'get_it',
+  'injectable',
+  'injectable_generator',
+  'moodiary_di',
+};
+final _legacyDirective = RegExp(
+  r'''^\s*(?:import|export)\s+['"]package:(''' + _legacyDi.join('|') + r')/',
+  multiLine: true,
+);
+
+List<String> findLegacyDiInPubspec(String pubspecContent, String pubspecPath) =>
+    [
+      for (final dep in _pubspecDeps(pubspecContent))
+        if (_legacyDi.contains(dep.name))
+          '$pubspecPath: ${dep.section}: ${dep.name}',
+    ];
+
+List<String> findLegacyDiInDart(String content, String filePath) => [
+  for (final match in _legacyDirective.allMatches(content))
+    '$filePath: ${match[1]}',
+];
+
+List<String> _checkNoLegacyDi() => [
+  for (final path in [
+    'pubspec.yaml',
+    for (final dir in _workspaceDirs) '$dir/pubspec.yaml',
+  ])
+    ...findLegacyDiInPubspec(File(path).readAsStringSync(), path),
+  for (final root in [
+    'packages',
+    for (final dir in _appDirs) ...['$dir/lib', '$dir/test'],
+  ])
+    for (final file in _dartFiles(root))
+      ...findLegacyDiInDart(file.readAsStringSync(), file.path),
+];
+
+final _manualRoot = RegExp(
+  r'\b(ProviderContainer|UncontrolledProviderScope)(?:\s*\(|\s*\.\s*new\b)',
+);
+
+List<String> findManualRootContainerInDart(String content, String filePath) {
+  final code = content
+      .split('\n')
+      .map((line) => line.trimLeft().startsWith('//') ? '' : line)
+      .join('\n');
+  return [
+    for (final match in _manualRoot.allMatches(code))
+      '$filePath:${'\n'.allMatches(code.substring(0, match.start)).length + 1}: ${match[1]}',
+  ];
+}
+
+List<String> _checkNoManualRootContainer() => [
+  for (final dir in _workspaceDirs)
+    for (final file in _dartFiles('$dir/lib'))
+      if (!file.path.endsWith('.g.dart') &&
+          !file.path.endsWith('.freezed.dart'))
+        ...findManualRootContainerInDart(file.readAsStringSync(), file.path),
+];
+
+List<String> findUnusedWorkspaceDeps({
+  required String pkgName,
+  required String pubspecContent,
+  required Set<String> workspacePackages,
+  required Set<String> libReferencedPkgs,
+  required Set<String> testReferencedPkgs,
+  required Set<String> hookReferencedPkgs,
+  required Set<String> analysisOptionPkgs,
+  Set<String> allowedDevDeps = const {},
+}) {
+  final production = {
+    ...libReferencedPkgs,
+    ...hookReferencedPkgs,
+    ...analysisOptionPkgs,
+  };
+  final development = {...production, ...testReferencedPkgs, ...allowedDevDeps};
+  return [
+    for (final dep in _pubspecDeps(pubspecContent))
+      if (workspacePackages.contains(dep.name) &&
+          switch (dep.section) {
+            'dependencies' => !production.contains(dep.name),
+            'dev_dependencies' => !development.contains(dep.name),
+            _ => false,
+          })
+        '$pkgName: unused ${dep.section}: ${dep.name}',
+  ];
+}
+
+final _dartPackageDirective = RegExp(
+  r'''^\s*(?:import|export)\s+['"]package:([a-z0-9_]+)/''',
+  multiLine: true,
+);
+final _analysisIncludeDirective = RegExp(
+  r'''^\s*include:\s*['"]?package:([a-z0-9_]+)/''',
+  multiLine: true,
+);
+
+Set<String> referencedDartPkgsInSource(String content) => {
+  for (final match in _dartPackageDirective.allMatches(content)) match[1]!,
+};
+
+Set<String> _referencedDartPkgs(Iterable<File> files) => {
+  for (final file in files)
+    ...referencedDartPkgsInSource(file.readAsStringSync()),
+};
+
+Set<String> _referencedAnalysisPkgs(File file) => {
+  if (file.existsSync())
+    for (final match in _analysisIncludeDirective.allMatches(
+      file.readAsStringSync(),
+    ))
+      match[1]!,
+};
+
+List<String> _checkUnusedWorkspaceDeps() {
+  final specs = {
+    for (final dir in ['.', ..._workspaceDirs])
+      dir: File('$dir/pubspec.yaml').readAsStringSync(),
+  };
+  final namePattern = RegExp(r'^name:\s*(\S+)', multiLine: true);
+  final names = {
+    for (final dir in _workspaceDirs) namePattern.firstMatch(specs[dir]!)![1]!,
+  };
+  return [
+    for (final entry in specs.entries)
+      ...findUnusedWorkspaceDeps(
+        pkgName: namePattern.firstMatch(entry.value)![1]!,
+        pubspecContent: entry.value,
+        workspacePackages: names,
+        libReferencedPkgs: _referencedDartPkgs(_dartFiles('${entry.key}/lib')),
+        testReferencedPkgs: _referencedDartPkgs([
+          ..._dartFiles('${entry.key}/test'),
+          if (entry.key == '.') ..._dartFiles('tool'),
+        ]),
+        hookReferencedPkgs: _referencedDartPkgs(
+          _dartFiles('${entry.key}/hook'),
+        ),
+        analysisOptionPkgs: _referencedAnalysisPkgs(
+          File('${entry.key}/analysis_options.yaml'),
+        ),
+        // Pull SQLite extension hooks into the root's single-process Flutter tests.
+        allowedDevDeps: entry.key == '.' ? const {'moodiary_data'} : const {},
+      ),
+  ];
+}
 
 List<File> _dartFiles(String root) {
   return _dartFileCache.putIfAbsent(root, () {
@@ -517,6 +721,15 @@ List<String> _checkEmptyTestDirs() {
 
 void main(List<String> args) {
   final update = args.contains('--update-baseline');
+  final guardViolations = [
+    ..._checkNoLegacyDi(),
+    ..._checkNoManualRootContainer(),
+    ..._checkUnusedWorkspaceDeps(),
+  ]..sort();
+  if (guardViolations.isNotEmpty) {
+    stderr.writeln(guardViolations.join('\n'));
+    exit(1);
+  }
   final themeViolations = _checkThemeDataConstruction();
   if (themeViolations.isEmpty) {
     stdout.writeln('✅ ThemeData 只在 mui 的 buildMuiTheme 里构造。');
@@ -653,27 +866,20 @@ void main(List<String> args) {
   var fileCount = 0;
 
   for (final libDir in appLibDirs) {
+    final pubName = _appPubNames[libDir.parent.path]!;
     for (final entity in libDir.listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       fileCount++;
       final rel = entity.path
           .replaceAll('\\', '/')
           .replaceFirst('${libDir.path.replaceAll('\\', '/')}/', '');
-      final srcN = _classify(rel);
+      if (classifyAppFile(rel).layer < 0) {
+        stderr.writeln('Unclassified app file: $rel');
+        exit(1);
+      }
       final content = entity.readAsStringSync();
-      for (final m in _importRe.allMatches(content)) {
-        final target = m.group(1)!;
-        final dstN = _classify(target);
-        final bool ok;
-        if (dstN.layer < srcN.layer) {
-          ok = true;
-        } else if (dstN.layer == srcN.layer) {
-          ok = dstN.module == srcN.module;
-        } else {
-          ok = false;
-        }
-        if (!ok) {
-          final v = Violation(rel, dstN.module);
+      for (final target in appImportTargets(rel, content, pubName)) {
+        for (final v in checkAppImport(rel, target)) {
           if (seen.add(v.key)) violations.add(v);
         }
       }

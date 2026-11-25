@@ -68,9 +68,17 @@ Paths are relative to the repository root unless stated otherwise.
 
 The DAG is strictly `foundation -> core -> feature_base -> feature -> apps`. Features never import each other; shared logic sinks a layer, cross-feature composition happens in the app. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`** at a zero baseline. Melos `categories:` are filters only.
 
-core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBaseOrder`; same-tier packages never import each other). Two edges rely on injection; keep them:
+Within `core` and `feature_base`, dependencies may only point to an earlier tier. All names in the table have the `moodiary_` prefix.
 
-- **`storage` below `files`**: the database and dictionary directories come from the composition root, so storage knows nothing about the file layout.
+| Tier | core | feature_base |
+|---|---|---|
+| 0 | i18n, router, native, http, storage | models, content |
+| 1 | platform | data |
+| 2 | files | components, migration, preferences, semantic |
+| 3 | theme, ml | tools, editor |
+
+- `moodiary_picker` was folded into `mobile/lib/app/picker/`; shared code consumes ports, not the mobile picker implementation.
+- **`moodiary_storage` stays at tier 0**: mobile startup passes `rootDir` and `secureKv` to `MmkvKVStorage.create`; storage does not resolve the file layout.
 - **`moodiary_logging` stays in foundation** because the release log path is injected via `AppLogger.configure`; reading `AppFiles` directly would float the package above core, out of reach of almost everyone.
 
 **core knows no domain type** (`Diary` / `Category` / `Font`): domain models live in `moodiary_models`, schema tables in `moodiary_data`. `moodiary_i18n` belongs in core even though its namespaces carry feature names: that knowledge is JSON keys, not type dependencies.
@@ -83,13 +91,13 @@ A barrel exports whole `src/` files without `show`. Anything a file does not nee
 
 Routes carry no path or query parameters, because the app never targets the web. A route class in `moodiary_router` holds `location` (its `static const path`) and a `params` map with snake_case keys; `push`/`go`/`replace` send it as `extra`, and each page exposes `factory X.fromRoute(GoRouterState)` reading `state.params`. Feature packages define their `xxxRoutes()` list in the package barrel; there is no `routes.dart`. Keep `params` to JSON scalars (ids, bools).
 
-### DI: get_it + injectable (details in [mobile/AGENTS.md](mobile/AGENTS.md))
+### DI and state: Riverpod 3 (details in [mobile/AGENTS.md](mobile/AGENTS.md))
 
-- Binding annotations go on implementation classes (`@Singleton(as:)` etc.). storage / http / ml / data / assistant / sync / editor / theme are micro-packages mounted by `mobile/lib/app/di/di.dart`; there is exactly one `configureDependencies`.
-- The container owns the whole object graph: `MoodiaryDatabase` (preResolve), repositories (`@lazySingleton`, constructor-injected), and the process-level holders (`@singleton`). Resolve with `getIt<X>()`; Riverpod Notifiers / widgets write `late final _repo = getIt<X>()`. Riverpod manages UI state only; there are no repository providers and no static `X.get()` facades (`MoodiaryKVs.x.get()` is a key accessor and stays).
-- Tests: `XxxRepository(MoodiaryDatabase.forTesting(...))` for repositories; `getIt.registerSingleton<XxxRepository>(fake)` + `tearDown(getIt.reset)` above them.
-- After changing annotations run `fvm dart tool/task.dart build-runner` (generated files are committed). Business code never hand-writes `getIt.register*`; the one exception is the session scope opened by `activateSyncProvider()`, which exposes the `@Named(SyncProviderIds.x)` backend as the unnamed `IRemoteSyncBackend`.
-- `@PostConstruct` is deliberately unused; startup belongs to main's bootstrap, not the container.
+- Use generated `@riverpod` / `@Riverpod` providers for DI and state. `mobile/lib/main.dart` mounts one `ProviderScope(retry: (_, _) => null, overrides: buildMobilePortOverrides())`. After changing provider definitions run `fvm dart tool/task.dart build-runner` and commit the generated files.
+- Process-level facades such as `AppLogger`, `PlatformService`, `KVStore` / `SecureKVStore`, `Fast*Runtime` and `LegacyDatabaseGuard` remain outside Riverpod.
+- Shared packages declare unimplemented keepAlive ports: `filePickerProvider`, `heifDecoderProvider`, `notificationPermissionProvider`, `diaryShareHandlerProvider`, `videoPlayerPortFactoryProvider`, `videoSurfaceBuilderProvider` and `videoAmbientPortFactoryProvider`. Bind them in `mobile/lib/app/di/overrides.dart` and verify them in `mobile/test/app/di/port_overrides_test.dart`.
+- `moodiary_di` was removed. `tool/check_layers.dart` forbids it, `get_it`, `injectable` and `injectable_generator`, and forbids manual `ProviderContainer` / `UncontrolledProviderScope` construction in production `lib/`.
+- Construct repositories directly in tests (`XxxRepository(MoodiaryDatabase.forTesting(...))`). Above repositories, supply doubles via `ProviderContainer.test(retry: (_, _) => null, overrides: [...])` or a widget `ProviderScope(retry: (_, _) => null, overrides: [...])`.
 
 ### mui: a supplement to material, not a replacement
 
@@ -112,8 +120,9 @@ Two unrelated slang outputs: the App (default mode, `Translations` / top-level `
 
 - `IKVStorage.set` / `remove` / `clear` return `void`; `init` and SecureKV stay async. Detect "no value" with `containsKey`.
 - Keys may use only int / bool / double / String / List<String>; a test guards it.
+- `KVStore.instance` / `SecureKVStore.instance` hold the installed stores. Widgets watch `kvValueProvider(key)` for keys with defaults or `kvValueOrProvider(key, fallback)` otherwise; these reactive providers live in `moodiary_storage`.
 - Secrets (app-lock PIN, third-party API keys) live in `MoodiarySecureKVs`. In widgets use `secretKvProvider(key)` and `ref.invalidate` after every write.
-- Never touch `password` directly; go through `AppLockPin` (Argon2id PHC string). App lock on = a credential exists (`AppLockPin.enabled`, loaded in `main.dart`).
+- Never touch `password` directly; go through `AppLockPin` (Argon2id PHC string). `appStartupProvider` loads the credential; widgets watch `appLockEnabledProvider`.
 
 ### Full-text search
 
