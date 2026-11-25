@@ -22,11 +22,6 @@ Future<void> buildRustCrate(List<String> args, {bool androidCmake = false}) =>
         cratePath: 'rust',
         extraCargoEnvironmentVariables: env,
       ).run(input: input, output: output);
-      output.dependencies.addAll([
-        input.packageRoot.resolve('rust/Cargo.toml'),
-        input.packageRoot.resolve('rust/Cargo.lock'),
-        input.packageRoot.resolve('rust/rust-toolchain.toml'),
-      ]);
     });
 
 @visibleForTesting
@@ -41,33 +36,30 @@ Map<String, String> rustCargoEnvironment(
     OS.macOS => {
       'MACOSX_DEPLOYMENT_TARGET': _apple(code.macOS.deploymentVersion),
     },
-    OS.android => _androidEnvironment(code, androidNdkRoot),
+    OS.android when androidNdkRoot != null => _androidCmakeEnvironment(
+      code,
+      androidNdkRoot,
+    ),
     _ => const <String, String>{},
   };
 }
 
 String _apple(AppleVersion v) => '${v.major}.${v.minor}';
 
-Map<String, String> _androidEnvironment(CodeConfig code, Uri? ndkRoot) {
+Map<String, String> _androidCmakeEnvironment(CodeConfig code, Uri ndkRoot) {
   final triple = switch (code.targetArchitecture) {
-    Architecture.arm64 => 'aarch64-linux-android',
-    Architecture.arm => 'armv7-linux-androideabi',
-    Architecture.x64 => 'x86_64-linux-android',
+    Architecture.arm64 => 'aarch64_linux_android',
+    Architecture.arm => 'armv7_linux_androideabi',
+    Architecture.x64 => 'x86_64_linux_android',
     _ => throw UnsupportedError(
       'Unsupported Android architecture: ${code.targetArchitecture}',
     ),
   };
-  final target = triple.replaceAll('-', '_');
   return {
-    // https://github.com/GregoryConrad/native_toolchain_rust/issues/116
-    'CARGO_TARGET_${target.toUpperCase()}_RUSTFLAGS':
-        '-C link-arg=-Wl,-z,max-page-size=16384',
-    if (ndkRoot != null) ...{
-      'CMAKE_TOOLCHAIN_FILE_$target': ndkRoot
-          .resolve('build/cmake/android.toolchain.cmake')
-          .toFilePath(),
-      'ANDROID_NDK_ROOT': Directory.fromUri(ndkRoot).path,
-    },
+    'CMAKE_TOOLCHAIN_FILE_$triple': ndkRoot
+        .resolve('build/cmake/android.toolchain.cmake')
+        .toFilePath(),
+    'ANDROID_NDK_ROOT': Directory.fromUri(ndkRoot).path,
   };
 }
 
