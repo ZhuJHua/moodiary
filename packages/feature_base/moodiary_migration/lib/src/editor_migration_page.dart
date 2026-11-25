@@ -16,11 +16,17 @@ import 'package:url_launcher/url_launcher.dart';
 import 'editor_migration_service.dart';
 import 'legacy_data_exporter.dart';
 import 'legacy_database_guard.dart';
+import 'startup_migration_coordinator.dart';
 
 class EditorMigrationPage extends StatefulWidget {
-  const EditorMigrationPage({required this.resumeStartup, super.key});
+  const EditorMigrationPage({
+    required this.resumeStartup,
+    this.coordinator,
+    super.key,
+  });
 
   final Future<void> Function() resumeStartup;
+  final StartupMigrationCoordinator? coordinator;
 
   @override
   State<EditorMigrationPage> createState() => _EditorMigrationPageState();
@@ -50,13 +56,14 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   int _summaryDiaries = 0;
   int _summaryCategories = 0;
 
-  late bool _legacyGate = LegacyDatabaseGuard.state != LegacyDatabaseState.none;
+  late final _coordinator = widget.coordinator ?? StartupMigrationCoordinator();
+  late bool _legacyGate = !_coordinator.canStartData;
   bool _homePending = false;
 
   Future<void> _resumeStartup() async {
-    await widget.resumeStartup();
+    await _coordinator.startData(widget.resumeStartup);
     if (!mounted) return;
-    if (EditorMigrationService.requiresMigration) {
+    if (!_coordinator.canEnterHome) {
       setState(() => _legacyGate = false);
     } else {
       setState(() => _homePending = true);
@@ -153,7 +160,8 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       });
       return;
     }
-    EditorMigrationService.requiresMigration = false;
+    final contentOnly = !_stages.contains(_Stage.editor);
+    _coordinator.completeEditorMigration();
     var diaries = 0;
     var categories = 0;
     try {
@@ -166,6 +174,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
     if (!mounted) return;
     setState(() {
       _phase = .done;
+      _homePending = contentOnly && _coordinator.canEnterHome;
       _summaryDiaries = diaries;
       _summaryCategories = categories;
     });
@@ -218,7 +227,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
         const DiaryHomeRoute().go(context);
       });
     }
-    if (_legacyGate || LegacyDatabaseGuard.state != LegacyDatabaseState.none) {
+    if (_legacyGate || !_coordinator.canStartData) {
       return _LegacyDataGate(resumeStartup: _resumeStartup);
     }
     return Scaffold(

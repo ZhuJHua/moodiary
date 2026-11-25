@@ -140,7 +140,10 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
 
   Future<void> _insertImages(List<XFile> files) async {
     for (final file in files) {
-      final name = await MediaManager.saveImage(file);
+      final name = await MediaManager.saveImage(
+        file,
+        decoder: getIt<IHeifDecoder>(),
+      );
       if (name == null) continue;
       await _controller.exec(.insertImage, {'name': name});
     }
@@ -187,7 +190,10 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   Future<String?> _saveDataUriImage(String dataUri, String fallbackName) async {
     final xfile = await _dataUriToTempFile(dataUri, fallbackName);
     if (xfile == null) return null;
-    final saved = await MediaManager.saveImages(imageFileList: [xfile]);
+    final saved = await MediaManager.saveImages(
+      decoder: getIt<IHeifDecoder>(),
+      imageFileList: [xfile],
+    );
     return saved[xfile.path];
   }
 

@@ -70,7 +70,10 @@ abstract interface class SyncMediaFiles {
 }
 
 class RepoSyncDiaryStore implements SyncDiaryStore {
-  late final _repo = getIt<DiaryRepository>();
+  RepoSyncDiaryStore([this._repository]);
+
+  final DiaryRepository? _repository;
+  late final _repo = _repository ?? getIt<DiaryRepository>();
 
   @override
   Future<List<Diary>> getAllDiaries() => _repo.getAllDiaries();
@@ -89,7 +92,10 @@ class RepoSyncDiaryStore implements SyncDiaryStore {
 }
 
 class RepoSyncCategoryStore implements SyncCategoryStore {
-  late final _repo = getIt<CategoryRepository>();
+  RepoSyncCategoryStore([this._repository]);
+
+  final CategoryRepository? _repository;
+  late final _repo = _repository ?? getIt<CategoryRepository>();
 
   @override
   Future<List<Category>> getAllCategoriesForSync() =>
@@ -104,7 +110,10 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
 }
 
 class RepoSyncTagStore implements SyncTagStore {
-  late final _repo = getIt<TagRepository>();
+  RepoSyncTagStore([this._repository]);
+
+  final TagRepository? _repository;
+  late final _repo = _repository ?? getIt<TagRepository>();
 
   @override
   Future<List<Tag>> getAllTagsForSync() =>
@@ -128,7 +137,10 @@ class RepoSyncTagStore implements SyncTagStore {
 }
 
 class RepoSyncPlaceStore implements SyncPlaceStore {
-  late final _repo = getIt<PlaceRepository>();
+  RepoSyncPlaceStore([this._repository]);
+
+  final PlaceRepository? _repository;
+  late final _repo = _repository ?? getIt<PlaceRepository>();
 
   @override
   Future<List<Place>> getAllPlacesForSync() => _repo.getAllPlaces();
@@ -149,7 +161,10 @@ class RepoSyncPlaceStore implements SyncPlaceStore {
 }
 
 class RepoSyncTombstoneStore implements SyncTombstoneStore {
-  late final _repo = getIt<TombstoneRepository>();
+  RepoSyncTombstoneStore([this._repository]);
+
+  final TombstoneRepository? _repository;
+  late final _repo = _repository ?? getIt<TombstoneRepository>();
 
   @override
   Future<List<SyncTombstone>> getAll() => _repo.getAll();

@@ -1,32 +1,12 @@
 import 'package:flutter/foundation.dart' show setEquals;
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'category_repository.dart';
-import 'diary_repository.dart';
-import 'loadmore.dart';
-import 'tag_repository.dart';
-
 part 'diary_controller.g.dart';
-
-Comparator<Diary> diarySortComparator(DiarySort sort) => switch (sort) {
-  // 第二排序键必须与 SQL 的 `, id DESC` 逐字段一致（分页 offset 依赖对齐）
-  .timeDesc => (a, b) {
-    final c = b.time.compareTo(a.time);
-    return c != 0 ? c : b.id.compareTo(a.id);
-  },
-  .timeAsc => (a, b) {
-    final c = a.time.compareTo(b.time);
-    return c != 0 ? c : a.id.compareTo(b.id);
-  },
-  .lastModifiedDesc => (a, b) {
-    final c = b.lastModified.compareTo(a.lastModified);
-    return c != 0 ? c : b.id.compareTo(a.id);
-  },
-};
 
 List<Diary> applyDiaryEvent(
   List<Diary> list,

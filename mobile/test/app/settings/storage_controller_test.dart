@@ -493,7 +493,10 @@ void main() {
           name = (await MediaManager.saveAttachment(xfile))!.name;
         } else {
           type = .image;
-          name = (await MediaManager.saveImage(xfile))!;
+          name = (await MediaManager.saveImage(
+            xfile,
+            decoder: getIt<IHeifDecoder>(),
+          ))!;
         }
         if (kind == 'heic') expect(name, endsWith('.jpg'));
         final protected = [File(AppFiles.getRealPath(type.value, name))];

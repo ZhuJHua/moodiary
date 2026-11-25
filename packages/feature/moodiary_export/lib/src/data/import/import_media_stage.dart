@@ -16,14 +16,20 @@ abstract interface class ImportMediaStore {
 }
 
 class AppImportMediaStore implements ImportMediaStore {
-  const AppImportMediaStore();
+  const AppImportMediaStore(this.decoder);
+
+  final IHeifDecoder decoder;
 
   @override
   Future<String?> save(String path, ImportMediaKind kind) async {
     if (await _reuseLocal(path, kind) case final name?) return name;
     switch (kind) {
       case .image:
-        return MediaManager.saveImage(XFile(path), reuseExisting: false);
+        return MediaManager.saveImage(
+          XFile(path),
+          decoder: decoder,
+          reuseExisting: false,
+        );
       case .video:
         final saved = await MediaManager.saveVideo(
           videoFileList: [XFile(path)],

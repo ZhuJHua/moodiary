@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_media/moodiary_media.dart';
@@ -59,6 +62,8 @@ class _ImageOptimizeTileState extends State<ImageOptimizeTile> {
     _showProgress(progress);
     try {
       final report = await ImageOptimizer.run(
+        repo: getIt<DiaryRepository>(),
+        decoder: getIt<IHeifDecoder>(),
         onProgress: (done, total) => progress.value = (done, total),
       );
       _dismissProgress();

@@ -76,6 +76,7 @@ class ArchiveApplier {
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
     int concurrency = 4,
+    String? cacheDirectory,
     OpenDiaryRegistry? openDiaries,
     SyncCancellation? cancellation,
     SyncPendingTracker? pending,
@@ -95,6 +96,7 @@ class ArchiveApplier {
     openDiaries ?? getIt<OpenDiaryRegistry>(),
     cancellation ?? getIt<SyncCancellation>(),
     pending ?? getIt<SyncPendingTracker>(),
+    cacheDirectory,
     trigger,
   );
 
@@ -113,12 +115,14 @@ class ArchiveApplier {
     this._openDiaries,
     this._cancellation,
     this._pending,
+    this._cacheDirectory,
     this._trigger,
   ) : _mediaGate = Pool(concurrency);
 
   final OpenDiaryRegistry _openDiaries;
   final SyncCancellation _cancellation;
   final SyncPendingTracker _pending;
+  final String? _cacheDirectory;
 
   final SyncTrigger? _trigger;
 
@@ -839,7 +843,10 @@ class ArchiveApplier {
 
   Future<File> _mediaTempFile(String tag) async {
     final dir = Directory(
-      p.join(PlatformService.get().applicationCachePath, 'sync-media'),
+      p.join(
+        _cacheDirectory ?? PlatformService.get().applicationCachePath,
+        'sync-media',
+      ),
     );
     await dir.create(recursive: true);
     return File(p.join(dir.path, '$tag-${uuidV7()}.tmp'));

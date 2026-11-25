@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_semantic/moodiary_semantic.dart';
 
 import '../media/diary_media.dart';
@@ -50,6 +51,7 @@ class ToolContext {
     DiaryMediaStore? mediaStore,
     int? bodyChars,
     this.semantic,
+    this.heifDecoder,
     DateTime Function()? now,
   }) : bodyChars =
            bodyChars ??
@@ -68,6 +70,7 @@ class ToolContext {
   final int bodyChars;
   final bool includeLinks;
   final EmbedIndexService? semantic;
+  final IHeifDecoder? heifDecoder;
   final DateTime Function() now;
 }
 

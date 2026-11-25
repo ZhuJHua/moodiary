@@ -77,6 +77,10 @@ class IncrementalSyncEngine {
     OpenDiaryRegistry? openDiaries,
     SyncCancellation? cancellation,
     SyncDirtyTracker? dirty,
+    SyncPendingTracker? pending,
+    String? cacheDirectory,
+    Future<Set<String>> Function() configuredBackends =
+        configuredCloudBackendIds,
     SyncTrigger? trigger,
   }) {
     final n = concurrency ?? resolveConcurrency();
@@ -94,6 +98,9 @@ class IncrementalSyncEngine {
       openDiaries ?? getIt<OpenDiaryRegistry>(),
       cancellation ?? getIt<SyncCancellation>(),
       dirty ?? getIt<SyncDirtyTracker>(),
+      pending,
+      cacheDirectory,
+      configuredBackends,
       trigger,
     );
   }
@@ -112,12 +119,18 @@ class IncrementalSyncEngine {
     this._openDiaries,
     this._cancellation,
     this._dirty,
+    this._pending,
+    this._cacheDirectory,
+    this._configuredBackends,
     this._trigger,
   ) : _mediaGate = Pool(concurrency);
 
   final OpenDiaryRegistry _openDiaries;
   final SyncCancellation _cancellation;
   final SyncDirtyTracker _dirty;
+  final SyncPendingTracker? _pending;
+  final String? _cacheDirectory;
+  final Future<Set<String>> Function() _configuredBackends;
 
   final SyncTrigger? _trigger;
 
@@ -153,6 +166,7 @@ class IncrementalSyncEngine {
           rethrow;
         }
       }, logger: _logger),
+      cancellation: _cancellation,
     );
   }
 
@@ -211,6 +225,8 @@ class IncrementalSyncEngine {
       concurrency: concurrency,
       openDiaries: _openDiaries,
       cancellation: _cancellation,
+      pending: _pending,
+      cacheDirectory: _cacheDirectory,
       trigger: _trigger,
     ).apply(manifest);
     return (report, manifest, manifestBytes);
@@ -323,7 +339,7 @@ class IncrementalSyncEngine {
     int failed = 0;
 
     final trackingId = backend.persistentBackendId;
-    final configuredBackends = await configuredCloudBackendIds();
+    final configuredBackends = await _configuredBackends();
     final tombstones = TombstoneBatch(await _tombstoneStore.getAll());
     final coveredTombstoneKeys = <String>[];
 
@@ -891,7 +907,10 @@ class IncrementalSyncEngine {
 
   Future<File> _mediaTempFile(String tag) async {
     final dir = Directory(
-      p.join(PlatformService.get().applicationCachePath, 'sync-media'),
+      p.join(
+        _cacheDirectory ?? PlatformService.get().applicationCachePath,
+        'sync-media',
+      ),
     );
     await dir.create(recursive: true);
     return File(p.join(dir.path, '$tag-${uuidV7()}.tmp'));

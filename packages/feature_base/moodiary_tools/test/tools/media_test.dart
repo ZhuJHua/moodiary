@@ -94,6 +94,7 @@ void main() {
         insights: MoodInsightsRepository(db),
         surface: ToolSurface.mcp,
         mediaStore: store,
+        heifDecoder: decoder,
       ),
     );
   }
@@ -101,7 +102,6 @@ void main() {
   setUp(() async {
     await AppFiles.initCreateDir();
     decoder = _HeifDecoder();
-    getIt.registerSingleton<IHeifDecoder>(decoder);
     store = _ReadTrackingMediaStore(
       pathOf: (kind, name) =>
           name.isEmpty ? '${root.path}/$kind' : '${root.path}/$kind/$name',
@@ -114,7 +114,6 @@ void main() {
 
   tearDown(() async {
     await db.close();
-    await getIt.unregister<IHeifDecoder>();
     final scratch = Directory(AppFiles.getCachePath('import/mcp'));
     if (scratch.existsSync()) expect(scratch.listSync(), isEmpty);
     for (final entry in root.listSync()) {

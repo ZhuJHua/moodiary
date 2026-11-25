@@ -1236,7 +1236,10 @@ class _AssistantPageState extends State<AssistantPage> {
     final files = await getIt<IFilePicker>().pickImages(context, maxAssets: 1);
     if (files.isEmpty || !mounted) return;
     final first = files.first;
-    final saved = await MediaManager.saveImages(imageFileList: [first]);
+    final saved = await MediaManager.saveImages(
+      decoder: getIt<IHeifDecoder>(),
+      imageFileList: [first],
+    );
     final name = saved[first.path];
     if (name == null || !mounted) return;
     setState(() => _pendingImageName = name);

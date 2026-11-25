@@ -3,12 +3,17 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_http/moodiary_http.dart';
+import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:path/path.dart';
 
 @module
 abstract class AppModule {
+  @lazySingleton
+  StartupMigrationCoordinator startupMigrations() =>
+      StartupMigrationCoordinator();
+
   @preResolve
   @singleton
   Future<IKVStorage> kvStorage(ISecureKVStorage secureKv) =>

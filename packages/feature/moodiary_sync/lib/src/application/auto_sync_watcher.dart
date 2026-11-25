@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -20,6 +19,26 @@ import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 @lazySingleton
 class AutoSyncWatcher {
   AutoSyncWatcher(
+    SyncLogger logger,
+    SyncRunner runner,
+    DiaryRepository diaries,
+    CategoryRepository categories,
+    TagRepository tags,
+    PlaceRepository places,
+    SyncDirtyTracker dirty,
+    OpenDiaryRegistry openDiaries,
+  ) : this.withDependencies(
+        logger,
+        runner,
+        diaries,
+        categories,
+        tags,
+        places,
+        dirty,
+        openDiaries,
+      );
+
+  AutoSyncWatcher.withDependencies(
     this._logger,
     this._runner,
     this._diaries,
@@ -27,8 +46,16 @@ class AutoSyncWatcher {
     this._tags,
     this._places,
     this._dirty,
-    this._openDiaries,
-  );
+    this._openDiaries, {
+    this.resolveBackend = currentSyncBackend,
+    this.configuredBackends = configuredCloudBackendIds,
+    Stream<bool> Function() onlineChanges = _onlineChanges,
+  }) : _networkChanges = onlineChanges;
+
+  static Stream<bool> _onlineChanges() => NetworkStatus.onlineChanges;
+  final IRemoteSyncBackend? Function() resolveBackend;
+  final Future<Set<String>> Function() configuredBackends;
+  final Stream<bool> Function() _networkChanges;
 
   final SyncLogger _logger;
   final SyncRunner _runner;
@@ -78,13 +105,14 @@ class AutoSyncWatcher {
   bool _started = false;
 
   void start() {
+    if (_started) return;
     _started = true;
     _diarySub ??= _diaries.diaryEvents.listen((event) async {
       if (event.fromSync) return;
       MoodiaryKVs.syncPendingLocal.set(true);
       switch (event) {
         case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
-          if ((await configuredCloudBackendIds()).isNotEmpty) {
+          if ((await configuredBackends()).isNotEmpty) {
             _dirty.markDirty(diary.id);
           }
           if (!_openDiaries.contains(diary.id)) _onLocalChange();
@@ -116,7 +144,7 @@ class AutoSyncWatcher {
       _onLocalChange(trigger: .close, delay: _closeDebounce);
     });
     _syncSub ??= _logger.events.listen(_onSyncEvent);
-    _netSub ??= NetworkStatus.onlineChanges.listen((online) {
+    _netSub ??= _networkChanges().listen((online) {
       if (online) _kick(.network);
     }, onError: (_) {});
     _lifecycle ??= AppLifecycleListener(onResume: _onResume, onHide: _onHide);
@@ -265,7 +293,7 @@ class AutoSyncWatcher {
   Future<void> _pollTick({SyncTrigger trigger = .poll}) async {
     if (MoodiaryKVs.autoSync.get() != true) return;
     if (_syncing || _runner.isRunning) return;
-    final backend = getIt.maybeGet<IRemoteSyncBackend>();
+    final backend = resolveBackend();
     if (backend == null) return;
     if (!await backend.isReady()) return;
     _lastTickAt = DateTime.now();
@@ -324,7 +352,7 @@ class AutoSyncWatcher {
     void Function()? onSuccess,
   }) async {
     if (_syncing || _runner.isRunning) return;
-    final backend = getIt.maybeGet<IRemoteSyncBackend>();
+    final backend = resolveBackend();
     if (backend == null) return;
     if (!await backend.isReady()) return;
     if (SyncKeyManager.hasKeyConflict(backend.persistentBackendId)) return;

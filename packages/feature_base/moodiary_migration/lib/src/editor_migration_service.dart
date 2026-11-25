@@ -22,8 +22,10 @@ class EditorMigrationService {
 
   static bool requiresContentUpgrade = false;
 
-  static Future<void> refreshRequiresMigration() async {
-    final repo = getIt<DiaryRepository>();
+  static Future<void> refreshRequiresMigration({
+    DiaryRepository? repository,
+  }) async {
+    final repo = repository ?? getIt<DiaryRepository>();
     hasLegacyDiaries = await repo.hasLegacyFormatDiaries();
     requiresContentUpgrade = MoodiaryKVs.contentSchemaV2.get() != true;
     if (requiresContentUpgrade &&
@@ -97,9 +99,10 @@ class EditorMigrationService {
   }
 
   static Future<int> upgradeContent({
+    DiaryRepository? repository,
     void Function(int done, int total)? onProgress,
   }) async {
-    final repo = getIt<DiaryRepository>();
+    final repo = repository ?? getIt<DiaryRepository>();
     await _writeContentBackup(repo);
     final changed = await repo.upgradeContentSchema(onProgress: onProgress);
     MoodiaryKVs.contentSchemaV2.set(true);
@@ -107,8 +110,8 @@ class EditorMigrationService {
     return changed;
   }
 
-  static Future<List<Diary>> pendingDiaries() =>
-      getIt<DiaryRepository>().getLegacyFormatDiaries();
+  static Future<List<Diary>> pendingDiaries({DiaryRepository? repository}) =>
+      (repository ?? getIt<DiaryRepository>()).getLegacyFormatDiaries();
 
   static String _toJson(Diary diary) {
     switch (DiaryType.fromValue(diary.type)) {
@@ -152,11 +155,14 @@ class EditorMigrationService {
     );
   }
 
-  static Future<bool> migrate(Diary diary) async {
+  static Future<bool> migrate(
+    Diary diary, {
+    DiaryRepository? repository,
+  }) async {
     if (DiaryType.fromValue(diary.type) == .tiptap) return false;
     final newDiary = await Isolate.run(() => _convertDiary(diary));
     await _writeBackup(diary);
-    await getIt<DiaryRepository>().updateADiary(
+    await (repository ?? getIt<DiaryRepository>()).updateADiary(
       newDiary: newDiary,
       fromSync: true,
       index: MoodiaryKVs.searchIndexBackfilled.get() ?? false ? .inline : .skip,
@@ -183,13 +189,14 @@ class EditorMigrationService {
 
   static Future<MigrationReport> migrateAll(
     List<Diary> diaries, {
+    DiaryRepository? repository,
     void Function(int done, int total)? onProgress,
   }) async {
     var migrated = 0;
     final failures = <MigrationFailure>[];
     for (var i = 0; i < diaries.length; i++) {
       try {
-        if (await migrate(diaries[i])) migrated++;
+        if (await migrate(diaries[i], repository: repository)) migrated++;
       } catch (e, s) {
         final redacted = redactDbError(e);
         logger.e('migrate diary failed', error: redacted, stackTrace: s);

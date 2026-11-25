@@ -20,6 +20,7 @@ dependencies:
   mmkv: 2.4.2
   shared_preferences: 2.5.5
   flutter_secure_storage: 11.0.0
+  riverpod_annotation: 4.0.7
   injectable: 3.0.0
 
 dev_dependencies:
@@ -27,4 +28,5 @@ dev_dependencies:
     sdk: flutter
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
+  riverpod_generator: 4.0.9
   injectable_generator: 3.1.3

@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -13,9 +12,10 @@ class ImageOptimizer {
   static const _heifSuffixes = ['.heic', '.heif'];
 
   static Future<ImageOptimizeReport> run({
+    required DiaryRepository repo,
+    required IHeifDecoder decoder,
     void Function(int done, int total)? onProgress,
   }) => runMediaExclusive(() async {
-    final repo = getIt<DiaryRepository>();
     final heicDiaries = await repo.getDiariesReferencingMedia(
       kind: .image,
       suffixes: _heifSuffixes,
@@ -35,7 +35,7 @@ class ImageOptimizer {
       final renamed = <String, String>{};
       for (final old in diary.imageName.where(_isHeif)) {
         final next = '${old.substring(0, old.lastIndexOf('.'))}.jpg';
-        if (await _convert(old, next)) {
+        if (await _convert(old, next, decoder)) {
           renamed[old] = next;
           converted++;
         } else {
@@ -69,14 +69,18 @@ class ImageOptimizer {
     );
   });
 
-  static Future<bool> _convert(String oldName, String newName) async {
+  static Future<bool> _convert(
+    String oldName,
+    String newName,
+    IHeifDecoder decoder,
+  ) async {
     final src = AppFiles.getRealPath('image', oldName);
     final dst = AppFiles.getRealPath('image', newName);
     if (await File(dst).exists()) return true;
     if (!await File(src).exists()) return false;
     final part = AppFiles.getRealPath('image', 'heif-${uuidV7()}.jpg');
     try {
-      final out = await getIt<IHeifDecoder>().convert(src, outputPath: part);
+      final out = await decoder.convert(src, outputPath: part);
       if (out == null) return false;
       await File(part).rename(dst);
       return true;

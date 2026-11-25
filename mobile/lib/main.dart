@@ -74,8 +74,7 @@ Future<void> _initSystem() async {
   }();
   await Future.wait([
     themeFuture,
-    if (LegacyDatabaseGuard.state == LegacyDatabaseState.none)
-      resumeDataStartup(),
+    getIt<StartupMigrationCoordinator>().startData(resumeDataStartup),
   ]);
   DiaryShare.register(showDiaryShareSheet);
 

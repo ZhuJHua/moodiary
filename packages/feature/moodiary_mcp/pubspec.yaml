@@ -16,6 +16,7 @@ dependencies:
   gap: 3.0.1
   moodiary_content: 0.0.1
   moodiary_di: 0.0.1
+  moodiary_files: 0.0.1
   moodiary_router: 0.0.1
   moodiary_semantic: 0.0.1
   mui: 0.0.1

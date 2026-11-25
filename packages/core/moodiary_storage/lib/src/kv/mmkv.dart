@@ -87,6 +87,7 @@ final class MmkvKVStorage extends IKVStorage {
   void clear() {
     _mmkv.clearAll();
     _mmkv.encodeBool(_migratedKey, true);
+    super.clear();
   }
 
   List<String>? _decodeStringList(String key) {

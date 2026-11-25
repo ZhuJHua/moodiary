@@ -50,10 +50,6 @@ class MoodiarySyncPackageModule extends _i526.MicroPackageModule {
     gh.lazySingleton<_i989.LegacyDataExporter>(
       () => _i186.SyncLegacyDataExporter(),
     );
-    gh.lazySingleton<_i472.IRemoteSyncBackend>(
-      () => _i454.S3SyncBackend(gh<_i731.SecureOptions>(instanceName: 's3')),
-      instanceName: 's3',
-    );
     gh.lazySingleton<_i1035.AutoSyncWatcher>(
       () => _i1035.AutoSyncWatcher(
         gh<_i59.SyncLogger>(),
@@ -66,6 +62,10 @@ class MoodiarySyncPackageModule extends _i526.MicroPackageModule {
         gh<_i691.OpenDiaryRegistry>(),
       ),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i472.IRemoteSyncBackend>(
+      () => _i454.S3SyncBackend(gh<_i731.SecureOptions>(instanceName: 's3')),
+      instanceName: 's3',
     );
     gh.lazySingleton<_i472.IRemoteSyncBackend>(
       () => _i351.WebDavSyncBackend(

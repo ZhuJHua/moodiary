@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_diary/moodiary_diary.dart';
 
 void main() {
   group('heatmapLevelResolver', () {

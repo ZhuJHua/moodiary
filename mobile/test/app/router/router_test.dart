@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_mobile/app/router/route_error_page.dart';
@@ -8,6 +9,13 @@ import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:mui/mui.dart';
 
 void main() {
+  setUp(
+    () => getIt.registerSingleton<StartupMigrationCoordinator>(
+      StartupMigrationCoordinator(),
+    ),
+  );
+  tearDown(getIt.reset);
+
   group('route tree config', () {
     testWidgets('unknown location lands on our own error page', (tester) async {
       final router = createMobileRouter(

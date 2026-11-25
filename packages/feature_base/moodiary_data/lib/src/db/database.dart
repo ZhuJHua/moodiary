@@ -6,6 +6,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:meta/meta.dart' show internal;
 import 'package:moodiary_content/moodiary_content.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:sqlite3_simple/sqlite3_simple.dart';
@@ -50,9 +51,26 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
       readPool: 3,
       setup: _setupConnection,
     );
-    final db = MoodiaryDatabase._(executor);
-    await db.customSelect('SELECT 1').get();
-    return db;
+    return probeConnection(MoodiaryDatabase._(executor));
+  }
+
+  @visibleForTesting
+  static Future<MoodiaryDatabase> probeConnection(MoodiaryDatabase db) async {
+    try {
+      await db.customSelect('SELECT 1').get();
+      return db;
+    } catch (_) {
+      try {
+        await db.close();
+      } catch (error, stack) {
+        logger.e(
+          'Closing database after failed probe',
+          error: error,
+          stackTrace: stack,
+        );
+      }
+      rethrow;
+    }
   }
 
   static void _setupConnection(sqlite3.Database db) {

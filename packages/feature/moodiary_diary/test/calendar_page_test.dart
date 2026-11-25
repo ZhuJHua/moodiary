@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_diary/src/presentation/calendar/calendar_page.dart';
 import 'package:moodiary_diary/src/presentation/widget/today_glyph.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';

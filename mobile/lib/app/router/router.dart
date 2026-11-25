@@ -1,4 +1,5 @@
 import 'package:moodiary_assistant/moodiary_assistant.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_editor/moodiary_editor.dart' show editorRoutes;
 import 'package:moodiary_export/moodiary_export.dart' show exportRoutes;
@@ -6,11 +7,7 @@ import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart' show mcpRoutes;
 import 'package:moodiary_media/moodiary_media.dart' show mediaRoutes;
 import 'package:moodiary_migration/moodiary_migration.dart'
-    show
-        EditorMigrationService,
-        LegacyDatabaseGuard,
-        LegacyDatabaseState,
-        migrationRoutes;
+    show LegacyDatabaseState, StartupMigrationCoordinator, migrationRoutes;
 import 'package:moodiary_mobile/app/di/bootstrap.dart' show resumeDataStartup;
 import 'package:moodiary_mobile/app/router/route_error_page.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
@@ -55,8 +52,8 @@ String? migrationGateRedirect(
   String matchedLocation, {
   LegacyDatabaseState? legacyState,
 }) {
-  if ((legacyState ?? LegacyDatabaseGuard.state) == LegacyDatabaseState.none &&
-      !EditorMigrationService.requiresMigration) {
+  if ((legacyState == null || legacyState == LegacyDatabaseState.none) &&
+      getIt<StartupMigrationCoordinator>().canEnterHome) {
     return null;
   }
   if (isGateRoute(matchedLocation)) {
@@ -78,7 +75,10 @@ List<RouteBase> _mobileRoutes() => [
   ...exportRoutes(),
   ...lockRoutes(),
   ...editorRoutes(),
-  ...migrationRoutes(resumeStartup: resumeDataStartup),
+  ...migrationRoutes(
+    resumeStartup: resumeDataStartup,
+    coordinator: getIt<StartupMigrationCoordinator>(),
+  ),
   ...mcpRoutes(),
   ...assistantRoutes(),
 ];

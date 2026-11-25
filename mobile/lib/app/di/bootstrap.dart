@@ -12,7 +12,7 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart' show McpKeepAlive, McpService;
 import 'package:moodiary_migration/moodiary_migration.dart'
-    show EditorMigrationService, VersionMigrator;
+    show EditorMigrationService, StartupMigrationCoordinator;
 import 'package:moodiary_ml/moodiary_ml.dart' show EmbeddingModelManager;
 import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -34,14 +34,16 @@ Future<void> bootstrapPlatform() async {
 
 Future<void> resumeDataStartup() async {
   try {
-    await VersionMigrator.run();
+    await StartupMigrationCoordinator.migrateVersion(getIt<IKVStorage>());
   } catch (e, s) {
     logger.e('version migration failed', error: e, stackTrace: s);
   }
 
   final migrationGateFuture = () async {
     try {
-      await EditorMigrationService.refreshRequiresMigration();
+      await StartupMigrationCoordinator.refreshEditorGate(
+        getIt<DiaryRepository>(),
+      );
     } catch (e, s) {
       logger.e('migration gate probe failed', error: e, stackTrace: s);
     }

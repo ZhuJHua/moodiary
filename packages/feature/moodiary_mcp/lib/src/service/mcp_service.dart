@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_semantic/moodiary_semantic.dart';
@@ -56,6 +57,7 @@ class McpService {
     this._tags,
     this._insights, [
     this._semantic,
+    this._heifDecoder,
   ]) : _endpointFactory = null,
        _networkChanges = null;
 
@@ -67,13 +69,15 @@ class McpService {
     this._insights,
     this._endpointFactory,
     this._networkChanges,
-  ) : _semantic = null;
+  ) : _semantic = null,
+      _heifDecoder = null;
 
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
   final TagRepository _tags;
   final MoodInsightsRepository _insights;
   final EmbedIndexService? _semantic;
+  final IHeifDecoder? _heifDecoder;
   final McpHttpEndpoint Function()? _endpointFactory;
   final Stream<Object?>? _networkChanges;
   final Lock _lock = Lock();
@@ -151,6 +155,7 @@ class McpService {
               tags: _tags,
               insights: _insights,
               semantic: _semantic,
+              heifDecoder: _heifDecoder,
               appVersion: version,
               iconUri: iconUri,
             ),

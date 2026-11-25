@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
@@ -9,6 +8,7 @@ import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 
 enum SyncDirection { push, pull, sync }
 
@@ -107,10 +107,17 @@ class SyncStatus {
 @singleton
 class SyncRunner {
   SyncRunner(this._cancellation, this._logger)
-    : _engineFactory = IncrementalSyncEngine.forCloud;
+    : _engineFactory = IncrementalSyncEngine.forCloud,
+      resolveBackend = currentSyncBackend;
 
-  @visibleForTesting
-  SyncRunner.withEngine(this._cancellation, this._logger, this._engineFactory);
+  SyncRunner.withEngine(
+    this._cancellation,
+    this._logger,
+    this._engineFactory, {
+    this.resolveBackend = currentSyncBackend,
+  });
+
+  final IRemoteSyncBackend? Function() resolveBackend;
 
   final SyncCancellation _cancellation;
   final SyncLogger _logger;
@@ -126,7 +133,7 @@ class SyncRunner {
 
   bool get isRunning => _status.value.isRunning;
 
-  IRemoteSyncBackend? get _backend => getIt.maybeGet<IRemoteSyncBackend>();
+  IRemoteSyncBackend? get _backend => resolveBackend();
 
   Future<SyncOutcome?> run(
     SyncDirection direction, {

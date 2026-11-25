@@ -1,10 +1,7 @@
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-import 'diary_repository.dart';
-import 'mood_insights.dart';
-import 'mood_insights_repository.dart';
 
 part 'mood_insights_controller.g.dart';
 

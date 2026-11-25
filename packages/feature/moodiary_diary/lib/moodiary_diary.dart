@@ -15,8 +15,11 @@ import 'src/presentation/recycle/recycle_page.dart';
 import 'src/presentation/search/search_page.dart';
 import 'src/presentation/tag/tag_manager_page.dart';
 
-export 'src/application/diary_filter.dart';
-export 'src/application/diary_selection.dart';
+export 'src/presentation/controllers/dashboard_controller.dart';
+export 'src/presentation/controllers/diary_controller.dart';
+export 'src/presentation/controllers/diary_filter.dart';
+export 'src/presentation/controllers/diary_selection.dart';
+export 'src/presentation/controllers/mood_insights_controller.dart';
 export 'src/presentation/map/map_tile_source.dart';
 export 'src/presentation/widget/category_drawer.dart';
 export 'src/presentation/widget/feed_view.dart';

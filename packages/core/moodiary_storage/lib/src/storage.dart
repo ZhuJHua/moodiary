@@ -4,7 +4,16 @@ class KVNotifier<T extends Object> extends ValueNotifier<T> {
   final IKVStorage storage;
   final String key;
 
-  KVNotifier._(super.value, {required this.storage, required this.key});
+  final T defaultValue;
+
+  KVNotifier._(
+    super.value, {
+    required this.defaultValue,
+    required this.storage,
+    required this.key,
+  });
+
+  void _reset() => super.value = storage.get<T>(key) ?? defaultValue;
 
   @override
   set value(T newValue) {
@@ -37,10 +46,15 @@ abstract class IKVStorage implements IKVSource {
 
   @mustCallSuper
   void remove(String key) {
-    _notifiers.remove(key);
+    _notifiers[key]?._reset();
   }
 
-  void clear();
+  @mustCallSuper
+  void clear() {
+    for (final notifier in _notifiers.values.toList()) {
+      notifier._reset();
+    }
+  }
 
   KVNotifier<T>? findNotifier<T extends Object>(String key) {
     return _notifiers[key] as KVNotifier<T>?;
@@ -49,8 +63,12 @@ abstract class IKVStorage implements IKVSource {
   KVNotifier<T> getNotifier<T extends Object>(String key, T defaultValue) {
     return _notifiers.putIfAbsent(
       key,
-      () =>
-          KVNotifier<T>._(get<T>(key) ?? defaultValue, storage: this, key: key),
+      () => KVNotifier<T>._(
+        get<T>(key) ?? defaultValue,
+        defaultValue: defaultValue,
+        storage: this,
+        key: key,
+      ),
     ) as KVNotifier<T>;
   }
 }

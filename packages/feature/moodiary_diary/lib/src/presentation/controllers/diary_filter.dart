@@ -1,4 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'diary_filter.g.dart';
 
 class DiaryFilter {
   final String? categoryId;
@@ -38,7 +40,8 @@ class DiaryFilter {
       : 'DiaryFilter.category($categoryId)';
 }
 
-class DiaryFilterNotifier extends Notifier<DiaryFilter> {
+@Riverpod(keepAlive: true)
+class HomeDiaryFilter extends _$HomeDiaryFilter {
   @override
   DiaryFilter build() => const .all();
 
@@ -46,6 +49,3 @@ class DiaryFilterNotifier extends Notifier<DiaryFilter> {
 
   void reset() => state = const .all();
 }
-
-final homeDiaryFilterProvider =
-    NotifierProvider<DiaryFilterNotifier, DiaryFilter>(DiaryFilterNotifier.new);

@@ -250,7 +250,7 @@ class _MarkdownImportPageState extends State<MarkdownImportPage> {
         diaries: getIt<DiaryRepository>(),
         categories: getIt<CategoryRepository>(),
         places: getIt<PlaceRepository>(),
-        media: const AppImportMediaStore(),
+        media: AppImportMediaStore(getIt<IHeifDecoder>()),
       );
       final report = await importer.run(
         source,

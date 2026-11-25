@@ -1,5 +1,6 @@
-import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'kv_keys.dart';
 
 part 'secret_controller.g.dart';
 

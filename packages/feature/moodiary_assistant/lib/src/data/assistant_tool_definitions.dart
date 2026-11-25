@@ -1,6 +1,7 @@
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
@@ -20,6 +21,9 @@ ToolContext assistantToolContext() => ToolContext(
   surface: ToolSurface.assistant,
   semantic: getIt.isRegistered<EmbedIndexService>()
       ? getIt<EmbedIndexService>()
+      : null,
+  heifDecoder: getIt.isRegistered<IHeifDecoder>()
+      ? getIt<IHeifDecoder>()
       : null,
 );
 

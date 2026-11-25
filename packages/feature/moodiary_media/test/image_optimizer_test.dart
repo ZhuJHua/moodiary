@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_media/moodiary_media.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -60,10 +59,7 @@ void main() {
     'optimization excludes cleanup until the converted image reference commits',
     () async {
       final root = Directory.systemTemp.createTempSync('image-optimize-');
-      addTearDown(() async {
-        await getIt.reset();
-        root.deleteSync(recursive: true);
-      });
+      addTearDown(() => root.deleteSync(recursive: true));
       PlatformService.get().applicationSupportPath = root.path;
       await AppFiles.initCreateDir();
       FastImageRuntime.configure(
@@ -74,9 +70,7 @@ void main() {
       await original.writeAsBytes([1, 2, 3]);
       final decoder = _Decoder();
       final repository = _Repository();
-      getIt.registerSingleton<IHeifDecoder>(decoder);
-      getIt.registerSingleton<DiaryRepository>(repository);
-      final optimizing = ImageOptimizer.run();
+      final optimizing = ImageOptimizer.run(repo: repository, decoder: decoder);
       await decoder.converted.future;
       var cleaned = false;
       final cleanup = runMediaExclusive(() async {
