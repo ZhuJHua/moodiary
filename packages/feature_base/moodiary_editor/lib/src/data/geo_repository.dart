@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:injectable/injectable.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_editor/src/data/model/geo.dart';
 import 'package:moodiary_editor/src/data/qweather_config.dart';
@@ -30,7 +29,6 @@ typedef GeoResult = ({String? name, LatLng? coords, GeoFailure? failure});
 
 typedef CoordinatesResult = ({LatLng? coords, GeoFailure? failure});
 
-@lazySingleton
 class GeoRepository {
   GeoRepository(this._http);
 

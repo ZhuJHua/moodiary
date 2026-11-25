@@ -26,13 +26,11 @@ class MoodiaryEditorHost extends ChangeNotifier {
   MoodiaryEditorHost(
     MoodiaryEditor configuration, {
     components.AudioPlaybackController Function()? audioControllerFactory,
-    VideoPlaybackPortFactory? videoPortFactory,
+    this._videoPortFactory,
     Future<FastImageProbe> Function({required String filePath})? imageProbe,
   }) : _configuration = configuration,
        _audioControllerFactory =
            audioControllerFactory ?? components.AudioPlaybackController.new,
-       _videoPortFactory =
-           videoPortFactory ?? components.videoPlayerPortFactory,
        _imageProbe = imageProbe ?? FastImageCodec.probe {
     final content = configuration.initialContent;
     _largeDocument = content.length >= _asyncLoadThreshold;
@@ -102,7 +100,7 @@ class MoodiaryEditorHost extends ChangeNotifier {
   }
 
   final components.AudioPlaybackController Function() _audioControllerFactory;
-  final VideoPlaybackPortFactory _videoPortFactory;
+  final VideoPlaybackPortFactory? _videoPortFactory;
   final Future<FastImageProbe> Function({required String filePath}) _imageProbe;
   final Map<int, _MediaPlayback> _media = {};
   final _mediaSources = LRUCache<(String, bool), ({String path, String mime})>(

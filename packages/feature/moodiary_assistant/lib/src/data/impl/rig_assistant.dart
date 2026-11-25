@@ -2,18 +2,19 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fast_core/llm.dart' as rust;
-import 'package:injectable/injectable.dart';
 import 'package:meta/meta.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_assistant/src/data/tool_call_data.dart';
+import 'package:moodiary_tools/moodiary_tools.dart';
 
 const String _gateRun = 'run';
 const String _gateSkip = 'skip:';
 
-@LazySingleton(as: AssistantService)
 class RigAssistantService implements AssistantService {
+  RigAssistantService(this._context);
+  final ToolContext _context;
   @override
   Stream<AssistantStreamEvent> chat(AssistantChatRequest request) async* {
     if (request.apiKey.isEmpty) {
@@ -204,6 +205,7 @@ class RigAssistantService implements AssistantService {
         ? null
         : AssistantToolRegistry.byId(name);
     return dispatchAssistantTool(
+      context: _context,
       spec: spec,
       toolName: name,
       argsJson: argsJson,
@@ -213,6 +215,7 @@ class RigAssistantService implements AssistantService {
 
 @visibleForTesting
 Future<String> dispatchAssistantTool({
+  required ToolContext context,
   required AssistantToolSpec? spec,
   required String toolName,
   required String argsJson,
@@ -226,7 +229,7 @@ Future<String> dispatchAssistantTool({
     if (input == null) {
       throw const FormatException('tool arguments must be a JSON object');
     }
-    return await spec.run(input);
+    return await spec.run(input, context);
   } catch (e) {
     return 'Failed: $toolName threw $e. Check the arguments against the schema, '
         'then retry or take another route.';

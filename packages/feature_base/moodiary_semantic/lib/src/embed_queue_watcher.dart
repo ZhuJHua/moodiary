@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'embed_index_service.dart';
 
-@lazySingleton
 class EmbedQueueWatcher {
   EmbedQueueWatcher(this._diaries, this._index, this._openDiaries);
 
@@ -32,7 +30,6 @@ class EmbedQueueWatcher {
     _timer = Timer(_debounce, () => unawaited(_index.drain()));
   }
 
-  @disposeMethod
   Future<void> dispose() async {
     _timer?.cancel();
     _timer = null;

@@ -58,7 +58,7 @@ final class SecretKvProvider
   }
 }
 
-String _$secretKvHash() => r'85633856dc8532ffe44ed1cdb6efc9d74d75c01e';
+String _$secretKvHash() => r'92b714558c886f62f4623b941be35e298165214f';
 
 final class SecretKvFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<String?>, MoodiarySecureKVs> {

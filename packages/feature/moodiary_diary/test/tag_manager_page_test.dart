@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -23,19 +22,14 @@ void main() {
     previousCustom = SmartDialog.config.custom;
     SmartDialog.config.custom = SmartConfigCustom(debounceTime: Duration.zero);
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
     await db.customStatement('PRAGMA foreign_keys = ON');
     tags = TagRepository(db);
     diaries = DiaryRepository(db);
-    getIt
-      ..registerSingleton(tags)
-      ..registerSingleton(diaries)
-      ..registerSingleton(SyncPendingTracker());
   });
 
-  tearDown(() async {
+  tearDown(() {
     SmartDialog.config.custom = previousCustom;
-    await getIt.reset();
-    await db.close();
   });
 
   Future<ProviderContainer> open(
@@ -67,6 +61,8 @@ void main() {
       muiTestApp(
         Router.withConfig(config: router),
         overrides: [
+          tagRepositoryProvider.overrideWithValue(tags),
+          diaryRepositoryProvider.overrideWithValue(diaries),
           orderedCategoriesProvider.overrideWithValue(const .data([])),
           categoryDiaryCountsProvider.overrideWithValue(
             const .data((byCategory: <String, int>{}, total: 0)),

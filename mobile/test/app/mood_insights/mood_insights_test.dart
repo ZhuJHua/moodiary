@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mobile/app/me/me_page.dart';
@@ -125,7 +124,8 @@ Widget _app(GoRouter router) => TranslationProvider(
 void main() {
   setUpAll(setupPluralResolvers);
   setUp(() {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
     PackageInfo.setMockInitialValues(
       appName: 'Moodiary',
       packageName: 'moodiary',
@@ -134,7 +134,6 @@ void main() {
       buildSignature: '',
     );
   });
-  tearDown(getIt.reset);
 
   testWidgets('Me shows the used tag group count and opens tag management', (
     tester,
@@ -144,6 +143,7 @@ void main() {
     addTearDown(router.dispose);
     await tester.pumpWidget(
       ProviderScope(
+        retry: (_, _) => null,
         overrides: [
           dashboardControllerProvider.overrideWith(_Dashboard.new),
           moodInsightsControllerProvider.overrideWith(_FailedMoods.new),
@@ -187,13 +187,14 @@ void main() {
     (tester) async {
       final repository = _PendingMoods();
       repository.pending.complete([]);
-      getIt.registerSingleton<MoodInsightsRepository>(repository);
-      getIt.registerSingleton<DiaryRepository>(_Diaries());
       final router = _host(const MePage());
       addTearDown(router.dispose);
       await tester.pumpWidget(
         ProviderScope(
+          retry: (_, _) => null,
           overrides: [
+            moodInsightsRepositoryProvider.overrideWithValue(repository),
+            diaryRepositoryProvider.overrideWithValue(_Diaries()),
             dashboardControllerProvider.overrideWith(_ReadyDashboard.new),
             _emptyCatalog,
             placeControllerProvider.overrideWith(_Places.new),
@@ -248,13 +249,14 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         final repository = _PendingMoods()..recorded = recorded;
-        getIt.registerSingleton<MoodInsightsRepository>(repository);
-        getIt.registerSingleton<DiaryRepository>(_Diaries());
         final router = _host(const MePage());
         addTearDown(router.dispose);
         await tester.pumpWidget(
           ProviderScope(
+            retry: (_, _) => null,
             overrides: [
+              moodInsightsRepositoryProvider.overrideWithValue(repository),
+              diaryRepositoryProvider.overrideWithValue(_Diaries()),
               dashboardControllerProvider.overrideWith(_Dashboard.new),
               _emptyCatalog,
               placeControllerProvider.overrideWith(_Places.new),
@@ -334,13 +336,14 @@ void main() {
 
   testWidgets('Me fast mood result never shows a skeleton', (tester) async {
     final repository = _PendingMoods();
-    getIt.registerSingleton<MoodInsightsRepository>(repository);
-    getIt.registerSingleton<DiaryRepository>(_Diaries());
     final router = _host(const MePage());
     addTearDown(router.dispose);
     await tester.pumpWidget(
       ProviderScope(
+        retry: (_, _) => null,
         overrides: [
+          moodInsightsRepositoryProvider.overrideWithValue(repository),
+          diaryRepositoryProvider.overrideWithValue(_Diaries()),
           dashboardControllerProvider.overrideWith(_Dashboard.new),
           _emptyCatalog,
           placeControllerProvider.overrideWith(_Places.new),
@@ -368,6 +371,7 @@ void main() {
     addTearDown(router.dispose);
     await tester.pumpWidget(
       ProviderScope(
+        retry: (_, _) => null,
         overrides: [
           dashboardControllerProvider.overrideWith(_Dashboard.new),
           moodInsightsControllerProvider.overrideWith(_FailedMoods.new),

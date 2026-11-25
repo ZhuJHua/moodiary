@@ -10,16 +10,17 @@ environment:
   flutter: ">=3.47.0"
 
 dependencies:
+  riverpod_annotation: 4.0.7
+  flutter_riverpod: 3.4.3
   flutter:
     sdk: flutter
 
   moodiary_logging: 0.0.1
   fast_core: 0.0.1
-  injectable: 3.0.0
 
 dev_dependencies:
+  riverpod_generator: 4.0.9
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
-  injectable_generator: 3.1.3

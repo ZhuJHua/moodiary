@@ -1,17 +1,16 @@
-import 'dart:convert';
-
-import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_storage/moodiary_storage.dart';
+part of 'sync_data_providers.dart';
 
 class SecureOptions {
-  SecureOptions(this._key);
+  SecureOptions(this._key, this._storage);
+
+  final ISecureKVStorage _storage;
 
   final MoodiarySecureKVs _key;
 
   Future<List<String>> read() async {
     final String? raw;
     try {
-      raw = await _key.get();
+      raw = await _storage.get(_key.name);
     } catch (e, s) {
       logger.e(
         'sync options read failed: ${_key.name}',
@@ -22,13 +21,14 @@ class SecureOptions {
     }
     if (raw == null || raw.isEmpty) return const <String>[];
     try {
-      return (jsonDecode(raw) as List).cast<String>();
+      return List<String>.unmodifiable(jsonDecode(raw) as List);
     } catch (_) {
       return const <String>[];
     }
   }
 
-  Future<void> save(List<String> options) => _key.set(jsonEncode(options));
+  Future<void> _save(List<String> options) =>
+      _storage.set(_key.name, jsonEncode(options));
 
-  Future<void> clear() => _key.remove();
+  Future<void> _clear() => _storage.remove(_key.name);
 }

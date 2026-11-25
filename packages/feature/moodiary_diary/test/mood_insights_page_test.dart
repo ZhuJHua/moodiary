@@ -4,7 +4,6 @@ import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_calendar.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_insights_page.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_patterns.dart';
@@ -15,6 +14,8 @@ import 'package:moodiary_diary/src/presentation/widget/today_glyph.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+
+import 'package:riverpod_annotation/riverpod_annotation.dart' show Override;
 
 import 'support/pump.dart';
 
@@ -72,13 +73,15 @@ void main() {
   });
   late _Repository repository;
   late _Diaries diaries;
+  late List<Override> overrides;
   setUp(() {
     repository = _Repository();
     diaries = _Diaries();
-    getIt.registerSingleton<MoodInsightsRepository>(repository);
-    getIt.registerSingleton<DiaryRepository>(diaries);
+    overrides = [
+      moodInsightsRepositoryProvider.overrideWithValue(repository),
+      diaryRepositoryProvider.overrideWithValue(diaries),
+    ];
   });
-  tearDown(getIt.reset);
 
   Future<void> openPage(WidgetTester tester) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -98,7 +101,11 @@ void main() {
       MoodInsightEntry(id: 'today', time: today, mood: .good),
     ];
     await tester.pumpWidget(
-      muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+      muiTestApp(
+        const MoodInsightsPage(),
+        wrapScaffold: false,
+        overrides: overrides,
+      ),
     );
     await tester.pumpAndSettle();
   }
@@ -134,6 +141,7 @@ void main() {
               ),
               wrapScaffold: false,
               locale: locale.flutterLocale,
+              overrides: overrides,
             ),
           );
           await tester.pumpAndSettle();
@@ -295,6 +303,7 @@ void main() {
               onChanged: (scope) => changed = scope,
             ),
             locale: locale.flutterLocale,
+            overrides: overrides,
           ),
         );
         await tester.pumpAndSettle();
@@ -343,6 +352,7 @@ void main() {
               ),
             ),
             locale: locale.flutterLocale,
+            overrides: overrides,
           ),
         );
         await tester.pumpAndSettle();
@@ -370,6 +380,7 @@ void main() {
           const MoodInsightsPage(),
           wrapScaffold: false,
           locale: locale.flutterLocale,
+          overrides: overrides,
         ),
       );
       await tester.pumpAndSettle();
@@ -422,6 +433,7 @@ void main() {
                 ),
               ),
             ),
+            overrides: overrides,
           ),
         );
         final map = find.byType(MHeatmap);
@@ -472,7 +484,11 @@ void main() {
     final today = moodDayKey(clock.now());
     repository.rows = [MoodInsightEntry(id: 'today', time: today, mood: .good)];
     await tester.pumpWidget(
-      muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+      muiTestApp(
+        const MoodInsightsPage(),
+        wrapScaffold: false,
+        overrides: overrides,
+      ),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.insights.year));
@@ -688,7 +704,11 @@ void main() {
       ),
     ];
     await tester.pumpWidget(
-      muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+      muiTestApp(
+        const MoodInsightsPage(),
+        wrapScaffold: false,
+        overrides: overrides,
+      ),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.insights.year));
@@ -719,7 +739,11 @@ void main() {
       ),
     ];
     await tester.pumpWidget(
-      muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+      muiTestApp(
+        const MoodInsightsPage(),
+        wrapScaffold: false,
+        overrides: overrides,
+      ),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.insights.year));
@@ -821,6 +845,7 @@ void main() {
       await tester.pumpWidget(
         muiTestApp(
           MoodPeriodPicker(scope: .week, anchor: month, repository: repository),
+          overrides: overrides,
         ),
       );
       await tester.pumpAndSettle();
@@ -870,6 +895,7 @@ void main() {
               repository: repository,
             ),
             locale: locale,
+            overrides: overrides,
           ),
         );
         await tester.pumpAndSettle();
@@ -991,7 +1017,11 @@ void main() {
     ) async {
       repository.pending = Completer();
       await tester.pumpWidget(
-        muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+        muiTestApp(
+          const MoodInsightsPage(),
+          wrapScaffold: false,
+          overrides: overrides,
+        ),
       );
       expect(find.byType(MoodPeriodHeader), findsOneWidget);
       expect(find.byType(MSkeleton), findsNothing);
@@ -1173,7 +1203,11 @@ void main() {
     ) async {
       repository.pending = Completer();
       await tester.pumpWidget(
-        muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+        muiTestApp(
+          const MoodInsightsPage(),
+          wrapScaffold: false,
+          overrides: overrides,
+        ),
       );
       if (scope != .month) {
         await tester.tap(
@@ -1251,6 +1285,7 @@ void main() {
               onSelected: (_) {},
             ),
           ),
+          overrides: overrides,
         ),
       );
       final calendar = find.byType(MoodCalendar);
@@ -1326,7 +1361,11 @@ void main() {
       ];
       diaries.pending = Completer();
       await tester.pumpWidget(
-        muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+        muiTestApp(
+          const MoodInsightsPage(),
+          wrapScaffold: false,
+          overrides: overrides,
+        ),
       );
       await tester.pumpAndSettle();
       await tester.tap(
@@ -1366,7 +1405,11 @@ void main() {
     'empty state replaces all data cards and scope navigation still works',
     (tester) async {
       await tester.pumpWidget(
-        muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+        muiTestApp(
+          const MoodInsightsPage(),
+          wrapScaffold: false,
+          overrides: overrides,
+        ),
       );
       await tester.pumpAndSettle();
       expect(find.text(l10n.insights.empty), findsOneWidget);
@@ -1401,7 +1444,11 @@ void main() {
         ),
       ];
       await tester.pumpWidget(
-        muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+        muiTestApp(
+          const MoodInsightsPage(),
+          wrapScaffold: false,
+          overrides: overrides,
+        ),
       );
       await tester.pumpAndSettle();
       expect(find.text(l10n.insights.calendar), findsOneWidget);
@@ -1474,7 +1521,11 @@ void main() {
           ),
       ];
       await tester.pumpWidget(
-        muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+        muiTestApp(
+          const MoodInsightsPage(),
+          wrapScaffold: false,
+          overrides: overrides,
+        ),
       );
       await tester.pumpAndSettle();
       await tester.tap(
@@ -1536,6 +1587,7 @@ void main() {
                 ),
               ],
             ),
+            overrides: overrides,
           ),
         );
         await tester.pumpAndSettle();

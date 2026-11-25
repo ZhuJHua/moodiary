@@ -1,5 +1,3 @@
-import 'package:moodiary_storage/moodiary_storage.dart';
-
 abstract final class SyncProviderIds {
   static const webdav = 'webdav';
   static const s3 = 's3';
@@ -20,10 +18,4 @@ enum SyncProviderType {
       orElse: () => SyncProviderType.webdav,
     );
   }
-
-  static SyncProviderType current() =>
-      fromValue(MoodiaryKVs.syncProvider.get());
-
-  static void setCurrent(SyncProviderType type) =>
-      MoodiaryKVs.syncProvider.set(type.value);
 }

@@ -1,6 +1,5 @@
 import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 import 'package:moodiary_storage/testing.dart';
@@ -10,11 +9,19 @@ void main() {
   late MemoryKVStorage kv;
 
   setUp(() async {
-    await getIt.reset();
     secure = MemorySecureKVStorage();
     kv = MemoryKVStorage();
-    getIt.registerSingleton<ISecureKVStorage>(secure);
-    getIt.registerSingleton<IKVStorage>(kv);
+    SecureKVStore.installForTesting(secure);
+    addTearDown(SecureKVStore.resetForTesting);
+    KVStore.installForTesting(kv);
+    addTearDown(KVStore.resetForTesting);
+    final verifier = AppLockPin.verifier;
+    final hasher = AppLockPin.hasher;
+    addTearDown(() async {
+      await AppLockPin.clear();
+      AppLockPin.verifier = verifier;
+      AppLockPin.hasher = hasher;
+    });
     AppLockPin.hasher = (pin) async => r'$argon2id$fake$' + pin;
     AppLockPin.verifier = (hash, pin) async => hash == r'$argon2id$fake$' + pin;
   });

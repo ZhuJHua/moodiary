@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
@@ -20,7 +19,6 @@ typedef SemanticHit = ({
   int len,
 });
 
-@lazySingleton
 class EmbedIndexService {
   EmbedIndexService(this._db, this._engine, this._openDiaries);
 

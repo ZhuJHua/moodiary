@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AppSettings {
 
- ThemeData get lightTheme; ThemeData get darkTheme; ThemeMode get themeMode;
+ ThemeData get lightTheme; ThemeData get darkTheme; ThemeMode get themeMode; Color? get systemAccentSeed; MuiFontConfig get fontConfig; ({String family, String path,})? get editorFont;
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 @override
 bool operator ==(Object other) {
   final _this = this as AppSettings;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.lightTheme, _this.lightTheme) || other.lightTheme == _this.lightTheme)&&(identical(other.darkTheme, _this.darkTheme) || other.darkTheme == _this.darkTheme)&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.lightTheme, _this.lightTheme) || other.lightTheme == _this.lightTheme)&&(identical(other.darkTheme, _this.darkTheme) || other.darkTheme == _this.darkTheme)&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.systemAccentSeed, _this.systemAccentSeed) || other.systemAccentSeed == _this.systemAccentSeed)&&(identical(other.fontConfig, _this.fontConfig) || other.fontConfig == _this.fontConfig)&&(identical(other.editorFont, _this.editorFont) || other.editorFont == _this.editorFont));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AppSettings;
-  return Object.hash(runtimeType,_this.lightTheme,_this.darkTheme,_this.themeMode);
+  return Object.hash(runtimeType,_this.lightTheme,_this.darkTheme,_this.themeMode,_this.systemAccentSeed,_this.fontConfig,_this.editorFont);
 }
 
 @override
 String toString() {
   final _this = this as AppSettings;
-  return 'AppSettings(lightTheme: ${_this.lightTheme}, darkTheme: ${_this.darkTheme}, themeMode: ${_this.themeMode})';
+  return 'AppSettings(lightTheme: ${_this.lightTheme}, darkTheme: ${_this.darkTheme}, themeMode: ${_this.themeMode}, systemAccentSeed: ${_this.systemAccentSeed}, fontConfig: ${_this.fontConfig}, editorFont: ${_this.editorFont})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
- ThemeData lightTheme, ThemeData darkTheme, ThemeMode themeMode
+ ThemeData lightTheme, ThemeData darkTheme, ThemeMode themeMode, Color? systemAccentSeed, MuiFontConfig fontConfig, ({String family, String path,})? editorFont
 });
 
 
@@ -68,12 +68,15 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lightTheme = null,Object? darkTheme = null,Object? themeMode = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? lightTheme = null,Object? darkTheme = null,Object? themeMode = null,Object? systemAccentSeed = freezed,Object? fontConfig = null,Object? editorFont = freezed,}) {
   return _then(AppSettings(
 lightTheme: null == lightTheme ? _self.lightTheme : lightTheme // ignore: cast_nullable_to_non_nullable
 as ThemeData,darkTheme: null == darkTheme ? _self.darkTheme : darkTheme // ignore: cast_nullable_to_non_nullable
 as ThemeData,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
-as ThemeMode,
+as ThemeMode,systemAccentSeed: freezed == systemAccentSeed ? _self.systemAccentSeed : systemAccentSeed // ignore: cast_nullable_to_non_nullable
+as Color?,fontConfig: null == fontConfig ? _self.fontConfig : fontConfig // ignore: cast_nullable_to_non_nullable
+as MuiFontConfig,editorFont: freezed == editorFont ? _self.editorFont : editorFont // ignore: cast_nullable_to_non_nullable
+as ({String family, String path,})?,
   ));
 }
 
@@ -158,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ThemeData lightTheme,  ThemeData darkTheme,  ThemeMode themeMode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ThemeData lightTheme,  ThemeData darkTheme,  ThemeMode themeMode,  Color? systemAccentSeed,  MuiFontConfig fontConfig,  ({String family, String path,})? editorFont)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.lightTheme,_that.darkTheme,_that.themeMode);case _:
+return $default(_that.lightTheme,_that.darkTheme,_that.themeMode,_that.systemAccentSeed,_that.fontConfig,_that.editorFont);case _:
   return orElse();
 
 }
@@ -179,10 +182,10 @@ return $default(_that.lightTheme,_that.darkTheme,_that.themeMode);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ThemeData lightTheme,  ThemeData darkTheme,  ThemeMode themeMode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ThemeData lightTheme,  ThemeData darkTheme,  ThemeMode themeMode,  Color? systemAccentSeed,  MuiFontConfig fontConfig,  ({String family, String path,})? editorFont)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.lightTheme,_that.darkTheme,_that.themeMode);case _:
+return $default(_that.lightTheme,_that.darkTheme,_that.themeMode,_that.systemAccentSeed,_that.fontConfig,_that.editorFont);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +202,10 @@ return $default(_that.lightTheme,_that.darkTheme,_that.themeMode);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ThemeData lightTheme,  ThemeData darkTheme,  ThemeMode themeMode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ThemeData lightTheme,  ThemeData darkTheme,  ThemeMode themeMode,  Color? systemAccentSeed,  MuiFontConfig fontConfig,  ({String family, String path,})? editorFont)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.lightTheme,_that.darkTheme,_that.themeMode);case _:
+return $default(_that.lightTheme,_that.darkTheme,_that.themeMode,_that.systemAccentSeed,_that.fontConfig,_that.editorFont);case _:
   return null;
 
 }
@@ -213,13 +216,16 @@ return $default(_that.lightTheme,_that.darkTheme,_that.themeMode);case _:
 /// @nodoc
 
 
-class _AppSettings implements AppSettings {
-  const _AppSettings({required this.lightTheme, required this.darkTheme, required this.themeMode});
+class _AppSettings extends AppSettings {
+  const _AppSettings({required this.lightTheme, required this.darkTheme, required this.themeMode, required this.systemAccentSeed, required this.fontConfig, required this.editorFont}): super._();
   
 
 @override final  ThemeData lightTheme;
 @override final  ThemeData darkTheme;
 @override final  ThemeMode themeMode;
+@override final  Color? systemAccentSeed;
+@override final  MuiFontConfig fontConfig;
+@override final  ({String family, String path,})? editorFont;
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -231,18 +237,18 @@ _$AppSettingsCopyWith<_AppSettings> get copyWith => __$AppSettingsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.lightTheme, lightTheme) || other.lightTheme == lightTheme)&&(identical(other.darkTheme, darkTheme) || other.darkTheme == darkTheme)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.lightTheme, lightTheme) || other.lightTheme == lightTheme)&&(identical(other.darkTheme, darkTheme) || other.darkTheme == darkTheme)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.systemAccentSeed, systemAccentSeed) || other.systemAccentSeed == systemAccentSeed)&&(identical(other.fontConfig, fontConfig) || other.fontConfig == fontConfig)&&(identical(other.editorFont, editorFont) || other.editorFont == editorFont));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,lightTheme,darkTheme,themeMode);
+    return Object.hash(runtimeType,lightTheme,darkTheme,themeMode,systemAccentSeed,fontConfig,editorFont);
 }
 
 @override
 String toString() {
-    return 'AppSettings(lightTheme: $lightTheme, darkTheme: $darkTheme, themeMode: $themeMode)';
+    return 'AppSettings(lightTheme: $lightTheme, darkTheme: $darkTheme, themeMode: $themeMode, systemAccentSeed: $systemAccentSeed, fontConfig: $fontConfig, editorFont: $editorFont)';
 }
 
 
@@ -253,7 +259,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- ThemeData lightTheme, ThemeData darkTheme, ThemeMode themeMode
+ ThemeData lightTheme, ThemeData darkTheme, ThemeMode themeMode, Color? systemAccentSeed, MuiFontConfig fontConfig, ({String family, String path,})? editorFont
 });
 
 
@@ -270,12 +276,15 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lightTheme = null,Object? darkTheme = null,Object? themeMode = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? lightTheme = null,Object? darkTheme = null,Object? themeMode = null,Object? systemAccentSeed = freezed,Object? fontConfig = null,Object? editorFont = freezed,}) {
   return _then(_AppSettings(
 lightTheme: null == lightTheme ? _self.lightTheme : lightTheme // ignore: cast_nullable_to_non_nullable
 as ThemeData,darkTheme: null == darkTheme ? _self.darkTheme : darkTheme // ignore: cast_nullable_to_non_nullable
 as ThemeData,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
-as ThemeMode,
+as ThemeMode,systemAccentSeed: freezed == systemAccentSeed ? _self.systemAccentSeed : systemAccentSeed // ignore: cast_nullable_to_non_nullable
+as Color?,fontConfig: null == fontConfig ? _self.fontConfig : fontConfig // ignore: cast_nullable_to_non_nullable
+as MuiFontConfig,editorFont: freezed == editorFont ? _self.editorFont : editorFont // ignore: cast_nullable_to_non_nullable
+as ({String family, String path,})?,
   ));
 }
 

@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
@@ -14,28 +13,26 @@ void main() {
   late DiaryRepository diaryRepo;
 
   setUp(() {
-    getIt.pushNewScope();
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
     diaryRepo = DiaryRepository(db);
     placeRepo = PlaceRepository(db, diaryRepo);
-    getIt
-      ..registerSingleton<MoodiaryDatabase>(db)
-      ..registerSingleton<PlaceRepository>(placeRepo)
-      ..registerSingleton<DiaryRepository>(diaryRepo)
-      ..registerSingleton<IKVStorage>(MemoryKVStorage());
-  });
-
-  tearDown(() async {
-    await getIt.popScope();
-    await db.close();
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
   });
 
   ProviderContainer makeContainer() {
-    final container = ProviderContainer();
+    final container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [
+        moodiaryDatabaseProvider.overrideWithValue(db),
+        placeRepositoryProvider.overrideWithValue(placeRepo),
+        diaryRepositoryProvider.overrideWithValue(diaryRepo),
+      ],
+    );
     final keepAlive = container.listen(placeControllerProvider, (_, _) {});
     addTearDown(() {
       keepAlive.close();
-      container.dispose();
     });
     return container;
   }
@@ -91,7 +88,14 @@ void main() {
     await placeRepo.insertAPlace(make('a', '家'));
     await placeRepo.insertAPlace(make('b', '家门口'));
     await insertDiary(db, 'd1', 'b', time: 100, show: false);
-    final container = ProviderContainer();
+    final container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [
+        moodiaryDatabaseProvider.overrideWithValue(db),
+        placeRepositoryProvider.overrideWithValue(placeRepo),
+        diaryRepositoryProvider.overrideWithValue(diaryRepo),
+      ],
+    );
     final subscription = container.listen(placeControllerProvider, (_, _) {});
     final notifier = container.read(placeControllerProvider.notifier);
     await container.read(placeControllerProvider.future);

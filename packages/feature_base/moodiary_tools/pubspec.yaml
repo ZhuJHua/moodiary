@@ -24,7 +24,6 @@ dependencies:
 
 dev_dependencies:
   fast_image: 0.0.1
-  moodiary_di: 0.0.1
   moodiary_platform: 0.0.1
   moodiary_storage: 0.0.1
   flutter_test:

@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -12,8 +11,6 @@ void main() {
   testWidgets('drawer entries close the drawer and open their routes', (
     tester,
   ) async {
-    getIt.registerSingleton(SyncPendingTracker());
-    addTearDown(getIt.reset);
     final key = GlobalKey<ScaffoldState>();
     final router = GoRouter(
       routes: [

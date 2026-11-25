@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -39,6 +38,7 @@ class MarkdownImportReport {
 class MarkdownImporter {
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
+  final TagRepository _tags;
   final PlaceRepository _places;
   final ImportMediaStore _media;
   final DateTime Function() _now;
@@ -47,6 +47,7 @@ class MarkdownImporter {
     required this._diaries,
     required this._categories,
     required this._places,
+    required this._tags,
     required this._media,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.timestamp;
@@ -159,7 +160,7 @@ class MarkdownImporter {
               videoName: const [],
               tagIds: meta.tags.isEmpty
                   ? const []
-                  : await getIt<TagRepository>().ensureTags(meta.tags),
+                  : await _tags.ensureTags(meta.tags),
               placeId: placeId,
               type: converted.type.value,
             ),

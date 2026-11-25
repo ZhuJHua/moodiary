@@ -5,13 +5,12 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_controller.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_page.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
-import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:mui/mui.dart';
 
 void main() {
@@ -24,8 +23,6 @@ void main() {
       ..applicationSupportPath = '${root.path}/support';
   });
   tearDownAll(() => root.deleteSync(recursive: true));
-  setUp(() => getIt.registerSingleton<SyncCancellation>(SyncCancellation()));
-  tearDown(getIt.reset);
 
   StorageReport report({
     StorageCleanupKind kind = .cache,
@@ -67,7 +64,7 @@ void main() {
                 reports?.call() ??
                 Stream.value(report(kind: kind, loading: loading)),
           ),
-          storageSyncBusyProvider.overrideWith((ref) => busy),
+          syncOperationBusyProvider.overrideWith((ref) => busy),
         ],
         child: TranslationProvider(
           child: MaterialApp(

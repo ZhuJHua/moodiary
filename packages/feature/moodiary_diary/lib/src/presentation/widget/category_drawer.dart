@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/controllers/diary_filter.dart';
 import 'package:moodiary_diary/src/presentation/controllers/diary_selection.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -36,6 +35,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final pending = ref.watch(syncPendingStateProvider);
     final colors = context.theme.colors;
     final filter = ref.watch(homeDiaryFilterProvider);
     final categoryState = ref.watch(orderedCategoriesProvider);
@@ -77,147 +77,136 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
 
     return Drawer(
       child: SafeArea(
-        child: ValueListenableBuilder(
-          valueListenable: getIt<SyncPendingTracker>().listenable,
-          builder: (context, pending, _) {
-            return Column(
-              crossAxisAlignment: .stretch,
-              children: [
-                if (_query.isNotEmpty ||
-                    categories.length >= _kSearchThreshold ||
-                    usedCount > _kTopTags)
-                  Padding(
-                    padding: const .fromLTRB(12, 0, 12, 8),
-                    child: SearchBar(
-                      hintText: context.l10n.diary.drawerSearchHint,
-                      leading: const Icon(LucideIcons.search, size: 20),
-                      constraints: const BoxConstraints(minHeight: 42),
-                      elevation: const WidgetStatePropertyAll(0),
-                      backgroundColor: WidgetStatePropertyAll(
-                        colors.surfaceContainerHigh,
-                      ),
-                      onChanged: (v) => setState(() => _query = v),
-                    ),
+        child: Column(
+          crossAxisAlignment: .stretch,
+          children: [
+            if (_query.isNotEmpty ||
+                categories.length >= _kSearchThreshold ||
+                usedCount > _kTopTags)
+              Padding(
+                padding: const .fromLTRB(12, 0, 12, 8),
+                child: SearchBar(
+                  hintText: context.l10n.diary.drawerSearchHint,
+                  leading: const Icon(LucideIcons.search, size: 20),
+                  constraints: const BoxConstraints(minHeight: 42),
+                  elevation: const WidgetStatePropertyAll(0),
+                  backgroundColor: WidgetStatePropertyAll(
+                    colors.surfaceContainerHigh,
                   ),
-                Expanded(
-                  child: ListView(
-                    padding: .only(
-                      bottom: 8 + MediaQuery.viewInsetsOf(context).bottom,
-                    ),
-                    children: [
-                      if (query.isEmpty) ...[
-                        _Tile(
-                          label: context.l10n.diary.categoryAllDiary,
-                          count: total,
-                          selected: filter.isAll,
-                          height: 48,
-                          leading: const Icon(LucideIcons.bookOpen, size: 18),
-                          onTap: () => _pick(const .all()),
-                        ),
-                        Divider(
-                          height: 1,
-                          thickness: 1,
-                          indent: 28,
-                          endIndent: 28,
-                          color: colors.outlineVariant,
-                        ),
-                      ],
-                      _SectionHeader(
-                        label: context.l10n.common.category,
-                        tooltip: context.l10n.diary.categoryManageEntry,
-                        onManage: () => _open(const CategoryManagerRoute()),
-                      ),
-                      for (final c in visibleCategories)
-                        _Tile(
-                          label: c.categoryName,
-                          count: counts?.byCategory[c.id],
-                          selected: filter.categoryId == c.id,
-                          color: categoryColorOf(colorValue: c.color, id: c.id),
-                          syncing: pending.updateCategoryIds.contains(c.id),
-                          onTap: () => _pick(.category(c.id)),
-                        ),
-                      if (query.isEmpty) ...[
-                        for (var i = 0; i < pending.newCategoryIds.length; i++)
-                          _PendingTile(
-                            label:
-                                context.l10n.diary.categorySyncingPlaceholder,
-                          ),
-                        if (categoryList?.isEmpty == true &&
-                            pending.newCategoryIds.isEmpty)
-                          _EmptyHint(
-                            label: context.l10n.diary.drawerNoCategories,
-                          ),
-                      ],
-                      if (showUncategorized)
-                        _Tile(
-                          label: uncategorizedLabel,
-                          count: uncategorized,
-                          selected: filter.uncategorized,
-                          onTap: () => _pick(const .uncategorized()),
-                        ),
-                      _SectionHeader(
-                        label: context.l10n.diary.tags,
-                        tooltip: context.l10n.diary.tagManageEntry,
-                        onManage: () => _open(const TagManagerRoute()),
-                      ),
-                      if (visibleTags.isNotEmpty)
-                        Padding(
-                          padding: const .symmetric(horizontal: 16),
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              for (final tag in visibleTags)
-                                MChip(
-                                  label: '#${tag.name}',
-                                  semanticLabel: '#${tag.name}, ${tag.count}',
-                                  trailing: Text('${tag.count}'),
-                                  selected: filter.tagName == tag.name,
-                                  onTap: () => _pick(.tag(tag.name)),
-                                ),
-                              if (query.isEmpty && more > 0)
-                                MChip(
-                                  label: context.l10n.diary.drawerMoreTags(
-                                    count: more,
-                                  ),
-                                  variant: .ghost,
-                                  trailing: const Icon(
-                                    LucideIcons.chevronRight,
-                                    size: 16,
-                                  ),
-                                  onTap: () => _open(const TagManagerRoute()),
-                                ),
-                            ],
-                          ),
-                        ),
-                      if (query.isEmpty && catalog?.usage.isEmpty == true)
-                        _EmptyHint(label: context.l10n.diary.drawerNoTags),
-                      if (query.isNotEmpty &&
-                          categoryList != null &&
-                          catalog != null &&
-                          visibleCategories.isEmpty &&
-                          visibleTags.isEmpty &&
-                          !showUncategorized)
-                        Padding(
-                          padding: const .symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          child: Text(
-                            context.l10n.diary.drawerNoMatch,
-                            style: context
-                                .theme
-                                .typography
-                                .bodyMedium
-                                .onSurfaceVariant,
-                          ),
-                        ),
-                    ],
-                  ),
+                  onChanged: (v) => setState(() => _query = v),
                 ),
-              ],
-            );
-          },
+              ),
+            Expanded(
+              child: ListView(
+                padding: .only(
+                  bottom: 8 + MediaQuery.viewInsetsOf(context).bottom,
+                ),
+                children: [
+                  if (query.isEmpty) ...[
+                    _Tile(
+                      label: context.l10n.diary.categoryAllDiary,
+                      count: total,
+                      selected: filter.isAll,
+                      height: 48,
+                      leading: const Icon(LucideIcons.bookOpen, size: 18),
+                      onTap: () => _pick(const .all()),
+                    ),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      indent: 28,
+                      endIndent: 28,
+                      color: colors.outlineVariant,
+                    ),
+                  ],
+                  _SectionHeader(
+                    label: context.l10n.common.category,
+                    tooltip: context.l10n.diary.categoryManageEntry,
+                    onManage: () => _open(const CategoryManagerRoute()),
+                  ),
+                  for (final c in visibleCategories)
+                    _Tile(
+                      label: c.categoryName,
+                      count: counts?.byCategory[c.id],
+                      selected: filter.categoryId == c.id,
+                      color: categoryColorOf(colorValue: c.color, id: c.id),
+                      syncing: pending.updateCategoryIds.contains(c.id),
+                      onTap: () => _pick(.category(c.id)),
+                    ),
+                  if (query.isEmpty) ...[
+                    for (var i = 0; i < pending.newCategoryIds.length; i++)
+                      _PendingTile(
+                        label: context.l10n.diary.categorySyncingPlaceholder,
+                      ),
+                    if (categoryList?.isEmpty == true &&
+                        pending.newCategoryIds.isEmpty)
+                      _EmptyHint(label: context.l10n.diary.drawerNoCategories),
+                  ],
+                  if (showUncategorized)
+                    _Tile(
+                      label: uncategorizedLabel,
+                      count: uncategorized,
+                      selected: filter.uncategorized,
+                      onTap: () => _pick(const .uncategorized()),
+                    ),
+                  _SectionHeader(
+                    label: context.l10n.diary.tags,
+                    tooltip: context.l10n.diary.tagManageEntry,
+                    onManage: () => _open(const TagManagerRoute()),
+                  ),
+                  if (visibleTags.isNotEmpty)
+                    Padding(
+                      padding: const .symmetric(horizontal: 16),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final tag in visibleTags)
+                            MChip(
+                              label: '#${tag.name}',
+                              semanticLabel: '#${tag.name}, ${tag.count}',
+                              trailing: Text('${tag.count}'),
+                              selected: filter.tagName == tag.name,
+                              onTap: () => _pick(.tag(tag.name)),
+                            ),
+                          if (query.isEmpty && more > 0)
+                            MChip(
+                              label: context.l10n.diary.drawerMoreTags(
+                                count: more,
+                              ),
+                              variant: .ghost,
+                              trailing: const Icon(
+                                LucideIcons.chevronRight,
+                                size: 16,
+                              ),
+                              onTap: () => _open(const TagManagerRoute()),
+                            ),
+                        ],
+                      ),
+                    ),
+                  if (query.isEmpty && catalog?.usage.isEmpty == true)
+                    _EmptyHint(label: context.l10n.diary.drawerNoTags),
+                  if (query.isNotEmpty &&
+                      categoryList != null &&
+                      catalog != null &&
+                      visibleCategories.isEmpty &&
+                      visibleTags.isEmpty &&
+                      !showUncategorized)
+                    Padding(
+                      padding: const .symmetric(horizontal: 16, vertical: 12),
+                      child: Text(
+                        context.l10n.diary.drawerNoMatch,
+                        style: context
+                            .theme
+                            .typography
+                            .bodyMedium
+                            .onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

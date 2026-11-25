@@ -3,17 +3,20 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
-import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_change_flow.dart';
 
+import '../../application/sync_operation_guard.dart';
+
 enum UserKeySheetMode { off, on, locked, keyfileMissing }
 
-Future<UserKeySheetMode> resolveUserKeySheetMode() async {
+Future<UserKeySheetMode> resolveUserKeySheetMode(
+  IRemoteSyncBackend backend,
+) async {
   final hasKey = await SyncKeyManager.loadDek() != null;
-  final backend = currentSyncBackend();
-  if (backend != null && await backend.isReady()) {
+  if (await backend.isReady()) {
     switch (await SyncKeyManager.probeRemote(backend)) {
       case .locked:
         return .locked;
@@ -30,15 +33,24 @@ Future<void> showUserKeySheet(
   BuildContext context,
   WidgetRef ref,
   UserKeySheetMode mode,
+  IRemoteSyncBackend backend,
 ) async {
   await MSheet.show<String>(
     context,
     builder: (ctx) => _KeyManageSheet(
       mode: mode,
       onSubmit: (newKey) async {
+        if (ref.read(syncOperationGuardProvider).isBusy) {
+          toast.info(message: l10n.sync.statusRunning);
+          return;
+        }
         Navigator.of(ctx).pop();
-        Future<bool> apply() =>
-            applyUserKeyChange(context: context, ref: ref, newKey: newKey);
+        Future<bool> apply() => applyUserKeyChange(
+          context: context,
+          ref: ref,
+          backend: backend,
+          newKey: newKey,
+        );
         if (mode == .on) {
           await AppAuth.guard(context, .syncKeyChange, apply);
         } else {
@@ -46,26 +58,72 @@ Future<void> showUserKeySheet(
         }
       },
       onRemove: () async {
+        if (ref.read(syncOperationGuardProvider).isBusy) {
+          toast.info(message: l10n.sync.statusRunning);
+          return;
+        }
         Navigator.of(ctx).pop();
-        await applyUserKeyChange(context: context, ref: ref, newKey: null);
+        await applyUserKeyChange(
+          context: context,
+          ref: ref,
+          backend: backend,
+          newKey: null,
+        );
       },
       onUnlock: () async {
+        if (!identical(backend, ref.read(activeSyncBackendProvider))) return;
+        if (ref.read(syncOperationGuardProvider).isBusy) {
+          toast.info(message: l10n.sync.statusRunning);
+          return;
+        }
         Navigator.of(ctx).pop();
-        final backend = currentSyncBackend();
-        if (backend == null) return;
-        await ensureSyncKeyReady(context: context, ref: ref, backend: backend);
+        final ran = await ref
+            .read(syncOperationGuardProvider)
+            .tryWithOperation(
+              (operation) async {
+                await ensureSyncKeyReady(
+                  operation: operation,
+                  context: context,
+                  ref: ref,
+                  backend: backend,
+                );
+                return true;
+              },
+            );
+        if (ran == null && context.mounted) {
+          toast.info(message: l10n.sync.statusRunning);
+        }
       },
       onReset: () async {
+        if (!identical(backend, ref.read(activeSyncBackendProvider))) return;
+        if (ref.read(syncOperationGuardProvider).isBusy) {
+          toast.info(message: l10n.sync.statusRunning);
+          return;
+        }
         Navigator.of(ctx).pop();
-        final backend = currentSyncBackend();
-        if (backend == null) return;
-        await resetAndOfferNewKey(context: context, ref: ref, backend: backend);
+        final ran = await ref
+            .read(syncOperationGuardProvider)
+            .tryWithOperation(
+              (operation) async {
+                await resetAndOfferNewKey(
+                  operation: operation,
+                  context: context,
+                  ref: ref,
+                  backend: backend,
+                );
+                return true;
+              },
+            );
+        if (ran == null && context.mounted) {
+          toast.info(message: l10n.sync.statusRunning);
+        }
       },
     ),
   );
 }
 
 Future<void> resetAndOfferNewKey({
+  required SyncOperation operation,
   required BuildContext context,
   required WidgetRef ref,
   required IRemoteSyncBackend backend,
@@ -81,6 +139,7 @@ Future<void> resetAndOfferNewKey({
   );
   if (choice == null || !context.mounted) return;
   await resetRemote(
+    operation: operation,
     context: context,
     ref: ref,
     backend: backend,
@@ -100,10 +159,13 @@ class _UserKeyTileState extends ConsumerState<UserKeyTile> {
 
   Future<void> _open() async {
     setState(() => _probing = true);
-    final mode = await resolveUserKeySheetMode();
+    final backend = ref.read(activeSyncBackendProvider);
+    final mode = await ref
+        .read(syncOperationGuardProvider)
+        .tryRun(() => resolveUserKeySheetMode(backend));
     if (!mounted) return;
     setState(() => _probing = false);
-    await showUserKeySheet(context, ref, mode);
+    if (mode != null) await showUserKeySheet(context, ref, mode, backend);
   }
 
   @override
@@ -129,7 +191,9 @@ class _UserKeyTileState extends ConsumerState<UserKeyTile> {
                 ),
               )
             : Icon(LucideIcons.settings, color: scheme.onPrimary),
-        onPressed: _probing ? null : _open,
+        onPressed: _probing || ref.watch(syncOperationBusyProvider)
+            ? null
+            : _open,
       ),
     );
   }

@@ -1,13 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
-import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_export/moodiary_export.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
@@ -17,25 +16,8 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
-import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 
-class _Runner implements SyncRunner {
-  @override
-  final ValueNotifier<SyncStatus> status = ValueNotifier(const SyncStatus());
-  @override
-  bool get isRunning => status.value.isRunning;
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _SyncController extends SyncController {
-  @override
-  SyncState build() => const SyncState.idle();
-
-  void running(bool value) => state = value
-      ? const SyncState.syncing(label: 'test')
-      : const SyncState.idle();
-}
+class _Tags extends Fake implements TagRepository {}
 
 class _DiaryRepository implements DiaryRepository {
   final images = <String>{};
@@ -43,6 +25,10 @@ class _DiaryRepository implements DiaryRepository {
   final files = <String>{};
   final batches = <List<Diary>>[];
   Future<void> Function()? beforeCollect;
+
+  @override
+  Future<List<Diary>> getAllDiaries() async =>
+      batches.expand((batch) => batch).toList();
 
   @override
   Future<void> insertDiaries(
@@ -72,8 +58,22 @@ class _DiaryRepository implements DiaryRepository {
 }
 
 class _Categories implements CategoryRepository {
+  final stored = <String, Category>{};
+
   @override
-  Future<List<Category>> getAllCategories() async => [];
+  Future<List<Category>> getAllCategories() async => stored.values.toList();
+  @override
+  Future<List<Category>> getAllCategoriesForSync() => getAllCategories();
+  @override
+  Future<Category?> getCategoryById(String id) async => stored[id];
+  @override
+  Future<void> insertACategory(
+    Category category, {
+    bool fromSync = false,
+  }) async {
+    stored[category.id] = category;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -83,6 +83,17 @@ class _Places implements PlaceRepository {
   Future<List<Place>> getAllPlaces() async => [];
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _Tombstones extends Fake implements TombstoneRepository {
+  @override
+  Future<List<SyncTombstone>> getAll() async => [];
+
+  @override
+  Future<void> putAll(List<SyncTombstone> rows) async => expect(rows, isEmpty);
+
+  @override
+  Future<void> deleteByKeys(List<String> keys) async => expect(keys, isEmpty);
 }
 
 class _HeifDecoder implements IHeifDecoder {
@@ -130,6 +141,7 @@ const _partial = StorageCandidate(path: '/x.part', bytes: 40, area: .model);
 const _cache = StorageCandidate(path: '/cache', bytes: 123, area: .cache);
 
 void _listen(ProviderContainer container) {
+  container.listen(syncOperationBusyProvider, (_, _) {});
   container.listen(storageReportProvider, (_, _) {});
   container.listen(storageDisplayControllerProvider, (_, _) {});
   container.listen(storageSelectionProvider, (_, _) {});
@@ -137,7 +149,7 @@ void _listen(ProviderContainer container) {
 
 List<Reclaimable> _items(ProviderContainer container) => storageReclaimables(
   container.read(storageDisplayControllerProvider).report,
-  syncBusy: container.read(storageSyncBusyProvider),
+  syncBusy: container.read(syncOperationBusyProvider),
   canClean: container.read(storageDisplayControllerProvider).canClean,
 );
 
@@ -173,9 +185,11 @@ void main() {
     );
   });
   tearDownAll(() => root.deleteSync(recursive: true));
-  setUp(() => getIt.registerSingleton<SyncCancellation>(SyncCancellation()));
-  tearDown(() async {
-    await getIt.reset();
+  setUp(() {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+  });
+  tearDown(() {
     for (final entity in root.listSync()) {
       entity.deleteSync(recursive: true);
     }
@@ -192,32 +206,26 @@ void main() {
   test(
     'running sync disables cache; clean skips it; idle re-enables it',
     () async {
-      final runner = _Runner();
-      getIt.registerSingleton<SyncRunner>(runner);
-      addTearDown(runner.status.dispose);
-      runner.status.value = SyncStatus(
-        running: SyncActivity(
-          trigger: .manual,
-          direction: .sync,
-          startedAt: DateTime(2026),
-          backendName: 'test',
-        ),
-      );
       final file = write('cache/keep', 123);
       final container = ProviderContainer.test(
+        retry: (_, _) => null,
         overrides: [
           storageReportProvider.overrideWith(
             (ref) => Stream.value(
               _report(
                 candidates: {
-                  .cache: [_cache],
+                  .cache: [
+                    StorageCandidate(path: file.path, bytes: 123, area: .cache),
+                  ],
                 },
               ),
             ),
           ),
-          syncControllerProvider.overrideWith(_SyncController.new),
         ],
       );
+      final operation = container
+          .read(syncOperationGuardProvider)
+          .tryAcquire()!;
       _listen(container);
       await _complete(container);
       expect(_items(container).single.busy, isTrue);
@@ -233,13 +241,8 @@ void main() {
       );
       await _complete(container);
       expect(file.existsSync(), isTrue);
-      runner.status.value = const SyncStatus();
-      expect(_items(container).single.available, isTrue);
-      final controller =
-          container.read(syncControllerProvider.notifier) as _SyncController;
-      controller.running(true);
-      expect(_items(container).single.available, isFalse);
-      controller.running(false);
+      operation.release();
+      await pumpEventQueue();
       expect(_items(container).single.available, isTrue);
     },
   );
@@ -248,8 +251,8 @@ void main() {
     final model = write('support/model/stale.part', 4);
     final cache = write('cache/in-use', 5);
     final media = write('support/file/incoming.txt', 6);
-    var busy = false;
     final container = ProviderContainer.test(
+      retry: (_, _) => null,
       overrides: [
         storageReportProvider.overrideWith(
           (ref) => Stream.value(
@@ -268,7 +271,6 @@ void main() {
             ),
           ),
         ),
-        storageSyncBusyProvider.overrideWith((ref) => busy),
       ],
     );
     _listen(container);
@@ -276,8 +278,8 @@ void main() {
     final clean = container
         .read(storageSelectionProvider.notifier)
         .clean(_items(container));
-    busy = true;
-    container.invalidate(storageSyncBusyProvider);
+    final operation = container.read(syncOperationGuardProvider).tryAcquire()!;
+    addTearDown(operation.release);
     expect(await clean, 4);
     expect(model.existsSync(), isFalse);
     expect(cache.existsSync(), isTrue);
@@ -297,12 +299,12 @@ void main() {
         ),
       );
       final container = ProviderContainer.test(
+        retry: (_, _) => null,
         overrides: [
           storageReportProvider.overrideWith((ref) {
             calls++;
             return stream;
           }),
-          storageSyncBusyProvider.overrideWith((ref) => false),
         ],
       );
       _listen(container);
@@ -339,10 +341,8 @@ void main() {
     addTearDown(next.close);
     var stream = old.stream;
     final container = ProviderContainer.test(
-      overrides: [
-        storageReportProvider.overrideWith((ref) => stream),
-        storageSyncBusyProvider.overrideWith((ref) => false),
-      ],
+      retry: (_, _) => null,
+      overrides: [storageReportProvider.overrideWith((ref) => stream)],
     );
     _listen(container);
     stream = next.stream;
@@ -371,6 +371,7 @@ void main() {
     final file = write('support/model/model.part', 40);
     var scans = 0;
     final container = ProviderContainer.test(
+      retry: (_, _) => null,
       overrides: [
         storageReportProvider.overrideWith((ref) {
           scans++;
@@ -385,7 +386,6 @@ void main() {
             ),
           );
         }),
-        storageSyncBusyProvider.overrideWith((ref) => false),
       ],
     );
     _listen(container);
@@ -420,10 +420,9 @@ void main() {
     final video = write('support/video/video-used.mp4', 19);
     final thumb = write('support/video/thumbnail-used.jpeg', 23);
     final repository = _DiaryRepository();
-    getIt.registerSingleton<DiaryRepository>(repository);
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
     final container = ProviderContainer.test(
-      overrides: [storageSyncBusyProvider.overrideWith((ref) => false)],
+      retry: (_, _) => null,
+      overrides: [diaryRepositoryProvider.overrideWithValue(repository)],
     );
     _listen(container);
     final scanned = await _complete(container);
@@ -460,9 +459,7 @@ void main() {
       '$kind saved this process survives a stale unused-media snapshot',
       () async {
         await AppFiles.initCreateDir();
-        getIt.registerSingleton<DiaryRepository>(_DiaryRepository());
-        getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-        getIt.registerSingleton<IHeifDecoder>(_HeifDecoder());
+        final repository = _DiaryRepository();
         const channel = MethodChannel('fc_native_video_thumbnail');
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(channel, (call) async {
@@ -495,7 +492,7 @@ void main() {
           type = .image;
           name = (await MediaManager.saveImage(
             xfile,
-            decoder: getIt<IHeifDecoder>(),
+            decoder: _HeifDecoder(),
           ))!;
         }
         if (kind == 'heic') expect(name, endsWith('.jpg'));
@@ -518,7 +515,10 @@ void main() {
           ),
           containsAll(protected.map((f) => f.path)),
         );
-        final live = ProviderContainer.test();
+        final live = ProviderContainer.test(
+          retry: (_, _) => null,
+          overrides: [diaryRepositoryProvider.overrideWithValue(repository)],
+        );
         final scanned = await _complete(live);
         expect(
           scanned.candidates[StorageCleanupKind.unusedMedia]!.files.map(
@@ -527,9 +527,10 @@ void main() {
           [orphan.path],
         );
         final container = ProviderContainer.test(
+          retry: (_, _) => null,
           overrides: [
+            diaryRepositoryProvider.overrideWithValue(repository),
             storageReportProvider.overrideWith((ref) => Stream.value(stale)),
-            storageSyncBusyProvider.overrideWith((ref) => false),
           ],
         );
         _listen(container);
@@ -559,10 +560,9 @@ void main() {
           write('support/image/thumb/$name', 7),
       ];
       final repository = _DiaryRepository()..images.add('foo.jpg');
-      getIt.registerSingleton<DiaryRepository>(repository);
-      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
       final container = ProviderContainer.test(
-        overrides: [storageSyncBusyProvider.overrideWith((ref) => false)],
+        retry: (_, _) => null,
+        overrides: [diaryRepositoryProvider.overrideWithValue(repository)],
       );
       _listen(container);
       final scan = await _complete(container);
@@ -587,12 +587,32 @@ void main() {
   );
 
   test(
-    'a stop requested behind cleanup reaches queued sync; sync resets it',
+    'a stop requested behind cleanup cancels only the queued archive restore',
     () async {
       final orphan = write('support/file/orphan.txt', 5);
       final entered = Completer<void>();
       final release = Completer<void>();
-      final cancellation = getIt<SyncCancellation>();
+      final cancellation = SyncCancellationToken();
+      SecureKVStore.installForTesting(MemorySecureKVStorage());
+      addTearDown(SecureKVStore.resetForTesting);
+      final categories = _Categories();
+      final logger = SyncLogger.memory();
+      addTearDown(logger.dispose);
+      final category = Category.create(categoryName: 'restored');
+      final archiveDir = Directory('${root.path}/archive');
+      Directory('${archiveDir.path}/category').createSync(recursive: true);
+      File('${archiveDir.path}/category/${category.id}.json')
+          .writeAsStringSync(jsonEncode(category.toJson()));
+      File('${archiveDir.path}/manifest.json').writeAsStringSync(
+        jsonEncode({
+          'version': 4,
+          'entries': {
+            'c:${category.id}': {
+              't': category.lastModified.millisecondsSinceEpoch,
+            },
+          },
+        }),
+      );
       final repository = _DiaryRepository();
       repository.beforeCollect = () async {
         entered.complete();
@@ -600,10 +620,15 @@ void main() {
         expect(cancellation.isRequested, isTrue);
         repository.beforeCollect = null;
       };
-      getIt.registerSingleton<DiaryRepository>(repository);
       final container = ProviderContainer.test(
+        retry: (_, _) => null,
         overrides: [
-          storageSyncBusyProvider.overrideWith((ref) => false),
+          diaryRepositoryProvider.overrideWithValue(repository),
+          categoryRepositoryProvider.overrideWithValue(categories),
+          tagRepositoryProvider.overrideWithValue(_Tags()),
+          placeRepositoryProvider.overrideWithValue(_Places()),
+          tombstoneRepositoryProvider.overrideWithValue(_Tombstones()),
+          syncLoggerProvider.overrideWithValue(logger),
           storageReportProvider.overrideWith(
             (ref) => Stream.value(
               _report(
@@ -628,18 +653,28 @@ void main() {
           .read(storageSelectionProvider.notifier)
           .clean(_items(container));
       await entered.future;
-      var started = false;
-      final sync = runSyncExclusive(() async {
-        started = true;
-        return cancellation.isRequested;
-      });
+      final archive = container.read(localArchiveProvider);
+      Future<SyncReport> restore(SyncCancellationToken token) =>
+          archive.importDirectory(
+            archiveDir.path,
+            cancellation: token,
+            policy: const RestorePolicy(),
+          );
+      final sync = restore(cancellation);
       cancellation.requestStop();
       await pumpEventQueue();
-      expect(started, isFalse);
+      expect(logger.recent, isEmpty);
       release.complete();
       expect(await clean, 5);
-      expect(await sync, isTrue);
-      expect(cancellation.isRequested, isFalse);
+      expect((await sync).cancelled, isTrue);
+      expect(categories.stored, isEmpty);
+      final next = await restore(SyncCancellationToken());
+      expect(next.cancelled, isFalse);
+      expect(next.failed, 0);
+      expect(
+        categories.stored[category.id]?.categoryName,
+        category.categoryName,
+      );
       await _complete(container);
     },
   );
@@ -657,19 +692,19 @@ void main() {
             .writeAsStringSync('![photo](photo-$i.jpg)');
       }
       final repository = _DiaryRepository();
-      getIt.registerSingleton<DiaryRepository>(repository);
-      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
       final media = _ImportMedia();
       final importing = MarkdownImporter(
         diaries: repository,
         categories: _Categories(),
         places: _Places(),
+        tags: _Tags(),
         media: media,
       ).run(MarkdownImportSource.scan(source));
       await media.stagedLast.future;
       expect(repository.batches.map((batch) => batch.length), [100]);
       final container = ProviderContainer.test(
-        overrides: [storageSyncBusyProvider.overrideWith((ref) => false)],
+        retry: (_, _) => null,
+        overrides: [diaryRepositoryProvider.overrideWithValue(repository)],
       );
       _listen(container);
       final scan = await _complete(container);
@@ -704,6 +739,7 @@ void main() {
   test('unfinished kinds and double clicks cannot start deletion', () async {
     final file = write('support/model/incomplete.part', 4);
     final container = ProviderContainer.test(
+      retry: (_, _) => null,
       overrides: [
         storageReportProvider.overrideWith(
           (ref) => Stream.value(
@@ -715,7 +751,6 @@ void main() {
             ),
           ),
         ),
-        storageSyncBusyProvider.overrideWith((ref) => false),
       ],
     );
     _listen(container);
@@ -743,7 +778,6 @@ void main() {
                   ),
                 ),
         ),
-        storageSyncBusyProvider.overrideWith((ref) => false),
       ],
     );
     _listen(container);
@@ -764,6 +798,7 @@ void main() {
       addTearDown(second.close);
       var round = 0;
       final container = ProviderContainer.test(
+        retry: (_, _) => null,
         overrides: [
           storageReportProvider.overrideWith(
             (ref) => round++ == 0
@@ -776,7 +811,6 @@ void main() {
                   )
                 : second.stream,
           ),
-          storageSyncBusyProvider.overrideWith((ref) => false),
         ],
       );
       _listen(container);
@@ -807,8 +841,8 @@ void main() {
   test('sync busy disables and skips unused media', () async {
     final file = write('support/file/incoming.txt', 5);
     final container = ProviderContainer.test(
+      retry: (_, _) => null,
       overrides: [
-        storageSyncBusyProvider.overrideWith((ref) => true),
         storageReportProvider.overrideWith(
           (ref) => Stream.value(
             _report(
@@ -827,6 +861,8 @@ void main() {
         ),
       ],
     );
+    final operation = container.read(syncOperationGuardProvider).tryAcquire()!;
+    addTearDown(operation.release);
     _listen(container);
     await _complete(container);
     expect(_items(container).single.busy, isTrue);
@@ -853,10 +889,10 @@ void main() {
           5,
         );
         final repository = _DiaryRepository();
-        getIt.registerSingleton<DiaryRepository>(repository);
         final container = ProviderContainer.test(
+          retry: (_, _) => null,
           overrides: [
-            storageSyncBusyProvider.overrideWith((ref) => false),
+            diaryRepositoryProvider.overrideWithValue(repository),
             storageReportProvider.overrideWith(
               (ref) => Stream.value(
                 _report(
@@ -879,7 +915,7 @@ void main() {
         await _complete(container);
         final entered = Completer<void>();
         final release = Completer<void>();
-        final owner = runSyncExclusive(() async {
+        final owner = runSyncExclusive(SyncCancellationToken(), (_) async {
           entered.complete();
           await release.future;
           // Incoming media is referenced only at the end of the operation.
@@ -914,8 +950,8 @@ void main() {
       final laterFile = write('support/model/later.bin', 11);
       var includeLater = false;
       final container = ProviderContainer.test(
+        retry: (_, _) => null,
         overrides: [
-          storageSyncBusyProvider.overrideWith((ref) => false),
           storageReportProvider.overrideWith(
             (ref) => Stream.value(
               _report(
@@ -984,8 +1020,8 @@ void main() {
           ),
       ];
       final container = ProviderContainer.test(
+        retry: (_, _) => null,
         overrides: [
-          storageSyncBusyProvider.overrideWith((ref) => false),
           storageReportProvider.overrideWith(
             (ref) =>
                 Stream.value(_report(candidates: {.partialDownload: snapshot})),
@@ -1021,8 +1057,8 @@ void main() {
       ),
     );
     final container = ProviderContainer.test(
+      retry: (_, _) => null,
       overrides: [
-        storageSyncBusyProvider.overrideWith((ref) => false),
         storageReportProvider.overrideWith(
           (ref) => Stream.value(
             _report(
@@ -1057,6 +1093,7 @@ void main() {
   test('partial deletion finishes before a later download can claim its path', () async {
     final file = write('support/model/claim-after-delete.part', 13);
     final container = ProviderContainer.test(
+      retry: (_, _) => null,
       overrides: [
         storageReportProvider.overrideWith(
           (ref) => Stream.value(
@@ -1074,7 +1111,6 @@ void main() {
             ),
           ),
         ),
-        storageSyncBusyProvider.overrideWith((ref) => false),
       ],
     );
     _listen(container);
@@ -1108,7 +1144,6 @@ void main() {
         final container = ProviderContainer.test(
           retry: (_, _) => null,
           overrides: [
-            storageSyncBusyProvider.overrideWith((ref) => false),
             storageReportProvider.overrideWith(
               (ref) => round++ == 0
                   ? Stream.value(
@@ -1154,6 +1189,7 @@ void main() {
 
   test('cleaned kinds leave the screen before the rescan finishes', () async {
     final container = ProviderContainer.test(
+      retry: (_, _) => null,
       overrides: [
         storageReportProvider.overrideWith(
           (ref) => Stream.value(
@@ -1165,7 +1201,6 @@ void main() {
             ),
           ),
         ),
-        storageSyncBusyProvider.overrideWith((ref) => false),
       ],
     );
     _listen(container);

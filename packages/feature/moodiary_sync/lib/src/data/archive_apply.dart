@@ -5,7 +5,6 @@ import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -15,7 +14,7 @@ import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation_token.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -67,35 +66,35 @@ class ArchiveApplier {
   factory ArchiveApplier(
     RemoteObjectStore backend, {
     required ArchiveApplyPolicy policy,
-    SyncLogger? logger,
-    SyncDiaryStore? diaryStore,
-    SyncCategoryStore? categoryStore,
-    SyncPlaceStore? placeStore,
-    SyncTagStore? tagStore,
-    SyncTombstoneStore? tombstoneStore,
+    required SyncLogger logger,
+    required SyncDiaryStore diaryStore,
+    required SyncCategoryStore categoryStore,
+    required SyncPlaceStore placeStore,
+    required SyncTagStore tagStore,
+    required SyncTombstoneStore tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
     int concurrency = 4,
     String? cacheDirectory,
-    OpenDiaryRegistry? openDiaries,
-    SyncCancellation? cancellation,
-    SyncPendingTracker? pending,
+    required OpenDiaryRegistry openDiaries,
+    required SyncCancellationToken cancellation,
+    required SyncPendingTracker pending,
     SyncTrigger? trigger,
   }) => ArchiveApplier._(
     backend,
     policy,
     concurrency,
-    logger ?? getIt<SyncLogger>(),
-    diaryStore ?? RepoSyncDiaryStore(),
-    categoryStore ?? RepoSyncCategoryStore(),
-    placeStore ?? RepoSyncPlaceStore(),
-    tagStore ?? RepoSyncTagStore(),
-    tombstoneStore ?? RepoSyncTombstoneStore(),
+    logger,
+    diaryStore,
+    categoryStore,
+    placeStore,
+    tagStore,
+    tombstoneStore,
     mediaFiles ?? DiskSyncMediaFiles(),
     cipherProvider ?? SyncCipher.current,
-    openDiaries ?? getIt<OpenDiaryRegistry>(),
-    cancellation ?? getIt<SyncCancellation>(),
-    pending ?? getIt<SyncPendingTracker>(),
+    openDiaries,
+    cancellation,
+    pending,
     cacheDirectory,
     trigger,
   );
@@ -120,7 +119,7 @@ class ArchiveApplier {
   ) : _mediaGate = Pool(concurrency);
 
   final OpenDiaryRegistry _openDiaries;
-  final SyncCancellation _cancellation;
+  final SyncCancellationToken _cancellation;
   final SyncPendingTracker _pending;
   final String? _cacheDirectory;
 

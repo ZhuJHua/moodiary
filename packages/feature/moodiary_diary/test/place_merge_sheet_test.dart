@@ -2,7 +2,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/place/place_merge_sheet.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -35,10 +34,10 @@ void main() {
   bool closed = false;
 
   setUp(() {
-    getIt.pushNewScope();
-    getIt
-      ..registerSingleton<IKVStorage>(MemoryKVStorage())
-      ..registerSingleton<ISecureKVStorage>(MemorySecureKVStorage());
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+    SecureKVStore.installForTesting(MemorySecureKVStorage());
+    addTearDown(SecureKVStore.resetForTesting);
     stub = StubPlaceController(candidates);
     final time = DateTime.utc(2026);
     footprints = {
@@ -48,8 +47,6 @@ void main() {
     outcome = null;
     closed = false;
   });
-
-  tearDown(() => getIt.popScope());
 
   Finder nameField() => find.descendant(
     of: find.byType(MField),

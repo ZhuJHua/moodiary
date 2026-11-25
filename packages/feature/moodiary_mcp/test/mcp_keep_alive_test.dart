@@ -1,9 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart';
 import 'package:moodiary_native/moodiary_native.dart';
@@ -12,14 +13,15 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
 class _McpService extends Fake implements McpService {
-  @override
   final state = ValueNotifier(const McpServerState(status: .running));
 
   int disableCalls = 0;
+  void Function()? onDisabled;
 
   @override
   Future<void> disable() async {
     disableCalls++;
+    onDisabled?.call();
     state.value = const McpServerState();
   }
 }
@@ -44,6 +46,12 @@ class _NotificationPermission implements NotificationPermission {
   }
 }
 
+class _ServerState extends McpServerController {
+  @override
+  McpServerState build() => const McpServerState(status: .running);
+  void stop() => state = const McpServerState();
+}
+
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -52,7 +60,11 @@ void main() {
       final service = _McpService();
       addTearDown(service.state.dispose);
       final notifications = _NotificationPermission()..fail = true;
-      final keepAlive = McpKeepAlive(service, notifications);
+      final keepAlive = McpKeepAlive(
+        service,
+        notifications,
+        () => service.state.value.running,
+      );
       const channel = BasicMessageChannel<Object?>(
         'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.requestExemption',
         BackgroundKeepAliveApi.pigeonChannelCodec,
@@ -85,7 +97,11 @@ void main() {
   test('app settings failures reach the caller', () async {
     final service = _McpService();
     addTearDown(service.state.dispose);
-    final keepAlive = McpKeepAlive(service, _NotificationPermission());
+    final keepAlive = McpKeepAlive(
+      service,
+      _NotificationPermission(),
+      () => service.state.value.running,
+    );
     const channel = BasicMessageChannel<Object?>(
       'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.openAppSettings',
       BackgroundKeepAliveApi.pigeonChannelCodec,
@@ -115,8 +131,8 @@ void main() {
   });
 
   test('notification Stop disables MCP and stops native keep-alive', () async {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-    addTearDown(getIt.reset);
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
     final service = _McpService();
     addTearDown(service.state.dispose);
     final nativeCalls = <List<Object?>>[];
@@ -140,7 +156,23 @@ void main() {
         null,
       );
     });
-    final keepAlive = McpKeepAlive(service, _NotificationPermission());
+    final state = _ServerState();
+    final container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [
+        mcpServiceProvider.overrideWithValue(service),
+        notificationPermissionProvider.overrideWithValue(
+          _NotificationPermission(),
+        ),
+        mcpServerStateProvider.overrideWith(() => state),
+      ],
+    );
+    service.onDisabled = () =>
+        (container.read(mcpServerStateProvider.notifier) as _ServerState)
+            .stop();
+    container.read(mcpServerStateProvider);
+    final keepAlive = container.read(mcpKeepAliveProvider);
+    if (!Platform.isAndroid) BackgroundKeepAliveEvents.setUp(keepAlive);
     await keepAlive.restore();
 
     final reply = Completer<Object?>();
@@ -153,9 +185,13 @@ void main() {
     );
 
     expect(await reply.future, isEmpty);
-    await nativeStopped.future;
     expect(service.disableCalls, 1);
     expect(service.state.value.status, McpServerStatus.stopped);
+    if (!Platform.isAndroid) {
+      expect(nativeCalls, isEmpty);
+      return;
+    }
+    await nativeStopped.future;
     expect(nativeCalls.map((arguments) => arguments.first), [true, false]);
     expect(nativeCalls.first, [
       true,
@@ -170,7 +206,11 @@ void main() {
     () async {
       final service = _McpService();
       final notifications = _NotificationPermission();
-      final keepAlive = McpKeepAlive(service, notifications);
+      final keepAlive = McpKeepAlive(
+        service,
+        notifications,
+        () => service.state.value.running,
+      );
       addTearDown(service.state.dispose);
       addTearDown(() => BackgroundKeepAliveEvents.setUp(null));
       await keepAlive.request(.notifications);

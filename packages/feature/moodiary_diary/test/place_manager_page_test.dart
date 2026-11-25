@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/place/place_manager_page.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -44,16 +43,15 @@ void main() {
     previousCustom = SmartDialog.config.custom;
     // 防抖依赖真实时钟，会吞掉相邻用例的提示。
     SmartDialog.config.custom = SmartConfigCustom(debounceTime: Duration.zero);
-    getIt.pushNewScope();
-    getIt
-      ..registerSingleton<IKVStorage>(MemoryKVStorage())
-      ..registerSingleton<ISecureKVStorage>(MemorySecureKVStorage());
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+    SecureKVStore.installForTesting(MemorySecureKVStorage());
+    addTearDown(SecureKVStore.resetForTesting);
     stub = StubPlaceController(places);
   });
 
   tearDown(() async {
     SmartDialog.config.custom = previousCustom;
-    await getIt.popScope();
   });
 
   Future<void> pumpPage(WidgetTester tester) async {

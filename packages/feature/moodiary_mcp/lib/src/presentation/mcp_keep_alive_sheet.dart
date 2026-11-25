@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:mui/mui.dart';
@@ -7,16 +8,14 @@ import 'package:mui/mui.dart';
 import '../service/mcp_keep_alive.dart';
 
 /// Permissions for keeping MCP reachable in the background.
-class McpKeepAliveSheet extends StatefulWidget {
-  const McpKeepAliveSheet({super.key, required this.keepAlive});
-
-  final McpKeepAlive keepAlive;
+class McpKeepAliveSheet extends ConsumerStatefulWidget {
+  const McpKeepAliveSheet({super.key});
 
   @override
-  State<McpKeepAliveSheet> createState() => _McpKeepAliveSheetState();
+  ConsumerState<McpKeepAliveSheet> createState() => _McpKeepAliveSheetState();
 }
 
-class _McpKeepAliveSheetState extends State<McpKeepAliveSheet>
+class _McpKeepAliveSheetState extends ConsumerState<McpKeepAliveSheet>
     with WidgetsBindingObserver {
   List<KeepAlivePermissionStatus> _statuses = const [];
   bool _busy = false;
@@ -119,7 +118,7 @@ class _McpKeepAliveSheetState extends State<McpKeepAliveSheet>
   Future<void> _request(KeepAlivePermissionStatus status) async {
     setState(() => _busy = true);
     try {
-      await widget.keepAlive.request(status.permission);
+      await ref.read(mcpKeepAliveProvider).request(status.permission);
     } catch (e, s) {
       logger.e('申请后台保活权限失败', error: e, stackTrace: s);
       if (mounted) {
@@ -133,7 +132,7 @@ class _McpKeepAliveSheetState extends State<McpKeepAliveSheet>
 
   Future<void> _openSettings() async {
     try {
-      await widget.keepAlive.openAppSettings();
+      await ref.read(mcpKeepAliveProvider).openAppSettings();
     } catch (e, s) {
       logger.e('打开应用信息页失败', error: e, stackTrace: s);
       if (mounted) {
@@ -144,7 +143,7 @@ class _McpKeepAliveSheetState extends State<McpKeepAliveSheet>
 
   Future<void> _refresh() async {
     try {
-      final statuses = await widget.keepAlive.statuses();
+      final statuses = await ref.read(mcpKeepAliveProvider).statuses();
       if (!mounted) return;
       setState(() => _statuses = statuses);
     } catch (e, s) {

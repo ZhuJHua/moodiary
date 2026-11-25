@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:video_player/video_player.dart';
 
 import 'support/pump.dart';
 
@@ -44,17 +43,6 @@ class _VideoPort implements VideoPlaybackPort {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  test(
-    'remote media uses a network video controller with its full URI',
-    () async {
-      final uri = Uri.parse('https://example.com/video.mp4?token=test');
-      final port = VideoPlayerPluginPort(VideoSource.network(uri));
-      final surface = port.buildSurface() as VideoPlayer;
-      expect(surface.controller.dataSourceType, DataSourceType.network);
-      expect(surface.controller.dataSource, uri.toString());
-      await port.dispose();
-    },
-  );
   testWidgets('video page opens an uppercase URL scheme as a network source', (
     tester,
   ) async {
@@ -62,15 +50,19 @@ void main() {
     VideoSource? source;
     await tester.pumpWidget(
       muiTestApp(
-        MVideoPlayerPage(
-          videoPath: 'HTTPS://example.com/video.mp4',
-          portFactory: (value) {
+        const MVideoPlayerPage(
+          videoPath: 'HTTPS://example.com/video.mp4?token=test',
+        ),
+        overrides: [
+          videoPlayerPortFactoryProvider.overrideWithValue((value) {
             source = value;
             return port;
-          },
-          ambientPorts: const {},
-          surfaceBuilder: (_) => const SizedBox(),
-        ),
+          }),
+          videoAmbientPortFactoryProvider.overrideWithValue(() => const {}),
+          videoSurfaceBuilderProvider.overrideWithValue(
+            (_) => const SizedBox(),
+          ),
+        ],
       ),
     );
     port.initialized.complete();
@@ -80,7 +72,7 @@ void main() {
       isA<VideoNetworkSource>().having(
         (value) => value.uri,
         'uri',
-        Uri.parse('https://example.com/video.mp4'),
+        Uri.parse('https://example.com/video.mp4?token=test'),
       ),
     );
     await tester.pumpWidget(const SizedBox());

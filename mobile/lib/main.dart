@@ -1,106 +1,23 @@
-import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 
-import 'package:fast_image/fast_image.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_export/moodiary_export.dart' show showDiaryShareSheet;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_mobile/app/boot_failure_page.dart';
 import 'package:moodiary_mobile/app/build_badge.dart';
-import 'package:moodiary_mobile/app/di/bootstrap.dart';
-import 'package:moodiary_mobile/app/di/di.dart';
+import 'package:moodiary_mobile/app/di/app_startup.dart';
+import 'package:moodiary_mobile/app/di/overrides.dart';
 import 'package:moodiary_mobile/app/licenses.dart';
 import 'package:moodiary_mobile/app/lifecycle/app_lock_observer.dart';
 import 'package:moodiary_mobile/app/lifecycle/reminder_navigation.dart';
-import 'package:moodiary_mobile/app/locale.dart';
 import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:moodiary_theme/moodiary_theme.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:moodiary_sync/moodiary_sync.dart';
 
-Future<void> _initSystem() async {
-  await FastImageRuntime.init();
-
-  await bootstrapPlatform();
-  await configureDependencies();
-  await AppLockPin.load();
-
-  await LegacyDatabaseGuard.probe();
-  if (LegacyDatabaseGuard.state == LegacyDatabaseState.abandoning) {
-    try {
-      await LegacyDatabaseGuard.abandon();
-    } catch (error, stack) {
-      logger.e(
-        'legacy quarantine interrupted',
-        error: error,
-        stackTrace: stack,
-      );
-    }
-  }
-
-  unawaited(_platFormOption());
-
-  try {
-    await setupPluralResolvers();
-    await applyStoredLanguage();
-  } catch (e, s) {
-    logger.e('locale init failed, staying on base', error: e, stackTrace: s);
-  }
-  final themeFuture = () async {
-    try {
-      final font = await getIt<FontRepository>().getActiveFont();
-      await getIt<ThemeManager>().buildTheme(customFont: font?.themeDescriptor);
-    } catch (e, s) {
-      logger.e(
-        'theme init failed, fallback to default',
-        error: e,
-        stackTrace: s,
-      );
-      try {
-        await getIt<ThemeManager>().buildTheme();
-      } catch (_) {
-        // 再失败就让 lightTheme / darkTheme getter 自己回落到 buildMuiTheme()
-      }
-    }
-  }();
-  await Future.wait([
-    themeFuture,
-    getIt<StartupMigrationCoordinator>().startData(resumeDataStartup),
-  ]);
-  DiaryShare.register(showDiaryShareSheet);
-
-  SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarContrastEnforced: false,
-    ),
-  );
-  applyDeviceOrientationLock();
-}
-
-Future<void> _platFormOption() async {
-  if (Platform.isAndroid) {
-    await FlutterDisplayMode.setHighRefreshRate();
-  }
-}
-
-@visibleForTesting
-String resolveInitialLocation() {
-  if (AppLockPin.enabled.value) return LockRoute.path;
-  return DiaryHomeRoute.path;
-}
-
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   FlutterError.onError = (details) {
@@ -118,29 +35,54 @@ void main() async {
 
   registerThirdPartyLicenses();
 
-  try {
-    await MGlassApp.initialize();
-    await _initSystem();
-    buildRouter(initialLocation: resolveInitialLocation());
-  } catch (e, s) {
-    logger.f('bootstrap failed', error: e, stackTrace: s);
-    runApp(
-      BuildBadge(
-        child: BootFailurePage(error: e, stackTrace: s),
-      ),
-    );
-    return;
-  }
-
   runApp(
-    MGlassApp(
-      child: BuildBadge(
-        child: TranslationProvider(
-          child: ProviderScope(retry: (_, _) => null, child: const Moodiary()),
-        ),
-      ),
+    ProviderScope(
+      retry: (_, _) => null,
+      overrides: buildMobilePortOverrides(),
+      child: const AppStartupWidget(),
     ),
   );
+}
+
+class AppStartupWidget extends ConsumerWidget {
+  const AppStartupWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => ref
+      .watch(appStartupProvider)
+      .when(
+        loading: () => const _StartupPlaceholder(),
+        error: (error, stack) => BuildBadge(
+          child: BootFailurePage(error: error, stackTrace: stack),
+        ),
+        data: (_) => MGlassApp(
+          child: BuildBadge(
+            child: TranslationProvider(
+              child: const _EagerInitialization(child: Moodiary()),
+            ),
+          ),
+        ),
+      );
+}
+
+class _StartupPlaceholder extends StatelessWidget {
+  const _StartupPlaceholder();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.expand();
+}
+
+class _EagerInitialization extends ConsumerWidget {
+  const _EagerInitialization({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(appStartupProvider);
+    ref.watch(autoSyncWatcherProvider);
+    ref.watch(embedQueueWatcherProvider);
+    return child;
+  }
 }
 
 class Moodiary extends ConsumerWidget {
@@ -149,9 +91,10 @@ class Moodiary extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsControllerProvider);
+    final palette = ref.watch(kvValueProvider(MoodiaryKVs.moodPalette));
     return MaterialApp.router(
       onGenerateTitle: (context) => context.l10n.common.appName,
-      routerConfig: router,
+      routerConfig: ref.watch(appRouterProvider),
       builder: (context, child) {
         final brightness = switch (settings.themeMode) {
           .light => Brightness.light,
@@ -164,12 +107,8 @@ class Moodiary extends ConsumerWidget {
           child: MaterialUiCompatibilityBridge(
             child: MGlassPrivacyOverlay(
               isEnabled: () => MoodiaryKVs.backendPrivacy.get() == true,
-              child: ValueListenableBuilder<String>(
-                valueListenable: MoodiaryKVs.moodPalette.getNotifier(),
-                builder: (context, palette, child) => MoodPaletteScope(
-                  palette: MoodPalette.fromName(palette),
-                  child: child!,
-                ),
+              child: MoodPaletteScope(
+                palette: MoodPalette.fromName(palette),
                 child: ReminderNavigation(
                   child: AppLockObserver(
                     child: FlutterSmartDialog.init()(context, child!),

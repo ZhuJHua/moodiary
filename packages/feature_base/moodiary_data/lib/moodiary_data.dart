@@ -3,6 +3,8 @@ library;
 export 'src/backup_archive.dart';
 export 'src/category_controller.dart';
 export 'src/category_repository.dart';
+export 'src/data_providers.dart';
+export 'src/database_provider.dart';
 export 'src/db/database.dart';
 export 'src/db/db_codec.dart';
 export 'src/diary_content.dart';

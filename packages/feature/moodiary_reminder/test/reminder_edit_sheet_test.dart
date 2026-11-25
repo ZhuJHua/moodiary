@@ -1,22 +1,38 @@
 import 'package:clock/clock.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_reminder/moodiary_reminder.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_storage/testing.dart';
 import 'package:mui/mui.dart';
 
 final _theme = buildMuiTheme(brightness: .light);
 
-Widget _host(Widget child) => TranslationProvider(
-  child: MuiTheme(
-    data: _theme,
-    child: MaterialApp(
-      theme: _theme,
-      locale: const Locale('zh'),
-      localizationsDelegates: const [
-        ...GlobalMaterialLocalizations.delegates,
-        GlobalMuiLocalizations.delegate,
-      ],
-      home: Scaffold(body: child),
+Widget _host(Widget child) => ProviderScope(
+  retry: (_, _) => null,
+  overrides: [
+    reminderStateProvider.overrideWithValue((
+      reminders: const <Reminder>[],
+      enabled: false,
+      tapAction: ReminderTapAction.openApp,
+      notificationsEnabled: true,
+      next: null,
+      now: DateTime(2026, 11, 24, 21, 30),
+    )),
+  ],
+  child: TranslationProvider(
+    child: MuiTheme(
+      data: _theme,
+      child: MaterialApp(
+        theme: _theme,
+        locale: const Locale('zh'),
+        localizationsDelegates: const [
+          ...GlobalMaterialLocalizations.delegates,
+          GlobalMuiLocalizations.delegate,
+        ],
+        home: Scaffold(body: child),
+      ),
     ),
   ),
 );
@@ -44,7 +60,11 @@ MSheetScaffold<ReminderEditResult> _sheet(WidgetTester tester) =>
     );
 
 void main() {
-  setUp(() => LocaleSettings.setLocale(AppLocale.zh));
+  setUp(() async {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+    await LocaleSettings.setLocale(AppLocale.zh);
+  });
 
   testWidgets('saving keeps the selected time, weekdays and enabled state', (
     tester,

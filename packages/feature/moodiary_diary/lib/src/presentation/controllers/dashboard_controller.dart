@@ -1,6 +1,5 @@
 import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -8,15 +7,20 @@ part 'dashboard_controller.g.dart';
 
 @riverpod
 class DashboardController extends _$DashboardController {
-  late final _tags = getIt<TagRepository>();
+  late TagRepository _tags;
   bool _stale = false;
 
   @override
   Future<DashboardStats> build() async {
-    final diarySub = getIt<DiaryRepository>().diaryEvents.listen(_markStale);
-    final catSub = getIt<CategoryRepository>().categoryEvents.listen(
-      _markStale,
-    );
+    _tags = ref.watch(tagRepositoryProvider);
+    final diarySub = ref
+        .watch(diaryRepositoryProvider)
+        .diaryEvents
+        .listen(_markStale);
+    final catSub = ref
+        .watch(categoryRepositoryProvider)
+        .categoryEvents
+        .listen(_markStale);
     ref.onDispose(diarySub.cancel);
     ref.onDispose(catSub.cancel);
     final tags = _tags.tagEvents.listen(_markStale);
@@ -29,16 +33,20 @@ class DashboardController extends _$DashboardController {
   void _markStale(void _) => _stale = true;
 
   Future<void> refreshIfStale() async {
+    final operationRef = ref;
     if (!_stale) return;
     _stale = false;
     final stats = await _compute();
-    if (!ref.mounted) return;
+    if (!operationRef.mounted) return;
     state = AsyncData(stats);
   }
 
   Future<DashboardStats> _compute() async {
-    final diaries = await getIt<DiaryRepository>().getAllDiaries();
-    final cats = await getIt<CategoryRepository>().getAllCategories();
+    final (diaries, cats, tags) = await (
+      ref.read(diaryRepositoryProvider).getAllDiaries(),
+      ref.read(categoryRepositoryProvider).getAllCategories(),
+      _tags.getTagUsage(),
+    ).wait;
 
     final visible = diaries.where((d) => d.show).toList(growable: false);
     final byDay = _aggregateByDay(visible);
@@ -50,7 +58,7 @@ class DashboardController extends _$DashboardController {
       categoryCount: cats.length,
       streakDays: _streakDays(byDay.keys),
       thisMonthCount: _thisMonthCount(visible),
-      tagCount: (await _tags.getTagUsage()).where((t) => t.count > 0).length,
+      tagCount: tags.where((t) => t.count > 0).length,
       byDay: byDay,
       lastYearCount: _lastYearCount(byDay),
     );

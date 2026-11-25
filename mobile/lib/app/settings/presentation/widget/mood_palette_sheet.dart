@@ -13,12 +13,14 @@ class MoodPaletteSheet extends ConsumerWidget {
       MSheet.show<void>(context, builder: (_) => const MoodPaletteSheet());
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => MSheetScaffold<void>(
-    title: context.l10n.app.moodColors,
-    icon: LucideIcons.smile,
-    child: ValueListenableBuilder<String>(
-      valueListenable: MoodiaryKVs.moodPalette.getNotifier(),
-      builder: (context, value, _) => Column(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = MoodPalette.fromName(
+      ref.watch(kvValueProvider(MoodiaryKVs.moodPalette)),
+    );
+    return MSheetScaffold<void>(
+      title: context.l10n.app.moodColors,
+      icon: LucideIcons.smile,
+      child: Column(
         mainAxisSize: .min,
         crossAxisAlignment: .stretch,
         children: [
@@ -40,7 +42,7 @@ class MoodPaletteSheet extends ConsumerWidget {
                   ],
                 ),
               ),
-              selected: palette == MoodPalette.fromName(value),
+              selected: palette == selected,
               onTap: () async {
                 HapticFeedback.selectionClick();
                 MoodiaryKVs.moodPalette.set(palette.name);
@@ -52,6 +54,6 @@ class MoodPaletteSheet extends ConsumerWidget {
             ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }

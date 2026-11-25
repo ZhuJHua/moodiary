@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
@@ -45,14 +44,16 @@ void main() {
   setUp(() {
     repository = _Repository();
     diaries = _Diaries();
-    getIt.registerSingleton<MoodInsightsRepository>(repository);
-    getIt.registerSingleton<DiaryRepository>(diaries);
-    container = ProviderContainer(retry: (_, _) => null);
+    container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [
+        moodInsightsRepositoryProvider.overrideWithValue(repository),
+        diaryRepositoryProvider.overrideWithValue(diaries),
+      ],
+    );
   });
   tearDown(() async {
-    container.dispose();
     await diaries.events.close();
-    await getIt.reset();
   });
 
   test('card has day-weighted month mean, full previous-month delta and rolling seven days', () async {

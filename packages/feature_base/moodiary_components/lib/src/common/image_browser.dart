@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:dismissible_page/dismissible_page.dart';
 import 'package:fast_image/fast_image.dart';
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -152,7 +152,7 @@ class _ImageBrowserPushSimulation extends Simulation {
   bool isDone(double time) => x(time) >= 1;
 }
 
-class MImageBrowser extends StatefulWidget {
+class MImageBrowser extends ConsumerStatefulWidget {
   final List<String> images;
   final int initialIndex;
   final String? heroPrefix;
@@ -220,10 +220,10 @@ class MImageBrowser extends StatefulWidget {
   }
 
   @override
-  State<MImageBrowser> createState() => _MImageBrowserState();
+  ConsumerState<MImageBrowser> createState() => _MImageBrowserState();
 }
 
-class _MImageBrowserState extends State<MImageBrowser> {
+class _MImageBrowserState extends ConsumerState<MImageBrowser> {
   late final PageController _pageController = PageController(
     initialPage: widget.initialIndex,
   );
@@ -568,11 +568,9 @@ class _MImageBrowserState extends State<MImageBrowser> {
       if (isNetworkMedia(image)) {
         toast.loading();
         try {
-          final resp = await getIt<IHttpClient>().requestBytes(
-            .get,
-            image,
-            silent: true,
-          );
+          final resp = await ref
+              .read(httpClientProvider)
+              .requestBytes(.get, image, silent: true);
           final bytes = resp.data;
           if (bytes == null || bytes.isEmpty) {
             throw const FormatException('empty body');

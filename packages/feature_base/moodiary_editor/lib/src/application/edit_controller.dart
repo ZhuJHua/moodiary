@@ -1,11 +1,12 @@
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/src/data/geo_repository.dart';
 import 'package:moodiary_editor/src/data/weather_repository.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../editor_providers.dart';
 
 part 'edit_controller.g.dart';
 
@@ -15,8 +16,6 @@ typedef PlaceResult = ({Place? place, GeoFailure? failure});
 
 @riverpod
 class EditController extends _$EditController {
-  late final _repository = getIt<DiaryRepository>();
-
   bool _persisted = false;
 
   bool _wasNewDraft = false;
@@ -33,11 +32,13 @@ class EditController extends _$EditController {
     DiaryType? defaultType,
     String? defaultCategoryId,
   }) async {
+    final operationRef = ref;
+    final repository = ref.watch(diaryRepositoryProvider);
     _persisted = !(diaryId == null || diaryId.isEmpty);
     _wasNewDraft = !_persisted;
     final Diary diary;
     if (_persisted) {
-      final stored = await _repository.getDiaryByBusinessId(diaryId!);
+      final stored = await repository.getDiaryByBusinessId(diaryId!);
       if (stored == null) throw StateError('Diary not found: $diaryId');
       diary = stored;
     } else {
@@ -47,9 +48,10 @@ class EditController extends _$EditController {
       diary = Diary.empty(type: defaultType)
           .copyWith(categoryId: defaultCategoryId);
     }
+    if (!operationRef.mounted) return diary;
     _latest = diary;
     _saved = diary;
-    final sub = _repository.diaryEvents.listen((event) {
+    final sub = repository.diaryEvents.listen((event) {
       switch (event) {
         // 同步拉取用 upsert 覆盖已有日记，发的是 DiaryCreated
         case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
@@ -146,24 +148,29 @@ class EditController extends _$EditController {
   }
 
   Future<CoordinatesResult> locate() =>
-      getIt<GeoRepository>().currentCoordinates();
+      ref.read(geoRepositoryProvider).currentCoordinates();
 
   Future<PlaceResult> fetchPosition(
     BuildContext context, {
     LatLng? coords,
     bool onlyIfUnset = false,
   }) async {
+    final operationRef = ref;
     try {
-      final geo = await getIt<GeoRepository>().getGeo(context, coords: coords);
+      final geo = await operationRef
+          .read(geoRepositoryProvider)
+          .getGeo(context, coords: coords);
+      if (!operationRef.mounted) return (place: null, failure: null);
       final name = geo.name;
       final at = geo.coords;
       if (name == null || at == null) {
         return (place: null, failure: geo.failure);
       }
-      final places = getIt<PlaceRepository>();
-      var place =
-          await places.getPlaceById(Place.idForName(name)) ??
-          await places.getPlaceByName(name);
+      final places = operationRef.read(placeRepositoryProvider);
+      var place = await places.getPlaceById(Place.idForName(name));
+      if (!operationRef.mounted) return (place: null, failure: null);
+      place ??= await places.getPlaceByName(name);
+      if (!operationRef.mounted) return (place: null, failure: null);
       if (place == null) {
         place = Place.forName(
           name,
@@ -172,6 +179,7 @@ class EditController extends _$EditController {
         );
         await places.insertAPlace(place);
       }
+      if (!operationRef.mounted) return (place: place, failure: null);
       if (!onlyIfUnset || state.value?.placeId == null) changePlace(place.id);
       return (place: place, failure: null);
     } catch (_) {
@@ -184,20 +192,23 @@ class EditController extends _$EditController {
     LatLng? coords,
     bool onlyIfUnset = false,
   }) async {
+    final operationRef = ref;
     try {
       var at = coords;
       if (at == null) {
-        final located = await getIt<GeoRepository>().currentCoordinates();
+        final located = await operationRef
+            .read(geoRepositoryProvider)
+            .currentCoordinates();
         at = located.coords;
         if (at == null) return (weather: null, failure: located.failure);
       }
-      if (!context.mounted) {
+      if (!operationRef.mounted || !context.mounted) {
         return (weather: null, failure: GeoFailure.lookupFailed);
       }
-      final result = await getIt<WeatherRepository>().getWeather(
-        context: context,
-        coords: at,
-      );
+      final result = await operationRef
+          .read(weatherRepositoryProvider)
+          .getWeather(context: context, coords: at);
+      if (!operationRef.mounted) return result;
       final weather = result.weather;
       if (weather != null && (!onlyIfUnset || state.value?.weather == null)) {
         changeWeather(weather);
@@ -209,19 +220,27 @@ class EditController extends _$EditController {
   }
 
   Future<DraftSaveResult> autoSave() async {
+    final operationRef = ref;
     while (_inFlight != null) {
       await _inFlight;
+      if (!operationRef.mounted) return .failed;
     }
-    final future = _doAutoSave();
+    final repository = operationRef.read(diaryRepositoryProvider);
+    final keepAlive = operationRef.keepAlive();
+    final future = _doAutoSave(operationRef, repository);
     _inFlight = future;
     try {
       return await future;
     } finally {
       if (identical(_inFlight, future)) _inFlight = null;
+      keepAlive.close();
     }
   }
 
-  Future<DraftSaveResult> _doAutoSave() async {
+  Future<DraftSaveResult> _doAutoSave(
+    Ref operationRef,
+    DiaryRepository repository,
+  ) async {
     while (true) {
       final current = _latest;
       if (current == null) return .saved;
@@ -236,8 +255,8 @@ class EditController extends _$EditController {
       try {
         if (_wasNewDraft && _isBlank(next)) {
           if (_persisted) {
-            await _repository.hardDeleteDiary(next.id);
-            _persisted = false;
+            await repository.hardDeleteDiary(next.id);
+            if (operationRef.mounted) _persisted = false;
           }
         } else if (rowDirty) {
           final indexMode =
@@ -246,19 +265,20 @@ class EditController extends _$EditController {
               ? IndexMode.skip
               : IndexMode.inline;
           if (_persisted) {
-            await _repository.updateADiary(newDiary: next, index: indexMode);
+            await repository.updateADiary(newDiary: next, index: indexMode);
           } else {
-            await _repository.insertADiary(next);
-            _persisted = true;
+            await repository.insertADiary(next);
+            if (operationRef.mounted) _persisted = true;
           }
+        }
+        if (!operationRef.mounted) {
+          return identical(_latest, current) ? .saved : .failed;
         }
         _saved = next;
         // 写入期间有新编辑时，保留最新状态并继续保存。
         if (!identical(_latest, current)) continue;
         _latest = next;
-        if (ref.mounted) {
-          state = .data(next);
-        }
+        state = .data(next);
         return .saved;
       } catch (_) {
         return .failed;

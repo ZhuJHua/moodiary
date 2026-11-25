@@ -4,7 +4,6 @@ import 'package:fast_image/fast_image.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -70,10 +69,9 @@ abstract interface class SyncMediaFiles {
 }
 
 class RepoSyncDiaryStore implements SyncDiaryStore {
-  RepoSyncDiaryStore([this._repository]);
+  RepoSyncDiaryStore(this._repo);
 
-  final DiaryRepository? _repository;
-  late final _repo = _repository ?? getIt<DiaryRepository>();
+  final DiaryRepository _repo;
 
   @override
   Future<List<Diary>> getAllDiaries() => _repo.getAllDiaries();
@@ -92,10 +90,9 @@ class RepoSyncDiaryStore implements SyncDiaryStore {
 }
 
 class RepoSyncCategoryStore implements SyncCategoryStore {
-  RepoSyncCategoryStore([this._repository]);
+  RepoSyncCategoryStore(this._repo);
 
-  final CategoryRepository? _repository;
-  late final _repo = _repository ?? getIt<CategoryRepository>();
+  final CategoryRepository _repo;
 
   @override
   Future<List<Category>> getAllCategoriesForSync() =>
@@ -110,10 +107,9 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
 }
 
 class RepoSyncTagStore implements SyncTagStore {
-  RepoSyncTagStore([this._repository]);
+  RepoSyncTagStore(this._repo);
 
-  final TagRepository? _repository;
-  late final _repo = _repository ?? getIt<TagRepository>();
+  final TagRepository _repo;
 
   @override
   Future<List<Tag>> getAllTagsForSync() =>
@@ -137,10 +133,9 @@ class RepoSyncTagStore implements SyncTagStore {
 }
 
 class RepoSyncPlaceStore implements SyncPlaceStore {
-  RepoSyncPlaceStore([this._repository]);
+  RepoSyncPlaceStore(this._repo);
 
-  final PlaceRepository? _repository;
-  late final _repo = _repository ?? getIt<PlaceRepository>();
+  final PlaceRepository _repo;
 
   @override
   Future<List<Place>> getAllPlacesForSync() => _repo.getAllPlaces();
@@ -161,10 +156,9 @@ class RepoSyncPlaceStore implements SyncPlaceStore {
 }
 
 class RepoSyncTombstoneStore implements SyncTombstoneStore {
-  RepoSyncTombstoneStore([this._repository]);
+  RepoSyncTombstoneStore(this._repo);
 
-  final TombstoneRepository? _repository;
-  late final _repo = _repository ?? getIt<TombstoneRepository>();
+  final TombstoneRepository _repo;
 
   @override
   Future<List<SyncTombstone>> getAll() => _repo.getAll();

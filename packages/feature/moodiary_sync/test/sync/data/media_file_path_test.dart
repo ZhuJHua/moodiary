@@ -2,9 +2,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation_token.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
 import 'package:path/path.dart' as p;
@@ -12,6 +14,7 @@ import 'package:path/path.dart' as p;
 import '../sync_test_harness.dart';
 
 void main() {
+  late SyncTestEnv env;
   late SyncLogger logger;
   late Directory root;
   late DiskSyncMediaFiles mediaFiles;
@@ -25,8 +28,9 @@ void main() {
   tearDownAll(() => cacheRoot.deleteSync(recursive: true));
 
   setUp(() async {
-    logger = (await setUpSyncEnv()).logger;
-    await configureBackend(.webdav);
+    env = await setUpSyncEnv();
+    logger = env.logger;
+    await env.configureBackend(.webdav);
     root = await Directory.systemTemp.createTemp('media-file-path-test');
     mediaFiles = DiskSyncMediaFiles(baseDir: root.path);
   });
@@ -40,6 +44,11 @@ void main() {
       IncrementalSyncEngine(
         backend,
         logger: logger,
+        cancellation: SyncCancellationToken(),
+        openDiaries: env.container.read(openDiaryRegistryProvider),
+        dirty: env.container.read(syncDirtyDiaryIdsProvider.notifier),
+        pending: env.container.read(syncPendingStateProvider.notifier),
+        configuredBackends: env.configuredBackends,
         diaryStore: d,
         categoryStore: FakeCategoryStore(const [], d.tombstones),
         tagStore: FakeTagStore(),

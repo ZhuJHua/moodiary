@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 import 'embedding_backend.dart';
 import 'embedding_models.dart';
-import 'onnx_embedding_backend.dart';
 
 abstract class SemanticEmbedder {
   bool get ready;
@@ -20,13 +18,13 @@ abstract class SemanticEmbedder {
   Future<void> dispose();
 }
 
-@LazySingleton(as: SemanticEmbedder)
 class EmbeddingEngine implements SemanticEmbedder {
   final EmbeddingModelManager _models;
   final EmbeddingBackend _backend;
 
   Future<void> _chain = Future.value();
   Timer? _idleTimer;
+  bool _disposed = false;
 
   String? _loadedModelId;
 
@@ -61,6 +59,7 @@ class EmbeddingEngine implements SemanticEmbedder {
   }
 
   Future<List<Float32List>> _run(List<String> texts, EmbeddingModelSpec spec) {
+    if (_disposed) throw StateError('EmbeddingEngine is disposed');
     if (texts.isEmpty) return Future.value(const []);
     final task = _chain.then((_) async {
       _idleTimer?.cancel();
@@ -87,22 +86,19 @@ class EmbeddingEngine implements SemanticEmbedder {
   }
 
   void _armIdleUnload() {
+    if (_disposed) return;
     _idleTimer?.cancel();
     _idleTimer = Timer(_idleUnload, () {
       _chain = _chain.then((_) => _backend.unload());
     });
   }
 
-  @disposeMethod
+  @override
   Future<void> dispose() {
+    if (_disposed) return _chain;
+    _disposed = true;
     _idleTimer?.cancel();
     _chain = _chain.then((_) => _backend.unload());
     return _chain;
   }
-}
-
-@module
-abstract class EmbeddingBackendModule {
-  @lazySingleton
-  EmbeddingBackend backend() => OnnxEmbeddingBackend();
 }

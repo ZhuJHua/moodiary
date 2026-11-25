@@ -4,7 +4,8 @@ import 'dart:ui' as ui;
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:moodiary_components/moodiary_components.dart' show MoodiaryLogo;
+import 'package:moodiary_components/moodiary_components.dart'
+    show MoodiaryLogo, MoodPalette, MoodPaletteScope;
 import 'package:moodiary_logging/moodiary_logging.dart';
 
 import '../presentation/image_card/card.dart';
@@ -38,6 +39,7 @@ abstract final class ImageComposer {
   static const int _kPreviewPixelBudget = 12 * 1000 * 1000;
 
   static Future<ImageComposeResult> composeToFile({
+    required MoodPalette palette,
     required List<ExportDoc> docs,
     required ExportCommon common,
     required ImageExportOptions options,
@@ -55,6 +57,7 @@ abstract final class ImageComposer {
       var scale = options.scale;
       var brand = await _brandMark(style, scale);
       _Composition composition = await _Composition.layout(
+        palette: palette,
         docs: docs,
         common: common,
         style: style,
@@ -68,6 +71,7 @@ abstract final class ImageComposer {
         logger.d('image export: content too tall, downgrading scale to $scale');
         brand = await _brandMark(style, scale);
         composition = await _Composition.layout(
+          palette: palette,
           docs: docs,
           common: common,
           style: style,
@@ -126,6 +130,7 @@ abstract final class ImageComposer {
   }
 
   static Future<ImagePreviewBands> renderBands({
+    required MoodPalette palette,
     required List<ExportDoc> docs,
     required ExportCommon common,
     required ImageCardStyle style,
@@ -139,6 +144,7 @@ abstract final class ImageComposer {
     );
     final brand = await _brandMark(style, maxScale);
     final composition = await _Composition.layout(
+      palette: palette,
       docs: docs,
       common: common,
       style: style,
@@ -289,6 +295,7 @@ class _Composition {
   double get contentHeight => _controller.contentHeight;
 
   static Future<_Composition> layout({
+    required MoodPalette palette,
     required List<ExportDoc> docs,
     required ExportCommon common,
     required ImageCardStyle style,
@@ -327,12 +334,15 @@ class _Composition {
           data: const MediaQueryData(textScaler: TextScaler.noScaling),
           child: Directionality(
             textDirection: TextDirection.ltr,
-            child: ImageCard(
-              docs: docs,
-              common: common,
-              style: style,
-              images: images,
-              brand: brand,
+            child: MoodPaletteScope(
+              palette: palette,
+              child: ImageCard(
+                docs: docs,
+                common: common,
+                style: style,
+                images: images,
+                brand: brand,
+              ),
             ),
           ),
         ),

@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/timeline_controller.dart';
 import 'package:moodiary_diary/src/application/timeline_group.dart';
 import 'package:moodiary_diary/src/presentation/controllers/diary_controller.dart';
@@ -12,21 +11,21 @@ import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 class DiaryTimelineView extends ConsumerWidget {
   final DiaryFilter filter;
 
-  final DiarySort sort;
-
-  const DiaryTimelineView({
-    super.key,
-    this.filter = const .all(),
-    this.sort = .timeDesc,
-  });
+  const DiaryTimelineView({super.key, this.filter = const .all()});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final sort = DiarySort.getType(
+      ref.watch(kvValueProvider(MoodiaryKVs.homeSortMode)),
+    );
+    final pending = ref.watch(syncPendingStateProvider);
+    final dirty = ref.watch(syncDirtyDiaryIdsProvider);
     final provider = diaryControllerProvider(
       categoryId: filter.categoryId,
       uncategorized: filter.uncategorized,
@@ -37,148 +36,135 @@ class DiaryTimelineView extends ConsumerWidget {
     final selecting = selection.isNotEmpty;
 
     return diaryAsync.buildLoading(
+      skipLoadingOnReload: false,
       data: (diaries) {
-        return ListenableBuilder(
-          listenable: .merge([
-            getIt<SyncPendingTracker>().listenable,
-            getIt<SyncDirtyTracker>().listenable,
-          ]),
-          builder: (context, _) {
-            final pending = getIt<SyncPendingTracker>().listenable.value;
-            final dirty = getIt<SyncDirtyTracker>().listenable.value;
-            Widget body;
-            if (diaries.isEmpty) {
-              body = Center(child: Text(context.l10n.diary.tabViewEmpty));
-            } else {
-              final monthCounts = ref
-                  .watch(
-                    timelineMonthCountsProvider(
-                      categoryId: filter.categoryId,
-                      uncategorized: filter.uncategorized,
-                      tagName: filter.tagName,
-                      sort: sort,
-                    ),
-                  )
-                  .value;
-              final months = buildTimeline(diaries, sort);
-              final flat = [for (final m in months) ...m.entries];
-              final selNotifier = ref.read(diarySelectionProvider.notifier);
-              var offset = 0;
+        Widget body;
+        if (diaries.isEmpty) {
+          body = Center(child: Text(context.l10n.diary.tabViewEmpty));
+        } else {
+          final monthCounts = ref
+              .watch(
+                timelineMonthCountsProvider(
+                  categoryId: filter.categoryId,
+                  uncategorized: filter.uncategorized,
+                  tagName: filter.tagName,
+                  sort: sort,
+                ),
+              )
+              .value;
+          final months = buildTimeline(diaries, sort);
+          final flat = [for (final m in months) ...m.entries];
+          final selNotifier = ref.read(diarySelectionProvider.notifier);
+          var offset = 0;
 
-              final slivers = <Widget>[];
-              for (final month in months) {
-                final base = offset;
-                offset += month.entries.length;
-                final header = SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _MonthHeaderDelegate(
-                    month: month.month,
-                    count: monthCounts?[month.month],
-                  ),
-                );
-                final list = SliverList.builder(
-                  itemCount: month.entries.length,
-                  itemBuilder: (context, index) {
-                    final flatIndex = base + index;
-                    final entry = flat[flatIndex];
-                    final diary = entry.diary;
-                    final syncState =
-                        (pending.updateDiaryIds.contains(diary.id) ||
-                            pending.newDiaryIds.contains(diary.id))
-                        ? DiaryCardSyncState.syncing
-                        : dirty.contains(diary.id)
-                        ? DiaryCardSyncState.dirty
-                        : DiaryCardSyncState.none;
-                    return Consumer(
-                      builder: (context, ref, _) {
-                        final category = ref.watch(
-                          categoryByIdProvider(diary.categoryId),
-                        );
-                        final place = ref.watch(
-                          placeByIdProvider(diary.placeId),
-                        );
-                        final next = flatIndex == flat.length - 1
-                            ? null
-                            : flat[flatIndex + 1];
-                        return DiaryTimelineTile(
-                          key: ValueKey(diary.id),
-                          diary: diary,
-                          stamp: entry.stamp,
-                          dayStart: entry.dayStart,
-                          breakBefore: entry.breakBefore,
-                          breakAfter: next?.breakBefore ?? false,
-                          hasAbove: flatIndex > 0,
-                          moodBelow: next?.diary.mood,
-                          hasBelow: next != null,
-                          category: category,
-                          place: place,
-                          showCategoryLabel: filter.isAll,
-                          syncState: syncState,
-                          selecting: selecting,
-                          selected: selection.contains(diary.id),
-                          onTap: selecting
-                              ? () => selNotifier.toggle(diary.id)
-                              : () => openDiaryDetail(context, diary),
-                          onLongPress: selecting
-                              ? null
-                              : () => selNotifier.enter(diary.id),
-                        );
-                      },
+          final slivers = <Widget>[];
+          for (final month in months) {
+            final base = offset;
+            offset += month.entries.length;
+            final header = SliverPersistentHeader(
+              pinned: true,
+              delegate: _MonthHeaderDelegate(
+                month: month.month,
+                count: monthCounts?[month.month],
+              ),
+            );
+            final list = SliverList.builder(
+              itemCount: month.entries.length,
+              itemBuilder: (context, index) {
+                final flatIndex = base + index;
+                final entry = flat[flatIndex];
+                final diary = entry.diary;
+                final syncState =
+                    (pending.updateDiaryIds.contains(diary.id) ||
+                        pending.newDiaryIds.contains(diary.id))
+                    ? DiaryCardSyncState.syncing
+                    : dirty.contains(diary.id)
+                    ? DiaryCardSyncState.dirty
+                    : DiaryCardSyncState.none;
+                return Consumer(
+                  builder: (context, ref, _) {
+                    final category = ref.watch(
+                      categoryByIdProvider(diary.categoryId),
+                    );
+                    final place = ref.watch(placeByIdProvider(diary.placeId));
+                    final next = flatIndex == flat.length - 1
+                        ? null
+                        : flat[flatIndex + 1];
+                    return DiaryTimelineTile(
+                      key: ValueKey(diary.id),
+                      diary: diary,
+                      stamp: entry.stamp,
+                      dayStart: entry.dayStart,
+                      breakBefore: entry.breakBefore,
+                      breakAfter: next?.breakBefore ?? false,
+                      hasAbove: flatIndex > 0,
+                      moodBelow: next?.diary.mood,
+                      hasBelow: next != null,
+                      category: category,
+                      place: place,
+                      showCategoryLabel: filter.isAll,
+                      syncState: syncState,
+                      selecting: selecting,
+                      selected: selection.contains(diary.id),
+                      onTap: selecting
+                          ? () => selNotifier.toggle(diary.id)
+                          : () => openDiaryDetail(context, diary),
+                      onLongPress: selecting
+                          ? null
+                          : () => selNotifier.enter(diary.id),
                     );
                   },
                 );
-                slivers.add(SliverMainAxisGroup(slivers: [header, list]));
-              }
-              slivers.add(
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 24 + MediaQuery.paddingOf(context).bottom,
-                  ),
-                ),
-              );
-
-              body = MRefresh(
-                onLoadMore: () => ref.read(provider.notifier).loadMore(),
-                onRefresh: () => ref.read(provider.notifier).refresh(),
-                child: CustomScrollView(
-                  slivers: [
-                    SliverPadding(
-                      padding: const .symmetric(horizontal: 14),
-                      sliver: SliverMainAxisGroup(slivers: slivers),
-                    ),
-                  ],
-                ),
-              );
-            }
-            final showSummary =
-                filter.isAll &&
-                (pending.newDiaryIds.isNotEmpty ||
-                    pending.updateDiaryIds.isNotEmpty);
-            if (!showSummary) return body;
-            return Column(
-              children: [
-                Padding(
-                  padding: const .fromLTRB(12, 12, 12, 0),
-                  child: SyncPendingSummaryCard(
-                    newCount: pending.newDiaryIds.length,
-                    updateCount: pending.updateDiaryIds.length,
-                    label: (newCount, updateCount) =>
-                        context.l10n.sync.pendingSummary(
-                          parts: [
-                            if (newCount > 0)
-                              context.l10n.sync.pendingNew(count: newCount),
-                            if (updateCount > 0)
-                              context.l10n.sync.pendingUpdate(
-                                count: updateCount,
-                              ),
-                          ].join(' · '),
-                        ),
-                  ),
-                ),
-                Expanded(child: body),
-              ],
+              },
             );
-          },
+            slivers.add(SliverMainAxisGroup(slivers: [header, list]));
+          }
+          slivers.add(
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 24 + MediaQuery.paddingOf(context).bottom,
+              ),
+            ),
+          );
+
+          body = MRefresh(
+            onLoadMore: () => ref.read(provider.notifier).loadMore(),
+            onRefresh: () => ref.read(provider.notifier).refresh(),
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const .symmetric(horizontal: 14),
+                  sliver: SliverMainAxisGroup(slivers: slivers),
+                ),
+              ],
+            ),
+          );
+        }
+        final showSummary =
+            filter.isAll &&
+            (pending.newDiaryIds.isNotEmpty ||
+                pending.updateDiaryIds.isNotEmpty);
+        if (!showSummary) return body;
+        return Column(
+          children: [
+            Padding(
+              padding: const .fromLTRB(12, 12, 12, 0),
+              child: SyncPendingSummaryCard(
+                newCount: pending.newDiaryIds.length,
+                updateCount: pending.updateDiaryIds.length,
+                label: (newCount, updateCount) =>
+                    context.l10n.sync.pendingSummary(
+                      parts: [
+                        if (newCount > 0)
+                          context.l10n.sync.pendingNew(count: newCount),
+                        if (updateCount > 0)
+                          context.l10n.sync.pendingUpdate(count: updateCount),
+                      ].join(' · '),
+                    ),
+              ),
+            ),
+            Expanded(child: body),
+          ],
         );
       },
     );

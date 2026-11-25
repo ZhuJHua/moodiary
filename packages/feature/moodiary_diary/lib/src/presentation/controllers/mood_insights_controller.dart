@@ -1,5 +1,4 @@
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -24,34 +23,39 @@ class MoodInsightsCardData {
 class MoodInsightsController extends _$MoodInsightsController {
   bool _stale = false;
   DateTime? _loadedDay;
-  late final _repository = getIt<MoodInsightsRepository>();
+  late MoodInsightsRepository _repository;
 
   @override
   Future<MoodInsightsCardData> build() async {
-    final sub = getIt<DiaryRepository>().diaryEvents.listen(
-      (_) => _stale = true,
-    );
+    _repository = ref.watch(moodInsightsRepositoryProvider);
+    final operationRef = ref;
+    final sub = ref
+        .watch(diaryRepositoryProvider)
+        .diaryEvents
+        .listen((_) => _stale = true);
     ref.onDispose(sub.cancel);
     _stale = false;
     try {
       return await _compute();
     } catch (e, s) {
-      _stale = true;
+      if (operationRef.mounted) _stale = true;
       logger.e('Mood card load failed', error: e, stackTrace: s);
       rethrow;
     }
   }
 
   Future<void> refreshIfStale() async {
+    final operationRef = ref;
     if (!_stale && _loadedDay == moodDayKey(DateTime.now())) return;
     _stale = false;
     try {
       final data = await _compute();
-      if (ref.mounted) state = AsyncData(data);
+      if (operationRef.mounted) state = AsyncData(data);
     } catch (e, s) {
+      if (!operationRef.mounted) return;
       _stale = true;
       logger.e('Mood card refresh failed', error: e, stackTrace: s);
-      if (ref.mounted) state = AsyncError(e, s);
+      state = AsyncError(e, s);
     }
   }
 

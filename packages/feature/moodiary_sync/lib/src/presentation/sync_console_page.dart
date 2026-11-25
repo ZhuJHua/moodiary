@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -17,8 +16,7 @@ import 'package:moodiary_sync/src/application/sync_stats_controller.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/sync_cancellation.dart';
-import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_labels.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -35,10 +33,9 @@ class _SyncConsolePageState extends ConsumerState<SyncConsolePage> {
   List<SyncEvent> _events = const [];
   StreamSubscription<SyncEvent>? _sub;
   bool _loading = true;
+  List<SyncEvent> _pending = [];
   bool _problemsOnly = false;
   DateTime _selectedDay = .now();
-
-  late Future<bool> _configured = getIt<IRemoteSyncBackend>().isReady();
 
   static bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -49,31 +46,28 @@ class _SyncConsolePageState extends ConsumerState<SyncConsolePage> {
   void initState() {
     super.initState();
     // 先订阅再读文件，否则漏掉订阅期间到达的事件
-    final pending = <SyncEvent>[];
-    _sub = getIt<SyncLogger>().events.listen((event) {
+    _sub = ref.read(syncLoggerProvider).events.listen((event) {
       if (!mounted || !_viewingToday) return;
       if (_loading) {
-        pending.add(event);
+        _pending.add(event);
       } else {
         setState(() => _events = [..._events, event]);
       }
     });
-    _loadDay(.now(), pendingDuringLoad: pending);
+    _loadDay(.now());
   }
 
-  Future<void> _loadDay(
-    DateTime day, {
-    List<SyncEvent>? pendingDuringLoad,
-  }) async {
+  Future<void> _loadDay(DateTime day) async {
+    final pending = _pending = [];
     setState(() {
       _selectedDay = day;
       _loading = true;
       _events = const [];
     });
-    final fromFile = await getIt<SyncLogger>().readDay(day);
-    if (!mounted || !_sameDay(_selectedDay, day)) return;
+    final fromFile = await ref.read(syncLoggerProvider).readDay(day);
+    if (!mounted || !identical(pending, _pending)) return;
     setState(() {
-      _events = [...fromFile, ...?pendingDuringLoad];
+      _events = [...fromFile, ...pending];
       _loading = false;
     });
   }
@@ -85,7 +79,7 @@ class _SyncConsolePageState extends ConsumerState<SyncConsolePage> {
   }
 
   Future<void> _pickDay() async {
-    final days = await getIt<SyncLogger>().availableDays();
+    final days = await ref.read(syncLoggerProvider).availableDays();
     final today = DateTime.now();
     if (!days.any((d) => _sameDay(d, today))) days.insert(0, today);
     if (!mounted) return;
@@ -125,33 +119,32 @@ class _SyncConsolePageState extends ConsumerState<SyncConsolePage> {
       isDestructive: true,
     );
     if (!confirmed) return;
-    await getIt<SyncLogger>().clearAll();
+    await ref.read(syncLoggerProvider).clearAll();
     if (!mounted) return;
     setState(() => _events = const []);
   }
 
   Future<void> _openSettings() async {
     await const BackupSyncRoute().push(context);
-    if (!mounted) return;
-    setState(() => _configured = getIt<IRemoteSyncBackend>().isReady());
   }
 
   Future<void> _syncNow() async {
-    final backend = getIt<IRemoteSyncBackend>();
-    if (!await ensureSyncKeyReady(
-      context: context,
-      ref: ref,
-      backend: backend,
-    )) {
-      return;
-    }
-    await ref.read(syncControllerProvider.notifier).sync(backend);
+    await ref
+        .read(syncControllerProvider.notifier)
+        .sync(
+          prepare: (operation, backend) => ensureSyncKeyReady(
+            context: context,
+            ref: ref,
+            operation: operation,
+            backend: backend,
+          ),
+        );
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<SyncState>(syncControllerProvider, (prev, next) {
-      if (next is SyncSuccess || next is SyncPartial || next is SyncError) {
+    ref.listen(syncControllerProvider, (prev, next) {
+      if (prev?.isRunning == true && !next.isRunning) {
         ref.invalidate(syncStatsProvider);
       }
     });
@@ -181,12 +174,9 @@ class _SyncConsolePageState extends ConsumerState<SyncConsolePage> {
           SliverPadding(
             padding: const .fromLTRB(12, 4, 12, 0),
             sliver: SliverToBoxAdapter(
-              child: FutureBuilder(
-                future: _configured,
-                builder: (context, snapshot) => _StatusPanel(
-                  configured: snapshot.data ?? false,
-                  onSync: _syncNow,
-                ),
+              child: _StatusPanel(
+                configured: ref.watch(syncBackendReadyProvider).value ?? false,
+                onSync: _syncNow,
               ),
             ),
           ),
@@ -288,7 +278,7 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(syncControllerProvider);
+    final status = ref.watch(syncControllerProvider);
     final stats = ref.watch(syncStatsProvider);
     final encrypted = ref
         .watch(syncDekControllerProvider)
@@ -296,34 +286,19 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
           data: (key) => key != null && key.isNotEmpty,
           orElse: () => false,
         );
-    final runner = getIt<SyncRunner>();
-    final watcher = getIt<AutoSyncWatcher>();
-    return ListenableBuilder(
-      listenable: .merge([
-        runner.status,
-        getIt<SyncDirtyTracker>().listenable,
-        getIt<SyncCancellation>().listenable,
-        MoodiaryKVs.lastSyncTime.getNotifier(),
-        MoodiaryKVs.autoSync.getNotifier(),
-        MoodiaryKVs.syncPollInterval.getNotifier(),
-        watcher.nextPollAt,
-      ]),
-      builder: (context, _) => _build(
-        context,
-        state: state,
-        status: runner.status.value,
-        stats: stats,
-        encrypted: encrypted,
-        pendingLocal: getIt<SyncDirtyTracker>().listenable.value.length,
-        stopping: getIt<SyncCancellation>().listenable.value,
-        nextPollAt: watcher.nextPollAt.value,
-      ),
+    return _build(
+      context,
+      status: status,
+      stats: stats,
+      encrypted: encrypted,
+      pendingLocal: ref.watch(syncDirtyDiaryIdsProvider).length,
+      stopping: status.stopping,
+      nextPollAt: ref.watch(autoSyncNextPollAtProvider),
     );
   }
 
   Widget _build(
     BuildContext context, {
-    required SyncState state,
     required SyncStatus status,
     required AsyncValue<SyncStats> stats,
     required bool encrypted,
@@ -334,8 +309,9 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
     final l10n = context.l10n;
     final scheme = context.theme.colors;
     final typography = context.theme.typography;
-    final backend = getIt<IRemoteSyncBackend>();
-    final running = state is SyncRunning;
+    final backend = ref.watch(activeSyncBackendProvider);
+    final running = status.isRunning;
+    final busy = ref.watch(syncOperationBusyProvider);
     final configured = widget.configured;
     final bad = configured && status.health.isBad;
 
@@ -354,7 +330,6 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
 
     final (title, sub, warn) = _headline(
       l10n,
-      state: state,
       status: status,
       configured: configured,
       backendName: backend.type.label,
@@ -365,7 +340,7 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
       AsyncData(:final value) => value,
       _ => null,
     };
-    final autoOn = MoodiaryKVs.autoSync.get() == true;
+    final autoOn = ref.watch(kvValueProvider(MoodiaryKVs.autoSync));
     final remaining = nextPollAt?.difference(DateTime.now());
 
     return Container(
@@ -518,7 +493,9 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
                         ? l10n.sync.autoSyncEvery(
                             interval: _fmtInterval(
                               l10n,
-                              MoodiaryKVs.syncPollInterval.get() ?? 30,
+                              ref.watch(
+                                kvValueProvider(MoodiaryKVs.syncPollInterval),
+                              ),
                             ),
                           )
                         : l10n.sync.autoSyncOff,
@@ -546,7 +523,7 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
                           : () => ref
                                 .read(syncControllerProvider.notifier)
                                 .stop())
-                    : configured
+                    : configured && !busy
                     ? widget.onSync
                     : null,
                 style: FilledButton.styleFrom(
@@ -569,17 +546,21 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
 
   (String, String?, bool) _headline(
     Translations l10n, {
-    required SyncState state,
     required SyncStatus status,
     required bool configured,
     required String backendName,
     required int pendingLocal,
   }) {
-    if (state case SyncRunning(:final label)) {
-      final trigger = status.running?.trigger;
+    if (status.running case final activity?) {
+      final trigger = activity.trigger;
+      final label = switch (activity.direction) {
+        .push => l10n.sync.uploading(backend: backendName),
+        .pull => l10n.sync.downloading(backend: backendName),
+        .sync => l10n.sync.syncing(backend: backendName),
+      };
       return (
         l10n.sync.statusRunning,
-        trigger == null || trigger == .manual
+        trigger == .manual
             ? label
             : '$label · ${syncTriggerLabel(l10n, trigger)}',
         false,
@@ -598,7 +579,7 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
     );
     if (healthTitle != null) {
       final since = status.healthSince;
-      final lastOk = MoodiaryKVs.lastSyncTime.get() ?? 0;
+      final lastOk = ref.watch(kvValueProvider(MoodiaryKVs.lastSyncTime));
       return (
         healthTitle,
         [
@@ -613,7 +594,7 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
         true,
       );
     }
-    final last = status.last;
+    final last = status.last?.outcome;
     if (last != null) {
       final stamp =
           '${TimeFormat.timeHms(last.at)} · ${syncTriggerLabel(l10n, last.trigger)}';
@@ -626,7 +607,7 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
           return (l10n.sync.statusSynced, [stamp, ?pending].join(' · '), false);
       }
     }
-    final millis = MoodiaryKVs.lastSyncTime.get() ?? 0;
+    final millis = ref.watch(kvValueProvider(MoodiaryKVs.lastSyncTime));
     if (millis > 0) {
       return (
         l10n.sync.statusSynced,
@@ -674,7 +655,7 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
   );
 }
 
-class _ProbeButton extends StatefulWidget {
+class _ProbeButton extends ConsumerStatefulWidget {
   final IconData icon;
   final bool enabled;
   final VoidCallback onProbed;
@@ -686,21 +667,21 @@ class _ProbeButton extends StatefulWidget {
   });
 
   @override
-  State<_ProbeButton> createState() => _ProbeButtonState();
+  ConsumerState<_ProbeButton> createState() => _ProbeButtonState();
 }
 
-class _ProbeButtonState extends State<_ProbeButton> {
+class _ProbeButtonState extends ConsumerState<_ProbeButton> {
   bool _busy = false;
 
   Future<void> _probe() async {
     setState(() => _busy = true);
     try {
-      await getIt<SyncRunner>().testConnection();
+      await ref.read(syncControllerProvider.notifier).testConnection();
     } on SyncException {
       // 探测失败不报错，结果由 onProbed 回读连接状态
     } finally {
       if (mounted) setState(() => _busy = false);
-      widget.onProbed();
+      if (mounted) widget.onProbed();
     }
   }
 
@@ -709,7 +690,10 @@ class _ProbeButtonState extends State<_ProbeButton> {
     final scheme = context.theme.colors;
     return IconButton(
       tooltip: context.l10n.sync.testConnection,
-      onPressed: widget.enabled && !_busy ? _probe : null,
+      onPressed:
+          widget.enabled && !_busy && !ref.watch(syncOperationBusyProvider)
+          ? _probe
+          : null,
       icon: _busy
           ? const SizedBox(
               width: 18,

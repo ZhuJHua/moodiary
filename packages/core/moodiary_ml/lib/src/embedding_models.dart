@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
@@ -63,7 +62,6 @@ const embeddingModelCatalog = <EmbeddingModelSpec>[
   ),
 ];
 
-@LazySingleton()
 class EmbeddingModelManager {
   final IHttpClient _http;
 

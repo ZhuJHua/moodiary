@@ -64,7 +64,7 @@ final class DiaryEgoGraphProvider
   }
 }
 
-String _$diaryEgoGraphHash() => r'c4ec6f6ae3460d92b203a52b917797d222d85f59';
+String _$diaryEgoGraphHash() => r'c4bce09b9ec1bde30b12e170c446af54970c9327';
 
 final class DiaryEgoGraphFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<DiaryGraphData>, String> {

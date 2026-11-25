@@ -9,33 +9,29 @@ class ThemeModeDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ValueListenableBuilder<int>(
-      valueListenable: MoodiaryKVs.themeMode.getNotifier(),
-      builder: (context, mode, _) {
-        return SimpleDialog(
-          title: Text(context.l10n.app.themeMode),
-          children: [
-            _Option(
-              selected: mode == 0,
-              icon: LucideIcons.sunMoon,
-              label: context.l10n.app.themeModeSystem,
-              onTap: () => _select(context, ref, 0),
-            ),
-            _Option(
-              selected: mode == 1,
-              icon: LucideIcons.sun,
-              label: context.l10n.app.themeModeLight,
-              onTap: () => _select(context, ref, 1),
-            ),
-            _Option(
-              selected: mode == 2,
-              icon: LucideIcons.moon,
-              label: context.l10n.app.themeModeDark,
-              onTap: () => _select(context, ref, 2),
-            ),
-          ],
-        );
-      },
+    final mode = ref.watch(kvValueProvider(MoodiaryKVs.themeMode));
+    return SimpleDialog(
+      title: Text(context.l10n.app.themeMode),
+      children: [
+        _Option(
+          selected: mode == 0,
+          icon: LucideIcons.sunMoon,
+          label: context.l10n.app.themeModeSystem,
+          onTap: () => _select(context, ref, 0),
+        ),
+        _Option(
+          selected: mode == 1,
+          icon: LucideIcons.sun,
+          label: context.l10n.app.themeModeLight,
+          onTap: () => _select(context, ref, 1),
+        ),
+        _Option(
+          selected: mode == 2,
+          icon: LucideIcons.moon,
+          label: context.l10n.app.themeModeDark,
+          onTap: () => _select(context, ref, 2),
+        ),
+      ],
     );
   }
 

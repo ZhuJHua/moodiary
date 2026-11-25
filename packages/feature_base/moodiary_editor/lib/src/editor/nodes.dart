@@ -208,6 +208,7 @@ class _MediaNodeState extends State<_MediaNode> {
         child = path == null ? _missing(LucideIcons.image) : _image(path);
       } else if (type == 'video') {
         final video = _video,
+            port = video?.port,
             ratio = (_video?.geometry.value.naturalAspect ?? 16 / 9).clamp(
               4 / 5,
               16 / 9,
@@ -228,11 +229,15 @@ class _MediaNodeState extends State<_MediaNode> {
                       )
                     : _image(poster.data!.path, fit: BoxFit.cover),
               ),
-              if (video?.port != null && video!.state.value.isInitialized)
+              if (port != null && video!.state.value.isInitialized)
                 Center(
                   child: AspectRatio(
                     aspectRatio: video.geometry.value.naturalAspect ?? ratio,
-                    child: components.defaultVideoSurfaceBuilder(video.port!),
+                    child: Consumer(
+                      builder: (context, ref, _) => ref.watch(
+                        components.videoSurfaceBuilderProvider,
+                      )(port),
+                    ),
                   ),
                 ),
               GestureDetector(

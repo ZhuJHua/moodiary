@@ -1,5 +1,4 @@
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -14,11 +13,9 @@ part 'font_controller.g.dart';
 
 @riverpod
 class FontController extends _$FontController {
-  late final _repository = getIt<FontRepository>();
-
   @override
   Future<List<Font>> build() async {
-    final list = await _repository.getAllFonts();
+    final list = await ref.watch(fontRepositoryProvider).getAllFonts();
     await Future.wait([
       for (final f in list)
         FontManager.loadFont(
@@ -30,11 +27,13 @@ class FontController extends _$FontController {
   }
 
   Future<String?> addFont() async {
-    final xFile = await FontManager.pickFont();
+    final operationRef = ref;
+    final repository = ref.read(fontRepositoryProvider);
+    final xFile = await FontManager.pickFont(ref.read(filePickerProvider));
     if (xFile == null) return null;
     final fontName = await FontManager.getFontName(filePath: xFile.path);
     if (fontName == null || fontName.isEmpty) return l10n.app.fontNameFailed;
-    if (!ref.mounted) return null;
+    if (!operationRef.mounted) return null;
     final current = state.value ?? const <Font>[];
     if (current.any((e) => e.fontFamily == fontName)) {
       return l10n.app.fontExists;
@@ -46,19 +45,21 @@ class FontController extends _$FontController {
       fontWghtAxisMap: await FontManager.getFontWghtAxis(filePath: xFile.path),
     );
     await xFile.saveTo(newPath);
-    await _repository.insertFont(newFont);
+    await repository.insertFont(newFont);
     await FontManager.loadFont(fontName: newFont.fontFamily, fontPath: newPath);
-    if (ref.mounted) state = .data([...current, newFont]);
+    if (operationRef.mounted) state = .data([...?state.value, newFont]);
     return '';
   }
 
   Future<void> removeFont(Font font) async {
+    final operationRef = ref;
+    final repository = ref.read(fontRepositoryProvider);
     if (MoodiaryKVs.customFont.get() == font.fontFamily) {
       await setActive(null);
     }
-    await _repository.deleteFontByFamily(font.fontFamily);
+    await repository.deleteFontByFamily(font.fontFamily);
     await AppFiles.deleteFile(AppFiles.getRealPath('font', font.fontFileName));
-    if (!ref.mounted) return;
+    if (!operationRef.mounted) return;
     final next = (state.value ?? const <Font>[])
         .where((e) => e.fontFamily != font.fontFamily)
         .toList();

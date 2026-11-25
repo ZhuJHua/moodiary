@@ -14,6 +14,7 @@ Widget muiTestApp(
   bool wrapScaffold = true,
 }) {
   return ProviderScope(
+    retry: (_, _) => null,
     overrides: overrides,
     child: TranslationProvider(
       child: MuiTheme(

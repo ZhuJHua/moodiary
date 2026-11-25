@@ -12,7 +12,7 @@ import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation_token.dart';
 import 'package:moodiary_sync/src/data/sync_exclusive.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
@@ -27,56 +27,24 @@ typedef ArchiveStores = ({
 });
 
 class LocalArchive {
-  LocalArchive._();
+  const LocalArchive(this.stores, this.logger, this.openDiaries, this.pending);
 
-  static ArchiveStores _repositoryStores() => (
-    diaries: RepoSyncDiaryStore(),
-    categories: RepoSyncCategoryStore(),
-    places: RepoSyncPlaceStore(),
-    tags: RepoSyncTagStore(),
-    tombstones: RepoSyncTombstoneStore(),
-  );
+  final ArchiveStores stores;
+  final SyncLogger logger;
+  final OpenDiaryRegistry openDiaries;
+  final SyncPendingTracker pending;
 
-  static Future<String> export({
-    ArchiveStores? stores,
-    SyncCancellation? cancellation,
+  Future<String> export({
+    required SyncCancellationToken cancellation,
     String? cacheDirectory,
     String? mediaBaseDir,
-  }) {
-    return runSyncExclusive(() async {
-      final source = stores ?? _repositoryStores();
-      final diaries = await source.diaries.getAllDiaries();
-      final categories = await source.categories.getAllCategoriesForSync();
-      final places = await source.places.getAllPlacesForSync();
-      final tags = await source.tags.getAllTagsForSync();
-      final tombstones = await source.tombstones.getAll();
-      final zipPath = p.join(
-        cacheDirectory ?? PlatformService.get().applicationCachePath,
-        _fileName(.now()),
-      );
-      await archive.FastZip.ensureInitialized();
-      final zip = await archive.Zip.newInstance(filePath: zipPath);
-      try {
-        await writeArchive(
-          sink: _RustZipSink(zip),
-          diaries: diaries,
-          categories: categories,
-          places: places,
-          tags: tags,
-          tombstones: tombstones,
-          mediaBaseDir:
-              mediaBaseDir ?? PlatformService.get().applicationSupportPath,
-        );
-      } catch (_) {
-        zip.dispose();
-        try {
-          await File(zipPath).delete();
-        } catch (_) {}
-        rethrow;
-      }
-      zip.dispose();
-      return zipPath;
-    }, cancellation: cancellation);
+  }) async {
+    final (path, _) = await _export(
+      cancellation: cancellation,
+      cacheDirectory: cacheDirectory,
+      mediaBaseDir: mediaBaseDir,
+    );
+    return path;
   }
 
   static String _fileName(DateTime now) {
@@ -85,21 +53,33 @@ class LocalArchive {
         '-${two(now.hour)}${two(now.minute)}${two(now.second)}.zip';
   }
 
-  static Future<(String, int)> exportDelta({
+  Future<(String, int)> exportDelta({
     required SyncManifest remote,
     required String zipPassword,
     String? cacheDirectory,
     String? mediaBaseDir,
-    ArchiveStores? stores,
-    SyncCancellation? cancellation,
+    required SyncCancellationToken cancellation,
+  }) => _export(
+    cancellation: cancellation,
+    remote: remote,
+    zipPassword: zipPassword,
+    cacheDirectory: cacheDirectory,
+    mediaBaseDir: mediaBaseDir,
+  );
+
+  Future<(String, int)> _export({
+    required SyncCancellationToken cancellation,
+    SyncManifest? remote,
+    String? zipPassword,
+    String? cacheDirectory,
+    String? mediaBaseDir,
   }) {
-    return runSyncExclusive(() async {
-      final source = stores ?? _repositoryStores();
-      final diaries = await source.diaries.getAllDiaries();
-      final categories = await source.categories.getAllCategoriesForSync();
-      final places = await source.places.getAllPlacesForSync();
-      final tags = await source.tags.getAllTagsForSync();
-      final tombstones = await source.tombstones.getAll();
+    return runSyncExclusive(cancellation, (token) async {
+      final diaries = await stores.diaries.getAllDiaries();
+      final categories = await stores.categories.getAllCategoriesForSync();
+      final places = await stores.places.getAllPlacesForSync();
+      final tags = await stores.tags.getAllTagsForSync();
+      final tombstones = await stores.tombstones.getAll();
       final zipPath = p.join(
         cacheDirectory ?? PlatformService.get().applicationCachePath,
         _fileName(.now()),
@@ -109,6 +89,7 @@ class LocalArchive {
       final int count;
       try {
         count = await writeArchive(
+          cancellation: token,
           sink: _RustZipSink(zip, zipPassword),
           diaries: diaries,
           categories: categories,
@@ -128,20 +109,16 @@ class LocalArchive {
       }
       zip.dispose();
       return (zipPath, count);
-    }, cancellation: cancellation);
+    });
   }
 
-  static Future<SyncManifest> buildLocalManifest({
-    ArchiveStores? stores,
-    String? mediaBaseDir,
-  }) async {
-    final source = stores ?? _repositoryStores();
+  Future<SyncManifest> buildLocalManifest({String? mediaBaseDir}) async {
     return buildManifest(
-      diaries: await source.diaries.getAllDiaries(),
-      categories: await source.categories.getAllCategoriesForSync(),
-      places: await source.places.getAllPlacesForSync(),
-      tags: await source.tags.getAllTagsForSync(),
-      tombstones: await source.tombstones.getAll(),
+      diaries: await stores.diaries.getAllDiaries(),
+      categories: await stores.categories.getAllCategoriesForSync(),
+      places: await stores.places.getAllPlacesForSync(),
+      tags: await stores.tags.getAllTagsForSync(),
+      tombstones: await stores.tombstones.getAll(),
       mediaBaseDir:
           mediaBaseDir ?? PlatformService.get().applicationSupportPath,
     );
@@ -199,6 +176,7 @@ class LocalArchive {
 
   @visibleForTesting
   static Future<int> writeArchive({
+    required SyncCancellationToken cancellation,
     required ArchiveSink sink,
     required List<Diary> diaries,
     required List<Category> categories,
@@ -241,6 +219,9 @@ class LocalArchive {
     final addedMedia = <String>{};
 
     for (final entry in included.entries) {
+      if (cancellation.isRequested) {
+        throw StateError('Archive export cancelled');
+      }
       if (entry.value.deleted) continue;
       if (entry.key.startsWith(SyncKeys.diaryPrefix)) {
         final id = entry.key.substring(SyncKeys.diaryPrefix.length);
@@ -291,17 +272,13 @@ class LocalArchive {
     return included.length;
   }
 
-  static Future<SyncReport> import(
+  Future<SyncReport> import(
     String zipPath, {
     String? password,
     archive.CancelToken? cancel,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
-    ArchiveStores? stores,
-    SyncCancellation? cancellation,
-    SyncLogger? logger,
-    OpenDiaryRegistry? openDiaries,
-    SyncPendingTracker? pending,
+    required SyncCancellationToken cancellation,
     String? cacheDirectory,
     ArchiveApplyPolicy policy = const SyncPullPolicy(),
   }) async {
@@ -319,15 +296,7 @@ class LocalArchive {
       return await importDirectory(
         extractDir.path,
         policy: policy,
-        diaryStore: stores?.diaries,
-        categoryStore: stores?.categories,
-        placeStore: stores?.places,
-        tagStore: stores?.tags,
-        tombstoneStore: stores?.tombstones,
         cancellation: cancellation,
-        logger: logger,
-        openDiaries: openDiaries,
-        pending: pending,
         mediaFiles: mediaFiles,
         cipherProvider: cipherProvider,
         cacheDirectory: cacheDirectory,
@@ -351,21 +320,12 @@ class LocalArchive {
     return false;
   }
 
-  @visibleForTesting
-  static Future<SyncReport> importDirectory(
+  Future<SyncReport> importDirectory(
     String dir, {
-    SyncCancellation? cancellation,
-    SyncDiaryStore? diaryStore,
-    SyncCategoryStore? categoryStore,
-    SyncPlaceStore? placeStore,
-    SyncTagStore? tagStore,
-    SyncTombstoneStore? tombstoneStore,
+    required SyncCancellationToken cancellation,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
     int? concurrency,
-    SyncLogger? logger,
-    OpenDiaryRegistry? openDiaries,
-    SyncPendingTracker? pending,
     String? cacheDirectory,
     ArchiveApplyPolicy policy = const SyncPullPolicy(),
   }) async {
@@ -384,24 +344,24 @@ class LocalArchive {
       throw SyncException(l10n.sync.errManifestCorrupt);
     }
     return runSyncExclusive(
-      () => ArchiveApplier(
+      cancellation,
+      (token) => ArchiveApplier(
         backend,
         policy: policy,
         logger: logger,
         openDiaries: openDiaries,
         pending: pending,
         cacheDirectory: cacheDirectory,
-        cancellation: cancellation,
-        diaryStore: diaryStore,
-        categoryStore: categoryStore,
-        placeStore: placeStore,
-        tagStore: tagStore,
-        tombstoneStore: tombstoneStore,
+        cancellation: token,
+        diaryStore: stores.diaries,
+        categoryStore: stores.categories,
+        placeStore: stores.places,
+        tagStore: stores.tags,
+        tombstoneStore: stores.tombstones,
         mediaFiles: mediaFiles,
         cipherProvider: cipher,
         concurrency: concurrency ?? 4,
       ).apply(SyncManifest.fromJson(decoded)),
-      cancellation: cancellation,
     );
   }
 }

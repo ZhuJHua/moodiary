@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_semantic/moodiary_semantic.dart';
@@ -75,25 +74,24 @@ void main() {
 
   setUpAll(() {
     loadSqliteVec();
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
     db = MoodiaryDatabase.forTesting(
       NativeDatabase.memory(
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
       ),
     );
+    addTearDown(db.close);
     repo = DiaryRepository(db);
   });
 
   setUp(() async {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
     MoodiaryKVs.embeddingIndexStale.remove();
     await db.clearAll();
     embedder = FakeEmbedder();
     openDiaries = OpenDiaryRegistry();
+    addTearDown(openDiaries.dispose);
     index = EmbedIndexService(db, embedder, openDiaries);
-  });
-
-  tearDownAll(() async {
-    await db.close();
   });
 
   Future<int> queueCount() async =>

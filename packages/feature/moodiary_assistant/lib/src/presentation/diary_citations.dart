@@ -1,12 +1,12 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
 const double _kRailCardWidth = 148;
 
-class DiaryCitations extends StatefulWidget {
+class DiaryCitations extends ConsumerStatefulWidget {
   final List<String> ids;
   final bool raised;
   final VoidCallback? onRemove;
@@ -19,10 +19,10 @@ class DiaryCitations extends StatefulWidget {
   });
 
   @override
-  State<DiaryCitations> createState() => _DiaryCitationsState();
+  ConsumerState<DiaryCitations> createState() => _DiaryCitationsState();
 }
 
-class _DiaryCitationsState extends State<DiaryCitations> {
+class _DiaryCitationsState extends ConsumerState<DiaryCitations> {
   final Map<String, Diary?> _diaries = {};
 
   @override
@@ -38,7 +38,7 @@ class _DiaryCitationsState extends State<DiaryCitations> {
   }
 
   Future<void> _load() async {
-    final repo = getIt<DiaryRepository>();
+    final repo = ref.read(diaryRepositoryProvider);
     final missing = [
       for (final id in widget.ids)
         if (!_diaries.containsKey(id)) id,

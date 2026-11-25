@@ -1,7 +1,5 @@
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
 enum MoodPalette {
@@ -22,14 +20,9 @@ enum MoodPalette {
   static MoodPalette fromName(String? name) =>
       name == blueOrange.name ? blueOrange : classic;
 
-  // Standalone component trees can use the default without app storage.
-  static MoodPalette get _current => getIt.isRegistered<IKVStorage>()
-      ? fromName(MoodiaryKVs.moodPalette.get())
-      : classic;
-
   static MoodPalette of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<MoodPaletteScope>()?.palette ??
-      _current;
+      classic;
 
   Color color(DiaryMood mood, ColorScheme colorScheme) => colorScheme.harmonize(
     Color((colorScheme.brightness == .dark ? _dark : _light)[mood.index]),

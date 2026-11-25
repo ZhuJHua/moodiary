@@ -2,10 +2,8 @@ import 'dart:convert';
 import 'dart:io' show File;
 import 'dart:typed_data';
 
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
@@ -62,18 +60,11 @@ class LanSendResult {
 class LanSender {
   LanSender({
     this._crypto = const RustLanCrypto(),
-    IHttpClient? http,
-    Future<(String, int)> Function(SyncManifest remote, String zipPassword)?
-    archiveBuilder,
+    required IHttpClient http,
+    required this._archiveBuilder,
     Future<String> Function()? appVersion,
-  }) : _client = http ?? getIt<IHttpClient>(),
-       _archiveBuilder = archiveBuilder ?? _buildArchive,
+  }) : _client = http,
        _appVersion = appVersion ?? lanLocalAppVersion;
-
-  static Future<(String, int)> _buildArchive(
-    SyncManifest remote,
-    String zipPassword,
-  ) => LocalArchive.exportDelta(remote: remote, zipPassword: zipPassword);
 
   final LanCrypto _crypto;
   final Future<(String, int)> Function(SyncManifest, String) _archiveBuilder;

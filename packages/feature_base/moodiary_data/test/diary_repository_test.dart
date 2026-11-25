@@ -6,7 +6,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -105,9 +104,9 @@ void main() {
   late DiaryRepository repo;
 
   setUp(() {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
   });
-  tearDown(getIt.reset);
 
   MoodiaryDatabase openDb() => MoodiaryDatabase.forTesting(
     NativeDatabase.memory(
@@ -118,18 +117,18 @@ void main() {
   void freshDatabasePerTest() {
     setUp(() {
       db = openDb();
+      addTearDown(() => db.close());
       repo = DiaryRepository(db);
     });
-    tearDown(() => db.close());
   }
 
   void oneDatabaseForGroup() {
     setUpAll(() {
       db = openDb();
+      addTearDown(() => db.close());
       repo = DiaryRepository(db);
     });
     setUp(() => db.clearAll());
-    tearDownAll(() => db.close());
   }
 
   Future<List<Diary>> search(String word) async => [

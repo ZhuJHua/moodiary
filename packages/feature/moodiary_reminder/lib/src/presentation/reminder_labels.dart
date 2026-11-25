@@ -39,7 +39,7 @@ String reminderDaysLabel(Translations l10n, Set<int> days) {
   }
 }
 
-String reminderStatusLabel(Translations l10n, ReminderService service) =>
+String reminderStatusLabel(Translations l10n, ReminderState service) =>
     service.reminders.isEmpty
     ? l10n.reminder.addFirst
     : !service.enabled

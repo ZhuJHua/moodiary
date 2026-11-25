@@ -10,6 +10,7 @@ import 'src/presentation/assistant_provider_picker_page.dart';
 import 'src/presentation/assistant_setting_page.dart';
 import 'src/presentation/memory_list_page.dart';
 
+export 'src/assistant_providers.dart';
 export 'src/data/assistant.dart';
 export 'src/data/impl/rig_assistant.dart';
 export 'src/presentation/assistant_page.dart';

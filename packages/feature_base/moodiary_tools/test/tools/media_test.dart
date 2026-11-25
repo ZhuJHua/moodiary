@@ -6,7 +6,6 @@ import 'package:fast_image/fast_image.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -75,13 +74,11 @@ void main() {
       imageDir: '${root.path}/unused-images',
       thumbDir: '${root.path}/unused-thumbs',
     );
-    if (!getIt.isRegistered<IKVStorage>()) {
-      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-    }
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
   });
 
   tearDownAll(() async {
-    await getIt.reset();
     if (root.existsSync()) root.deleteSync(recursive: true);
   });
 
@@ -107,13 +104,13 @@ void main() {
           name.isEmpty ? '${root.path}/$kind' : '${root.path}/$kind/$name',
     );
     db = openTestDatabase();
+    addTearDown(db.close);
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
     buildServer();
   });
 
   tearDown(() async {
-    await db.close();
     final scratch = Directory(AppFiles.getCachePath('import/mcp'));
     if (scratch.existsSync()) expect(scratch.listSync(), isEmpty);
     for (final entry in root.listSync()) {

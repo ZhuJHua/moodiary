@@ -1,14 +1,20 @@
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation_token.dart';
 
 import '../archive_apply.dart';
 import '../sync.dart';
 import 'local_archive.dart';
 
-@LazySingleton(as: IBackupArchive)
 class SyncBackupArchive implements IBackupArchive {
-  const SyncBackupArchive()
-    : this.withDependencies(LocalArchive.export, _restore);
+  SyncBackupArchive(LocalArchive archive)
+    : this.withDependencies(
+        () => archive.export(cancellation: SyncCancellationToken()),
+        (path) => archive.import(
+          path,
+          policy: const RestorePolicy(),
+          cancellation: SyncCancellationToken(),
+        ),
+      );
 
   const SyncBackupArchive.withDependencies(
     this._exportArchive,
@@ -17,9 +23,6 @@ class SyncBackupArchive implements IBackupArchive {
 
   final Future<String> Function() _exportArchive;
   final Future<SyncReport> Function(String) _importArchive;
-
-  static Future<SyncReport> _restore(String zipPath) =>
-      LocalArchive.import(zipPath, policy: const RestorePolicy());
 
   @override
   Future<String> export() => _exportArchive();

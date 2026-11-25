@@ -1,13 +1,10 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
-import 'package:injectable/injectable.dart';
-
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
-@lazySingleton
 class LlmProviderRepository {
   LlmProviderRepository(this._db, this._secure);
 
@@ -17,6 +14,8 @@ class LlmProviderRepository {
   static String _keyOf(String id) => 'llm_key_$id';
 
   final StreamController<void> _events = StreamController<void>.broadcast();
+
+  Future<void> dispose() => _events.close();
 
   Stream<void> get providerEvents => _events.stream;
 
@@ -72,7 +71,7 @@ class LlmProviderRepository {
     await _db
         .into(_db.llmProviders)
         .insertOnConflictUpdate(_toCompanion(provider));
-    _events.add(null);
+    if (!_events.isClosed) _events.add(null);
   }
 
   Future<void> deleteProvider(String id) async {
@@ -81,7 +80,7 @@ class LlmProviderRepository {
     if (MoodiaryKVs.assistantActiveProviderId.get() == id) {
       MoodiaryKVs.assistantActiveProviderId.set('');
     }
-    _events.add(null);
+    if (!_events.isClosed) _events.add(null);
   }
 
   Future<void> reorderProviders(List<String> orderedIds) async {
@@ -95,7 +94,7 @@ class LlmProviderRepository {
         );
       }
     });
-    _events.add(null);
+    if (!_events.isClosed) _events.add(null);
   }
 
   Future<int> nextSortOrder() async {

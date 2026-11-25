@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart';
 import 'package:moodiary_mcp/src/tools/register_moodiary_tools.dart';
 import 'package:moodiary_mcp/src/transport/mcp_http_endpoint.dart';
@@ -28,20 +28,19 @@ void main() {
   InternetAddress? remoteAddress;
   final servers = <McpServer>[];
 
-  setUpAll(() {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-    getIt.registerSingleton<ISecureKVStorage>(MemorySecureKVStorage());
+  setUp(() {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+    SecureKVStore.installForTesting(MemorySecureKVStorage());
+    addTearDown(SecureKVStore.resetForTesting);
   });
-
-  tearDownAll(getIt.reset);
 
   setUp(() async {
     now = DateTime.utc(2026);
     remoteAddress = InternetAddress.loopbackIPv4;
     servers.clear();
-    getIt<IKVStorage>().clear();
-    await getIt<ISecureKVStorage>().clear();
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
     final diaries = DiaryRepository(db);
     await diaries.insertADiary(makeDiary('one', 'A sunny afternoon'));
     endpoint = McpHttpEndpoint(
@@ -63,12 +62,11 @@ void main() {
     );
     await endpoint.start(port: 0, allowLan: false, token: 'secret');
     http = HttpClient();
-  });
 
-  tearDown(() async {
-    http.close(force: true);
-    await endpoint.stop();
-    await db.close();
+    addTearDown(() async {
+      http.close(force: true);
+      await endpoint.stop();
+    });
   });
 
   Future<HttpClientResponse> request({
@@ -305,20 +303,28 @@ void main() {
     final occupied = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(() => occupied.close(force: true));
     MoodiaryKVs.mcpPort.set(occupied.port);
+    final container = ProviderContainer.test(retry: (_, _) => null);
     final service = McpService(
       DiaryRepository(db),
       CategoryRepository(db),
       TagRepository(db),
       MoodInsightsRepository(db),
+      container.read(mcpServerStateProvider.notifier),
     );
     addTearDown(() async {
       await service.stop();
-      service.state.dispose();
+      await service.dispose();
     });
     await service.enable();
-    expect(service.state.value.status, McpServerStatus.failed);
-    expect(service.state.value.failure, McpServerFailure.portInUse);
-    expect(service.state.value.port, occupied.port);
+    expect(
+      container.read(mcpServerStateProvider).status,
+      McpServerStatus.failed,
+    );
+    expect(
+      container.read(mcpServerStateProvider).failure,
+      McpServerFailure.portInUse,
+    );
+    expect(container.read(mcpServerStateProvider).port, occupied.port);
     expect(await service.ensureToken(), hasLength(43));
     expect(await MoodiarySecureKVs.mcpToken.get(), await service.ensureToken());
     expect(MoodiaryKVs.mcpAllowLan.get(), isFalse);

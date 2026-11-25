@@ -6,6 +6,7 @@ export 'src/app_files.dart';
 export 'src/attachment_launcher.dart';
 export 'src/audio_duration.dart';
 export 'src/file_picker.dart';
+export 'src/file_providers.dart';
 export 'src/heif_decoder.dart';
 export 'src/media_exclusive.dart';
 export 'src/media_holds.dart';

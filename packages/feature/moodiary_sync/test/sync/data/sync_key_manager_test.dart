@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/application/remote_wipe.dart';
+import 'package:moodiary_sync/src/application/sync_operation_guard.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
@@ -49,8 +50,15 @@ Future<List<int>> fakeDecrypt({
 }
 
 void main() {
+  late SyncTestEnv env;
+  SyncOperation acquire() {
+    final operation = env.guard.tryAcquire()!;
+    addTearDown(operation.release);
+    return operation;
+  }
+
   setUp(() async {
-    await setUpSyncEnv();
+    env = await setUpSyncEnv();
     SyncKeyManager.deriveKey = fakeDerive;
     SyncKeyManager.aeadEncrypt = fakeEncrypt;
     SyncKeyManager.aeadDecrypt = fakeDecrypt;
@@ -541,6 +549,8 @@ void main() {
       final progress = <int>[];
       final report = await RemoteWipe.run(
         backend,
+        operation: acquire(),
+        logger: env.logger,
         passphrase: null,
         onProgress: (done, total, _) => progress.add(done),
       );
@@ -580,7 +590,12 @@ void main() {
       await SyncKeyManager.storeDek(SyncKeyManager.generateDek());
 
       await expectLater(
-        RemoteWipe.run(backend, passphrase: null),
+        RemoteWipe.run(
+          backend,
+          operation: acquire(),
+          logger: env.logger,
+          passphrase: null,
+        ),
         throwsA(isA<SyncException>()),
       );
       expect(SyncKeyManager.hasKeyConflict('webdav'), isTrue);
@@ -603,7 +618,12 @@ void main() {
           throw const SyncException('timeout');
         }
       };
-      final report = await RemoteWipe.run(backend, passphrase: null);
+      final report = await RemoteWipe.run(
+        backend,
+        operation: acquire(),
+        logger: env.logger,
+        passphrase: null,
+      );
       expect(report.failed, 1);
       expect(report.deleted, 4);
       expect(backend.objects.keys, {'diary/a.json', SyncKeys.manifestPath});

@@ -1,13 +1,11 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'db/database.dart';
 import 'db/db_codec.dart';
 
-@lazySingleton
 class CategoryRepository {
   CategoryRepository(this._db);
 
@@ -17,6 +15,8 @@ class CategoryRepository {
       StreamController<CategoryEvent>.broadcast();
 
   Stream<CategoryEvent> get categoryEvents => _events.stream;
+
+  Future<void> dispose() => _events.close();
 
   static Category _toCategory(CategoryRow r) => Category(
     id: r.id,

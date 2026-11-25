@@ -235,6 +235,7 @@ final class IoTestHttpClient extends IHttpClient {
 
 void main() {
   late io.Directory tmp;
+  late LanReceiveState state;
 
   setUp(() async {
     tmp = await io.Directory.systemTemp.createTemp('lan-transfer-test-');
@@ -254,7 +255,8 @@ void main() {
     required Future<SyncReport> Function(String, String) applier,
   }) => LanReceiverService(
     crypto: FakeLanCrypto(),
-    server: IoTestHttpServer(),
+    createServer: IoTestHttpServer.new,
+    onState: (value) => state = value,
     tempDirPath: tmp.path,
     manifestBuilder: () async => receiverManifest,
     archiveApplier: applier,
@@ -322,7 +324,7 @@ void main() {
         LanSendPhase.applying,
       ]),
     );
-    expect(receiver.state.value, isA<LanReceiveDone>());
+    expect(state, isA<LanReceiveDone>());
   });
 
   test('配对码错误 → 401，明确报错，不触发导入', () async {
@@ -410,7 +412,7 @@ void main() {
       426,
     );
     expect(
-      receiver.state.value,
+      state,
       isA<LanReceiveFailed>().having(
         (s) => s.incompatible,
         'incompatible',
@@ -427,7 +429,7 @@ void main() {
       426,
     );
     expect(
-      receiver.state.value,
+      state,
       isA<LanReceiveFailed>()
           .having((s) => s.incompatible, 'incompatible', isTrue)
           .having((s) => s.message, 'message', contains('2.8.1 (101)')),
@@ -462,6 +464,7 @@ void main() {
       crypto: FakeLanCrypto(),
       http: IoTestHttpClient(),
       appVersion: () async => '2.8.1+101',
+      archiveBuilder: (_, _) async => fail('unexpected archive request'),
     );
     await expectLater(
       sender.send(host: '127.0.0.1', port: server.port, pin: '123456'),
@@ -536,7 +539,7 @@ void main() {
       401,
       reason: '锁死之后连正确配对码也不再放行',
     );
-    expect(receiver.state.value, isA<LanReceiveFailed>());
+    expect(state, isA<LanReceiveFailed>());
   });
 
   test('对方已是最新（条目数 0）→ 不上传', () async {
@@ -595,7 +598,7 @@ void main() {
         ),
       ),
     );
-    expect(receiver.state.value, isA<LanReceiveFailed>());
+    expect(state, isA<LanReceiveFailed>());
   });
 }
 

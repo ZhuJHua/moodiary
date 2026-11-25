@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -37,52 +36,53 @@ abstract class DiarySearchState with _$DiarySearchState {
 class DiarySearchController extends _$DiarySearchController {
   static const _pageSize = 30;
 
-  late final _repository = getIt<DiaryRepository>();
+  late DiaryRepository _repository;
 
   int _seq = 0;
 
   @override
   DiarySearchState build() {
+    _repository = ref.watch(diaryRepositoryProvider);
     unawaited(_repository.warmUpSearch());
     return const DiarySearchState();
   }
 
-  Future<void> search(String text) async {
+  Future<void> search(String text) {
     state = state.copyWith(query: text.trim());
-    await _run();
+    return _run();
   }
 
-  Future<void> setCategory(String? categoryId) async {
+  Future<void> setCategory(String? categoryId) {
     state = state.copyWith(categoryId: categoryId);
-    await _run();
+    return _run();
   }
 
-  Future<void> setTag(String? tagName) async {
+  Future<void> setTag(String? tagName) {
     state = state.copyWith(tagName: tagName);
-    await _run();
+    return _run();
   }
 
-  Future<void> setDatePreset(DateRangePreset preset) async {
+  Future<void> setDatePreset(DateRangePreset preset) {
     state = state.copyWith(
       datePreset: preset,
       customStart: null,
       customEnd: null,
     );
-    await _run();
+    return _run();
   }
 
-  Future<void> setCustomRange(DateTime start, DateTime end) async {
+  Future<void> setCustomRange(DateTime start, DateTime end) {
     state = state.copyWith(
       datePreset: .custom,
       customStart: start,
       customEnd: end,
     );
-    await _run();
+    return _run();
   }
 
-  Future<void> setSort(SearchSort sort) async {
+  Future<void> setSort(SearchSort sort) {
     state = state.copyWith(sort: sort);
-    await _run();
+    return _run();
   }
 
   ({DateTime? start, DateTime? end}) _resolveRange() {
@@ -113,6 +113,7 @@ class DiarySearchController extends _$DiarySearchController {
   }
 
   Future<void> _run() async {
+    final operationRef = ref;
     final trimmed = state.query;
     if (!state.hasSearch) {
       _seq++;
@@ -150,7 +151,7 @@ class DiarySearchController extends _$DiarySearchController {
       ),
     ).wait;
     stopwatch.stop();
-    if (!ref.mounted || seq != _seq) return;
+    if (!operationRef.mounted || seq != _seq) return;
     state = state.copyWith(
       results: results,
       totalCount: total,
@@ -160,6 +161,7 @@ class DiarySearchController extends _$DiarySearchController {
   }
 
   Future<void> loadMore() async {
+    final operationRef = ref;
     if (state.isSearching || state.isLoadingMore || !state.hasMore) return;
     final seq = _seq;
     state = state.copyWith(isLoadingMore: true);
@@ -174,7 +176,7 @@ class DiarySearchController extends _$DiarySearchController {
       limit: _pageSize,
       offset: state.results.length,
     );
-    if (!ref.mounted || seq != _seq) return;
+    if (!operationRef.mounted || seq != _seq) return;
     final results = [...state.results, ...next];
     state = state.copyWith(
       results: results,

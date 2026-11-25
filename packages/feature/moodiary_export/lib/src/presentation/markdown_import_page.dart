@@ -1,6 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
@@ -10,14 +10,14 @@ import '../data/import/import_media_stage.dart';
 import '../data/import/import_source.dart';
 import '../data/import/markdown_importer.dart';
 
-class MarkdownImportPage extends StatefulWidget {
+class MarkdownImportPage extends ConsumerStatefulWidget {
   const MarkdownImportPage({super.key});
 
   @override
-  State<MarkdownImportPage> createState() => _MarkdownImportPageState();
+  ConsumerState<MarkdownImportPage> createState() => _MarkdownImportPageState();
 }
 
-class _MarkdownImportPageState extends State<MarkdownImportPage> {
+class _MarkdownImportPageState extends ConsumerState<MarkdownImportPage> {
   MarkdownImportSource? _source;
   String? _fileName;
   bool _scanning = false;
@@ -145,9 +145,9 @@ class _MarkdownImportPageState extends State<MarkdownImportPage> {
 
   Future<void> _pickFile() async {
     final l10n = context.l10n;
-    final file = await getIt<IFilePicker>().pickFile(
-      allowedExtensions: ['zip', 'md'],
-    );
+    final file = await ref
+        .read(filePickerProvider)
+        .pickFile(allowedExtensions: ['zip', 'md']);
     if (file == null || !mounted) return;
 
     final previous = _source;
@@ -247,10 +247,11 @@ class _MarkdownImportPageState extends State<MarkdownImportPage> {
     });
     try {
       final importer = MarkdownImporter(
-        diaries: getIt<DiaryRepository>(),
-        categories: getIt<CategoryRepository>(),
-        places: getIt<PlaceRepository>(),
-        media: AppImportMediaStore(getIt<IHeifDecoder>()),
+        diaries: ref.read(diaryRepositoryProvider),
+        categories: ref.read(categoryRepositoryProvider),
+        places: ref.read(placeRepositoryProvider),
+        tags: ref.read(tagRepositoryProvider),
+        media: AppImportMediaStore(ref.read(heifDecoderProvider)),
       );
       final report = await importer.run(
         source,

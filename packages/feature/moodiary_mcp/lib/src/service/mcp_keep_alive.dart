@@ -1,12 +1,38 @@
 import 'dart:async';
+import 'dart:io';
 
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:synchronized/synchronized.dart';
 
 import 'mcp_service.dart';
+
+part 'mcp_keep_alive.g.dart';
+
+@Riverpod(keepAlive: true)
+McpKeepAlive mcpKeepAlive(Ref ref) {
+  final keepAlive = McpKeepAlive(
+    ref.watch(mcpServiceProvider),
+    ref.watch(notificationPermissionProvider),
+    () => ref.read(mcpServerStateProvider).running,
+  );
+  if (Platform.isAndroid) {
+    BackgroundKeepAliveEvents.setUp(keepAlive);
+    ref.listen<McpServerState>(mcpServerStateProvider, (prev, next) {
+      if (prev == null || prev.running != next.running) {
+        unawaited(keepAlive._apply(next.running));
+      }
+    }, fireImmediately: true);
+    ref.onDispose(() {
+      BackgroundKeepAliveEvents.setUp(null);
+      unawaited(keepAlive._apply(false));
+    });
+  }
+  return keepAlive;
+}
 
 enum KeepAlivePermission { batteryOptimization, notifications }
 
@@ -23,12 +49,9 @@ final class KeepAlivePermissionStatus {
 
 /// Runs Android's foreground service while MCP is running. Native calls
 /// occur only when that state changes.
-@lazySingleton
 class McpKeepAlive implements BackgroundKeepAliveEvents {
-  McpKeepAlive(this._server, this._notificationPermission) {
-    BackgroundKeepAliveEvents.setUp(this);
-    _server.state.addListener(_onServerStateChanged);
-  }
+  McpKeepAlive(this._server, this._notificationPermission, this._running);
+  final bool Function() _running;
 
   final McpService _server;
   final NotificationPermission _notificationPermission;
@@ -37,9 +60,11 @@ class McpKeepAlive implements BackgroundKeepAliveEvents {
   Future<void> onStopRequested() => _server.disable();
 
   /// Last value handed to the native keep-alive; `null` means unknown.
+  final _transitions = Lock();
   bool? _keepAliveRunning;
 
-  Future<void> restore() => _apply();
+  Future<void> restore() =>
+      Platform.isAndroid ? _apply(_running()) : Future.value();
 
   /// Failed native reads fall back to ungranted permissions.
   Future<List<KeepAlivePermissionStatus>> statuses() async {
@@ -87,11 +112,8 @@ class McpKeepAlive implements BackgroundKeepAliveEvents {
 
   Future<void> openAppSettings() => BackgroundKeepAliveApi().openAppSettings();
 
-  void _onServerStateChanged() => unawaited(_apply());
-
-  Future<void> _apply() async {
+  Future<void> _apply(bool shouldRun) => _transitions.synchronized(() async {
     try {
-      final shouldRun = _server.state.value.running;
       if (shouldRun == _keepAliveRunning) return;
       if (!shouldRun && _keepAliveRunning == null) {
         // A cold start with MCP disabled must not call native code.
@@ -113,5 +135,5 @@ class McpKeepAlive implements BackgroundKeepAliveEvents {
         stackTrace: s,
       );
     }
-  }
+  });
 }

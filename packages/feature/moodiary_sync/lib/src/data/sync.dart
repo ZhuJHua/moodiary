@@ -36,10 +36,6 @@ abstract class IRemoteSyncBackend implements RemoteObjectStore {
 
   Future<List<String>> savedOptions();
 
-  Future<void> saveOptions(List<String> options);
-
-  Future<void> clearOptions();
-
   Future<void> testConnection();
 
   Future<List<String>> listObjects();

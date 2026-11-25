@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/application/re_cipher.dart';
+import 'package:moodiary_sync/src/application/sync_operation_guard.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
@@ -30,6 +31,8 @@ class _TestCipher extends SyncCipher {
 }
 
 void main() {
+  late SyncTestEnv env;
+  late SyncOperation operation;
   late SyncLogger logger;
   late Directory cacheRoot;
 
@@ -41,7 +44,10 @@ void main() {
   tearDownAll(() => cacheRoot.deleteSync(recursive: true));
 
   setUp(() async {
-    logger = (await setUpSyncEnv()).logger;
+    env = await setUpSyncEnv();
+    logger = env.logger;
+    operation = env.guard.tryAcquire()!;
+    addTearDown(operation.release);
   });
   tearDown(tearDownSyncEnv);
 
@@ -71,8 +77,9 @@ void main() {
       final data = {'id': 'a', 'deleted': true};
       backend.objects[path] = jsonBytes(data);
       const encrypted = _TestCipher();
-      final converter = CloudReCipher(backend, logger: logger);
+      final converter = CloudReCipher(backend, logger);
       final forward = await converter.run(
+        operation,
         from: SyncCipher.plaintext,
         to: encrypted,
       );
@@ -80,6 +87,7 @@ void main() {
       expect(forward.failed, 1);
       expect(SyncCipher.isCipherText(backend.objects[path]!), isTrue);
       final reverse = await converter.run(
+        operation,
         from: encrypted,
         to: SyncCipher.plaintext,
       );
@@ -103,7 +111,8 @@ void main() {
     };
 
     await expectLater(
-      CloudReCipher(backend, logger: logger).run(
+      CloudReCipher(backend, logger).run(
+        operation,
         from: SyncCipher.withKey(List.filled(32, 1)),
         to: SyncCipher.plaintext,
       ),
@@ -127,7 +136,8 @@ void main() {
     });
     backend.objects['media/image/p.jpg'] = Uint8List.fromList([1, 2, 3]);
 
-    await CloudReCipher(backend, logger: logger).run(
+    await CloudReCipher(backend, logger).run(
+      operation,
       from: SyncCipher.withKey(List.filled(32, 1)),
       to: SyncCipher.plaintext,
     );
@@ -148,7 +158,8 @@ void main() {
     });
     backend.objects['media/file/file-a.pdf'] = Uint8List.fromList([1, 2, 3]);
 
-    await CloudReCipher(backend, logger: logger).run(
+    await CloudReCipher(backend, logger).run(
+      operation,
       from: SyncCipher.withKey(List.filled(32, 1)),
       to: SyncCipher.plaintext,
     );
@@ -161,7 +172,8 @@ void main() {
     backend.objects[SyncKeys.manifestPath] = manifestBytes('mine');
     backend.objects[SyncKeys.diaryObjectPath('a')] = jsonBytes({'id': 'a'});
 
-    await CloudReCipher(backend, logger: logger).run(
+    await CloudReCipher(backend, logger).run(
+      operation,
       from: SyncCipher.withKey(List.filled(32, 1)),
       to: SyncCipher.plaintext,
     );

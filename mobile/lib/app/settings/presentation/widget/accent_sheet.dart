@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
@@ -20,34 +19,32 @@ class AccentSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(appSettingsControllerProvider);
     final modes = [
       ThemeAccentMode.neutral,
-      if (getIt<ThemeManager>().supportDynamic) ThemeAccentMode.system,
+      if (settings.supportDynamic) ThemeAccentMode.system,
       ThemeAccentMode.custom,
     ];
 
+    final index = ref.watch(kvValueProvider(MoodiaryKVs.themeAccentMode));
+    final current = index >= 0 && index < ThemeAccentMode.values.length
+        ? ThemeAccentMode.values[index]
+        : ThemeAccentMode.neutral;
     return MSheetScaffold<void>(
       title: context.l10n.app.accentTitle,
       icon: LucideIcons.palette,
-      child: ValueListenableBuilder<int>(
-        valueListenable: MoodiaryKVs.themeAccentMode.getNotifier(),
-        builder: (context, index, _) {
-          final current = index >= 0 && index < ThemeAccentMode.values.length
-              ? ThemeAccentMode.values[index]
-              : ThemeAccentMode.neutral;
-          return Column(
-            crossAxisAlignment: .stretch,
-            mainAxisSize: .min,
-            children: [
-              for (final mode in modes)
-                _AccentModeRow(
-                  mode: mode,
-                  selected: mode == current,
-                  onTap: () => _select(context, ref, mode),
-                ),
-            ],
-          );
-        },
+      child: Column(
+        crossAxisAlignment: .stretch,
+        mainAxisSize: .min,
+        children: [
+          for (final mode in modes)
+            _AccentModeRow(
+              mode: mode,
+              selected: mode == current,
+              systemAccentSeed: settings.systemAccentSeed,
+              onTap: () => _select(context, ref, mode),
+            ),
+        ],
       ),
     );
   }
@@ -70,12 +67,14 @@ class AccentSheet extends ConsumerWidget {
 }
 
 class _AccentModeRow extends StatelessWidget {
+  final Color? systemAccentSeed;
   final ThemeAccentMode mode;
   final bool selected;
   final VoidCallback onTap;
 
   const _AccentModeRow({
     required this.mode,
+    required this.systemAccentSeed,
     required this.selected,
     required this.onTap,
   });
@@ -159,7 +158,7 @@ class _AccentModeRow extends StatelessWidget {
       .system => DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: radius,
-          color: getIt<ThemeManager>().systemAccentSeed ?? scheme.primary,
+          color: systemAccentSeed ?? scheme.primary,
         ),
       ),
       .custom => DecoratedBox(

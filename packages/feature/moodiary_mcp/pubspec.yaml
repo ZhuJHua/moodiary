@@ -10,12 +10,13 @@ environment:
   flutter: ">=3.47.0"
 
 dependencies:
+  riverpod_annotation: 4.0.7
+  flutter_riverpod: 3.4.3
   flutter:
     sdk: flutter
 
   gap: 3.0.1
   moodiary_content: 0.0.1
-  moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_router: 0.0.1
   moodiary_semantic: 0.0.1
@@ -29,11 +30,11 @@ dependencies:
   moodiary_storage: 0.0.1
   moodiary_utils: 0.0.1
 
-  injectable: 3.0.0
   mcp_dart: 2.4.3
   synchronized: 3.4.1+2
 
 dev_dependencies:
+  riverpod_generator: 4.0.9
   moodiary_models: 0.0.1
   fast_image: 0.0.1
   flutter_test:
@@ -41,4 +42,3 @@ dev_dependencies:
   moodiary_lint: 0.0.1
   drift: 2.35.0
   build_runner: 2.16.1
-  injectable_generator: 3.1.3

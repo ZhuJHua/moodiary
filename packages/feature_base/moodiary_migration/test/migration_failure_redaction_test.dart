@@ -5,7 +5,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -73,6 +72,7 @@ void main() {
 
   group('内容 schema v2 升级', () {
     late MoodiaryDatabase db;
+    late DiaryRepository repo;
     late Directory support;
     final v1 = jsonEncode({
       'type': 'doc',
@@ -99,16 +99,12 @@ void main() {
 
     setUp(() {
       db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
-      getIt
-        ..registerSingleton<IKVStorage>(MemoryKVStorage())
-        ..registerSingleton<DiaryRepository>(DiaryRepository(db));
+      addTearDown(db.close);
+      KVStore.installForTesting(MemoryKVStorage());
+      addTearDown(KVStore.resetForTesting);
+      repo = DiaryRepository(db);
       final backup = File(EditorMigrationService.contentBackupPath);
       if (backup.existsSync()) backup.deleteSync();
-    });
-
-    tearDown(() async {
-      await getIt.reset();
-      await db.close();
     });
 
     Future<void> rawInsert(String id, String content) => db
@@ -127,12 +123,14 @@ void main() {
         );
 
     test('Markdown conversion crosses the isolate and preserves backup and derived fields', () async {
-      final repo = getIt<DiaryRepository>();
       const markdown = '## Heading\n\n汉 👨‍👩‍👧‍👦 é **bold**';
       final source = Diary.empty(type: DiaryType.markdown)
           .copyWith(content: markdown);
       await repo.insertDiaries([source], index: .skip);
-      expect(await EditorMigrationService.migrate(source), isTrue);
+      expect(
+        await EditorMigrationService.migrate(source, repository: repo),
+        isTrue,
+      );
       final converted = (await repo.getDiaryByBusinessId(source.id))!;
       expect(converted.type, DiaryType.tiptap.value);
       expect(converted.content, MarkdownToTiptap.convert(markdown));
@@ -146,11 +144,14 @@ void main() {
       ) as Map;
       expect(backup['content'], markdown);
       expect(backup['type'], DiaryType.markdown.value);
-      expect(await EditorMigrationService.migrate(converted), isFalse);
+      expect(
+        await EditorMigrationService.migrate(converted, repository: repo),
+        isFalse,
+      );
     });
 
     test('空库直接记为已升级，不进迁移页', () async {
-      await EditorMigrationService.refreshRequiresMigration();
+      await EditorMigrationService.refreshRequiresMigration(repository: repo);
       expect(EditorMigrationService.requiresContentUpgrade, isFalse);
       expect(EditorMigrationService.requiresMigration, isFalse);
       expect(MoodiaryKVs.contentSchemaV2.get(), isTrue);
@@ -158,23 +159,24 @@ void main() {
 
     test('有日记且未升级 → 需要迁移；标志已置位 → 不需要', () async {
       await rawInsert('a', v1);
-      await EditorMigrationService.refreshRequiresMigration();
+      await EditorMigrationService.refreshRequiresMigration(repository: repo);
       expect(EditorMigrationService.requiresContentUpgrade, isTrue);
       expect(EditorMigrationService.requiresMigration, isTrue);
       expect(EditorMigrationService.hasLegacyDiaries, isFalse);
 
       MoodiaryKVs.contentSchemaV2.set(true);
-      await EditorMigrationService.refreshRequiresMigration();
+      await EditorMigrationService.refreshRequiresMigration(repository: repo);
       expect(EditorMigrationService.requiresMigration, isFalse);
     });
 
     test('先写全量备份再归一，成功后才置位；重跑不覆盖原始备份', () async {
       await rawInsert('a', v1);
       await rawInsert('b', v1);
-      await EditorMigrationService.refreshRequiresMigration();
+      await EditorMigrationService.refreshRequiresMigration(repository: repo);
 
       final progress = <int>[];
       final changed = await EditorMigrationService.upgradeContent(
+        repository: repo,
         onProgress: (done, total) => progress.add(done),
       );
       expect(changed, 2);
@@ -190,15 +192,13 @@ void main() {
       expect(saved.map((d) => d['id']), unorderedEquals(['a', 'b']));
       expect(saved.every((d) => d['content'] == v1), isTrue);
 
-      final upgraded = (await getIt<DiaryRepository>().getDiaryByBusinessId(
-        'a',
-      ))!;
+      final upgraded = (await repo.getDiaryByBusinessId('a'))!;
       expect(upgraded.content, isNot(contains('filename')));
       expect(upgraded.audioName, ['audio-1.m4a']);
       expect(upgraded.contentText, '旧正文');
       expect(upgraded.lastModified.microsecondsSinceEpoch, 2);
 
-      await EditorMigrationService.upgradeContent();
+      await EditorMigrationService.upgradeContent(repository: repo);
       final again = jsonDecode(
         File(EditorMigrationService.contentBackupPath).readAsStringSync(),
       ) as Map<String, dynamic>;

@@ -39,7 +39,7 @@ final class LlmProviderPresetControllerProvider
 }
 
 String _$llmProviderPresetControllerHash() =>
-    r'82c553dbf8c9ebf4746ca7ced398d960a8c9e61e';
+    r'b8fea529c3f1e38e9de9e786261668f4a325a796';
 
 abstract class _$LlmProviderPresetController
     extends $AsyncNotifier<List<LlmProviderPreset>> {

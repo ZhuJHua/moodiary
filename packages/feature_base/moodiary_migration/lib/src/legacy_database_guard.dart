@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart' show Font;
@@ -45,16 +44,16 @@ abstract final class LegacyDatabaseGuard {
   }
 
   static Future<void> abandon({
-    DiaryRepository? diaries,
-    FontRepository? fonts,
+    required DiaryRepository diaries,
+    required FontRepository fonts,
   }) => _activeAbandon ??= _abandon(
     diaries,
     fonts,
   ).whenComplete(() => _activeAbandon = null);
 
   static Future<void> _abandon(
-    DiaryRepository? diaries,
-    FontRepository? fontRepository,
+    DiaryRepository diaries,
+    FontRepository fonts,
   ) async {
     switch (await probe()) {
       case .none:
@@ -97,8 +96,7 @@ abstract final class LegacyDatabaseGuard {
     }
     _state = .abandoning;
     await Directory(destination).create(recursive: true);
-    final references = await (diaries ?? getIt<DiaryRepository>())
-        .collectReferencedMedia();
+    final references = await diaries.collectReferencedMedia();
     if (references.images.isEmpty &&
         references.audios.isEmpty &&
         references.videos.isEmpty &&
@@ -117,7 +115,6 @@ abstract final class LegacyDatabaseGuard {
       destination,
     );
     await AppFiles.initCreateDir();
-    final fonts = fontRepository ?? getIt<FontRepository>();
     // 字体登记是尽力而为：坏字体文件会让整次扫描抛错，不能因此把放弃卡死在拦截页。
     // 文件本身留在 font/ 目录不动；SQLite 写入失败仍然抛出，保留 journal 重试。
     List<Font> diskFonts;

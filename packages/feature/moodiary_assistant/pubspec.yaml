@@ -17,7 +17,6 @@ dependencies:
   moodiary_semantic: 0.0.1
   moodiary_components: 0.0.1
   moodiary_data: 0.0.1
-  moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_http: 0.0.1
   moodiary_i18n: 0.0.1
@@ -37,7 +36,6 @@ dependencies:
   json_schema_builder: 0.1.7
   url_launcher: 6.3.2
   meta: 1.19.0
-  injectable: 3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -45,4 +43,3 @@ dev_dependencies:
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
   riverpod_generator: 4.0.9
-  injectable_generator: 3.1.3

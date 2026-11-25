@@ -70,7 +70,7 @@ class DiarySettingPage extends StatelessWidget {
   }
 }
 
-class _KvSwitchTile extends StatelessWidget {
+class _KvSwitchTile extends ConsumerWidget {
   final MoodiaryKVs<bool> kv;
   final String title;
   final String? subtitle;
@@ -78,17 +78,13 @@ class _KvSwitchTile extends StatelessWidget {
   const _KvSwitchTile({required this.kv, required this.title, this.subtitle});
 
   @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: kv.getNotifier(),
-      builder: (context, value, _) {
-        return SettingSwitchListTile(
-          title: title,
-          subtitle: subtitle,
-          value: value,
-          onChanged: (v) => kv.set(v),
-        );
-      },
+  Widget build(BuildContext context, WidgetRef ref) {
+    final value = ref.watch(kvValueProvider(kv));
+    return SettingSwitchListTile(
+      title: title,
+      subtitle: subtitle,
+      value: value,
+      onChanged: (v) => kv.set(v),
     );
   }
 }
@@ -109,20 +105,16 @@ class _GatedKvSwitchTile extends ConsumerWidget {
     final key = ref
         .watch(secretKvProvider(MoodiarySecureKVs.qweatherKey))
         .value;
-    return ValueListenableBuilder(
-      valueListenable: MoodiaryKVs.qweatherApiHost.getNotifierOr(''),
-      builder: (context, host, _) {
-        final ready = host.isNotEmpty && (key?.isNotEmpty ?? false);
-        if (ready) {
-          return _KvSwitchTile(kv: kv, title: title, subtitle: subtitle);
-        }
-        return SettingListTile(
-          title: title,
-          subtitle: context.l10n.app.qweatherRequired,
-          trailing: const Switch(value: false, onChanged: null),
-          onTap: () => const ServicesRoute().push(context),
-        );
-      },
+    final host = ref.watch(kvValueOrProvider(MoodiaryKVs.qweatherApiHost, ''));
+    final ready = host.isNotEmpty && (key?.isNotEmpty ?? false);
+    if (ready) {
+      return _KvSwitchTile(kv: kv, title: title, subtitle: subtitle);
+    }
+    return SettingListTile(
+      title: title,
+      subtitle: context.l10n.app.qweatherRequired,
+      trailing: const Switch(value: false, onChanged: null),
+      onTap: () => const ServicesRoute().push(context),
     );
   }
 }

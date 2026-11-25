@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/src/application/llm_provider_preset_controller.dart';
-import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_assistant/src/presentation/catalog_error.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -28,7 +27,7 @@ class _AssistantProviderPickerPageState
     if (_refreshing) return;
     setState(() => _refreshing = true);
     try {
-      await getIt<LlmPresetRepository>().refresh();
+      await ref.read(llmPresetRepositoryProvider).refresh();
       if (!mounted) return;
       ref.invalidate(llmProviderPresetControllerProvider);
       toast.success(message: context.l10n.assistant.llmPickerRefreshed);
@@ -126,7 +125,7 @@ class _AssistantProviderPickerPageState
                 padding: const .only(bottom: 8),
                 child: _PresetCard(preset: p, onTap: () => _openPreset(p)),
               ),
-            _UpdatedFooter(at: getIt<LlmPresetRepository>().cachedAt),
+            _UpdatedFooter(at: ref.read(llmPresetRepositoryProvider).cachedAt),
           ],
         ],
       ),

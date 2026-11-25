@@ -8,6 +8,7 @@ export 'src/application/edit_controller.dart';
 export 'src/data/geo_repository.dart';
 export 'src/data/qweather_config.dart';
 export 'src/data/weather_repository.dart';
+export 'src/editor_providers.dart';
 export 'src/media.dart';
 export 'src/moodiary_editor.dart';
 export 'src/presentation/widget/category_picker_sheet.dart';

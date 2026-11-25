@@ -2,12 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
-import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
@@ -55,18 +52,15 @@ class LanReceiveFailed extends LanReceiveState {
 class LanReceiverService {
   LanReceiverService({
     this._crypto = const RustLanCrypto(),
-    this._server,
-    Future<SyncManifest> Function()? manifestBuilder,
-    Future<SyncReport> Function(String zipPath, String zipPassword)?
-    archiveApplier,
+    required this._createServer,
+    required this._onState,
+    required this._manifestBuilder,
+    required this._archiveApplier,
     this._tempDirPath,
     Future<String> Function()? appVersion,
-  }) : _manifestBuilder = manifestBuilder ?? LocalArchive.buildLocalManifest,
-       _archiveApplier = archiveApplier ?? _applyArchive,
-       _appVersion = appVersion ?? lanLocalAppVersion;
+  }) : _appVersion = appVersion ?? lanLocalAppVersion;
 
-  static Future<SyncReport> _applyArchive(String zipPath, String zipPassword) =>
-      LocalArchive.import(zipPath, password: zipPassword);
+  final IHttpServer Function() _createServer;
 
   final LanCrypto _crypto;
   final Future<SyncManifest> Function() _manifestBuilder;
@@ -74,9 +68,7 @@ class LanReceiverService {
   final String? _tempDirPath;
   final Future<String> Function() _appVersion;
 
-  final ValueNotifier<LanReceiveState> state = ValueNotifier(
-    const LanReceiveWaiting(),
-  );
+  final void Function(LanReceiveState) _onState;
 
   IHttpServer? _server;
   late String pin;
@@ -97,22 +89,31 @@ class LanReceiverService {
   int get port => _server!.port;
 
   Future<void> start() async {
-    version = await _appVersion();
-    pin = lanGeneratePin();
-    _salt = lanRandomHex(16);
-    _key = await _crypto.deriveKey(salt: _salt, pin: pin);
-    _usedNonces.clear();
-    _authFailures = 0;
-    _authLocked = false;
-    final server = _server ??= getIt<IHttpServer>();
-    await server.start(
-      handler: _handle,
-      preferredPort: lanDefaultPort,
-      spoolDir: _tempDir,
-      onBodyProgress: (received, total) {
-        state.value = LanReceiveReceiving(received: received, total: total);
-      },
-    );
+    if (_server != null) throw StateError('LAN receiver already started');
+    final server = _server = _createServer();
+    try {
+      version = await _appVersion();
+      pin = lanGeneratePin();
+      _salt = lanRandomHex(16);
+      _key = await _crypto.deriveKey(salt: _salt, pin: pin);
+      _usedNonces.clear();
+      _authFailures = 0;
+      _authLocked = false;
+      if (!identical(_server, server)) return;
+      await server.start(
+        handler: _handle,
+        preferredPort: lanDefaultPort,
+        spoolDir: _tempDir,
+        onBodyProgress: (received, total) {
+          _onState(LanReceiveReceiving(received: received, total: total));
+        },
+      );
+      if (!identical(_server, server)) await server.stop();
+    } catch (_) {
+      if (identical(_server, server)) _server = null;
+      await server.stop();
+      rethrow;
+    }
   }
 
   Future<void> stop() async {
@@ -146,7 +147,7 @@ class LanReceiverService {
       sender: lanDisplayVersion(request.headers[lanVersionHeader]),
       receiver: lanDisplayVersion(version),
     );
-    state.value = LanReceiveFailed(message, incompatible: true);
+    _onState(LanReceiveFailed(message, incompatible: true));
     return .text(HttpStatus.upgradeRequired, message);
   }
 
@@ -164,7 +165,7 @@ class LanReceiverService {
     }
     if (++_authFailures >= lanMaxAuthFailures) {
       _authLocked = true;
-      state.value = LanReceiveFailed(l10n.sync.lanAuthLocked, locked: true);
+      _onState(LanReceiveFailed(l10n.sync.lanAuthLocked, locked: true));
       return .text(HttpStatus.unauthorized, l10n.sync.lanAuthLocked);
     }
     return .text(HttpStatus.unauthorized, '配对码不正确');
@@ -190,7 +191,7 @@ class LanReceiverService {
     _busy = true;
     File? inlineSpool;
     try {
-      state.value = const LanReceiveImporting();
+      _onState(const LanReceiveImporting());
       String zipPath;
       if (request.bodyFilePath != null) {
         zipPath = request.bodyFilePath!;
@@ -202,7 +203,7 @@ class LanReceiverService {
         zipPath = inlineSpool.path;
       }
       final report = await _archiveApplier(zipPath, lanZipPassword(_key));
-      state.value = LanReceiveDone(report);
+      _onState(LanReceiveDone(report));
       final body = await _crypto.encrypt(
         _key,
         utf8.encode(
@@ -217,7 +218,7 @@ class LanReceiverService {
       );
       return .ok(body, contentType: 'application/octet-stream');
     } catch (e) {
-      state.value = LanReceiveFailed(e.toString());
+      _onState(LanReceiveFailed(e.toString()));
       rethrow;
     } finally {
       _busy = false;

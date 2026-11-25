@@ -6,14 +6,29 @@ class KVNotifier<T extends Object> extends ValueNotifier<T> {
 
   final T defaultValue;
 
+  bool _hasStoredValue;
+
   KVNotifier._(
-    super.value, {
+    T? storedValue, {
     required this.defaultValue,
     required this.storage,
     required this.key,
-  });
+  }) : _hasStoredValue = storedValue != null,
+       super(storedValue ?? defaultValue);
 
-  void _reset() => super.value = storage.get<T>(key) ?? defaultValue;
+  void _reset() => _update(storage.get<T>(key));
+
+  void _update(T? storedValue) {
+    final hasStoredValue = storedValue != null;
+    final presenceChanged = hasStoredValue != _hasStoredValue;
+    _hasStoredValue = hasStoredValue;
+    final next = storedValue ?? defaultValue;
+    if (presenceChanged && next == value) {
+      notifyListeners();
+    } else {
+      super.value = next;
+    }
+  }
 
   @override
   set value(T newValue) {
@@ -21,7 +36,7 @@ class KVNotifier<T extends Object> extends ValueNotifier<T> {
   }
 
   void updateFromStorage(T newValue) {
-    super.value = newValue;
+    _update(newValue);
   }
 }
 
@@ -64,7 +79,7 @@ abstract class IKVStorage implements IKVSource {
     return _notifiers.putIfAbsent(
       key,
       () => KVNotifier<T>._(
-        get<T>(key) ?? defaultValue,
+        get<T>(key),
         defaultValue: defaultValue,
         storage: this,
         key: key,

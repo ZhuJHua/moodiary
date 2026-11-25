@@ -1,13 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/src/application/llm_provider_preset_controller.dart';
-import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
-import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
-import 'package:moodiary_assistant/src/data/model_catalog_repository.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_assistant/src/presentation/catalog_error.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -35,7 +32,7 @@ class AssistantProviderEditPage extends ConsumerStatefulWidget {
 
 class _AssistantProviderEditPageState
     extends ConsumerState<AssistantProviderEditPage> {
-  late final _repo = getIt<LlmProviderRepository>();
+  late final _repo = ref.read(llmProviderRepositoryProvider);
 
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
@@ -128,7 +125,7 @@ class _AssistantProviderEditPageState
 
   Future<LlmProviderPreset?> _findPreset(String id) async {
     try {
-      for (final p in await getIt<LlmPresetRepository>().load()) {
+      for (final p in await ref.read(llmPresetRepositoryProvider).load()) {
         if (p.id == id) return p;
       }
     } catch (_) {}
@@ -152,7 +149,8 @@ class _AssistantProviderEditPageState
 
   Future<void> _pickDefaultModel() async {
     final l10n = context.l10n;
-    final options = ModelResolver.optionsFor(_draft);
+    final options = ModelResolver(ref.read(llmPresetRepositoryProvider))
+        .optionsFor(_draft);
     if (options.isEmpty) {
       toast.info(message: l10n.assistant.modelListEmpty);
       return;
@@ -173,7 +171,7 @@ class _AssistantProviderEditPageState
     setState(() => _refreshingCatalog = true);
     final l10n = context.l10n;
     try {
-      final presets = await getIt<LlmPresetRepository>().refresh();
+      final presets = await ref.read(llmPresetRepositoryProvider).refresh();
       if (!mounted) return;
       ref.invalidate(llmProviderPresetControllerProvider);
       final preset = presets.where((p) => p.id == _presetId).firstOrNull;
@@ -202,11 +200,9 @@ class _AssistantProviderEditPageState
     }
     setState(() => _fetchingModels = true);
     try {
-      final ids = await getIt<ModelCatalogRepository>().fetch(
-        protocol: _type,
-        baseUrl: _baseUrl.text.trim(),
-        apiKey: key,
-      );
+      final ids = await ref
+          .read(modelCatalogRepositoryProvider)
+          .fetch(protocol: _type, baseUrl: _baseUrl.text.trim(), apiKey: key);
       if (!mounted) return;
       setState(() {
         _models = {..._models, ...ids}.toList()..sort();
@@ -363,7 +359,9 @@ class _AssistantProviderEditPageState
   Widget _buildModelSection(Translations l10n) {
     final scheme = context.theme.colors;
     final count = _isPreset
-        ? ModelResolver.optionsFor(_draft).length
+        ? ModelResolver(ref.read(llmPresetRepositoryProvider))
+              .optionsFor(_draft)
+              .length
         : _models.length;
     return Column(
       crossAxisAlignment: .start,

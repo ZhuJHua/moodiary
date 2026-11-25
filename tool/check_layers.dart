@@ -441,11 +441,7 @@ const Set<String> _mobileOnlyPlugins = {
   'flutter_displaymode',
 };
 
-const Map<String, String> _mobileOnlyPluginAllowlist = {
-  'packages/feature_base/moodiary_components -> video_player':
-      '播放引擎的移动实现与唯一调用点同居；桌面经 MVideoPlayerPage 的 '
-      'portFactory/ambientPorts 注入自己的端口实现，皮肤与状态机（mui）零插件',
-};
+const Map<String, String> _mobileOnlyPluginAllowlist = {};
 
 List<String> _checkMobileOnlyPlugins() {
   final out = <String>[];

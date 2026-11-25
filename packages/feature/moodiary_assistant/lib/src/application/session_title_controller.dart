@@ -4,10 +4,12 @@ import 'dart:convert';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 class SessionTitleController {
+  SessionTitleController(this._service, this._resolver);
+  final AssistantService _service;
+  final ModelResolver _resolver;
   final Set<String> _inFlight = <String>{};
 
   Future<ChatSession?> maybeTitle({
@@ -60,7 +62,7 @@ class SessionTitleController {
     required String framed,
     required Duration timeout,
   }) async {
-    final route = ModelResolver.resolve(provider, model);
+    final route = _resolver.resolve(provider, model);
     final request = AssistantChatRequest(
       type: route.protocol,
       baseUrl: route.baseUrl,
@@ -75,7 +77,7 @@ class SessionTitleController {
     final buffer = StringBuffer();
     final done = Completer<bool>();
     late final StreamSubscription<AssistantStreamEvent> sub;
-    sub = getIt<AssistantService>()
+    sub = _service
         .chat(request)
         .listen(
           (event) {

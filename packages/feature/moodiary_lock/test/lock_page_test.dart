@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -17,30 +17,33 @@ void main() {
     verifyCalls = 0;
     final secure = MemorySecureKVStorage();
     secure.data['password'] = r'$argon2-stored';
-    getIt.pushNewScope(
-      init: (gi) {
-        gi.registerSingleton<IKVStorage>(MemoryKVStorage());
-        gi.registerSingleton<ISecureKVStorage>(secure);
-      },
-    );
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+    SecureKVStore.installForTesting(secure);
+    addTearDown(SecureKVStore.resetForTesting);
+    final verifier = AppLockPin.verifier;
+    final hasher = AppLockPin.hasher;
+    addTearDown(() async {
+      await AppLockPin.clear();
+      AppLockPin.verifier = verifier;
+      AppLockPin.hasher = hasher;
+    });
   });
 
-  tearDown(() async {
-    AppLockPin.verifier = (hash, pin) async => false;
-    await getIt.popScope();
-  });
-
-  Widget host() => TranslationProvider(
-    child: MuiTheme(
-      data: _mui,
-      child: MaterialApp(
-        locale: const Locale('zh'),
-        localizationsDelegates: const [
-          ...GlobalMaterialLocalizations.delegates,
-          GlobalMuiLocalizations.delegate,
-        ],
-        supportedLocales: AppLocaleUtils.supportedLocales,
-        home: const LockPage(lockType: 'pause'),
+  Widget host() => ProviderScope(
+    retry: (_, _) => null,
+    child: TranslationProvider(
+      child: MuiTheme(
+        data: _mui,
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: const [
+            ...GlobalMaterialLocalizations.delegates,
+            GlobalMuiLocalizations.delegate,
+          ],
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          home: const LockPage(lockType: 'pause'),
+        ),
       ),
     ),
   );

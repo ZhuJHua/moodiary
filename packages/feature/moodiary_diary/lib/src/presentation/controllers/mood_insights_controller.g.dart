@@ -35,7 +35,7 @@ final class MoodInsightsControllerProvider
 }
 
 String _$moodInsightsControllerHash() =>
-    r'7126961e8666b72cc0177ea4496964681f4bff76';
+    r'221285d99574bdf4f456f79ab36c451624568dbc';
 
 abstract class _$MoodInsightsController
     extends $AsyncNotifier<MoodInsightsCardData> {

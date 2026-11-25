@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/application/session_title_controller.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
+import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 class _FakeAssistant implements AssistantService {
@@ -39,6 +42,8 @@ class _FakeAssistant implements AssistantService {
   }
 }
 
+class _Presets extends Fake implements LlmPresetRepository {}
+
 void main() {
   LlmProvider provider() => LlmProvider.create(
     name: 'custom',
@@ -55,21 +60,23 @@ void main() {
         reasoningEffort: effort,
       ).copyWith(title: title);
 
-  void use(_FakeAssistant fake) {
-    if (getIt.isRegistered<AssistantService>()) {
-      getIt.unregister<AssistantService>();
-    }
-    getIt.registerSingleton<AssistantService>(fake);
-  }
-
   Future<ChatSession?> run(
     _FakeAssistant fake, {
     ChatSession? from,
     String seed = '这周搬家好累，帮我看看日记',
     Duration timeout = const Duration(seconds: 5),
   }) {
-    use(fake);
-    return SessionTitleController().maybeTitle(
+    final container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [
+        assistantServiceProvider.overrideWithValue(fake),
+        llmPresetRepositoryProvider.overrideWithValue(_Presets()),
+      ],
+    );
+    return SessionTitleController(
+      container.read(assistantServiceProvider),
+      ModelResolver(container.read(llmPresetRepositoryProvider)),
+    ).maybeTitle(
       session: from ?? session(),
       firstUserText: seed,
       provider: provider(),
@@ -78,12 +85,6 @@ void main() {
       timeout: timeout,
     );
   }
-
-  tearDown(() {
-    if (getIt.isRegistered<AssistantService>()) {
-      getIt.unregister<AssistantService>();
-    }
-  });
 
   group('生成', () {
     test('生成之前标题是空的，拿到才填上', () async {

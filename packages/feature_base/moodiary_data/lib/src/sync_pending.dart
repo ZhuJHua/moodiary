@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
-import 'package:injectable/injectable.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'sync_pending.g.dart';
 
 class SyncPendingState {
   final Set<String> newDiaryIds;
@@ -9,14 +10,17 @@ class SyncPendingState {
   final Set<String> newCategoryIds;
   final Set<String> updateCategoryIds;
 
-  const SyncPendingState({
-    this.newDiaryIds = const {},
-    this.updateDiaryIds = const {},
-    this.newCategoryIds = const {},
-    this.updateCategoryIds = const {},
-  });
+  SyncPendingState({
+    Set<String> newDiaryIds = const {},
+    Set<String> updateDiaryIds = const {},
+    Set<String> newCategoryIds = const {},
+    Set<String> updateCategoryIds = const {},
+  }) : newDiaryIds = Set.unmodifiable(newDiaryIds),
+       updateDiaryIds = Set.unmodifiable(updateDiaryIds),
+       newCategoryIds = Set.unmodifiable(newCategoryIds),
+       updateCategoryIds = Set.unmodifiable(updateCategoryIds);
 
-  static const SyncPendingState empty = SyncPendingState();
+  static final SyncPendingState empty = SyncPendingState();
 
   bool get isEmpty =>
       newDiaryIds.isEmpty &&
@@ -25,13 +29,10 @@ class SyncPendingState {
       updateCategoryIds.isEmpty;
 }
 
-@singleton
-class SyncPendingTracker {
-  final ValueNotifier<SyncPendingState> _notifier = ValueNotifier(
-    SyncPendingState.empty,
-  );
-
-  ValueListenable<SyncPendingState> get listenable => _notifier;
+@Riverpod(keepAlive: true, name: 'syncPendingStateProvider')
+class SyncPendingTracker extends _$SyncPendingTracker {
+  @override
+  SyncPendingState build() => SyncPendingState.empty;
 
   void begin({
     required Set<String> newDiaryIds,
@@ -39,7 +40,7 @@ class SyncPendingTracker {
     required Set<String> newCategoryIds,
     required Set<String> updateCategoryIds,
   }) {
-    _notifier.value = SyncPendingState(
+    state = SyncPendingState(
       newDiaryIds: newDiaryIds,
       updateDiaryIds: updateDiaryIds,
       newCategoryIds: newCategoryIds,
@@ -48,11 +49,11 @@ class SyncPendingTracker {
   }
 
   void completeDiary(String id) {
-    final v = _notifier.value;
+    final v = state;
     if (!v.newDiaryIds.contains(id) && !v.updateDiaryIds.contains(id)) {
       return;
     }
-    _notifier.value = SyncPendingState(
+    state = SyncPendingState(
       newDiaryIds: {...v.newDiaryIds}..remove(id),
       updateDiaryIds: {...v.updateDiaryIds}..remove(id),
       newCategoryIds: v.newCategoryIds,
@@ -61,11 +62,11 @@ class SyncPendingTracker {
   }
 
   void completeCategory(String id) {
-    final v = _notifier.value;
+    final v = state;
     if (!v.newCategoryIds.contains(id) && !v.updateCategoryIds.contains(id)) {
       return;
     }
-    _notifier.value = SyncPendingState(
+    state = SyncPendingState(
       newDiaryIds: v.newDiaryIds,
       updateDiaryIds: v.updateDiaryIds,
       newCategoryIds: {...v.newCategoryIds}..remove(id),
@@ -74,24 +75,33 @@ class SyncPendingTracker {
   }
 
   void clear() {
-    if (_notifier.value.isEmpty) return;
-    _notifier.value = .empty;
+    if (state.isEmpty) return;
+    state = .empty;
   }
 }
 
-@singleton
-class SyncDirtyTracker {
-  final ValueNotifier<Set<String>> _notifier = ValueNotifier(const {});
+@Riverpod(keepAlive: true, name: 'syncDirtyDiaryIdsProvider')
+class SyncDirtyTracker extends _$SyncDirtyTracker {
+  @override
+  Set<String> build() => const {};
 
-  ValueListenable<Set<String>> get listenable => _notifier;
+  Set<String> consume() {
+    final dirty = state;
+    clear();
+    return dirty;
+  }
+
+  void clear() {
+    if (state.isNotEmpty) state = const {};
+  }
 
   void markDirty(String id) {
-    if (id.isEmpty || _notifier.value.contains(id)) return;
-    _notifier.value = {..._notifier.value, id};
+    if (id.isEmpty || state.contains(id)) return;
+    state = Set.unmodifiable({...state, id});
   }
 
   void clearDirty(String id) {
-    if (!_notifier.value.contains(id)) return;
-    _notifier.value = {..._notifier.value}..remove(id);
+    if (!state.contains(id)) return;
+    state = Set.unmodifiable({...state}..remove(id));
   }
 }

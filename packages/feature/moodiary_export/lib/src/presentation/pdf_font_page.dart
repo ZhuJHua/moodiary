@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -7,16 +8,16 @@ import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
 
-class PdfFontPage extends StatefulWidget {
+class PdfFontPage extends ConsumerStatefulWidget {
   final String selected;
 
   const PdfFontPage({super.key, required this.selected});
 
   @override
-  State<PdfFontPage> createState() => _PdfFontPageState();
+  ConsumerState<PdfFontPage> createState() => _PdfFontPageState();
 }
 
-class _PdfFontPageState extends State<PdfFontPage> {
+class _PdfFontPageState extends ConsumerState<PdfFontPage> {
   List<Font> _fonts = const [];
   bool _loading = true;
 
@@ -37,7 +38,7 @@ class _PdfFontPageState extends State<PdfFontPage> {
 
   Future<void> _import() async {
     final l10n = context.l10n;
-    final picked = await FontManager.pickFont();
+    final picked = await FontManager.pickFont(ref.read(filePickerProvider));
     if (picked == null) return;
 
     toast.loading(message: l10n.export.importingFont);

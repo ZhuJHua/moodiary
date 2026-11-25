@@ -1,14 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_media/moodiary_media.dart';
 
-class ImageOptimizeTile extends StatefulWidget {
+class ImageOptimizeTile extends ConsumerStatefulWidget {
   final bool isFirst;
   final bool isLast;
 
@@ -19,10 +19,10 @@ class ImageOptimizeTile extends StatefulWidget {
   });
 
   @override
-  State<ImageOptimizeTile> createState() => _ImageOptimizeTileState();
+  ConsumerState<ImageOptimizeTile> createState() => _ImageOptimizeTileState();
 }
 
-class _ImageOptimizeTileState extends State<ImageOptimizeTile> {
+class _ImageOptimizeTileState extends ConsumerState<ImageOptimizeTile> {
   bool _running = false;
   BuildContext? _progressCtx;
 
@@ -58,13 +58,13 @@ class _ImageOptimizeTileState extends State<ImageOptimizeTile> {
 
   Future<void> _run() async {
     setState(() => _running = true);
-    final progress = ValueNotifier<(int, int)>((0, 0));
-    _showProgress(progress);
+    final progress = StreamController<(int, int)>();
+    _showProgress(progress.stream);
     try {
       final report = await ImageOptimizer.run(
-        repo: getIt<DiaryRepository>(),
-        decoder: getIt<IHeifDecoder>(),
-        onProgress: (done, total) => progress.value = (done, total),
+        repo: ref.read(diaryRepositoryProvider),
+        decoder: ref.read(heifDecoderProvider),
+        onProgress: (done, total) => progress.add((done, total)),
       );
       _dismissProgress();
       if (!mounted) return;
@@ -74,7 +74,7 @@ class _ImageOptimizeTileState extends State<ImageOptimizeTile> {
       logger.e('图片优化失败', error: e, stackTrace: s);
       if (mounted) toast.error(message: l10n.app.imageOptimizeFailed);
     } finally {
-      progress.dispose();
+      unawaited(progress.close());
       if (mounted) setState(() => _running = false);
     }
   }
@@ -96,7 +96,7 @@ class _ImageOptimizeTileState extends State<ImageOptimizeTile> {
     );
   }
 
-  void _showProgress(ValueNotifier<(int, int)> progress) {
+  void _showProgress(Stream<(int, int)> progress) {
     unawaited(
       showDialog<void>(
         context: context,
@@ -105,10 +105,11 @@ class _ImageOptimizeTileState extends State<ImageOptimizeTile> {
           _progressCtx = ctx;
           return AlertDialog(
             title: Text(l10n.app.imageOptimizeRunning),
-            content: ValueListenableBuilder<(int, int)>(
-              valueListenable: progress,
-              builder: (_, v, _) {
-                final (done, total) = v;
+            content: StreamBuilder<(int, int)>(
+              stream: progress,
+              initialData: (0, 0),
+              builder: (_, snapshot) {
+                final (done, total) = snapshot.requireData;
                 return Column(
                   mainAxisSize: .min,
                   children: [

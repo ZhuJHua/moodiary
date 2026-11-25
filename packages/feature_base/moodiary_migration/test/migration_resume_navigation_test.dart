@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -16,8 +16,8 @@ void main() {
     ) async {
       final startup = Completer<void>();
       var resumes = 0;
-      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-      addTearDown(getIt.reset);
+      KVStore.installForTesting(MemoryKVStorage());
+      addTearDown(KVStore.resetForTesting);
       MoodiaryKVs.legacyAbandonJournal.set('interrupted');
       expect(await LegacyDatabaseGuard.probe(), LegacyDatabaseState.abandoning);
       final router = GoRouter(
@@ -44,14 +44,17 @@ void main() {
       );
       addTearDown(router.dispose);
       await tester.pumpWidget(
-        TranslationProvider(
-          child: MaterialApp.router(
-            routerConfig: router,
-            theme: buildMuiTheme(brightness: .light),
-            localizationsDelegates: const [
-              ...GlobalMaterialLocalizations.delegates,
-              GlobalMuiLocalizations.delegate,
-            ],
+        ProviderScope(
+          retry: (_, _) => null,
+          child: TranslationProvider(
+            child: MaterialApp.router(
+              routerConfig: router,
+              theme: buildMuiTheme(brightness: .light),
+              localizationsDelegates: const [
+                ...GlobalMaterialLocalizations.delegates,
+                GlobalMuiLocalizations.delegate,
+              ],
+            ),
           ),
         ),
       );

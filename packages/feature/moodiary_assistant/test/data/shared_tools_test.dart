@@ -9,7 +9,6 @@ import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_assistant/src/data/impl/rig_assistant.dart';
 import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -18,20 +17,24 @@ import 'package:moodiary_tools/moodiary_tools.dart';
 
 void main() {
   late MoodiaryDatabase db;
+  late AssistantToolContext context;
   setUp(() {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-    getIt.registerSingleton<DiaryRepository>(DiaryRepository(db));
-    getIt.registerSingleton<TagRepository>(TagRepository(db));
-    getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
-    getIt.registerSingleton<MoodInsightsRepository>(MoodInsightsRepository(db));
-    getIt.registerSingleton<MemoryRepository>(MemoryRepository(db));
-  });
-  tearDown(() async {
-    await getIt.reset();
-    await db.close();
+    addTearDown(db.close);
+    context = AssistantToolContext(
+      diaries: DiaryRepository(db),
+      tags: TagRepository(db),
+      categories: CategoryRepository(db),
+      insights: MoodInsightsRepository(db),
+      memory: MemoryRepository(db),
+      semantic: null,
+      heifDecoder: null,
+    );
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
   });
   Future<String> dispatch(String name, Object? args) => dispatchAssistantTool(
+    context: context,
     spec: AssistantToolRegistry.byId(name),
     toolName: name,
     argsJson: jsonEncode(args),
@@ -56,6 +59,7 @@ void main() {
     expect(await dispatch('unknown', {}), 'Failed: unknown tool "unknown".');
     expect(
       await dispatchAssistantTool(
+        context: context,
         spec: AssistantToolRegistry.byId('get_diary'),
         toolName: 'get_diary',
         argsJson: '[',
@@ -175,7 +179,6 @@ void main() {
   test(
     'assistant-only definitions validate outputs and preserve memory behavior',
     () async {
-      final context = assistantToolContext();
       Future<Map<String, Object?>> call(
         String name,
         Map<String, Object?> args,

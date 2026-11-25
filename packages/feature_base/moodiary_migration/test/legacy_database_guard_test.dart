@@ -5,7 +5,6 @@ import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_lint/testing.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
@@ -67,14 +66,14 @@ void main() {
   setUp(() async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     await AppFiles.initCreateDir();
-    getIt.registerSingleton<IKVStorage>(kv = MemoryKVStorage());
-    getIt.registerSingleton<DiaryRepository>(diaries = _Diaries());
-    getIt.registerSingleton<FontRepository>(fonts = _Fonts());
+    KVStore.installForTesting(kv = MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+    diaries = _Diaries();
+    fonts = _Fonts();
     MoodiaryKVs.appVersion.set('2.7.3+73');
   });
   tearDown(() async {
     debugDefaultTargetPlatformOverride = null;
-    await getIt.reset();
     for (final child in support.listSync()) {
       child.deleteSync(recursive: true);
     }
@@ -113,7 +112,10 @@ void main() {
   test('an unreadable database path keeps the gate closed', () async {
     directory(database).createSync();
     expect(await LegacyDatabaseGuard.probe(), LegacyDatabaseState.probeFailed);
-    await expectLater(LegacyDatabaseGuard.abandon(), throwsStateError);
+    await expectLater(
+      LegacyDatabaseGuard.abandon(diaries: diaries, fonts: fonts),
+      throwsStateError,
+    );
     expect(MoodiaryKVs.legacyAbandonJournal.get(), isNull);
     MoodiaryKVs.dbEngineMigrated.set(true);
     expect(await LegacyDatabaseGuard.probe(), LegacyDatabaseState.none);
@@ -136,7 +138,7 @@ void main() {
           entry.renameSync(p.join(target.path, p.basename(entry.path)));
         }
         await AppFiles.initCreateDir();
-        await LegacyDatabaseGuard.abandon();
+        await LegacyDatabaseGuard.abandon(diaries: diaries, fonts: fonts);
         expect(LegacyDatabaseGuard.state, LegacyDatabaseState.none);
         for (final name in media) {
           expect(
@@ -182,7 +184,7 @@ void main() {
         MoodiaryKVs.legacyAbandonJournal.set(target.path);
         MoodiaryKVs.dbEngineMigrated.set(true);
         MoodiaryKVs.searchIndexBackfilled.set(backfilled);
-        await LegacyDatabaseGuard.abandon();
+        await LegacyDatabaseGuard.abandon(diaries: diaries, fonts: fonts);
         expect(MoodiaryKVs.legacyAbandonJournal.get(), isNull);
         expect(MoodiaryKVs.searchIndexBackfilled.get(), isTrue);
         expect(
@@ -198,8 +200,7 @@ void main() {
     seed();
     final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
-    await getIt.unregister<DiaryRepository>();
-    getIt.registerSingleton<DiaryRepository>(DiaryRepository(db));
+    final repository = DiaryRepository(db);
     await db
         .into(db.chatSessions)
         .insert(
@@ -225,7 +226,7 @@ void main() {
         );
     file('image/chat.jpg').writeAsStringSync('chat image');
 
-    await LegacyDatabaseGuard.abandon();
+    await LegacyDatabaseGuard.abandon(diaries: repository, fonts: fonts);
 
     expect(file('image/chat.jpg').readAsStringSync(), 'chat image');
     for (final name in media) {
@@ -241,9 +242,7 @@ void main() {
         seed();
         final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
         addTearDown(db.close);
-        await getIt.unregister<FontRepository>();
         final repository = FontRepository(db);
-        getIt.registerSingleton<FontRepository>(repository);
         final assets = '$repoRoot/packages/foundation/mui/assets/fonts';
         final bytes = await File('$assets/Dosis.ttf').readAsBytes();
         final truncated = bytes.sublist(0, 6);
@@ -267,7 +266,7 @@ void main() {
           file(database).renameSync('${target.path}/default.isar');
         }
 
-        await LegacyDatabaseGuard.abandon();
+        await LegacyDatabaseGuard.abandon(diaries: diaries, fonts: repository);
 
         // 坏字体让扫描整体失败时，字体登记被跳过，但放弃必须完成且字体文件原样保留。
         expect(file('font/valid.ttf').existsSync(), isTrue);
@@ -287,15 +286,18 @@ void main() {
       seed();
       diaries.files.add('attachment.pdf');
       fonts.fail = true;
-      await expectLater(LegacyDatabaseGuard.abandon(), throwsStateError);
+      await expectLater(
+        LegacyDatabaseGuard.abandon(diaries: diaries, fonts: fonts),
+        throwsStateError,
+      );
       expect(LegacyDatabaseGuard.state, LegacyDatabaseState.abandoning);
       final journal = MoodiaryKVs.legacyAbandonJournal.get()!;
       expect(File('$journal/default.isar').existsSync(), isTrue);
       expect(await LegacyDatabaseGuard.probe(), LegacyDatabaseState.abandoning);
       fonts.fail = false;
       await Future.wait([
-        LegacyDatabaseGuard.abandon(),
-        LegacyDatabaseGuard.abandon(),
+        LegacyDatabaseGuard.abandon(diaries: diaries, fonts: fonts),
+        LegacyDatabaseGuard.abandon(diaries: diaries, fonts: fonts),
       ]);
       for (final name in media) {
         expect(file('$name/旧文件').readAsStringSync(), '$name/旧文件');

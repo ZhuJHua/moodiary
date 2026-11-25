@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:bonsoir/bonsoir.dart';
-import 'package:flutter/foundation.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 
@@ -67,7 +66,9 @@ class LanBrowser {
 
   final Map<String, LanPeer> _found = {};
 
-  final ValueNotifier<List<LanPeer>> peers = ValueNotifier(const []);
+  LanBrowser(this._onPeers);
+
+  final void Function(List<LanPeer>) _onPeers;
 
   Future<void> start() async {
     if (_discovery != null) return;
@@ -75,6 +76,7 @@ class LanBrowser {
       final discovery = BonsoirDiscovery(type: lanServiceType);
       _discovery = discovery;
       await discovery.initialize();
+      if (!identical(discovery, _discovery)) return;
       // 先订阅再 start，否则会漏掉启动瞬间已在网的服务
       _subscription = discovery.eventStream?.listen(_onEvent);
       await discovery.start();
@@ -84,6 +86,7 @@ class LanBrowser {
   }
 
   void _onEvent(BonsoirDiscoveryEvent event) {
+    if (_discovery == null) return;
     switch (event) {
       // found 事件只有名字，需显式 resolve 才带回 hostAddresses
       case BonsoirDiscoveryServiceFoundEvent(:final service):
@@ -112,7 +115,7 @@ class LanBrowser {
     }
   }
 
-  void _publish() => peers.value = List.unmodifiable(_found.values);
+  void _publish() => _onPeers(List.unmodifiable(_found.values));
 
   // Android 标准 DNS 解析不认 .local 主机名，只能用数字 IP（hostAddresses），优先 IPv4
   static String? _hostOf(BonsoirService service) {
@@ -130,7 +133,6 @@ class LanBrowser {
     _discovery = null;
     _subscription = null;
     _found.clear();
-    _publish();
     await subscription?.cancel();
     if (discovery != null) {
       try {

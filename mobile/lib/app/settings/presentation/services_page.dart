@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -38,58 +37,46 @@ class ServicesPage extends ConsumerWidget {
   }
 }
 
-class _AiSection extends StatelessWidget {
+class _AiSection extends ConsumerWidget {
   const _AiSection();
 
   @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: MoodiaryKVs.assistantEnabled.getNotifier(),
-      builder: (context, enabled, child) =>
-          enabled ? child! : const SliverToBoxAdapter(),
-      child: MSliverSettingGroup(
-        title: context.l10n.app.servicesAssistant,
-        children: [
-          ValueListenableBuilder<String>(
-            valueListenable: MoodiaryKVs.assistantActiveProviderId
-                .getNotifier(),
-            builder: (context, _, _) => const AssistantSummaryTile(),
-          ),
-        ],
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(kvValueProvider(MoodiaryKVs.assistantEnabled))) {
+      return const SliverToBoxAdapter();
+    }
+    return MSliverSettingGroup(
+      title: context.l10n.app.servicesAssistant,
+      children: const [AssistantSummaryTile()],
     );
   }
 }
 
-class _ModelDownloadSection extends StatelessWidget {
+class _ModelDownloadSection extends ConsumerWidget {
   const _ModelDownloadSection();
 
   @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<String>(
-      valueListenable: MoodiaryKVs.modelDownloadEndpoint.getNotifier(),
-      builder: (context, value, _) {
-        final endpoint = value.trim();
-        final host = Uri.parse(HfHub.normalize(endpoint)).authority;
-        final subtitle = endpoint.isEmpty
-            ? '${context.l10n.app.servicesHfOfficial} · $host'
-            : '${context.l10n.common.custom} · $host';
-        return MSliverSettingGroup(
-          title: context.l10n.app.servicesModelDownload,
-          children: [
-            SettingListTile(
-              leading: Icon(
-                LucideIcons.download,
-                color: context.theme.colors.onSurfaceVariant,
-              ),
-              title: context.l10n.app.servicesHfEndpoint,
-              subtitle: subtitle,
-              trailing: const Icon(LucideIcons.chevronRight),
-              onTap: () => _pickEndpoint(context, endpoint),
-            ),
-          ],
-        );
-      },
+  Widget build(BuildContext context, WidgetRef ref) {
+    final value = ref.watch(kvValueProvider(MoodiaryKVs.modelDownloadEndpoint));
+    final endpoint = value.trim();
+    final host = Uri.parse(HfHub.normalize(endpoint)).authority;
+    final subtitle = endpoint.isEmpty
+        ? '${context.l10n.app.servicesHfOfficial} · $host'
+        : '${context.l10n.common.custom} · $host';
+    return MSliverSettingGroup(
+      title: context.l10n.app.servicesModelDownload,
+      children: [
+        SettingListTile(
+          leading: Icon(
+            LucideIcons.download,
+            color: context.theme.colors.onSurfaceVariant,
+          ),
+          title: context.l10n.app.servicesHfEndpoint,
+          subtitle: subtitle,
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => _pickEndpoint(context, endpoint),
+        ),
+      ],
     );
   }
 
@@ -135,59 +122,51 @@ class _ModelDownloadSection extends StatelessWidget {
   }
 }
 
-class _SemanticSection extends StatefulWidget {
+class _SemanticSection extends ConsumerStatefulWidget {
   const _SemanticSection();
 
   @override
-  State<_SemanticSection> createState() => _SemanticSectionState();
+  ConsumerState<_SemanticSection> createState() => _SemanticSectionState();
 }
 
-class _SemanticSectionState extends State<_SemanticSection> {
-  late final _manager = getIt<EmbeddingModelManager>();
+class _SemanticSectionState extends ConsumerState<_SemanticSection> {
+  late final _manager = ref.read(embeddingModelManagerProvider);
 
   bool _rebuilding = false;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return ValueListenableBuilder<String>(
-      valueListenable: MoodiaryKVs.embeddingModelId.getNotifier(),
-      builder: (context, _, _) {
-        final active = _manager.active;
-        return MSliverSettingGroup(
-          title: context.l10n.app.semanticTitle,
-          children: [
-            SettingListTile(
-              leading: Icon(
-                LucideIcons.sparkles,
-                color: scheme.onSurfaceVariant,
-              ),
-              title: context.l10n.app.semanticModelTitle,
-              subtitle:
-                  active?.displayName ?? context.l10n.app.semanticStateOff,
-              trailing: const Icon(LucideIcons.chevronRight),
-              onTap: _openPicker,
+    ref.watch(kvValueProvider(MoodiaryKVs.embeddingModelId));
+    final active = _manager.active;
+    return MSliverSettingGroup(
+      title: context.l10n.app.semanticTitle,
+      children: [
+        SettingListTile(
+          leading: Icon(LucideIcons.sparkles, color: scheme.onSurfaceVariant),
+          title: context.l10n.app.semanticModelTitle,
+          subtitle: active?.displayName ?? context.l10n.app.semanticStateOff,
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: _openPicker,
+        ),
+        if (active != null)
+          SettingListTile(
+            leading: Icon(
+              LucideIcons.refreshCw,
+              color: scheme.onSurfaceVariant,
             ),
-            if (active != null)
-              SettingListTile(
-                leading: Icon(
-                  LucideIcons.refreshCw,
-                  color: scheme.onSurfaceVariant,
-                ),
-                title: context.l10n.app.semanticRebuildTitle,
-                subtitle: context.l10n.app.semanticRebuildSubtitle,
-                trailing: _rebuilding
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(LucideIcons.chevronRight),
-                onTap: _rebuilding ? null : _rebuild,
-              ),
-          ],
-        );
-      },
+            title: context.l10n.app.semanticRebuildTitle,
+            subtitle: context.l10n.app.semanticRebuildSubtitle,
+            trailing: _rebuilding
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(LucideIcons.chevronRight),
+            onTap: _rebuilding ? null : _rebuild,
+          ),
+      ],
     );
   }
 
@@ -202,7 +181,7 @@ class _SemanticSectionState extends State<_SemanticSection> {
   Future<void> _rebuild() async {
     setState(() => _rebuilding = true);
     try {
-      final count = await getIt<EmbedIndexService>().rebuildAll();
+      final count = await ref.read(embedIndexServiceProvider).rebuildAll();
       toast.success(message: l10n.app.semanticRebuildDone(count: count));
     } catch (e, s) {
       logger.e('semantic rebuild failed', error: e, stackTrace: s);
@@ -212,16 +191,16 @@ class _SemanticSectionState extends State<_SemanticSection> {
   }
 }
 
-class _ModelPickerSheet extends StatefulWidget {
+class _ModelPickerSheet extends ConsumerStatefulWidget {
   final EmbeddingModelManager manager;
 
   const _ModelPickerSheet({required this.manager});
 
   @override
-  State<_ModelPickerSheet> createState() => _ModelPickerSheetState();
+  ConsumerState<_ModelPickerSheet> createState() => _ModelPickerSheetState();
 }
 
-class _ModelPickerSheetState extends State<_ModelPickerSheet> {
+class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
   String? _downloadingId;
   double _progress = 0;
 
@@ -333,6 +312,7 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
       _progress = 0;
     });
     try {
+      final index = ref.read(embedIndexServiceProvider);
       if (!downloaded) {
         await _manager.download(
           spec,
@@ -344,7 +324,7 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
       }
       if (mounted) setState(() => _progress = -1);
       await _manager.activate(spec);
-      unawaited(getIt<EmbedIndexService>().drain());
+      unawaited(index.drain());
       toast.success(message: l10n.app.semanticEnabled);
       if (mounted) Navigator.of(context).pop();
     } catch (e, s) {
@@ -383,7 +363,7 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
     if (!confirmed || !mounted) return;
     try {
       _manager.deactivate();
-      await getIt<EmbedIndexService>().clearAll();
+      await ref.read(embedIndexServiceProvider).clearAll();
       if (mounted) Navigator.of(context).pop();
     } catch (e, s) {
       logger.e('disable semantic search failed', error: e, stackTrace: s);
@@ -416,39 +396,35 @@ class _QweatherSection extends ConsumerWidget {
   }
 }
 
-class _MapSection extends StatelessWidget {
+class _MapSection extends ConsumerWidget {
   const _MapSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.theme.colors;
-    return ValueListenableBuilder<String>(
-      valueListenable: MoodiaryKVs.mapTileSource.getNotifier(),
-      builder: (context, value, _) {
-        final source = MapTileSource.of(value);
-        return MSliverSettingGroup(
-          title: context.l10n.app.servicesMap,
-          children: [
-            SettingListTile(
-              leading: Icon(LucideIcons.layers, color: scheme.onSurfaceVariant),
-              title: context.l10n.diary.mapSource,
-              subtitle: source?.label ?? context.l10n.common.notConfigured,
-              onTap: () => showMapSourcePicker(context),
-            ),
-            if (source == .tianditu)
-              _SecretKvTile(
-                kv: .tiandituKey,
-                title: context.l10n.diary.mapTiandituKey,
-                leading: Icon(LucideIcons.key, color: scheme.onSurfaceVariant),
-              ),
-          ],
-        );
-      },
+    final value = ref.watch(kvValueProvider(MoodiaryKVs.mapTileSource));
+    final source = MapTileSource.of(value);
+    return MSliverSettingGroup(
+      title: context.l10n.app.servicesMap,
+      children: [
+        SettingListTile(
+          leading: Icon(LucideIcons.layers, color: scheme.onSurfaceVariant),
+          title: context.l10n.diary.mapSource,
+          subtitle: source?.label ?? context.l10n.common.notConfigured,
+          onTap: () => showMapSourcePicker(context),
+        ),
+        if (source == .tianditu)
+          _SecretKvTile(
+            kv: .tiandituKey,
+            title: context.l10n.diary.mapTiandituKey,
+            leading: Icon(LucideIcons.key, color: scheme.onSurfaceVariant),
+          ),
+      ],
     );
   }
 }
 
-class _KvTile extends StatelessWidget {
+class _KvTile extends ConsumerWidget {
   final MoodiaryKVs<String> kv;
   final String title;
   final Widget? leading;
@@ -462,22 +438,18 @@ class _KvTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<String>(
-      valueListenable: kv.getNotifierOr(''),
-      builder: (context, value, _) {
-        return SettingInputTile(
-          title: title,
-          leading: leading,
-          value: value,
-          subtitle: value.isEmpty
-              ? (subtitleWhenEmpty ?? context.l10n.common.notConfigured)
-              : context.l10n.common.configured,
-          onValue: (v) async {
-            kv.set(v);
-            toast.success(message: l10n.app.servicesSaved);
-          },
-        );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final value = ref.watch(kvValueOrProvider(kv, ''));
+    return SettingInputTile(
+      title: title,
+      leading: leading,
+      value: value,
+      subtitle: value.isEmpty
+          ? (subtitleWhenEmpty ?? context.l10n.common.notConfigured)
+          : context.l10n.common.configured,
+      onValue: (v) async {
+        kv.set(v);
+        toast.success(message: l10n.app.servicesSaved);
       },
     );
   }

@@ -1,5 +1,5 @@
-import 'package:moodiary_assistant/src/data/memory_repository.dart';
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -9,15 +9,15 @@ const List<String> _kCategories = ['preference', 'theme', 'goal', 'fact'];
 
 const int _kSearchThreshold = 6;
 
-class MemoryListPage extends StatefulWidget {
+class MemoryListPage extends ConsumerStatefulWidget {
   const MemoryListPage({super.key});
 
   @override
-  State<MemoryListPage> createState() => _MemoryListPageState();
+  ConsumerState<MemoryListPage> createState() => _MemoryListPageState();
 }
 
-class _MemoryListPageState extends State<MemoryListPage> {
-  final _repo = getIt<MemoryRepository>();
+class _MemoryListPageState extends ConsumerState<MemoryListPage> {
+  late final _repo = ref.read(memoryRepositoryProvider);
   final _search = TextEditingController();
   List<MemoryEntry>? _all;
   String _query = '';
@@ -341,16 +341,16 @@ class _Empty extends StatelessWidget {
   }
 }
 
-class _MemoryEditSheet extends StatefulWidget {
+class _MemoryEditSheet extends ConsumerStatefulWidget {
   final MemoryEntry entry;
 
   const _MemoryEditSheet({required this.entry});
 
   @override
-  State<_MemoryEditSheet> createState() => _MemoryEditSheetState();
+  ConsumerState<_MemoryEditSheet> createState() => _MemoryEditSheetState();
 }
 
-class _MemoryEditSheetState extends State<_MemoryEditSheet> {
+class _MemoryEditSheetState extends ConsumerState<_MemoryEditSheet> {
   late final _text = TextEditingController(text: widget.entry.text);
   late String _category = widget.entry.category;
 

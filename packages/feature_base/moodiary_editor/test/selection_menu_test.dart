@@ -4,9 +4,9 @@ import 'dart:convert';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_native/moodiary_native.dart';
@@ -32,7 +32,8 @@ void main() {
 
   setUp(() {
     clipboard = null;
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
     binding.defaultBinaryMessenger.setMockDecodedMessageHandler(writeChannel, (
       message,
     ) async {
@@ -45,7 +46,6 @@ void main() {
       writeChannel,
       null,
     );
-    await getIt.reset();
   });
 
   Future<(ft.TiptapController, MaterialLocalizations)> openMenu(
@@ -62,17 +62,20 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      TranslationProvider(
-        child: MaterialApp(
-          theme: buildMuiTheme(brightness: Brightness.light),
-          localizationsDelegates: const [
-            ...GlobalMaterialLocalizations.delegates,
-            GlobalMuiLocalizations.delegate,
-          ],
-          builder: (context, child) =>
-              MaterialUiCompatibilityBridge(child: child!),
-          home: Scaffold(
-            body: MoodiaryEditor(initialContent: jsonEncode(doc.toJson())),
+      ProviderScope(
+        retry: (_, _) => null,
+        child: TranslationProvider(
+          child: MaterialApp(
+            theme: buildMuiTheme(brightness: Brightness.light),
+            localizationsDelegates: const [
+              ...GlobalMaterialLocalizations.delegates,
+              GlobalMuiLocalizations.delegate,
+            ],
+            builder: (context, child) =>
+                MaterialUiCompatibilityBridge(child: child!),
+            home: Scaffold(
+              body: MoodiaryEditor(initialContent: jsonEncode(doc.toJson())),
+            ),
           ),
         ),
       ),

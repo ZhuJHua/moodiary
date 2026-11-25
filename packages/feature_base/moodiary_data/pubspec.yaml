@@ -10,6 +10,7 @@ environment:
   flutter: ">=3.47.0"
 
 dependencies:
+  flutter_riverpod: 3.4.3
   flutter:
     sdk: flutter
 
@@ -18,11 +19,9 @@ dependencies:
     git:
       url: https://github.com/ZhuJHua/sqlite3_simple.git
       ref: b69cb32
-  moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_storage: 0.0.1
   drift: 2.35.0
-  injectable: 3.0.0
   sqlite3: 3.5.2
   moodiary_logging: 0.0.1
   moodiary_models: 0.0.1
@@ -37,9 +36,7 @@ dev_dependencies:
   moodiary_platform: 0.0.1
   flutter_test:
     sdk: flutter
-  flutter_riverpod: 3.4.3
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
-  injectable_generator: 3.1.3
   riverpod_generator: 4.0.9
   drift_dev: 2.35.0

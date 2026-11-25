@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -391,10 +390,9 @@ void main() {
 
     setUp(() {
       kv = MemoryKVStorage();
-      getIt.pushNewScope(init: (gi) => gi.registerSingleton<IKVStorage>(kv));
+      KVStore.installForTesting(kv);
+      addTearDown(KVStore.resetForTesting);
     });
-
-    tearDown(() => getIt.popScope());
 
     void warmCache() {
       MoodiaryKVs.llmPresetCache.set(

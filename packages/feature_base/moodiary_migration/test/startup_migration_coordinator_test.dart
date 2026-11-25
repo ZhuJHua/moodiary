@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -31,8 +30,8 @@ void main() {
       final directory = Directory.systemTemp.createTempSync('content-upgrade');
       addTearDown(() => directory.delete(recursive: true));
       PlatformService.get().applicationSupportPath = directory.path;
-      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-      addTearDown(getIt.reset);
+      KVStore.installForTesting(MemoryKVStorage());
+      addTearDown(KVStore.resetForTesting);
       MoodiaryKVs.dbEngineMigrated.set(true);
       final coordinator = StartupMigrationCoordinator();
       addTearDown(coordinator.completeEditorMigration);
@@ -41,7 +40,7 @@ void main() {
       var starts = 0;
       Future<void> resume() async {
         starts++;
-        await StartupMigrationCoordinator.refreshEditorGate(repository);
+        await coordinator.refreshEditorGate(repository);
       }
 
       await Future.wait([

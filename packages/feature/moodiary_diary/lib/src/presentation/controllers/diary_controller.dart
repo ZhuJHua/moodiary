@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -33,64 +32,73 @@ List<Diary> applyDiaryEvent(
 
 @riverpod
 class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
-  late final _repository = getIt<DiaryRepository>();
-  late final _categories = getIt<CategoryRepository>();
-  late final _tags = getIt<TagRepository>();
+  late DiaryRepository _repository;
   Set<String> _activeCategories = {};
   Set<String> _tagIdsForName = {};
 
-  DiarySort get _sort => .getType(MoodiaryKVs.homeSortMode.get()!);
+  late DiarySort _sort;
+  Future<void>? _membership;
 
   @override
   FutureOr<List<Diary>> build({
     String? categoryId,
     bool uncategorized = false,
     String? tagName,
-  }) async {
+  }) {
+    _repository = ref.watch(diaryRepositoryProvider);
+    _sort = DiarySort.getType(
+      ref.watch(kvValueProvider(MoodiaryKVs.homeSortMode)),
+    );
     final sub = _repository.diaryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
-    final sortNotifier = MoodiaryKVs.homeSortMode.getNotifier();
-    void onSortChanged() => refresh();
-    sortNotifier.addListener(onSortChanged);
-    ref.onDispose(() => sortNotifier.removeListener(onSortChanged));
+    final operationRef = ref;
+    _membership = null;
     if (uncategorized) {
-      final buildRef = ref;
-      final sub = _categories.categoryEvents.listen(
-        (_) => buildRef.invalidateSelf(),
+      final categories = ref.watch(categoryRepositoryProvider);
+      final categorySub = categories.categoryEvents.listen(
+        (_) => operationRef.invalidateSelf(),
       );
-      buildRef.onDispose(sub.cancel);
-      final active = await _categories.getAllCategories();
-      if (!buildRef.mounted) return [];
-      _activeCategories = {for (final c in active) c.id};
-      return init(refreshFirst: true);
-    }
-    if (tagName != null) {
-      final buildRef = ref;
-      Future<Set<String>> liveIds() async => {
-        for (final tag in await _tags.getAllTags())
-          if (tag.name == tagName) tag.id,
-      };
-
-      final initialIds = liveIds();
-      final sub = _tags.tagEvents.listen((_) async {
-        await initialIds;
-        if (!buildRef.mounted) return;
-        final ids = await liveIds();
-        if (buildRef.mounted && !setEquals(ids, _tagIdsForName)) {
-          buildRef.invalidateSelf();
+      ref.onDispose(categorySub.cancel);
+      _membership = categories.getAllCategories().then((categories) {
+        if (operationRef.mounted) {
+          _activeCategories = {for (final category in categories) category.id};
         }
       });
-      buildRef.onDispose(sub.cancel);
-      final ids = await initialIds;
-      if (!buildRef.mounted) return [];
-      _tagIdsForName = ids;
-      return init(refreshFirst: true);
+    } else if (tagName != null) {
+      final tags = ref.watch(tagRepositoryProvider);
+      Future<Set<String>> liveIds() async => {
+        for (final tag in await tags.getAllTags())
+          if (tag.name == tagName) tag.id,
+      };
+      final initialIds = liveIds().then((ids) {
+        if (operationRef.mounted) _tagIdsForName = ids;
+      });
+      _membership = initialIds;
+      final tagSub = tags.tagEvents.listen((_) async {
+        await initialIds;
+        if (!operationRef.mounted) return;
+        final ids = await liveIds();
+        if (operationRef.mounted && !setEquals(ids, _tagIdsForName)) {
+          operationRef.invalidateSelf();
+        }
+      });
+      ref.onDispose(tagSub.cancel);
     }
-    return init();
+    return init(refreshFirst: true);
   }
 
   @override
-  Future<Iterable<Diary>?> load({required int limit, required int offset}) {
+  Future<Iterable<Diary>?> load({
+    required int limit,
+    required int offset,
+  }) async {
+    final operationRef = ref;
+    final membership = _membership;
+    if (membership != null) {
+      await membership;
+      if (!operationRef.mounted) return null;
+      _membership = null;
+    }
     return _repository.getDiaryByCategory(
       categoryId: categoryId,
       uncategorized: uncategorized,
@@ -103,7 +111,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
 
   void _applyChange(DiaryEvent event) {
     final list = state.value;
-    if (list == null) {
+    if (list == null || _membership != null || state.isReloading) {
       markMissedEvent();
       return;
     }
@@ -125,15 +133,17 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   }
 
   Future<bool> softDeleteDiary(Diary diary) async {
+    final operationRef = ref;
     try {
       await _repository.setVisibility(diary, show: false);
-      return true;
+      return operationRef.mounted;
     } catch (_) {
       return false;
     }
   }
 
   Future<int> softDeleteByIds(Set<String> ids) async {
+    final operationRef = ref;
     final list = state.value ?? const <Diary>[];
     var count = 0;
     for (final diary in list.where((d) => ids.contains(d.id)).toList()) {
@@ -143,6 +153,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
       } catch (e, s) {
         logger.e('soft delete failed: ${diary.id}', error: e, stackTrace: s);
       }
+      if (!operationRef.mounted) break;
     }
     return count;
   }
@@ -150,16 +161,18 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
 
 @riverpod
 class RecycleBinDiaries extends _$RecycleBinDiaries {
-  late final _repository = getIt<DiaryRepository>();
+  late DiaryRepository _repository;
 
   bool _missedEvent = false;
 
   @override
   FutureOr<List<Diary>> build() async {
+    _repository = ref.watch(diaryRepositoryProvider);
+    final operationRef = ref;
     final sub = _repository.diaryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
     var list = await _repository.getRecycleBinDiaries();
-    for (var i = 0; _missedEvent && i < 3; i++) {
+    for (var i = 0; operationRef.mounted && _missedEvent && i < 3; i++) {
       _missedEvent = false;
       list = await _repository.getRecycleBinDiaries();
     }
@@ -176,30 +189,34 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
   }
 
   Future<bool> restore(Diary diary) async {
+    final operationRef = ref;
     try {
       await _repository.setVisibility(diary, show: true);
-      return true;
+      return operationRef.mounted;
     } catch (_) {
       return false;
     }
   }
 
   Future<bool> permanentDelete(String id) async {
+    final operationRef = ref;
     try {
-      return await _repository.deleteADiary(id);
+      final deleted = await _repository.deleteADiary(id);
+      return operationRef.mounted && deleted;
     } catch (_) {
       return false;
     }
   }
 
   Future<int> clear() async {
-    final diaries = state.value ?? const <Diary>[];
+    final repository = _repository;
+    final ids = [for (final d in state.value ?? const <Diary>[]) d.id];
     int count = 0;
-    for (final d in diaries) {
+    for (final id in ids) {
       try {
-        if (await _repository.deleteADiary(d.id)) count += 1;
+        if (await repository.deleteADiary(id)) count += 1;
       } catch (e, s) {
-        logger.e('recycle clear failed: ${d.id}', error: e, stackTrace: s);
+        logger.e('recycle clear failed: $id', error: e, stackTrace: s);
       }
     }
     return count;

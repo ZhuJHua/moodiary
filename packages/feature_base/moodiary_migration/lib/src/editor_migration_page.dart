@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart' show SystemNavigator;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart' show logger;
@@ -16,27 +16,23 @@ import 'package:url_launcher/url_launcher.dart';
 import 'editor_migration_service.dart';
 import 'legacy_data_exporter.dart';
 import 'legacy_database_guard.dart';
-import 'startup_migration_coordinator.dart';
+import 'migration_providers.dart';
 
-class EditorMigrationPage extends StatefulWidget {
-  const EditorMigrationPage({
-    required this.resumeStartup,
-    this.coordinator,
-    super.key,
-  });
+class EditorMigrationPage extends ConsumerStatefulWidget {
+  const EditorMigrationPage({required this.resumeStartup, super.key});
 
   final Future<void> Function() resumeStartup;
-  final StartupMigrationCoordinator? coordinator;
 
   @override
-  State<EditorMigrationPage> createState() => _EditorMigrationPageState();
+  ConsumerState<EditorMigrationPage> createState() =>
+      _EditorMigrationPageState();
 }
 
 enum _Phase { landing, running, failed, done }
 
 enum _Stage { editor, content }
 
-class _EditorMigrationPageState extends State<EditorMigrationPage> {
+class _EditorMigrationPageState extends ConsumerState<EditorMigrationPage> {
   _Phase _phase = .landing;
 
   late final List<_Stage> _stages = [
@@ -56,7 +52,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   int _summaryDiaries = 0;
   int _summaryCategories = 0;
 
-  late final _coordinator = widget.coordinator ?? StartupMigrationCoordinator();
+  late final _coordinator = ref.read(startupMigrationCoordinatorProvider);
   late bool _legacyGate = !_coordinator.canStartData;
   bool _homePending = false;
 
@@ -109,11 +105,15 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       _logPath = null;
     });
     try {
-      final pending = await EditorMigrationService.pendingDiaries();
+      final repository = ref.read(diaryRepositoryProvider);
+      final pending = await EditorMigrationService.pendingDiaries(
+        repository: repository,
+      );
       if (!mounted) return;
       if (pending.isNotEmpty) _enter(.editor, total: pending.length);
       final report = await EditorMigrationService.migrateAll(
         pending,
+        repository: repository,
         onProgress: _onProgress,
       );
       if (!mounted) return;
@@ -135,7 +135,10 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
 
       if (EditorMigrationService.requiresContentUpgrade) {
         _enter(.content);
-        await EditorMigrationService.upgradeContent(onProgress: _onProgress);
+        await EditorMigrationService.upgradeContent(
+          repository: repository,
+          onProgress: _onProgress,
+        );
       }
       _complete(.content);
     } catch (e, s) {
@@ -160,14 +163,15 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       });
       return;
     }
+    if (!mounted) return;
     final contentOnly = !_stages.contains(_Stage.editor);
     _coordinator.completeEditorMigration();
     var diaries = 0;
     var categories = 0;
     try {
-      diaries = await getIt<DiaryRepository>().countAllDiaries();
-      categories =
-          (await getIt<CategoryRepository>().getAllCategories()).length;
+      final categoriesRepository = ref.read(categoryRepositoryProvider);
+      diaries = await ref.read(diaryRepositoryProvider).countAllDiaries();
+      categories = (await categoriesRepository.getAllCategories()).length;
     } catch (e, s) {
       logger.e('load migration summary failed', error: e, stackTrace: s);
     }
@@ -227,7 +231,8 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
         const DiaryHomeRoute().go(context);
       });
     }
-    if (_legacyGate || !_coordinator.canStartData) {
+    final gate = ref.watch(migrationGateProvider);
+    if (_legacyGate || !gate.canStartData) {
       return _LegacyDataGate(resumeStartup: _resumeStartup);
     }
     return Scaffold(
@@ -479,16 +484,16 @@ enum _LegacyPhase {
   probeFailed,
 }
 
-class _LegacyDataGate extends StatefulWidget {
+class _LegacyDataGate extends ConsumerStatefulWidget {
   const _LegacyDataGate({required this.resumeStartup});
 
   final Future<void> Function() resumeStartup;
 
   @override
-  State<_LegacyDataGate> createState() => _LegacyDataGateState();
+  ConsumerState<_LegacyDataGate> createState() => _LegacyDataGateState();
 }
 
-class _LegacyDataGateState extends State<_LegacyDataGate> {
+class _LegacyDataGateState extends ConsumerState<_LegacyDataGate> {
   _LegacyPhase _phase = .landing;
   LegacyExportSummary? _summary;
   String? _archive;
@@ -513,7 +518,7 @@ class _LegacyDataGateState extends State<_LegacyDataGate> {
   Future<void> _inspect() async {
     setState(() => _busy = true);
     try {
-      final summary = await getIt<LegacyDataExporter>().inspect();
+      final summary = await ref.read(legacyDataExporterProvider).inspect();
       if (mounted) {
         setState(() {
           _summary = summary;
@@ -532,13 +537,25 @@ class _LegacyDataGateState extends State<_LegacyDataGate> {
     }
   }
 
+  Future<void> _abandonLegacy() async {
+    await ref.read(moodiaryDatabaseAsyncProvider.future);
+    if (!mounted) return;
+    await ref
+        .read(startupMigrationCoordinatorProvider)
+        .abandonLegacy(
+          diaries: ref.read(diaryRepositoryProvider),
+          fonts: ref.read(fontRepositoryProvider),
+        );
+  }
+
   Future<void> _retryGuard() async {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      await LegacyDatabaseGuard.probe();
+      await ref.read(startupMigrationCoordinatorProvider).probeLegacy();
+      if (!mounted) return;
       if (LegacyDatabaseGuard.state == LegacyDatabaseState.abandoning) {
-        await LegacyDatabaseGuard.abandon();
+        await _abandonLegacy();
       }
       if (!mounted) return;
       switch (LegacyDatabaseGuard.state) {
@@ -566,17 +583,19 @@ class _LegacyDataGateState extends State<_LegacyDataGate> {
       _total = (_summary?.mediaCount ?? 0) + 1;
     });
     try {
-      final archive = await getIt<LegacyDataExporter>().export(
-        onProgress: (completed, total) {
-          if (mounted) {
-            setState(() {
-              _completed = completed;
-              _total = total;
-            });
-          }
-        },
-        isCancelled: () => !mounted || _cancelRequested,
-      );
+      final archive = await ref
+          .read(legacyDataExporterProvider)
+          .export(
+            onProgress: (completed, total) {
+              if (mounted) {
+                setState(() {
+                  _completed = completed;
+                  _total = total;
+                });
+              }
+            },
+            isCancelled: () => !mounted || _cancelRequested,
+          );
       final size = await File(archive).length();
       if (mounted) {
         setState(() {
@@ -635,7 +654,7 @@ class _LegacyDataGateState extends State<_LegacyDataGate> {
         acknowledgeLabel: saved ? null : context.l10n.editor.legacyUnderstand,
       );
       if (!confirmed || !mounted) return;
-      await LegacyDatabaseGuard.abandon();
+      await _abandonLegacy();
       if (!mounted) return;
       if (LegacyDatabaseGuard.state == LegacyDatabaseState.none) {
         await widget.resumeStartup();

@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -21,7 +20,7 @@ class VersionMigrator {
     required String currentVersion,
     IKVStorage? storage,
   }) async {
-    final kv = storage ?? getIt<IKVStorage>();
+    final kv = storage ?? KVStore.instance;
     final appVersion = kv.get<String>(MoodiaryKVs.appVersion.name);
     if (appVersion != null) {
       await merge(lastAppVersion: appVersion, storage: kv);
@@ -46,7 +45,7 @@ class VersionMigrator {
     required String lastAppVersion,
     IKVStorage? storage,
   }) async {
-    late final kv = storage ?? getIt<IKVStorage>();
+    late final kv = storage ?? KVStore.instance;
     bool below(String version) => versionBelow(lastAppVersion, version);
 
     if (below('2.6.3')) {
@@ -88,7 +87,7 @@ Future<void> _purgeMoodLlmModel(IKVStorage? storage) async {
     }
   }
   try {
-    (storage ?? getIt<IKVStorage>()).remove('moodLlmModelId');
+    (storage ?? KVStore.instance).remove('moodLlmModelId');
   } catch (e, s) {
     logger.e('remove mood model key failed', error: e, stackTrace: s);
   }

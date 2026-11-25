@@ -4,6 +4,7 @@ import 'storage.dart';
 
 abstract final class KVStore {
   static IKVStorage? _instance;
+  static bool get isInstalled => _instance != null;
   static IKVStorage get instance =>
       _instance ?? (throw StateError('KVStore is not installed'));
 
@@ -21,6 +22,7 @@ abstract final class KVStore {
 
 abstract final class SecureKVStore {
   static ISecureKVStorage? _instance;
+  static bool get isInstalled => _instance != null;
   static ISecureKVStorage get instance =>
       _instance ?? (throw StateError('SecureKVStore is not installed'));
 

@@ -10,21 +10,21 @@ environment:
   flutter: ">=3.47.0"
 
 dependencies:
+  riverpod_annotation: 4.0.7
+  flutter_riverpod: 3.4.3
   flutter:
     sdk: flutter
 
-  moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_storage: 0.0.1
   mui: 0.0.1
   dynamic_color: 2.1.0
-  injectable: 3.0.0
   path: 1.9.1
 
 dev_dependencies:
+  riverpod_generator: 4.0.9
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
-  injectable_generator: 3.1.3

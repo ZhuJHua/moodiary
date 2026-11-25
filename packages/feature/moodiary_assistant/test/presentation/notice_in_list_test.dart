@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
+import 'package:moodiary_assistant/src/data/chat_repository.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:moodiary_components/moodiary_components.dart';
@@ -13,13 +14,15 @@ AssistantTurn _turn(String id, {required bool fromUser}) => AssistantTurn(
   createdAt: DateTime.utc(2026, 1, 1),
 );
 
+class _ChatRepository extends Fake implements ChatRepository {}
+
 void main() {
   late AssistantChatController controller;
   late ScrollController scroll;
   late GlobalKey<AssistantChatListState> listKey;
 
   setUp(() {
-    controller = AssistantChatController();
+    controller = AssistantChatController(repository: _ChatRepository());
     scroll = ScrollController();
     listKey = GlobalKey<AssistantChatListState>();
   });

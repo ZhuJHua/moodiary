@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
@@ -9,13 +10,10 @@ import 'package:moodiary_assistant/src/application/context_compaction_controller
 import 'package:moodiary_assistant/src/application/diary_citation.dart';
 import 'package:moodiary_assistant/src/application/session_title_controller.dart';
 import 'package:moodiary_assistant/src/application/tool_approval.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
-import 'package:moodiary_assistant/src/data/chat_repository.dart';
-import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
-import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
-import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_assistant/src/data/tool_call_data.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
@@ -30,11 +28,11 @@ import 'package:moodiary_assistant/src/presentation/reasoning_label.dart';
 import 'package:moodiary_assistant/src/presentation/tool_approval_card.dart';
 import 'package:moodiary_assistant/src/presentation/tool_approval_preview.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
@@ -59,7 +57,7 @@ Widget _codeBlock(
   bool closed,
 ) => MarkdownCodeBlock(name: name, code: code);
 
-class AssistantPage extends StatefulWidget {
+class AssistantPage extends ConsumerStatefulWidget {
   final String? initialSessionId;
 
   final String? initialTitle;
@@ -80,7 +78,7 @@ class AssistantPage extends StatefulWidget {
   );
 
   @override
-  State<AssistantPage> createState() => _AssistantPageState();
+  ConsumerState<AssistantPage> createState() => _AssistantPageState();
 }
 
 String _sessionTitle(ChatSession? session, Translations l10n) {
@@ -88,7 +86,7 @@ String _sessionTitle(ChatSession? session, Translations l10n) {
   return title.isEmpty ? l10n.assistant.newChat : title;
 }
 
-class _AssistantPageState extends State<AssistantPage> {
+class _AssistantPageState extends ConsumerState<AssistantPage> {
   final _inputController = TextEditingController();
   final _inputFocusNode = FocusNode();
   final _chatScroll = ScrollController();
@@ -139,8 +137,15 @@ class _AssistantPageState extends State<AssistantPage> {
 
   String? _citedDiaryId;
 
-  final ContextCompactionController _compaction = ContextCompactionController();
-  final SessionTitleController _title = SessionTitleController();
+  late final _resolver = ModelResolver(ref.read(llmPresetRepositoryProvider));
+  late final _compaction = ContextCompactionController(
+    ref.read(assistantServiceProvider),
+    _resolver,
+  );
+  late final _title = SessionTitleController(
+    ref.read(assistantServiceProvider),
+    _resolver,
+  );
   final ToolApprovalGate _approvalGate = ToolApprovalGate();
 
   ToolApprovalRequest? _approval;
@@ -203,7 +208,7 @@ class _AssistantPageState extends State<AssistantPage> {
       _approvalPreview = null;
     });
     unawaited(
-      buildToolApprovalPreview(request, l10n)
+      buildToolApprovalPreview(ref, request, l10n)
           .catchError(
             (Object _) => ToolApprovalPreview(
               subtitle: '',
@@ -253,7 +258,9 @@ class _AssistantPageState extends State<AssistantPage> {
   @override
   void initState() {
     super.initState();
-    _chat = AssistantChatController();
+    _chat = AssistantChatController(
+      repository: ref.read(chatRepositoryProvider),
+    );
     _disclaimerAccepted =
         MoodiaryKVs.assistantDisclaimerAccepted.get() ?? false;
     _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get();
@@ -294,7 +301,8 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Future<void> _refreshReady() async {
-    final repo = getIt<LlmProviderRepository>();
+    final presets = ref.read(llmPresetRepositoryProvider);
+    final repo = ref.read(llmProviderRepositoryProvider);
     final session = _session;
     final pinned = session == null || session.providerId.isEmpty
         ? null
@@ -324,14 +332,13 @@ class _AssistantPageState extends State<AssistantPage> {
         : last != null && lastModel.isNotEmpty
         ? lastModel
         : (provider?.defaultModel ?? '');
+    if (!mounted) return;
     final resolved = provider == null
         ? null
-        : ModelResolver.resolve(provider, wanted);
+        : _resolver.resolve(provider, wanted);
     final model = resolved?.preset;
     final catalogMissing =
-        provider != null &&
-        provider.isPreset &&
-        getIt<LlmPresetRepository>().cachedAt == 0;
+        provider != null && provider.isPreset && presets.cachedAt == 0;
     final modelMissing =
         provider != null &&
         provider.isPreset &&
@@ -341,7 +348,7 @@ class _AssistantPageState extends State<AssistantPage> {
     final caps = _capabilities(provider, model);
     final levels = provider == null
         ? const <String>[]
-        : ModelResolver.levelsFor(provider, wanted);
+        : _resolver.levelsFor(provider, wanted);
     if (mounted) {
       setState(() {
         _resolved = true;
@@ -383,20 +390,22 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Future<List<ProviderModels>> _providerGroups() async {
-    final repo = getIt<LlmProviderRepository>();
+    final repo = ref.read(llmProviderRepositoryProvider);
     final providers = await repo.getAllProviders();
     final keys = await Future.wait(providers.map((p) => repo.getKey(p.id)));
     return [
       for (final (i, p) in providers.indexed)
         (
           provider: p,
-          options: ModelResolver.optionsFor(p),
+          options: _resolver.optionsFor(p),
           hasKey: keys[i]?.isNotEmpty ?? false,
         ),
     ];
   }
 
   Future<void> _pickModel() async {
+    final chats = ref.read(chatRepositoryProvider);
+    final presets = ref.read(llmPresetRepositoryProvider);
     if (_sending) return;
     final groups = await _providerGroups();
     if (!mounted) return;
@@ -411,9 +420,9 @@ class _AssistantPageState extends State<AssistantPage> {
       providerId: _provider?.id ?? '',
       modelId: _modelId,
       level: _reasoningLevel,
-      catalogUpdatedAt: getIt<LlmPresetRepository>().cachedAt,
+      catalogUpdatedAt: presets.cachedAt,
       onDownloadCatalog: () async {
-        await getIt<LlmPresetRepository>().refresh();
+        await presets.refresh();
         return _providerGroups();
       },
       onManageProviders: () async {
@@ -432,7 +441,7 @@ class _AssistantPageState extends State<AssistantPage> {
         model: choice.modelId,
         reasoningEffort: level ?? reasoningFollowValue,
       );
-      await getIt<ChatRepository>().upsertSession(updated);
+      await chats.upsertSession(updated);
       if (!mounted) return;
       setState(() => _session = updated);
     }
@@ -461,14 +470,13 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Future<bool> _confirmSwitch(GlobalModelChoice choice) async {
+    final providers = ref.read(llmProviderRepositoryProvider);
     if (choice.providerId == _provider?.id && choice.modelId == _modelId) {
       return true;
     }
-    final provider = await getIt<LlmProviderRepository>().getProvider(
-      choice.providerId,
-    );
+    final provider = await providers.getProvider(choice.providerId);
     if (provider == null || !mounted) return true;
-    final resolved = ModelResolver.resolve(provider, choice.modelId);
+    final resolved = _resolver.resolve(provider, choice.modelId);
     final caps = _capabilities(provider, resolved.preset);
     final l10n = context.l10n;
     final notes = <String>[];
@@ -537,7 +545,8 @@ class _AssistantPageState extends State<AssistantPage> {
   );
 
   Future<void> _loadSessionById(String id) async {
-    final session = await getIt<ChatRepository>().getSession(id);
+    final chats = ref.read(chatRepositoryProvider);
+    final session = await chats.getSession(id);
     if (!mounted) return;
     if (session == null) {
       Navigator.of(context).maybePop();
@@ -568,6 +577,7 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Future<ChatSession?> _ensureSession(String firstUserText) async {
+    final chats = ref.read(chatRepositoryProvider);
     final existing = _session;
     if (existing != null) return existing;
     final provider = _provider;
@@ -577,17 +587,20 @@ class _AssistantPageState extends State<AssistantPage> {
       model: _modelId,
       reasoningEffort: _reasoningLevel ?? reasoningFollowValue,
     );
-    await getIt<ChatRepository>().upsertSession(session);
+    await chats.upsertSession(session);
+    if (!mounted) return null;
     _chat.sessionId = session.id;
-    if (mounted) setState(() => _session = session);
+    setState(() => _session = session);
     unawaited(_generateTitle(session, firstUserText));
     return session;
   }
 
   Future<void> _generateTitle(ChatSession session, String firstUserText) async {
+    final chats = ref.read(chatRepositoryProvider);
+    final providers = ref.read(llmProviderRepositoryProvider);
     final provider = _provider;
     if (provider == null) return;
-    final key = await getIt<LlmProviderRepository>().getKey(provider.id);
+    final key = await providers.getKey(provider.id);
     if (key == null || key.isEmpty) return;
     if (!mounted || _session?.id != session.id) return;
 
@@ -601,7 +614,7 @@ class _AssistantPageState extends State<AssistantPage> {
     final current = _session;
     if (updated == null || !mounted || current?.id != session.id) return;
     final merged = current!.copyWith(title: updated.title);
-    await getIt<ChatRepository>().upsertSession(merged);
+    await chats.upsertSession(merged);
     if (!mounted || _session?.id != session.id) return;
     setState(() => _session = merged);
   }
@@ -652,11 +665,12 @@ class _AssistantPageState extends State<AssistantPage> {
     List<String>? allowedTools,
     AssistantToolGate? toolGate,
   }) async {
+    final providers = ref.read(llmProviderRepositoryProvider);
     final provider = _provider;
     if (provider == null) return null;
-    final key = await getIt<LlmProviderRepository>().getKey(provider.id);
+    final key = await providers.getKey(provider.id);
     if (key == null || key.isEmpty) return null;
-    final route = ModelResolver.resolve(provider, _modelId);
+    final route = _resolver.resolve(provider, _modelId);
     return AssistantChatRequest(
       type: route.protocol,
       baseUrl: route.baseUrl,
@@ -791,15 +805,16 @@ class _AssistantPageState extends State<AssistantPage> {
     required AssistantTurn userMessage,
     required DateTime placeholderAt,
   }) async {
+    final assistantService = ref.read(assistantServiceProvider);
+    final memories = ref.read(memoryRepositoryProvider);
+    final index = ref.read(embedIndexServiceProvider);
     _listKey.currentState?.pinToBottom();
     final l10n = context.l10n;
     final toolsActive = _canUseTools;
     final memoryEnabled =
         toolsActive && (MoodiaryKVs.assistantMemoryEnabled.get() ?? true);
     final allowedTools = memoryEnabled ? null : toolIdsWithoutMemory();
-    final factCount = memoryEnabled
-        ? await getIt<MemoryRepository>().count()
-        : null;
+    final factCount = memoryEnabled ? await memories.count() : null;
     if (!mounted || gen != _generation) return;
     final systemPrompt = buildStableSystemPrompt(
       toolsEnabled: toolsActive,
@@ -810,7 +825,7 @@ class _AssistantPageState extends State<AssistantPage> {
     final volatilePrefix = buildTurnContext(
       nowLocal: .now(),
       factCount: factCount,
-      semanticSearch: AssistantToolRegistry.semanticAvailable,
+      semanticSearch: index.enabled,
     );
 
     _resetThinkingState();
@@ -856,7 +871,7 @@ class _AssistantPageState extends State<AssistantPage> {
     final needApiKeyText = l10n.assistant.needApiKey;
     var errored = false;
     try {
-      _streamSub = getIt<AssistantService>()
+      _streamSub = assistantService
           .chat(request)
           .listen(
             (event) {
@@ -992,11 +1007,13 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Future<ChatSession?> _maybeCompact({bool force = false}) async {
+    final chats = ref.read(chatRepositoryProvider);
+    final providers = ref.read(llmProviderRepositoryProvider);
     final session = _session;
     if (session == null || (!force && _lastTurnInputTokens <= 0)) return null;
     final provider = _provider;
     if (provider == null) return null;
-    final key = await getIt<LlmProviderRepository>().getKey(provider.id);
+    final key = await providers.getKey(provider.id);
     if (key == null || key.isEmpty) return null;
     if (!mounted || _session?.id != session.id) return null;
 
@@ -1018,7 +1035,7 @@ class _AssistantPageState extends State<AssistantPage> {
       compactedAt: updated.compactedAt,
       compactedInputTokensAtTrigger: updated.compactedInputTokensAtTrigger,
     );
-    await getIt<ChatRepository>().upsertSession(merged);
+    await chats.upsertSession(merged);
     if (!mounted || _session?.id != session.id) return null;
     setState(() => _session = merged);
     _syncCompactionNotice();
@@ -1058,6 +1075,7 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Future<void> _restoreFullHistory() async {
+    final chats = ref.read(chatRepositoryProvider);
     final session = _session;
     if (session == null || session.compactedSummary == null) return;
     final restored = session.copyWith(
@@ -1066,7 +1084,7 @@ class _AssistantPageState extends State<AssistantPage> {
       compactedAt: null,
       compactedInputTokensAtTrigger: null,
     );
-    await getIt<ChatRepository>().upsertSession(restored);
+    await chats.upsertSession(restored);
     if (!mounted) return;
     setState(() => _session = restored);
     _syncCompactionNotice();
@@ -1231,13 +1249,15 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Future<void> _pickImage() async {
+    final picker = ref.read(filePickerProvider);
+    final decoder = ref.read(heifDecoderProvider);
     if (_sending) return;
     _inputFocusNode.unfocus();
-    final files = await getIt<IFilePicker>().pickImages(context, maxAssets: 1);
+    final files = await picker.pickImages(context, maxAssets: 1);
     if (files.isEmpty || !mounted) return;
     final first = files.first;
     final saved = await MediaManager.saveImages(
-      decoder: getIt<IHeifDecoder>(),
+      decoder: decoder,
       imageFileList: [first],
     );
     final name = saved[first.path];
@@ -1284,7 +1304,7 @@ class _AssistantPageState extends State<AssistantPage> {
         _ModelSwitchChip(
           model: switch (_providers[providerId]) {
             final p? =>
-              '${p.name} · ${ModelResolver.resolve(p, model).preset?.name ?? model}',
+              '${p.name} · ${_resolver.resolve(p, model).preset?.name ?? model}',
             null => model,
           },
         ),
@@ -2539,11 +2559,11 @@ class _BubbleActionButton extends StatelessWidget {
   }
 }
 
-class AssistantSessionListPage extends StatelessWidget {
+class AssistantSessionListPage extends ConsumerWidget {
   const AssistantSessionListPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
@@ -2562,7 +2582,7 @@ class AssistantSessionListPage extends StatelessWidget {
           title: session.title,
         ).push(context),
         onDelete: (session) =>
-            getIt<ChatRepository>().deleteSession(session.id),
+            ref.read(chatRepositoryProvider).deleteSession(session.id),
         padding: .only(bottom: 8 + MediaQuery.paddingOf(context).bottom),
       ),
     );
@@ -2618,7 +2638,7 @@ class _HistoryRow extends _HistoryEntry {
   const _HistoryRow(this.session, this.bucket);
 }
 
-class _SessionListView extends StatefulWidget {
+class _SessionListView extends ConsumerStatefulWidget {
   final void Function(ChatSession session) onSelect;
 
   final void Function(ChatSession session) onDelete;
@@ -2632,10 +2652,10 @@ class _SessionListView extends StatefulWidget {
   });
 
   @override
-  State<_SessionListView> createState() => _SessionListViewState();
+  ConsumerState<_SessionListView> createState() => _SessionListViewState();
 }
 
-class _SessionListViewState extends State<_SessionListView> {
+class _SessionListViewState extends ConsumerState<_SessionListView> {
   List<ChatSession>? _sessions;
   StreamSubscription<void>? _sub;
 
@@ -2643,7 +2663,10 @@ class _SessionListViewState extends State<_SessionListView> {
   void initState() {
     super.initState();
     _load();
-    _sub = getIt<ChatRepository>().sessionEvents.listen((_) => _load());
+    _sub = ref
+        .read(chatRepositoryProvider)
+        .sessionEvents
+        .listen((_) => _load());
   }
 
   @override
@@ -2653,7 +2676,7 @@ class _SessionListViewState extends State<_SessionListView> {
   }
 
   Future<void> _load() async {
-    final sessions = await getIt<ChatRepository>().getAllSessions();
+    final sessions = await ref.read(chatRepositoryProvider).getAllSessions();
     if (mounted) setState(() => _sessions = sessions);
   }
 
@@ -2721,15 +2744,15 @@ class _HistoryGroupLabel extends StatelessWidget {
   }
 }
 
-class _EmptySessions extends StatefulWidget {
+class _EmptySessions extends ConsumerStatefulWidget {
   const _EmptySessions();
 
   @override
-  State<_EmptySessions> createState() => _EmptySessionsState();
+  ConsumerState<_EmptySessions> createState() => _EmptySessionsState();
 }
 
-class _EmptySessionsState extends State<_EmptySessions> {
-  late final _repo = getIt<LlmProviderRepository>();
+class _EmptySessionsState extends ConsumerState<_EmptySessions> {
+  late final _repo = ref.read(llmProviderRepositoryProvider);
   late final StreamSubscription<void> _subscription;
   LlmProvider? _provider;
   bool _loaded = false;

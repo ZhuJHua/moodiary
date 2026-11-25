@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -19,16 +20,16 @@ const int _maxPort = 65535;
 
 enum _TokenAction { copy, regenerate }
 
-class McpPage extends StatefulWidget {
+class McpPage extends ConsumerStatefulWidget {
   const McpPage({super.key});
 
   @override
-  State<McpPage> createState() => _McpPageState();
+  ConsumerState<McpPage> createState() => _McpPageState();
 }
 
-class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
-  final McpService _service = getIt<McpService>();
-  final McpKeepAlive _keepAlive = getIt<McpKeepAlive>();
+class _McpPageState extends ConsumerState<McpPage> with WidgetsBindingObserver {
+  late final McpService _service = ref.read(mcpServiceProvider);
+  late final McpKeepAlive _keepAlive = ref.read(mcpKeepAliveProvider);
 
   String? _lanHost;
   List<KeepAlivePermissionStatus> _permissions = const [];
@@ -37,14 +38,13 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _service.state.addListener(_onStateChanged);
+    ref.listenManual(mcpServerStateProvider, (_, _) => _onStateChanged());
     _onStateChanged();
     unawaited(_refreshPermissions());
   }
 
   @override
   void dispose() {
-    _service.state.removeListener(_onStateChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -58,29 +58,25 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(mcpServerStateProvider);
+    final lan = ref.watch(kvValueProvider(MoodiaryKVs.mcpAllowLan));
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.app.mcpPageTitle)),
-      body: ValueListenableBuilder<McpServerState>(
-        valueListenable: _service.state,
-        builder: (context, state, _) => ValueListenableBuilder<bool>(
-          valueListenable: MoodiaryKVs.mcpAllowLan.getNotifier(),
-          builder: (context, lan, _) => CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: const .fromLTRB(12, 4, 12, 0),
-                sliver: SliverToBoxAdapter(child: _panel(context, state, lan)),
-              ),
-              SliverPadding(
-                padding: const .symmetric(horizontal: 8),
-                sliver: MSliverSettingGroup(
-                  title: context.l10n.app.mcpGroupSettings,
-                  children: _settingTiles(context, state, lan),
-                ),
-              ),
-              SliverGap(context.safeBottom),
-            ],
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const .fromLTRB(12, 4, 12, 0),
+            sliver: SliverToBoxAdapter(child: _panel(context, state, lan)),
           ),
-        ),
+          SliverPadding(
+            padding: const .symmetric(horizontal: 8),
+            sliver: MSliverSettingGroup(
+              title: context.l10n.app.mcpGroupSettings,
+              children: _settingTiles(context, state, lan),
+            ),
+          ),
+          SliverGap(context.safeBottom),
+        ],
       ),
     );
   }
@@ -202,12 +198,9 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
           const Gap(4),
           Padding(
             padding: const .only(top: 6),
-            child: ValueListenableBuilder<bool>(
-              valueListenable: MoodiaryKVs.mcpEnabled.getNotifier(),
-              builder: (context, enabled, _) => Switch(
-                value: enabled,
-                onChanged: (on) => unawaited(_setEnabled(on)),
-              ),
+            child: Switch(
+              value: ref.watch(kvValueProvider(MoodiaryKVs.mcpEnabled)),
+              onChanged: (on) => unawaited(_setEnabled(on)),
             ),
           ),
         ],
@@ -293,20 +286,21 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
         trailing: const Icon(LucideIcons.chevronRight),
         onTap: () => unawaited(_openToken()),
       ),
-      SettingListTile(
-        title: l10n.mcpKeepAlivePermissionTitle,
-        leading: const Icon(LucideIcons.batteryCharging),
-        trailing: Row(
-          mainAxisSize: .min,
-          spacing: 4,
-          children: [
-            if (_permissions.isNotEmpty)
-              _value(context, _keepAliveSummary(context)),
-            const Icon(LucideIcons.chevronRight),
-          ],
+      if (Platform.isAndroid)
+        SettingListTile(
+          title: l10n.mcpKeepAlivePermissionTitle,
+          leading: const Icon(LucideIcons.batteryCharging),
+          trailing: Row(
+            mainAxisSize: .min,
+            spacing: 4,
+            children: [
+              if (_permissions.isNotEmpty)
+                _value(context, _keepAliveSummary(context)),
+              const Icon(LucideIcons.chevronRight),
+            ],
+          ),
+          onTap: () => unawaited(_openKeepAliveSheet()),
         ),
-        onTap: () => unawaited(_openKeepAliveSheet()),
-      ),
     ];
   }
 
@@ -352,7 +346,7 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
   }
 
   void _onStateChanged() {
-    if (McpService.allowLan && !_service.state.value.running) {
+    if (McpService.allowLan && !ref.read(mcpServerStateProvider).running) {
       unawaited(_refreshLanHost());
     }
   }
@@ -437,7 +431,7 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
       if (!confirmed || !mounted) return;
     }
     await _service.updateConfig(lan: lan);
-    _onStateChanged();
+    if (mounted) _onStateChanged();
   }
 
   Future<void> _openToken() async {
@@ -499,14 +493,12 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
   }
 
   Future<void> _openKeepAliveSheet() async {
-    await MSheet.show<void>(
-      context,
-      builder: (_) => McpKeepAliveSheet(keepAlive: _keepAlive),
-    );
+    await MSheet.show<void>(context, builder: (_) => const McpKeepAliveSheet());
     await _refreshPermissions();
   }
 
   Future<void> _refreshPermissions() async {
+    if (!Platform.isAndroid || !mounted) return;
     final permissions = await _keepAlive.statuses();
     if (!mounted) return;
     setState(() => _permissions = permissions);

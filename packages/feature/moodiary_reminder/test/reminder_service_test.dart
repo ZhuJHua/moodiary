@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart' show AppLifecycleState, VoidCallback;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -66,6 +66,7 @@ void main() {
   late _Notifications notifications;
   late _Permission permission;
   late _Service service;
+  late ProviderContainer container;
   final morning = Reminder(id: 1, hour: 8, minute: 5, weekdays: {5, 1});
   final evening = Reminder(id: 2, hour: 21, minute: 30, weekdays: {1, 2});
 
@@ -77,19 +78,22 @@ void main() {
 
   setUp(() async {
     await LocaleSettings.setLocale(AppLocale.zh);
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
     MoodiaryKVs.reminders.set(Reminder.encode([morning, evening]));
     MoodiaryKVs.reminderEnabled.set(true);
     notifications = _Notifications();
     permission = _Permission();
     service = _Service(notifications, permission);
-  });
-
-  tearDown(() async {
-    service.dispose();
-    expect(notifications.handler, isNull);
-    await LocaleSettings.setLocale(AppLocale.zh);
-    await getIt.reset();
+    container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [reminderServiceProvider.overrideWithValue(service)],
+    );
+    addTearDown(() async {
+      await service.dispose();
+      expect(notifications.handler, isNull);
+      await LocaleSettings.setLocale(AppLocale.zh);
+    });
   });
 
   test(
@@ -166,7 +170,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(service.launchedFromNotification, isTrue);
       expect(taps, 1);
-      service.launchedFromNotification = false;
+      expect(service.consumeTap(), isTrue);
       notifications.handler!();
       await Future<void>.delayed(Duration.zero);
       expect(service.launchedFromNotification, isTrue);
@@ -225,32 +229,39 @@ void main() {
     await initialize();
     expect(service.next, DateTime(2026, 11, 16, 21, 30));
     expect(
-      reminderStatusLabel(strings, service),
+      reminderStatusLabel(strings, container.read(reminderStateProvider)),
       strings.reminder.next(day: strings.reminder.today, time: '21:30'),
     );
     service.now = service.next!;
+    container.invalidate(reminderStateProvider);
     expect(service.next, DateTime(2026, 11, 17, 21, 30));
     expect(
-      reminderStatusLabel(strings, service),
+      reminderStatusLabel(strings, container.read(reminderStateProvider)),
       strings.reminder.next(day: strings.reminder.tomorrow, time: '21:30'),
     );
     await service.remove(2);
     expect(service.next, DateTime(2026, 11, 20, 8, 5));
     expect(
-      reminderStatusLabel(strings, service),
+      reminderStatusLabel(strings, container.read(reminderStateProvider)),
       strings.reminder.next(day: strings.reminder.weekdays[4], time: '08:05'),
     );
     await service.setEnabled(false);
     expect(service.next, isNull);
-    expect(reminderStatusLabel(strings, service), strings.reminder.off);
+    expect(
+      reminderStatusLabel(strings, container.read(reminderStateProvider)),
+      strings.reminder.off,
+    );
     await service.save(morning.withEnabled(false));
     await service.setEnabled(true);
     expect(
-      reminderStatusLabel(strings, service),
+      reminderStatusLabel(strings, container.read(reminderStateProvider)),
       strings.reminder.noEnabledTimes,
     );
     await service.remove(1);
-    expect(reminderStatusLabel(strings, service), strings.reminder.addFirst);
+    expect(
+      reminderStatusLabel(strings, container.read(reminderStateProvider)),
+      strings.reminder.addFirst,
+    );
     expect(service.enabled, isFalse);
   });
 

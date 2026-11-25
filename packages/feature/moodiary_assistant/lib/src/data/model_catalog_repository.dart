@@ -1,8 +1,6 @@
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-@lazySingleton
 class ModelCatalogRepository {
   ModelCatalogRepository(this._http);
 

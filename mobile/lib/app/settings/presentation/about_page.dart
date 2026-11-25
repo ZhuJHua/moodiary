@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_mobile/app/settings/data/app_update_repository.dart';
@@ -13,15 +13,15 @@ const _legalese =
     'License v3.0. The licenses below cover the Dart, Rust and JavaScript '
     'packages it is built on.';
 
-class AboutPage extends StatefulWidget {
+class AboutPage extends ConsumerStatefulWidget {
   const AboutPage({super.key});
 
   @override
-  State<AboutPage> createState() => _AboutPageState();
+  ConsumerState<AboutPage> createState() => _AboutPageState();
 }
 
-class _AboutPageState extends State<AboutPage> {
-  late final _updateRepository = getIt<AppUpdateRepository>();
+class _AboutPageState extends ConsumerState<AboutPage> {
+  late final _updateRepository = ref.read(appUpdateRepositoryProvider);
 
   PackageInfo? _packageInfo;
   String _systemVersion = '...';

@@ -1,6 +1,5 @@
 import 'dart:ui' show VoidCallback;
 
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_native/moodiary_native.dart';
 
 abstract interface class ReminderNotifications {
@@ -11,7 +10,6 @@ abstract interface class ReminderNotifications {
   Future<bool> isChannelEnabled();
 }
 
-@LazySingleton(as: ReminderNotifications)
 class NativeReminderNotifications
     implements ReminderNotifications, ReminderNotificationsEvents {
   final _api = ReminderNotificationsApi();

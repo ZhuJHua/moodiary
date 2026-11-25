@@ -1,20 +1,20 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 
-class DataRepairTile extends StatefulWidget {
+class DataRepairTile extends ConsumerStatefulWidget {
   final bool isFirst;
   final bool isLast;
 
   const DataRepairTile({super.key, this.isFirst = false, this.isLast = false});
 
   @override
-  State<DataRepairTile> createState() => _DataRepairTileState();
+  ConsumerState<DataRepairTile> createState() => _DataRepairTileState();
 }
 
-class _DataRepairTileState extends State<DataRepairTile> {
+class _DataRepairTileState extends ConsumerState<DataRepairTile> {
   bool _repairing = false;
 
   @override
@@ -43,7 +43,7 @@ class _DataRepairTileState extends State<DataRepairTile> {
       message: l10n.app.repairMessage,
       confirmLabel: l10n.app.repairStart,
     );
-    if (!confirmed) return;
+    if (!confirmed || !mounted) return;
     await _repair();
   }
 
@@ -51,7 +51,7 @@ class _DataRepairTileState extends State<DataRepairTile> {
     setState(() => _repairing = true);
     toast.loading(message: l10n.app.repairRunning);
     try {
-      final report = await getIt<DiaryRepository>().repairData();
+      final report = await ref.read(diaryRepositoryProvider).repairData();
       await toast.dismiss();
       if (!mounted) return;
       await _showResult(report);

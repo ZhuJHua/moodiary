@@ -90,31 +90,24 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
   @override
   Widget build(BuildContext context) {
     final selecting = ref.watch(diarySelectionProvider).isNotEmpty;
-    return ValueListenableBuilder<bool>(
-      valueListenable: MoodiaryKVs.assistantEnabled.getNotifier(),
-      builder: (context, enabled, _) {
-        final tabs = enabled
-            ? _ShellTab.values
-            : const [_ShellTab.diary, _ShellTab.me];
-        if (!enabled && _tab == .assistant) _tab = .diary;
-        final drawerUsable = _tab == .diary && !selecting;
-        return Scaffold(
-          key: _scaffoldKey,
-          extendBody: true,
-          drawer: drawerUsable ? const CategoryDrawer() : null,
-          drawerEnableOpenDragGesture: drawerUsable,
-          body: MLazyIndexedStack(index: _tab.index, children: _pages),
-          bottomNavigationBar: MGlassNavBar(
-            selectedIndex: tabs.indexOf(_tab),
-            onDestinationSelected: (index) =>
-                setState(() => _tab = tabs[index]),
-            destinations: [
-              for (final tab in tabs) _navDestination(context, tab),
-            ],
-            action: _navAction(context),
-          ),
-        );
-      },
+    final enabled = ref.watch(kvValueProvider(MoodiaryKVs.assistantEnabled));
+    final tabs = enabled
+        ? _ShellTab.values
+        : const [_ShellTab.diary, _ShellTab.me];
+    if (!enabled && _tab == .assistant) _tab = .diary;
+    final drawerUsable = _tab == .diary && !selecting;
+    return Scaffold(
+      key: _scaffoldKey,
+      extendBody: true,
+      drawer: drawerUsable ? const CategoryDrawer() : null,
+      drawerEnableOpenDragGesture: drawerUsable,
+      body: MLazyIndexedStack(index: _tab.index, children: _pages),
+      bottomNavigationBar: MGlassNavBar(
+        selectedIndex: tabs.indexOf(_tab),
+        onDestinationSelected: (index) => setState(() => _tab = tabs[index]),
+        destinations: [for (final tab in tabs) _navDestination(context, tab)],
+        action: _navAction(context),
+      ),
     );
   }
 }

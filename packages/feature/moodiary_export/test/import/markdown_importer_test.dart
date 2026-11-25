@@ -5,7 +5,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_export/moodiary_export.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -30,6 +29,7 @@ class _FakeStore implements ImportMediaStore {
 
 void main() {
   late MoodiaryDatabase db;
+  late TagRepository tags;
   late DiaryRepository diaries;
   late CategoryRepository categories;
   late PlaceRepository places;
@@ -37,19 +37,22 @@ void main() {
   late MarkdownImporter importer;
 
   setUp(() {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
     db = MoodiaryDatabase.forTesting(
       NativeDatabase.memory(
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
       ),
     );
+    addTearDown(db.close);
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
-    getIt.registerSingleton<TagRepository>(TagRepository(db));
+    tags = TagRepository(db);
     places = PlaceRepository(db, diaries);
     root = Directory.systemTemp.createTempSync('md-importer');
     importer = MarkdownImporter(
       diaries: diaries,
+      tags: tags,
       categories: categories,
       places: places,
       media: _FakeStore(),
@@ -57,9 +60,7 @@ void main() {
     );
   });
 
-  tearDown(getIt.reset);
-  tearDown(() async {
-    await db.close();
+  tearDown(() {
     if (root.existsSync()) root.deleteSync(recursive: true);
   });
 
@@ -101,7 +102,7 @@ tags: ["a"]
     expect(
       resolveTagNames(
         first.tagIds,
-        await getIt<TagRepository>().getTagsByIds(first.tagIds),
+        await tags.getTagsByIds(first.tagIds),
       ).map((entry) => entry.name),
       ['a', l10n.common.legacySceneTravel],
     );

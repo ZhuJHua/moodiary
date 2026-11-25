@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
@@ -44,8 +43,10 @@ void main() {
   late CategoryRepository categories;
   late TestToolClient client;
   setUp(() {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
     db = openTestDatabase();
+    addTearDown(db.close);
     tagRepo = TagRepository(db);
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
@@ -58,10 +59,6 @@ void main() {
         surface: ToolSurface.mcp,
       ),
     );
-  });
-  tearDown(() async {
-    await getIt.reset();
-    await db.close();
   });
 
   Future<Map<String, dynamic>> run(

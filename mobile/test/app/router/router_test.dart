@@ -1,7 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_mobile/app/router/route_error_page.dart';
@@ -9,20 +9,18 @@ import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:mui/mui.dart';
 
 void main() {
-  setUp(
-    () => getIt.registerSingleton<StartupMigrationCoordinator>(
-      StartupMigrationCoordinator(),
-    ),
-  );
-  tearDown(getIt.reset);
-
   group('route tree config', () {
     testWidgets('unknown location lands on our own error page', (tester) async {
-      final router = createMobileRouter(
-        initialLocation: '/definitely-not-a-route',
-        navigatorKey: GlobalKey<NavigatorState>(),
+      final container = ProviderContainer.test(
+        retry: (_, _) => null,
+        overrides: [
+          migrationGateProvider.overrideWithBuild(
+            (ref, notifier) => (canStartData: true, canEnterHome: true),
+          ),
+        ],
       );
-      addTearDown(router.dispose);
+      final router = container.read(appRouterProvider)
+        ..go('/definitely-not-a-route');
       await tester.pumpWidget(
         TranslationProvider(
           child: MaterialApp.router(
@@ -39,42 +37,38 @@ void main() {
   });
 
   group('migration gate redirect', () {
-    tearDown(() => EditorMigrationService.requiresMigration = false);
-
-    test('迁移未完成时除锁屏与迁移页外一律重定向', () {
-      EditorMigrationService.requiresMigration = true;
-      expect(migrationGateRedirect('/'), EditorMigrationRoute.path);
-      expect(
-        migrationGateRedirect(DiarySearchRoute.path),
-        EditorMigrationRoute.path,
-      );
-      expect(migrationGateRedirect(EditorMigrationRoute.path), isNull);
-      expect(migrationGateRedirect(LockRoute.path), isNull);
-    });
-
-    for (final state in LegacyDatabaseState.values.where(
-      (state) => state != LegacyDatabaseState.none,
-    )) {
-      test('旧库状态 $state 保留锁屏和迁移入口', () {
-        expect(
-          migrationGateRedirect('/', legacyState: state),
-          EditorMigrationRoute.path,
+    for (final canEnterHome in [false, true]) {
+      testWidgets('router follows migration gate: canEnterHome=$canEnterHome', (
+        tester,
+      ) async {
+        final container = ProviderContainer.test(
+          retry: (_, _) => null,
+          overrides: [
+            migrationGateProvider.overrideWithBuild(
+              (_, _) => (canStartData: true, canEnterHome: canEnterHome),
+            ),
+          ],
         );
-        expect(
-          migrationGateRedirect(LockRoute.path, legacyState: state),
-          isNull,
-        );
-        expect(
-          migrationGateRedirect(EditorMigrationRoute.path, legacyState: state),
-          isNull,
-        );
+        final router = container.read(appRouterProvider);
+        const host = Key('route-parser');
+        await tester.pumpWidget(const SizedBox(key: host));
+        final context = tester.element(find.byKey(host));
+        for (final (path, gated) in [
+          (DiaryHomeRoute.path, EditorMigrationRoute.path),
+          (DiarySearchRoute.path, EditorMigrationRoute.path),
+          (EditorMigrationRoute.path, EditorMigrationRoute.path),
+          (LockRoute.path, LockRoute.path),
+        ]) {
+          final matches = await router.routeInformationParser
+              .parseRouteInformationWithDependencies(
+                RouteInformation(uri: Uri.parse(path)),
+                context,
+              );
+          expect(matches.error, isNull);
+          expect(matches.uri.path, canEnterHome ? path : gated, reason: path);
+        }
       });
     }
-
-    test('无待迁移时不重定向', () {
-      EditorMigrationService.requiresMigration = false;
-      expect(migrationGateRedirect('/'), isNull);
-    });
   });
 
   test('params 只放 JSON 标量：go_router 恢复状态时会 json.encode', () {

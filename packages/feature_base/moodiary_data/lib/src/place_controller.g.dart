@@ -33,7 +33,7 @@ final class PlaceControllerProvider
   PlaceController create() => PlaceController();
 }
 
-String _$placeControllerHash() => r'e31dcadc6edf6cb01b9965b190943dd60d4bd70b';
+String _$placeControllerHash() => r'ca2726978b2c74cced9882d2799b23d12ed5711b';
 
 abstract class _$PlaceController extends $AsyncNotifier<List<Place>> {
   FutureOr<List<Place>> build();
@@ -98,7 +98,7 @@ final class OrderedPlacesProvider
   }
 }
 
-String _$orderedPlacesHash() => r'7626954db1c7ea5ad1ffdc07141134154dabc477';
+String _$orderedPlacesHash() => r'767b7d11fd9f070d2e7a5b4aec5db6d4cdfd42d1';
 
 @ProviderFor(placeById)
 final placeByIdProvider = PlaceByIdFamily._();
@@ -216,4 +216,4 @@ final class PlaceFootprintsProvider
   }
 }
 
-String _$placeFootprintsHash() => r'3503d9864260ca396a2c64d771065bc50f721df0';
+String _$placeFootprintsHash() => r'bf348af07d41852d54bf93ab0e44c976194c38bf';

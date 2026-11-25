@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:meta/meta.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -17,11 +17,10 @@ import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation_token.dart';
 import 'package:moodiary_sync/src/data/sync_exclusive.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
-import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
@@ -55,49 +54,40 @@ class IncrementalSyncEngine {
   static const int _minConcurrency = 1;
   static const int _maxConcurrency = 32;
 
-  static Future<IncrementalSyncEngine> forCloud(
-    IRemoteSyncBackend backend, {
-    SyncTrigger? trigger,
-  }) async {
-    if (!await backend.isReady()) throw backend.notReadyError;
-    return IncrementalSyncEngine(backend, trigger: trigger);
-  }
-
   factory IncrementalSyncEngine(
     RemoteObjectStore backend, {
-    SyncLogger? logger,
-    SyncDiaryStore? diaryStore,
-    SyncCategoryStore? categoryStore,
-    SyncPlaceStore? placeStore,
-    SyncTagStore? tagStore,
-    SyncTombstoneStore? tombstoneStore,
+    required SyncLogger logger,
+    required SyncDiaryStore diaryStore,
+    required SyncCategoryStore categoryStore,
+    required SyncPlaceStore placeStore,
+    required SyncTagStore tagStore,
+    required SyncTombstoneStore tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
     int? concurrency,
-    OpenDiaryRegistry? openDiaries,
-    SyncCancellation? cancellation,
-    SyncDirtyTracker? dirty,
-    SyncPendingTracker? pending,
+    required OpenDiaryRegistry openDiaries,
+    required SyncCancellationToken cancellation,
+    required SyncDirtyTracker dirty,
+    required SyncPendingTracker pending,
     String? cacheDirectory,
-    Future<Set<String>> Function() configuredBackends =
-        configuredCloudBackendIds,
+    required Future<Set<String>> Function() configuredBackends,
     SyncTrigger? trigger,
   }) {
     final n = concurrency ?? resolveConcurrency();
     return IncrementalSyncEngine._(
       _GatedBackend(backend, n),
       n,
-      logger ?? getIt<SyncLogger>(),
-      diaryStore ?? RepoSyncDiaryStore(),
-      categoryStore ?? RepoSyncCategoryStore(),
-      placeStore ?? RepoSyncPlaceStore(),
-      tagStore ?? RepoSyncTagStore(),
-      tombstoneStore ?? RepoSyncTombstoneStore(),
+      logger,
+      diaryStore,
+      categoryStore,
+      placeStore,
+      tagStore,
+      tombstoneStore,
       mediaFiles ?? DiskSyncMediaFiles(),
       cipherProvider ?? SyncCipher.current,
-      openDiaries ?? getIt<OpenDiaryRegistry>(),
-      cancellation ?? getIt<SyncCancellation>(),
-      dirty ?? getIt<SyncDirtyTracker>(),
+      openDiaries,
+      cancellation,
+      dirty,
       pending,
       cacheDirectory,
       configuredBackends,
@@ -126,9 +116,9 @@ class IncrementalSyncEngine {
   ) : _mediaGate = Pool(concurrency);
 
   final OpenDiaryRegistry _openDiaries;
-  final SyncCancellation _cancellation;
+  final SyncCancellationToken _cancellation;
   final SyncDirtyTracker _dirty;
-  final SyncPendingTracker? _pending;
+  final SyncPendingTracker _pending;
   final String? _cacheDirectory;
   final Future<Set<String>> Function() _configuredBackends;
 
@@ -142,7 +132,7 @@ class IncrementalSyncEngine {
   }
 
   static Future<T> runExclusive<T>(Future<T> Function() body) =>
-      runSyncExclusive(body);
+      runMediaExclusive(body);
 
   bool _distrustRemoteMedia = false;
 
@@ -154,7 +144,8 @@ class IncrementalSyncEngine {
 
   Future<T> _exclusive<T>(Future<T> Function() body) {
     return runSyncExclusive(
-      () => RemoteLease.protect(backend, () async {
+      _cancellation,
+      (_) => RemoteLease.protect(backend, () async {
         try {
           return await body();
         } catch (e) {
@@ -166,7 +157,6 @@ class IncrementalSyncEngine {
           rethrow;
         }
       }, logger: _logger),
-      cancellation: _cancellation,
     );
   }
 

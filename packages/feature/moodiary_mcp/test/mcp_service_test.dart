@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart';
 import 'package:moodiary_mcp/src/tools/register_moodiary_tools.dart';
 import 'package:moodiary_mcp/src/transport/mcp_http_endpoint.dart';
@@ -43,6 +43,7 @@ class _ControlledEndpoint extends McpHttpEndpoint {
 void main() {
   late MoodiaryDatabase db;
   late McpService service;
+  late ProviderContainer container;
   late HttpClient http;
   late Completer<_ControlledEndpoint> firstEndpoint;
   Completer<void>? startGate;
@@ -53,16 +54,14 @@ void main() {
   late StreamController<Object?> networkChanges;
   final endpoints = <_ControlledEndpoint>[];
 
-  setUpAll(() {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-    getIt.registerSingleton<ISecureKVStorage>(MemorySecureKVStorage());
+  setUp(() {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+    SecureKVStore.installForTesting(MemorySecureKVStorage());
+    addTearDown(SecureKVStore.resetForTesting);
   });
 
-  tearDownAll(getIt.reset);
-
   setUp(() async {
-    getIt<IKVStorage>().clear();
-    await getIt<ISecureKVStorage>().clear();
     MoodiaryKVs.mcpPort.set(0);
     endpoints.clear();
     firstEndpoint = Completer<_ControlledEndpoint>();
@@ -77,40 +76,48 @@ void main() {
     final categories = CategoryRepository(db);
     final tags = TagRepository(db);
     final insights = MoodInsightsRepository(db);
-    service = McpService.forTesting(diaries, categories, tags, insights, () {
-      final endpoint = _ControlledEndpoint(
-        now: () => now,
-        listLanHosts: lanHosts == null
-            ? null
-            : () async {
-                interfaceReads++;
-                return lanHosts!;
-              },
-        startGate: endpoints.isEmpty ? startGate : null,
-        startFailure: startFailure,
-        serverFactory: (iconUri) => buildMoodiaryServer(
-          diaries: diaries,
-          categories: categories,
-          tags: tags,
-          insights: insights,
-          appVersion: 'test',
-          iconUri: iconUri,
-        ),
-      );
-      endpoints.add(endpoint);
-      if (!firstEndpoint.isCompleted) firstEndpoint.complete(endpoint);
-      return endpoint;
-    }, networkChanges.stream);
+    container = ProviderContainer.test(retry: (_, _) => null);
+    service = McpService.forTesting(
+      diaries,
+      categories,
+      tags,
+      insights,
+      container.read(mcpServerStateProvider.notifier),
+      () {
+        final endpoint = _ControlledEndpoint(
+          now: () => now,
+          listLanHosts: lanHosts == null
+              ? null
+              : () async {
+                  interfaceReads++;
+                  return lanHosts!;
+                },
+          startGate: endpoints.isEmpty ? startGate : null,
+          startFailure: startFailure,
+          serverFactory: (iconUri) => buildMoodiaryServer(
+            diaries: diaries,
+            categories: categories,
+            tags: tags,
+            insights: insights,
+            appVersion: 'test',
+            iconUri: iconUri,
+          ),
+        );
+        endpoints.add(endpoint);
+        if (!firstEndpoint.isCompleted) firstEndpoint.complete(endpoint);
+        return endpoint;
+      },
+      networkChanges.stream,
+    );
     http = HttpClient();
-  });
-
-  tearDown(() async {
-    if (startGate case final gate? when !gate.isCompleted) gate.complete();
-    http.close(force: true);
-    await service.stop();
-    await networkChanges.close();
-    service.state.dispose();
-    await db.close();
+    addTearDown(() async {
+      if (startGate case final gate? when !gate.isCompleted) gate.complete();
+      http.close(force: true);
+      await service.stop();
+      await networkChanges.close();
+      await service.dispose();
+      await db.close();
+    });
   });
 
   Future<void> waitUntilBound() async {
@@ -119,7 +126,11 @@ void main() {
 
   Future<int> authStatus(String? token) async {
     final request = await http.getUrl(
-      service.state.value.endpoints.first.replace(path: '/missing'),
+      container
+          .read(mcpServerStateProvider)
+          .endpoints
+          .first
+          .replace(path: '/missing'),
     );
     if (token != null) {
       request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
@@ -135,8 +146,8 @@ void main() {
     await service.enable();
 
     const failed = McpServerState(status: .failed, port: 0, failure: .unknown);
-    expect(service.state.value, failed);
-    expect(service.state.value.hashCode, failed.hashCode);
+    expect(container.read(mcpServerStateProvider), failed);
+    expect(container.read(mcpServerStateProvider).hashCode, failed.hashCode);
     expect(endpoints.single.port, 0);
     expect(service.enabled, isTrue);
 
@@ -146,9 +157,9 @@ void main() {
     await socket.close();
     await service.updateConfig(port: newPort);
 
-    expect(service.state.value.running, isTrue);
-    expect(service.state.value.port, newPort);
-    expect(service.state.value.failure, isNull);
+    expect(container.read(mcpServerStateProvider).running, isTrue);
+    expect(container.read(mcpServerStateProvider).port, newPort);
+    expect(container.read(mcpServerStateProvider).failure, isNull);
     expect(endpoints, hasLength(2));
   });
 
@@ -159,7 +170,7 @@ void main() {
       MoodiaryKVs.mcpAllowLan.set(true);
       await service.enable();
       final token = await service.ensureToken();
-      final uri = service.state.value.endpoints.first;
+      final uri = container.read(mcpServerStateProvider).endpoints.first;
 
       Future<HttpClientResponse> call(
         String host, {
@@ -210,10 +221,13 @@ void main() {
       expect(refreshed.statusCode, HttpStatus.ok);
       await refreshed.drain<void>();
       expect(interfaceReads, 2);
-      expect(service.state.value.endpoints.map((endpoint) => endpoint.host), [
-        '127.0.0.1',
-        '192.168.2.2',
-      ]);
+      expect(
+        container
+            .read(mcpServerStateProvider)
+            .endpoints
+            .map((endpoint) => endpoint.host),
+        ['127.0.0.1', '192.168.2.2'],
+      );
       expect(endpoints, hasLength(1));
 
       for (final host in ['192.168.1.2', 'evil.example']) {
@@ -245,15 +259,21 @@ void main() {
     ]) {
       final changed = Completer<void>();
       void onChanged() => changed.complete();
-      service.state.addListener(onChanged);
+      final sub = container.listen(
+        mcpServerStateProvider,
+        (_, _) => onChanged(),
+      );
       lanHosts = hosts;
       networkChanges.add('wifi');
       await changed.future;
-      service.state.removeListener(onChanged);
-      expect(service.state.value.endpoints.map((endpoint) => endpoint.host), [
-        '127.0.0.1',
-        ...hosts,
-      ]);
+      sub.close();
+      expect(
+        container
+            .read(mcpServerStateProvider)
+            .endpoints
+            .map((endpoint) => endpoint.host),
+        ['127.0.0.1', ...hosts],
+      );
     }
     expect(interfaceReads, 3);
     expect(endpoints, hasLength(1));
@@ -266,7 +286,10 @@ void main() {
     startGate = Completer<void>();
     final starting = service.enable();
     await waitUntilBound();
-    expect(service.state.value.status, McpServerStatus.starting);
+    expect(
+      container.read(mcpServerStateProvider).status,
+      McpServerStatus.starting,
+    );
     expect(endpoints.single.boundLan, isFalse);
 
     final updating = service.updateConfig(lan: true);
@@ -274,7 +297,7 @@ void main() {
     startGate!.complete();
     await Future.wait([starting, updating]);
 
-    expect(service.state.value.running, isTrue);
+    expect(container.read(mcpServerStateProvider).running, isTrue);
     expect(McpService.allowLan, isTrue);
     expect(endpoints, hasLength(2));
     expect(endpoints.first.port, 0);
@@ -297,8 +320,11 @@ void main() {
       await Future.wait([starting, disabling, restarting, restoring]);
 
       expect(service.enabled, isFalse);
-      expect(service.state.value.status, McpServerStatus.stopped);
-      expect(service.state.value.endpoints, isEmpty);
+      expect(
+        container.read(mcpServerStateProvider).status,
+        McpServerStatus.stopped,
+      );
+      expect(container.read(mcpServerStateProvider).endpoints, isEmpty);
       expect(endpoints, hasLength(1));
       expect(endpoints.single.port, 0);
       await expectLater(
@@ -323,7 +349,7 @@ void main() {
     expect(newToken, isNot(oldToken));
     expect(await service.ensureToken(), newToken);
     expect(await MoodiarySecureKVs.mcpToken.get(), newToken);
-    expect(service.state.value.running, isTrue);
+    expect(container.read(mcpServerStateProvider).running, isTrue);
     expect(endpoints, hasLength(2));
     expect(endpoints.first.port, 0);
     expect(await authStatus(oldToken), HttpStatus.unauthorized);
@@ -339,8 +365,11 @@ void main() {
       final token = await service.regenerateToken();
 
       expect(await service.ensureToken(), token);
-      expect(service.state.value.status, McpServerStatus.stopped);
-      expect(service.state.value.port, 12345);
+      expect(
+        container.read(mcpServerStateProvider).status,
+        McpServerStatus.stopped,
+      );
+      expect(container.read(mcpServerStateProvider).port, 12345);
       expect(endpoints, isEmpty);
     },
   );
@@ -348,7 +377,10 @@ void main() {
   test('concurrent restores leave a disabled server stopped', () async {
     await Future.wait([service.restore(), service.restore()]);
 
-    expect(service.state.value.status, McpServerStatus.stopped);
+    expect(
+      container.read(mcpServerStateProvider).status,
+      McpServerStatus.stopped,
+    );
     expect(endpoints, isEmpty);
     expect(await MoodiarySecureKVs.mcpToken.get(), isNull);
   });

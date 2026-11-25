@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -34,7 +33,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
   MoodInsightsScope _scope = .month;
   DateTime _anchor = moodDayKey(clock.now());
   DateTime? _selected;
-  late final _repository = getIt<MoodInsightsRepository>();
+  late final _repository = ref.read(moodInsightsRepositoryProvider);
   late Future<_InsightsData> _future;
   StreamSubscription<DiaryEvent>? _subscription;
   Timer? _debounce;
@@ -43,7 +42,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
   void initState() {
     super.initState();
     _future = _load();
-    _subscription = getIt<DiaryRepository>().diaryEvents.listen((_) {
+    _subscription = ref.read(diaryRepositoryProvider).diaryEvents.listen((_) {
       _debounce?.cancel();
       _debounce = Timer(const Duration(milliseconds: 200), _refresh);
     });
@@ -409,10 +408,12 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
   Future<void> _showDay(DateTime day) async {
     Future<List<Diary>> load() async {
       try {
-        return await getIt<DiaryRepository>().getDiariesByDateRange(
-          day,
-          moodDayOffset(day, 1).subtract(const Duration(microseconds: 1)),
-        );
+        return await ref
+            .read(diaryRepositoryProvider)
+            .getDiariesByDateRange(
+              day,
+              moodDayOffset(day, 1).subtract(const Duration(microseconds: 1)),
+            );
       } catch (e, s) {
         logger.e('Mood day diaries load failed', error: e, stackTrace: s);
         rethrow;

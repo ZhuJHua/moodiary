@@ -4,7 +4,6 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -101,9 +100,9 @@ class RemoteLease {
   static Future<T> protect<T>(
     RemoteObjectStore backend,
     Future<T> Function() body, {
-    SyncLogger? logger,
+    required SyncLogger logger,
   }) async {
-    final log = logger ?? getIt<SyncLogger>();
+    final log = logger;
     final owner = await _ensureDeviceId();
     await _acquire(backend, owner, log);
 

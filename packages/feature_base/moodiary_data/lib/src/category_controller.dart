@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'category_repository.dart';
-import 'diary_repository.dart';
+import 'data_providers.dart';
 
 part 'category_controller.g.dart';
 
@@ -31,18 +30,20 @@ List<Category> _applyEvent(List<Category> list, CategoryEvent event) {
 
 @riverpod
 class CategoryController extends _$CategoryController {
-  late final _repository = getIt<CategoryRepository>();
+  CategoryRepository get _repository => ref.read(categoryRepositoryProvider);
 
   bool _missedEvent = false;
 
   @override
   FutureOr<List<Category>> build() async {
-    final sub = _repository.categoryEvents.listen(_applyChange);
+    final operationRef = ref;
+    final repository = ref.watch(categoryRepositoryProvider);
+    final sub = repository.categoryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
-    var list = await _repository.getAllCategories();
-    for (var i = 0; _missedEvent && i < 3; i++) {
+    var list = await repository.getAllCategories();
+    for (var i = 0; operationRef.mounted && _missedEvent && i < 3; i++) {
       _missedEvent = false;
-      list = await _repository.getAllCategories();
+      list = await repository.getAllCategories();
     }
     return list;
   }
@@ -78,16 +79,14 @@ class CategoryController extends _$CategoryController {
 
 @riverpod
 AsyncValue<List<Category>> orderedCategories(Ref ref) {
-  final orderNotifier = MoodiaryKVs.categoryOrder.getNotifierOr(
-    const <String>[],
+  final order = ref.watch(
+    kvValueOrProvider<List<String>>(
+      MoodiaryKVs.categoryOrder,
+      const <String>[],
+    ),
   );
-  void onOrderChanged() => ref.invalidateSelf();
-  orderNotifier.addListener(onOrderChanged);
-  ref.onDispose(() => orderNotifier.removeListener(onOrderChanged));
   final async = ref.watch(categoryControllerProvider);
-  return async.whenData(
-    (categories) => applyCategoryOrder(categories, orderNotifier.value),
-  );
+  return async.whenData((categories) => applyCategoryOrder(categories, order));
 }
 
 List<Category> applyCategoryOrder(
@@ -109,7 +108,7 @@ List<Category> applyCategoryOrder(
 Future<({Map<String, int> byCategory, int total})> categoryDiaryCounts(
   Ref ref,
 ) async {
-  final diaryRepo = getIt<DiaryRepository>();
+  final diaryRepo = ref.watch(diaryRepositoryProvider);
   Timer? debounce;
   void invalidate(Object _) {
     debounce?.cancel();
@@ -117,9 +116,10 @@ Future<({Map<String, int> byCategory, int total})> categoryDiaryCounts(
   }
 
   final sub = diaryRepo.diaryEvents.listen(invalidate);
-  final categories = getIt<CategoryRepository>().categoryEvents.listen(
-    invalidate,
-  );
+  final categories = ref
+      .watch(categoryRepositoryProvider)
+      .categoryEvents
+      .listen(invalidate);
   ref.onDispose(() {
     debounce?.cancel();
     sub.cancel();

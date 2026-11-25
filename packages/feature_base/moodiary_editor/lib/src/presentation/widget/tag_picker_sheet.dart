@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart' show listEquals, visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -121,11 +120,14 @@ abstract final class TagPickerSheet {
         ],
       ),
     );
-    if (result == null) return null;
+    if (result == null || !context.mounted) return null;
     final diff = tagSelectionDiff(tagIds, catalog.byId, result);
     final ensured = diff.addedNames.isEmpty
         ? <String>[]
-        : await getIt<TagRepository>().ensureTags(diff.addedNames);
+        : await ProviderScope.containerOf(
+            context,
+            listen: false,
+          ).read(tagRepositoryProvider).ensureTags(diff.addedNames);
     return applyTagSelection(tagIds, diff.retained, ensured);
   }
 }

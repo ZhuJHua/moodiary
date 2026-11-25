@@ -1,23 +1,30 @@
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/lan/lan_discovery.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/lan/lan_receiver.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 import 'package:moodiary_sync/src/presentation/widget/lan_widgets.dart';
 import 'package:mui/mui.dart';
 
-class LanReceivePage extends StatefulWidget {
+import '../data/sync_cancellation_token.dart';
+
+class LanReceivePage extends ConsumerStatefulWidget {
   const LanReceivePage({super.key});
 
   @override
-  State<LanReceivePage> createState() => _LanReceivePageState();
+  ConsumerState<LanReceivePage> createState() => _LanReceivePageState();
 }
 
-class _LanReceivePageState extends State<LanReceivePage> {
-  final LanReceiverService _service = LanReceiverService();
+class _LanReceivePageState extends ConsumerState<LanReceivePage> {
+  LanReceiveState _state = const LanReceiveWaiting();
+  late final LanReceiverService _service;
+
   final LanAdvertiser _advertiser = LanAdvertiser();
   List<String> _ips = const [];
   String? _startError;
@@ -26,13 +33,35 @@ class _LanReceivePageState extends State<LanReceivePage> {
   @override
   void initState() {
     super.initState();
+    final archive = ref.read(localArchiveProvider);
+    final createServer = ref.read(httpServerFactoryProvider);
+    _service = LanReceiverService(
+      createServer: createServer,
+      manifestBuilder: archive.buildLocalManifest,
+      archiveApplier: (path, password) => archive.import(
+        path,
+        password: password,
+        cancellation: SyncCancellationToken(),
+      ),
+      onState: (state) {
+        if (mounted) setState(() => _state = state);
+      },
+    );
     _start();
   }
 
   Future<void> _start() async {
     try {
       await _service.start();
+      if (!mounted) {
+        await _service.stop();
+        return;
+      }
       await _advertiser.start(port: _service.port, version: _service.version);
+      if (!mounted) {
+        await _advertiser.stop();
+        return;
+      }
       final ips = await NetworkStatus.getLocalIPv4s();
       if (!mounted) return;
       setState(() {
@@ -73,44 +102,40 @@ class _LanReceivePageState extends State<LanReceivePage> {
             )
           : !_ready
           ? const Center(child: CircularProgressIndicator())
-          : ValueListenableBuilder(
-              valueListenable: _service.state,
-              builder: (context, state, _) => ListView(
-                padding: const .fromLTRB(20, 8, 20, 32),
-                children: [
-                  Center(child: _StatusHero(state: state)),
-                  const SizedBox(height: 4),
-                  Center(child: _StatusLine(state: state)),
-                  const SizedBox(height: 28),
-                  Center(
-                    child: Text(
-                      context.l10n.sync.lanPin,
-                      style:
-                          context.theme.typography.labelLarge.onSurfaceVariant,
-                    ),
+          : ListView(
+              padding: const .fromLTRB(20, 8, 20, 32),
+              children: [
+                Center(child: _StatusHero(state: _state)),
+                const SizedBox(height: 4),
+                Center(child: _StatusLine(state: _state)),
+                const SizedBox(height: 28),
+                Center(
+                  child: Text(
+                    context.l10n.sync.lanPin,
+                    style: context.theme.typography.labelLarge.onSurfaceVariant,
                   ),
-                  const SizedBox(height: 10),
-                  LanPinBoxes(
-                    pin: _service.pin,
-                    onTap: () =>
-                        _copy(_service.pin, context.l10n.sync.lanPinCopied),
+                ),
+                const SizedBox(height: 10),
+                LanPinBoxes(
+                  pin: _service.pin,
+                  onTap: () =>
+                      _copy(_service.pin, context.l10n.sync.lanPinCopied),
+                ),
+                const SizedBox(height: 6),
+                Center(
+                  child: Text(
+                    context.l10n.sync.lanPinHelp,
+                    style: context.theme.typography.bodySmall.outline,
                   ),
-                  const SizedBox(height: 6),
-                  Center(
-                    child: Text(
-                      context.l10n.sync.lanPinHelp,
-                      style: context.theme.typography.bodySmall.outline,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  _AddressCard(
-                    ips: _ips,
-                    port: _service.port,
-                    onCopy: (address) =>
-                        _copy(address, context.l10n.sync.lanAddressCopied),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 28),
+                _AddressCard(
+                  ips: _ips,
+                  port: _service.port,
+                  onCopy: (address) =>
+                      _copy(address, context.l10n.sync.lanAddressCopied),
+                ),
+              ],
             ),
     );
   }

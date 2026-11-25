@@ -1,13 +1,11 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 import 'db/database.dart';
 
-@lazySingleton
 class FontRepository {
   FontRepository(this._db);
 

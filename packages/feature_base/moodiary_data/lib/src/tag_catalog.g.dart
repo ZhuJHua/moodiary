@@ -47,4 +47,4 @@ final class TagCatalogProvider
   }
 }
 
-String _$tagCatalogHash() => r'3843b4a5c2dc060313775cf243a18e3380505ff8';
+String _$tagCatalogHash() => r'adc17883f56c5a71fd48cb604046fecea2273266';

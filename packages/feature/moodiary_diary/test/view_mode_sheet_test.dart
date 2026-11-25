@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/widget/view_mode_sheet.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -13,10 +12,9 @@ void main() {
 
   setUp(() {
     kv = MemoryKVStorage();
-    getIt.pushNewScope(init: (gi) => gi.registerSingleton<IKVStorage>(kv));
+    KVStore.installForTesting(kv);
+    addTearDown(KVStore.resetForTesting);
   });
-
-  tearDown(() => getIt.popScope());
 
   Widget host() {
     return muiTestApp(

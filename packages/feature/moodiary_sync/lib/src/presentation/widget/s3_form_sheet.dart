@@ -1,10 +1,9 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_sync/src/data/model/sync_provider.dart';
-import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 
-class S3FormSheet extends StatefulWidget {
+class S3FormSheet extends ConsumerStatefulWidget {
   const S3FormSheet({
     super.key,
     required this.initial,
@@ -15,10 +14,10 @@ class S3FormSheet extends StatefulWidget {
   final bool configured;
 
   @override
-  State<S3FormSheet> createState() => _S3FormSheetState();
+  ConsumerState<S3FormSheet> createState() => _S3FormSheetState();
 
-  static Future<bool?> show(BuildContext context) async {
-    final backend = getIt<IRemoteSyncBackend>(instanceName: SyncProviderIds.s3);
+  static Future<bool?> show(BuildContext context, WidgetRef ref) async {
+    final backend = ref.read(syncBackendProvider(.s3));
     final (initial, configured) = await (
       backend.savedOptions(),
       backend.isReady(),
@@ -31,16 +30,13 @@ class S3FormSheet extends StatefulWidget {
   }
 }
 
-class _S3FormSheetState extends State<S3FormSheet> {
+class _S3FormSheetState extends ConsumerState<S3FormSheet> {
   late final TextEditingController _endpointCtl;
   late final TextEditingController _regionCtl;
   late final TextEditingController _accessKeyCtl;
   late final TextEditingController _secretKeyCtl;
   late final TextEditingController _bucketCtl;
 
-  late final _backend = getIt<IRemoteSyncBackend>(
-    instanceName: SyncProviderIds.s3,
-  );
   late final bool _configured = widget.configured;
   late final String _savedBucket;
 
@@ -114,14 +110,19 @@ class _S3FormSheetState extends State<S3FormSheet> {
     if (_saving || !_validate()) return;
     setState(() => _saving = true);
     try {
-      await _backend.saveOptions([
-        _endpointCtl.text.trim(),
-        _regionCtl.text.trim(),
-        _accessKeyCtl.text.trim(),
-        _secretKeyCtl.text,
-        _bucketCtl.text.trim(),
-        _useSSL ? '1' : '0',
-      ]);
+      if (!await ref.read(activeSyncProviderTypeProvider.notifier).saveOptions(
+        .s3,
+        [
+          _endpointCtl.text.trim(),
+          _regionCtl.text.trim(),
+          _accessKeyCtl.text.trim(),
+          _secretKeyCtl.text,
+          _bucketCtl.text.trim(),
+          _useSSL ? '1' : '0',
+        ],
+      )) {
+        return;
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -143,7 +144,11 @@ class _S3FormSheetState extends State<S3FormSheet> {
     if (!confirmed || !mounted) return;
     setState(() => _saving = true);
     try {
-      await _backend.clearOptions();
+      if (!await ref
+          .read(activeSyncProviderTypeProvider.notifier)
+          .clearOptions(.s3)) {
+        return;
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -156,18 +161,19 @@ class _S3FormSheetState extends State<S3FormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final busy = _saving || ref.watch(syncOperationBusyProvider);
     final l10n = context.l10n;
     return MSheetScaffold<bool>(
       title: l10n.sync.backupSyncS3,
       subtitle: _configured ? _savedBucket : l10n.sync.backupSyncWebdavNoOption,
       icon: LucideIcons.database,
       actions: [
-        MAction(label: l10n.common.cancel, value: false, enabled: !_saving),
+        MAction(label: l10n.common.cancel, value: false, enabled: !busy),
         MAction(
           label: l10n.common.save,
           isPrimary: true,
           busy: _saving,
-          enabled: !_saving,
+          enabled: !busy,
           onPressed: _save,
         ),
       ],
@@ -181,7 +187,7 @@ class _S3FormSheetState extends State<S3FormSheet> {
             controller: _endpointCtl,
             label: l10n.sync.s3OptionEndpoint,
             errorText: _endpointError,
-            enabled: !_saving,
+            enabled: !busy,
             keyboardType: .url,
             textInputAction: .next,
             onChanged: _normalizeEndpoint,
@@ -190,14 +196,14 @@ class _S3FormSheetState extends State<S3FormSheet> {
             controller: _bucketCtl,
             label: l10n.sync.s3OptionBucket,
             errorText: _bucketError,
-            enabled: !_saving,
+            enabled: !busy,
             textInputAction: .next,
           ),
           MField(
             controller: _regionCtl,
             label: l10n.sync.s3OptionRegion,
             hintText: l10n.sync.fieldOptional,
-            enabled: !_saving,
+            enabled: !busy,
             textInputAction: .next,
           ),
           MFormSection(l10n.sync.sectionCredentials),
@@ -205,14 +211,14 @@ class _S3FormSheetState extends State<S3FormSheet> {
             controller: _accessKeyCtl,
             label: l10n.sync.s3OptionAccessKey,
             errorText: _accessKeyError,
-            enabled: !_saving,
+            enabled: !busy,
             textInputAction: .next,
           ),
           MField(
             controller: _secretKeyCtl,
             label: l10n.sync.s3OptionSecretKey,
             errorText: _secretKeyError,
-            enabled: !_saving,
+            enabled: !busy,
             obscureText: true,
             onSubmitted: (_) => _save(),
           ),
@@ -225,7 +231,7 @@ class _S3FormSheetState extends State<S3FormSheet> {
           if (_configured)
             MDangerRow(
               label: l10n.sync.configClear,
-              onPressed: _saving ? null : _clear,
+              onPressed: busy ? null : _clear,
             ),
         ],
       ),

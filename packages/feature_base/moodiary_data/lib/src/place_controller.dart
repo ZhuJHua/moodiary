@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'diary_repository.dart';
+import 'data_providers.dart';
+import 'diary_repository.dart' show PlaceFootprint;
 import 'place_repository.dart';
 
 part 'place_controller.g.dart';
@@ -31,18 +31,21 @@ List<Place> _applyEvent(List<Place> list, PlaceEvent event) {
 
 @riverpod
 class PlaceController extends _$PlaceController {
-  late final _repository = getIt<PlaceRepository>();
+  late PlaceRepository _repository;
 
   bool _missedEvent = false;
 
   @override
   FutureOr<List<Place>> build() async {
-    final sub = _repository.placeEvents.listen(_applyChange);
+    final operationRef = ref;
+    final repository = ref.watch(placeRepositoryProvider);
+    _repository = repository;
+    final sub = repository.placeEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
-    var list = await _repository.getAllPlaces();
-    for (var i = 0; _missedEvent && i < 3; i++) {
+    var list = await repository.getAllPlaces();
+    for (var i = 0; operationRef.mounted && _missedEvent && i < 3; i++) {
       _missedEvent = false;
-      list = await _repository.getAllPlaces();
+      list = await repository.getAllPlaces();
     }
     return list;
   }
@@ -77,7 +80,9 @@ class PlaceController extends _$PlaceController {
 
   Future<int> affectedDiaryCount(List<String> placeIds) async {
     try {
-      return await getIt<DiaryRepository>().countDiariesWithPlaceIds(placeIds);
+      return await ref
+          .read(diaryRepositoryProvider)
+          .countDiariesWithPlaceIds(placeIds);
     } catch (e, s) {
       logger.e('load affected diaries failed', error: e, stackTrace: s);
       return 0;
@@ -114,14 +119,11 @@ class PlaceController extends _$PlaceController {
 
 @riverpod
 AsyncValue<List<Place>> orderedPlaces(Ref ref) {
-  final orderNotifier = MoodiaryKVs.placeOrder.getNotifierOr(const <String>[]);
-  void onOrderChanged() => ref.invalidateSelf();
-  orderNotifier.addListener(onOrderChanged);
-  ref.onDispose(() => orderNotifier.removeListener(onOrderChanged));
-  final async = ref.watch(placeControllerProvider);
-  return async.whenData(
-    (places) => applyPlaceOrder(places, orderNotifier.value),
+  final order = ref.watch(
+    kvValueOrProvider<List<String>>(MoodiaryKVs.placeOrder, const <String>[]),
   );
+  final async = ref.watch(placeControllerProvider);
+  return async.whenData((places) => applyPlaceOrder(places, order));
 }
 
 List<Place> applyPlaceOrder(List<Place> places, List<String> order) {
@@ -148,7 +150,7 @@ Place? placeById(Ref ref, String? id) {
 
 @riverpod
 Future<Map<String, PlaceFootprint>> placeFootprints(Ref ref) async {
-  final diaryRepo = getIt<DiaryRepository>();
+  final diaryRepo = ref.watch(diaryRepositoryProvider);
   Timer? debounce;
   final sub = diaryRepo.diaryEvents.listen((_) {
     debounce?.cancel();

@@ -2,13 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show listEquals;
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/diary_meta_references.dart';
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -102,6 +100,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  late final _registry = ref.read(openDiaryRegistryProvider);
   final _editorController = MoodiaryEditorController();
 
   final ValueNotifier<int> _activeHeading = ValueNotifier<int>(-1);
@@ -128,7 +127,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final id = widget.diaryId;
     if (id != null) {
       _guardId = id;
-      getIt<OpenDiaryRegistry>().open(id);
+      _registry.open(id);
       _hops.reset(id);
       _syncEditing();
     } else {
@@ -136,12 +135,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         final diary = next.value;
         if (diary != null && _guardId == null) {
           _guardId = diary.id;
-          getIt<OpenDiaryRegistry>().open(diary.id);
+          _registry.open(diary.id);
           _syncEditing();
         }
       });
     }
-    _linksSub = getIt<DiaryRepository>().diaryEvents.listen((event) {
+    _linksSub = ref.read(diaryRepositoryProvider).diaryEvents.listen((event) {
       if (_mode != .edit) {
         _linksDebounce?.cancel();
         _linksDebounce = Timer(const Duration(milliseconds: 400), _loadLinks);
@@ -196,10 +195,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _guardSub?.close();
     _guardSub = null;
     if (oldId != null && oldId != newId) {
-      getIt<OpenDiaryRegistry>().close(oldId);
+      _registry.close(oldId);
     }
     _guardId = newId;
-    if (oldId != newId) getIt<OpenDiaryRegistry>().open(newId);
+    if (oldId != newId) _registry.open(newId);
     _notifier = ref.read(_provider.notifier);
     _mode = widget.startInEdit ? .edit : .read;
     _dirty = false;
@@ -215,7 +214,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   void _syncEditing() {
     final id = _mode == .edit ? _guardId : null;
     if (id == _editingId) return;
-    final registry = getIt<OpenDiaryRegistry>();
+    final registry = _registry;
     if (_editingId case final previous?) {
       registry.setEditing(previous, editing: false);
     }
@@ -224,7 +223,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<void> _applyExternalSwap(String id) async {
-    final target = await getIt<DiaryRepository>().getDiaryByBusinessId(id);
+    final target = await ref
+        .read(diaryRepositoryProvider)
+        .getDiaryByBusinessId(id);
     if (!mounted || target == null) return;
     setState(() => _hopTarget = target);
     _shownContent = target.content;
@@ -271,9 +272,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         if (_dirty) await _notifier.autoSave();
       } finally {
         guardSub?.close();
-        if (guardId != null) getIt<OpenDiaryRegistry>().close(guardId);
+        if (guardId != null) _registry.close(guardId);
         if (editingId != null) {
-          getIt<OpenDiaryRegistry>().setEditing(editingId, editing: false);
+          _registry.setEditing(editingId, editing: false);
         }
       }
     }();
@@ -498,6 +499,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final saved = await _editorController.withInputSuspended(
       () => showPlaceEditor(
         context,
+        ref,
         latitude: fix?.latitude,
         longitude: fix?.longitude,
       ),
@@ -703,7 +705,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                 IconButton(
                   tooltip: context.l10n.diary.share,
                   icon: const Icon(LucideIcons.share),
-                  onPressed: () => DiaryShare.open(context, diary.id),
+                  onPressed: () =>
+                      ref.read(diaryShareHandlerProvider)(context, diary.id),
                 ),
               ],
               if (headings.isNotEmpty)
@@ -1053,7 +1056,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final id = _linksFor;
     if (id == null) return;
     final token = ++_linksToken;
-    final repo = getIt<DiaryRepository>();
+    final repo = ref.read(diaryRepositoryProvider);
     final results = await Future.wait([
       repo.getForwardLinks(id),
       repo.getBacklinks(id),
@@ -1070,7 +1073,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (id == _guardId) return;
     _hopping = true;
     try {
-      final target = await getIt<DiaryRepository>().getDiaryByBusinessId(id);
+      final target = await ref
+          .read(diaryRepositoryProvider)
+          .getDiaryByBusinessId(id);
       if (!mounted) return;
       if (target == null) {
         toast.error(message: context.l10n.diary.linkNotFound);
@@ -1105,9 +1110,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       while (true) {
         final entry = _hops.peek(delta);
         if (entry == null) return;
-        final target = await getIt<DiaryRepository>().getDiaryByBusinessId(
-          entry.diaryId,
-        );
+        final target = await ref
+            .read(diaryRepositoryProvider)
+            .getDiaryByBusinessId(entry.diaryId);
         if (!mounted) return;
         if (target == null) {
           _hops.dropNext(delta);

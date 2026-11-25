@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 import 'package:moodiary_components/moodiary_components.dart' as components;
 import 'package:moodiary_content/moodiary_content.dart';
@@ -53,7 +54,7 @@ void _log(String msg, {Object? error, StackTrace? stack, int level = 0}) {
   );
 }
 
-class MoodiaryEditor extends StatefulWidget {
+class MoodiaryEditor extends ConsumerStatefulWidget {
   final MoodiaryEditorController? controller;
 
   final String initialContent;
@@ -175,7 +176,7 @@ class MoodiaryEditor extends StatefulWidget {
   });
 
   @override
-  State<MoodiaryEditor> createState() => _MoodiaryEditorState();
+  ConsumerState<MoodiaryEditor> createState() => _MoodiaryEditorState();
 }
 
 bool _isSafeMediaName(String name) {

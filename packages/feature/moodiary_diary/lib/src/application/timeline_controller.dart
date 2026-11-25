@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -15,7 +14,7 @@ Future<Map<DateTime, int>> timelineMonthCounts(
   String? tagName,
   required DiarySort sort,
 }) async {
-  final repository = getIt<DiaryRepository>();
+  final repository = ref.watch(diaryRepositoryProvider);
   Timer? debounce;
   void invalidate(Object _) {
     debounce?.cancel();
@@ -25,9 +24,9 @@ Future<Map<DateTime, int>> timelineMonthCounts(
   final sub = repository.diaryEvents.listen(invalidate);
   final tags = tagName == null
       ? null
-      : getIt<TagRepository>().tagEvents.listen(invalidate);
+      : ref.read(tagRepositoryProvider).tagEvents.listen(invalidate);
   final categories = uncategorized
-      ? getIt<CategoryRepository>().categoryEvents.listen(invalidate)
+      ? ref.read(categoryRepositoryProvider).categoryEvents.listen(invalidate)
       : null;
   ref.onDispose(() {
     debounce?.cancel();

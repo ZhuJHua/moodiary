@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart' show MethodChannel;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -47,9 +47,8 @@ void main() {
     testWidgets('requires manual confirmation after share result "$result"', (
       tester,
     ) async {
-      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-      getIt.registerSingleton<LegacyDataExporter>(_Exporter(archive));
-      addTearDown(getIt.reset);
+      KVStore.installForTesting(MemoryKVStorage());
+      addTearDown(KVStore.resetForTesting);
       expect(
         await tester.runAsync(LegacyDatabaseGuard.probe),
         LegacyDatabaseState.pending,
@@ -65,14 +64,20 @@ void main() {
       });
       addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
       await tester.pumpWidget(
-        TranslationProvider(
-          child: MaterialApp(
-            theme: buildMuiTheme(brightness: .light),
-            localizationsDelegates: const [
-              ...GlobalMaterialLocalizations.delegates,
-              GlobalMuiLocalizations.delegate,
-            ],
-            home: EditorMigrationPage(resumeStartup: () async {}),
+        ProviderScope(
+          retry: (_, _) => null,
+          overrides: [
+            legacyDataExporterProvider.overrideWithValue(_Exporter(archive)),
+          ],
+          child: TranslationProvider(
+            child: MaterialApp(
+              theme: buildMuiTheme(brightness: .light),
+              localizationsDelegates: const [
+                ...GlobalMaterialLocalizations.delegates,
+                GlobalMuiLocalizations.delegate,
+              ],
+              home: EditorMigrationPage(resumeStartup: () async {}),
+            ),
           ),
         ),
       );

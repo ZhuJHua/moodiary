@@ -4,15 +4,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/services.dart' show DeviceOrientation, HapticFeedback;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-import 'video_ambient_port_impl.dart';
-import 'video_player_port_impl.dart';
-
-typedef VideoSurfaceBuilder = Widget Function(VideoPlaybackPort port);
+import 'video_providers.dart';
 
 // 0.6 = 一屏滑动覆盖时长的比例；1000/6 = 单位像素毫秒数封顶（长片一屏≈67秒）
 double scrubMillisPerPixel(Duration duration, double width) {
@@ -27,12 +25,7 @@ Uri? _networkUri(String path) {
       : null;
 }
 
-Widget defaultVideoSurfaceBuilder(VideoPlaybackPort port) =>
-    port is VideoPlayerPluginPort
-    ? port.buildSurface()
-    : const SizedBox.shrink();
-
-class MVideoPlayerPage extends StatefulWidget {
+class MVideoPlayerPage extends ConsumerStatefulWidget {
   const MVideoPlayerPage({
     super.key,
     required this.videoPath,
@@ -40,8 +33,8 @@ class MVideoPlayerPage extends StatefulWidget {
     this.initialAspect,
     this.startAt = .zero,
     this.onExitAt,
-    this.surfaceBuilder = defaultVideoSurfaceBuilder,
-    this.portFactory = videoPlayerPortFactory,
+    this.surfaceBuilder,
+    this.portFactory,
     this.ambientPorts,
   });
 
@@ -55,9 +48,9 @@ class MVideoPlayerPage extends StatefulWidget {
 
   final ValueChanged<Duration>? onExitAt;
 
-  final VideoSurfaceBuilder surfaceBuilder;
+  final VideoSurfaceBuilder? surfaceBuilder;
 
-  final VideoPlaybackPortFactory portFactory;
+  final VideoPlaybackPortFactory? portFactory;
 
   final Map<VideoAmbientChannel, VideoAmbientChannelPort>? ambientPorts;
 
@@ -68,23 +61,29 @@ class MVideoPlayerPage extends StatefulWidget {
     double? initialAspect,
     Duration startAt = .zero,
     ValueChanged<Duration>? onExitAt,
-    VideoPlaybackPortFactory portFactory = videoPlayerPortFactory,
+    VideoPlaybackPortFactory? portFactory,
+    VideoSurfaceBuilder? surfaceBuilder,
     Map<VideoAmbientChannel, VideoAmbientChannelPort>? ambientPorts,
   }) {
+    final container = ProviderScope.containerOf(context, listen: false);
     return Navigator.of(context, rootNavigator: true).push(
       PageRouteBuilder<void>(
         opaque: false,
         barrierColor: Colors.black,
         transitionDuration: Durations.medium2,
         reverseTransitionDuration: Durations.medium1,
-        pageBuilder: (_, _, _) => MVideoPlayerPage(
-          videoPath: videoPath,
-          coverPath: coverPath,
-          initialAspect: initialAspect,
-          startAt: startAt,
-          onExitAt: onExitAt,
-          portFactory: portFactory,
-          ambientPorts: ambientPorts,
+        pageBuilder: (_, _, _) => UncontrolledProviderScope(
+          container: container,
+          child: MVideoPlayerPage(
+            videoPath: videoPath,
+            coverPath: coverPath,
+            initialAspect: initialAspect,
+            startAt: startAt,
+            onExitAt: onExitAt,
+            portFactory: portFactory,
+            surfaceBuilder: surfaceBuilder,
+            ambientPorts: ambientPorts,
+          ),
         ),
         transitionsBuilder: (_, animation, _, child) =>
             FadeTransition(opacity: animation, child: child),
@@ -99,7 +98,8 @@ class MVideoPlayerPage extends StatefulWidget {
     required String name,
     Duration startAt = .zero,
     ValueChanged<Duration>? onExitAt,
-    VideoPlaybackPortFactory portFactory = videoPlayerPortFactory,
+    VideoPlaybackPortFactory? portFactory,
+    VideoSurfaceBuilder? surfaceBuilder,
     Map<VideoAmbientChannel, VideoAmbientChannelPort>? ambientPorts,
   }) async {
     if (_opening) return;
@@ -129,6 +129,7 @@ class MVideoPlayerPage extends StatefulWidget {
       startAt: startAt,
       onExitAt: onExitAt,
       portFactory: portFactory,
+      surfaceBuilder: surfaceBuilder,
       ambientPorts: ambientPorts,
     );
   }
@@ -152,15 +153,15 @@ class MVideoPlayerPage extends StatefulWidget {
   }
 
   @override
-  State<MVideoPlayerPage> createState() => _MVideoPlayerPageState();
+  ConsumerState<MVideoPlayerPage> createState() => _MVideoPlayerPageState();
 }
 
-class _MVideoPlayerPageState extends State<MVideoPlayerPage>
+class _MVideoPlayerPageState extends ConsumerState<MVideoPlayerPage>
     with WidgetsBindingObserver {
   late final MVideoPlaybackController _player;
   final _chrome = VideoChromeController();
   late final _ambient = VideoAmbientController(
-    ports: widget.ambientPorts ?? defaultVideoAmbientPorts(),
+    ports: widget.ambientPorts ?? ref.read(videoAmbientPortFactoryProvider)(),
   );
 
   OrientationOverrideRelease? _releaseOrientation;
@@ -199,7 +200,8 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
         final uri? => VideoSource.network(uri),
         null => VideoSource.file(widget.videoPath),
       },
-      portFactory: widget.portFactory,
+      portFactory:
+          widget.portFactory ?? ref.read(videoPlayerPortFactoryProvider),
       initialAspect: widget.initialAspect,
       autoPlay: false,
     );
@@ -538,6 +540,8 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
   }
 
   Widget _buildSurface() {
+    final VideoSurfaceBuilder buildSurface =
+        widget.surfaceBuilder ?? ref.watch(videoSurfaceBuilderProvider);
     return ValueListenableBuilder<VideoGeometry>(
       valueListenable: _player.geometry,
       builder: (context, geo, _) {
@@ -547,7 +551,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
             ? const SizedBox.shrink()
             : KeyedSubtree(
                 key: ValueKey(geo.generation),
-                child: widget.surfaceBuilder(port),
+                child: buildSurface(port),
               );
         return Center(
           child: aspect == null
