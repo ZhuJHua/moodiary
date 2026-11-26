@@ -6,12 +6,12 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.14.0"
-  flutter: ">=3.50.0"
+  sdk: ">=3.14.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  flutter: ">=3.50.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dependencies:
-  riverpod_annotation: 4.0.8
-  flutter_riverpod: 3.5.0
+  riverpod_annotation: 4.0.8 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  flutter_riverpod: 3.5.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   flutter:
     sdk: flutter
 
@@ -22,12 +22,12 @@ dependencies:
   local_auth_darwin: 2.0.5
   network_info_plus: 8.2.2
   package_info_plus: 10.2.2
-  path_provider: 2.1.6
+  path_provider: 2.1.6 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   moodiary_native: 0.0.1
 
 dev_dependencies:
-  riverpod_generator: 4.0.10
-  build_runner: 2.17.1
+  riverpod_generator: 4.0.10 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  build_runner: 2.17.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

@@ -5,8 +5,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.14.0"
-  flutter: ">=3.50.0"
+  sdk: ">=3.14.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  flutter: ">=3.50.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dependencies:
   flutter:
@@ -18,9 +18,9 @@ dependencies:
   moodiary_utils: 0.0.1
   moodiary_files: 0.0.1
   moodiary_logging: 0.0.1
-  json_schema_builder: 0.1.7
-  mime: 2.1.0
-  synchronized: 3.6.1+1
+  json_schema_builder: 0.1.7 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  mime: 2.1.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  synchronized: 3.6.1+1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dev_dependencies:
   fast_image: 0.0.1
@@ -29,4 +29,4 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  drift: 2.35.4
+  drift: 2.35.4 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml

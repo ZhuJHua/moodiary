@@ -19,6 +19,51 @@ melos:
       - packages/feature_base/*
     feature:
       - packages/feature/*
+  command:
+    bootstrap:
+      markSharedDependencies: true
+      environment:
+        sdk: ">=3.14.0"
+        flutter: ">=3.50.0"
+      dependencies:
+        cached_network_image_ce: 4.13.2
+        characters: 1.4.1
+        clock: 1.1.3
+        code_assets: 2.2.0
+        crypto: 3.0.8
+        cupertino_ui: 1.1.7
+        drift: 2.35.4
+        flutter_riverpod: 3.5.0
+        flutter_rust_bridge: 2.13.0
+        flutter_svg: 2.5.1
+        freezed_annotation: 3.1.0
+        gap: 3.1.0
+        hooks: 2.2.0
+        intl: 0.20.3
+        json_annotation: 4.12.0
+        json_schema_builder: 0.1.7
+        latlong2: 0.10.1
+        meta: 1.19.0
+        mime: 2.1.0
+        path: 1.9.1
+        path_provider: 2.1.6
+        photo_view: 0.15.0
+        pool: 1.5.3
+        riverpod_annotation: 4.0.8
+        share_plus: 13.3.1
+        slang: 4.19.2
+        slang_flutter: 4.19.0
+        sqlite3_vec: 0.1.3
+        synchronized: 3.6.1+1
+        url_launcher: 6.3.3
+      dev_dependencies:
+        build_runner: 2.17.1
+        drift: 2.35.4
+        ffigen: 23.0.0
+        freezed: 4.0.3
+        json_serializable: 6.15.2
+        riverpod_generator: 4.0.10
+        sqlite3_vec: 0.1.3
   scripts:
     analyze:
       run: fvm dart tool/task.dart analyze

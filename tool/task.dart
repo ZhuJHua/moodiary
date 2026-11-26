@@ -109,7 +109,10 @@ const _frbAnchorDir = 'packages/foundation/fast_image';
 
 Future<void> _assertCodegenVersion() async {
   final pinned =
-      RegExp(r'^\s*flutter_rust_bridge:\s*(\S+)\s*$', multiLine: true)
+      RegExp(
+            r'^\s*flutter_rust_bridge:\s*(\S+)(?:\s+#.*)?\s*$',
+            multiLine: true,
+          )
           .firstMatch(File('$_frbAnchorDir/pubspec.yaml').readAsStringSync())
           ?.group(1);
   if (pinned == null) {
@@ -184,8 +187,16 @@ Future<void> _i18n() async {
 }
 
 final Map<String, Future<void> Function(List<String> rest)> _tasks = {
-  'setup': (_) async {
-    await _flutter(['pub', 'get']);
+  'setup': (rest) async {
+    await _run('fvm', [
+      'dart',
+      'run',
+      'melos',
+      'bootstrap',
+      if (Directory('.fvm/flutter_sdk').existsSync())
+        '--sdk-path=.fvm/flutter_sdk',
+      ...rest,
+    ]);
   },
   'run': (rest) async {
     await _flutter(['run', ...rest]);

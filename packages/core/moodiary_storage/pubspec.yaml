@@ -6,25 +6,25 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.14.0"
-  flutter: ">=3.50.0"
+  sdk: ">=3.14.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  flutter: ">=3.50.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dependencies:
-  flutter_riverpod: 3.5.0
+  flutter_riverpod: 3.5.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   flutter:
     sdk: flutter
 
-  clock: 1.1.3
+  clock: 1.1.3 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   fast_crypto: 0.0.1
   moodiary_logging: 0.0.1
   mmkv: 2.4.3
   shared_preferences: 2.5.6
   flutter_secure_storage: 11.2.0
-  riverpod_annotation: 4.0.8
+  riverpod_annotation: 4.0.8 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  build_runner: 2.17.1
-  riverpod_generator: 4.0.10
+  build_runner: 2.17.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  riverpod_generator: 4.0.10 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml

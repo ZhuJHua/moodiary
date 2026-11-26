@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.14.0"
-  flutter: ">=3.50.0"
+  sdk: ">=3.14.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  flutter: ">=3.50.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dependencies:
   flutter:
@@ -15,14 +15,14 @@ dependencies:
 
   moodiary_utils: 0.0.1
 
-  freezed_annotation: 3.1.0
-  json_annotation: 4.12.0
-  path: 1.9.1
+  freezed_annotation: 3.1.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  json_annotation: 4.12.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  path: 1.9.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  build_runner: 2.17.1
-  freezed: 4.0.3
-  json_serializable: 6.15.2
+  build_runner: 2.17.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  freezed: 4.0.3 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  json_serializable: 6.15.2 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
