@@ -273,6 +273,8 @@ class MoodiaryEditorController {
     await _host?.exec(command, args);
   }
 
+  Future<void> pauseMedia() => _host?.pauseMedia() ?? Future.value();
+
   Future<void> flush() async {
     await _host?.flush();
   }

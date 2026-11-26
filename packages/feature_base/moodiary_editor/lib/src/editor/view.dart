@@ -117,6 +117,10 @@ class _MoodiaryEditorState extends ConsumerState<MoodiaryEditor>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      unawaited(host.pauseMedia());
+    }
     if (state != AppLifecycleState.resumed) unawaited(host.flush());
   }
 

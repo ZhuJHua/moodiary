@@ -18,11 +18,11 @@ class _MediaPlayback extends ChangeNotifier {
     final resolved = await source;
     if (disposed || resolved == null) return;
     if (type == 'audio') {
-      final controller = audio = host._audioControllerFactory();
+      final controller = audio = host._audioControllerFactory(resolved.path);
       controller.progress.addListener(_updated);
       notifyListeners();
       try {
-        await controller.prepare(resolved.path);
+        await controller.prepare();
       } catch (error, stack) {
         _log('audio metadata read failed', error: error, stack: stack);
       }

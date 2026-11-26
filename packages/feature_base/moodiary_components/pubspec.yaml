@@ -10,7 +10,7 @@ environment:
   flutter: ">=3.50.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dependencies:
-  audioplayers: 7.0.0-dev.0
+  audio_session: 0.2.4
   cached_network_image_ce: 4.13.2 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   dismissible_page: 2.1.1
   fast_image: 0.0.1
@@ -18,6 +18,7 @@ dependencies:
     sdk: flutter
   flutter_riverpod: 3.5.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   flutter_svg: 2.5.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  just_audio: 0.10.6
   moodiary_content: 0.0.1
   moodiary_files: 0.0.1
   moodiary_http: 0.0.1

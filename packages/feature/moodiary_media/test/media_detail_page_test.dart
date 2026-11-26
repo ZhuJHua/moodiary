@@ -202,13 +202,24 @@ void main() {
     tester,
   ) async {
     final playerCalls = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('xyz.luan/audioplayers'),
-      (call) async {
-        playerCalls.add(call.method);
-        return null;
-      },
-    );
+    for (final name in const [
+      'com.ryanheise.just_audio.methods',
+      'com.ryanheise.audio_session',
+    ]) {
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        MethodChannel(name),
+        (call) async {
+          playerCalls.add('$name:${call.method}');
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          MethodChannel(name),
+          null,
+        ),
+      );
+    }
     await _show(tester, .audio, size: const Size(844, 320), scale: 1.3);
     expect(
       find.text('3:42 · 1.50 KB · ${TimeFormat.longDate(_date)}'),

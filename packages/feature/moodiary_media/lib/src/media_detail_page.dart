@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -210,7 +211,11 @@ class _MediaDetailPageState extends ConsumerState<MediaDetailPage> {
       rename: () => _rename(context, ref, type, widget.name, label),
       meta: meta,
       action: _audio
-          ? _AudioAction(duration: duration, localFile: _localFile)
+          ? _AudioAction(
+              key: ValueKey(widget.name),
+              duration: duration,
+              localFile: _localFile,
+            )
           : SizedBox(
               width: 220,
               child: FilledButton.icon(
@@ -349,48 +354,83 @@ class _DetailScaffold extends StatelessWidget {
 class _AudioAction extends StatefulWidget {
   final Duration? duration;
   final Future<File?> Function() localFile;
-  const _AudioAction({required this.duration, required this.localFile});
+  const _AudioAction({
+    super.key,
+    required this.duration,
+    required this.localFile,
+  });
 
   @override
   State<_AudioAction> createState() => _AudioActionState();
 }
 
-class _AudioActionState extends State<_AudioAction> {
+class _AudioActionState extends State<_AudioAction>
+    with WidgetsBindingObserver {
   AudioPlaybackController? _controller;
-  Future<void> _pending = Future.value();
+  Future<AudioPlaybackController?>? _loading;
+  int _gen = 0;
 
-  void _enqueue([double? fraction]) {
-    _pending = _pending.then((_) async {
-      if (!mounted) return;
-      try {
-        final current = _controller;
-        if (fraction == null &&
-            current != null &&
-            current.progress.value.playing) {
-          await current.pause();
-          return;
-        }
-        final file = await widget.localFile();
-        if (!mounted || file == null) return;
-        final controller = _controller ??= (AudioPlaybackController()
-          ..progress.addListener(_update));
-        await controller.prepare(file.path);
-        if (!mounted) return;
-        if (fraction == null) {
-          await controller.toggle(file.path);
-        } else {
-          await controller.seek(fraction, fallbackTotal: widget.duration);
-        }
-      } catch (_) {
-        if (mounted) toast.error(message: l10n.common.openFailed);
-      }
-    });
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
   }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _gen++;
+      unawaited(_controller?.pause());
+    }
+  }
+
+  Future<AudioPlaybackController?> _ensureController() {
+    if (_controller != null) return Future.value(_controller);
+    return _loading ??= () async {
+      try {
+        final file = await widget.localFile();
+        if (!mounted || file == null) return null;
+        final controller = _controller ??= (AudioPlaybackController(file.path)
+          ..progress.addListener(_update));
+        await controller.prepare();
+        return mounted ? controller : null;
+      } finally {
+        _loading = null;
+      }
+    }();
+  }
+
+  Future<void> _onAction([double? fraction]) async {
+    final current = _controller;
+    if (fraction == null && current != null && current.progress.value.playing) {
+      _gen++;
+      await current.pause();
+      return;
+    }
+    final gen = _gen;
+    try {
+      final controller = await _ensureController();
+      if (!mounted || controller == null) return;
+      if (fraction == null) {
+        if (gen != _gen) return;
+        await controller.toggle();
+      } else {
+        // Don't block subsequent Play/Pause on Android seeks that land in STATE_ENDED.
+        unawaited(controller.seek(fraction, fallbackTotal: widget.duration));
+      }
+    } catch (_) {
+      if (mounted) toast.error(message: l10n.common.openFailed);
+    }
+  }
+
+  void _enqueue([double? fraction]) => unawaited(_onAction(fraction));
 
   void _update() => setState(() {});
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
     super.dispose();
   }
