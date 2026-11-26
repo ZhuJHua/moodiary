@@ -34,9 +34,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           retry: (_, _) => null,
-          overrides: [
-            activeSyncBackendProvider.overrideWithValue(backend),
-          ],
+          overrides: [activeSyncBackendProvider.overrideWithValue(backend)],
           child: TranslationProvider(
             child: MuiTheme(
               data: theme,
@@ -84,7 +82,9 @@ void main() {
       expect(fields, findsNWidgets(2));
       await tester.enterText(fields.at(0), 'new-passphrase');
       await tester.enterText(fields.at(1), 'new-passphrase');
-      await tester.tap(find.widgetWithText(FilledButton, l10n.sync.keyChangeAction));
+      await tester.tap(
+        find.widgetWithText(FilledButton, l10n.sync.keyChangeAction),
+      );
       await tester.pump();
 
       // Sheet stays open with user's typed text intact instead of silently discarding.

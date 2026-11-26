@@ -147,7 +147,7 @@ final class RecycleBinDiariesProvider
   RecycleBinDiaries create() => RecycleBinDiaries();
 }
 
-String _$recycleBinDiariesHash() => r'6e12580df6c58fca3268e961dffa6ecf159d5bea';
+String _$recycleBinDiariesHash() => r'd99666be68513cffa2958779cc7d4f09a99a9636';
 
 abstract class _$RecycleBinDiaries extends $AsyncNotifier<List<Diary>> {
   FutureOr<List<Diary>> build();

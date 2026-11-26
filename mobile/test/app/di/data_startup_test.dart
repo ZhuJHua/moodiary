@@ -17,15 +17,23 @@ import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 
 class _Database extends Fake implements MoodiaryDatabase {
-  _Database(this.upgradedFrom);
+  _Database(this.upgradedFrom, {this.nextSceneError});
   @override
   final int? upgradedFrom;
+  Object? nextSceneError;
   int sceneMigrations = 0;
 
   @override
   Future<void> applyLegacyMoodScenes(
     String Function(LegacyMoodScene) label,
-  ) async => sceneMigrations++;
+  ) async {
+    final error = nextSceneError;
+    if (error != null) {
+      nextSceneError = null;
+      throw error;
+    }
+    sceneMigrations++;
+  }
 }
 
 class _Diaries extends Fake implements DiaryRepository {
@@ -86,6 +94,12 @@ class _Queue extends Fake implements EmbedQueueWatcher {
   void start() => starts++;
 }
 
+void _flushPostFrame() {
+  final binding = TestWidgetsFlutterBinding.instance;
+  binding.handleBeginFrame(Duration.zero);
+  binding.handleDrawFrame();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() {
@@ -127,9 +141,9 @@ void main() {
               )
               ..createSync(recursive: true)
               ..writeAsBytesSync([1, 2, 3]);
-        var stagingPurgedBeforeAutoSync = false;
+        var stagingPresentWhenAutoSyncStarted = false;
         final autoSync = _AutoSync(() {
-          stagingPurgedBeforeAutoSync = !stagingFile.existsSync();
+          stagingPresentWhenAutoSyncStarted = stagingFile.existsSync();
         });
         final queue = _Queue();
         final container = ProviderContainer.test(
@@ -167,30 +181,119 @@ void main() {
           await coordinator.abandonLegacy(diaries: diaries, fonts: _Fonts());
         }
         expect(await coordinator.probeLegacy(), LegacyDatabaseState.none);
+        final guard = container.read(syncOperationGuardProvider);
+        final purgeDone = guard.changes.firstWhere((busy) => !busy);
         final startup = coordinator.startData(activate);
         await reminders.entered.future;
         // Sequential startup runs legacy scene migration after reminders finish.
         expect(database.sceneMigrations, 0);
-        final concurrent = [
-          startup,
-          coordinator.startData(activate),
-          resumeDataStartup(ref),
-        ];
+        final concurrent = [startup, coordinator.startData(activate)];
         reminders.release.complete();
         await Future.wait(concurrent);
         await coordinator.startData(activate);
-        await resumeDataStartup(ref);
 
         expect(activations, 1);
         expect(reminders.calls, 1);
         expect(database.sceneMigrations, 1);
-        expect(stagingPurgedBeforeAutoSync, isTrue);
+        expect(stagingPresentWhenAutoSyncStarted, isTrue);
         expect(autoSync.starts, 1);
         expect(queue.starts, 1);
         expect(container.read(migrationGateProvider).canEnterHome, isTrue);
         expect(MoodiaryKVs.syncPendingLocal.get(), dirty);
         expect(MoodiaryKVs.pendingMoodNotice.get(), notice);
+
+        _flushPostFrame();
+        await purgeDone;
+        expect(stagingFile.existsSync(), isFalse);
       },
     );
   }
+
+  test('retrying startData after a failure re-runs startup and opens the home gate', () async {
+    final database = _Database(
+      null,
+      nextSceneError: StateError('scene migration failed'),
+    );
+    final diaries = _Diaries();
+    final reminders = _Reminders()..release.complete();
+    final autoSync = _AutoSync(() {});
+    final queue = _Queue();
+    final container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [
+        moodiaryDatabaseProvider.overrideWithValue(database),
+        diaryRepositoryProvider.overrideWithValue(diaries),
+        reminderServiceProvider.overrideWithValue(reminders),
+        autoSyncWatcherProvider.overrideWithValue(autoSync),
+        tombstoneRepositoryProvider.overrideWithValue(_Tombstones()),
+        embedIndexServiceProvider.overrideWithValue(_Index()),
+        embedQueueWatcherProvider.overrideWithValue(queue),
+      ],
+    );
+    final coordinator = container.read(startupMigrationCoordinatorProvider);
+    addTearDown(coordinator.completeEditorMigration);
+    final ref = container.read(Provider<Ref>((ref) => ref));
+    var activations = 0;
+    Future<void> activate() {
+      activations++;
+      return resumeDataStartup(ref);
+    }
+
+    expect(await coordinator.probeLegacy(), LegacyDatabaseState.none);
+    await expectLater(coordinator.startData(activate), throwsStateError);
+    expect(activations, 1);
+    expect(database.sceneMigrations, 0);
+    expect(autoSync.starts, 0);
+    expect(queue.starts, 0);
+    expect(container.read(migrationGateProvider).canEnterHome, isFalse);
+
+    await coordinator.startData(activate);
+    expect(activations, 2);
+    expect(database.sceneMigrations, 1);
+    expect(autoSync.starts, 1);
+    expect(queue.starts, 1);
+    expect(container.read(migrationGateProvider).canEnterHome, isTrue);
+  });
+
+  test('post-frame sync media purge skips cleanup while sync guard is busy', () async {
+    final database = _Database(null);
+    final diaries = _Diaries();
+    final reminders = _Reminders()..release.complete();
+    final stagingFile =
+        File(
+            '${PlatformService.get().applicationCachePath}/sync-media/active.bin',
+          )
+          ..createSync(recursive: true)
+          ..writeAsBytesSync([4, 5, 6]);
+    final container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [
+        moodiaryDatabaseProvider.overrideWithValue(database),
+        diaryRepositoryProvider.overrideWithValue(diaries),
+        reminderServiceProvider.overrideWithValue(reminders),
+        autoSyncWatcherProvider.overrideWithValue(_AutoSync(() {})),
+        tombstoneRepositoryProvider.overrideWithValue(_Tombstones()),
+        embedIndexServiceProvider.overrideWithValue(_Index()),
+        embedQueueWatcherProvider.overrideWithValue(_Queue()),
+      ],
+    );
+    final coordinator = container.read(startupMigrationCoordinatorProvider);
+    addTearDown(coordinator.completeEditorMigration);
+    final ref = container.read(Provider<Ref>((ref) => ref));
+    final guard = container.read(syncOperationGuardProvider);
+    final releaseGuard = Completer<void>();
+    final activeSync = guard.tryRun(() => releaseGuard.future);
+    addTearDown(() {
+      if (!releaseGuard.isCompleted) releaseGuard.complete();
+    });
+
+    expect(await coordinator.probeLegacy(), LegacyDatabaseState.none);
+    await coordinator.startData(() => resumeDataStartup(ref));
+    _flushPostFrame();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(stagingFile.existsSync(), isTrue);
+    releaseGuard.complete();
+    await activeSync;
+  });
 }

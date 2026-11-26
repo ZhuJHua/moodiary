@@ -48,4 +48,4 @@ final class McpKeepAliveProvider
   }
 }
 
-String _$mcpKeepAliveHash() => r'0d7df6ea56a700319d8d567ccac8b8ee836f3663';
+String _$mcpKeepAliveHash() => r'bbcd1082f8b07b9802cc1a077ed184cc92ad7302';

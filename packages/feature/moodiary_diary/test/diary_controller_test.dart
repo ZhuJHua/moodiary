@@ -87,42 +87,50 @@ void main() {
     expect(await container.read(provider.future), same(pages));
   });
 
-  test('recycle bin clear finishes all deletes after listener leaves', () async {
-    final firstDeleteStarted = Completer<void>();
-    final allowFirstDelete = Completer<void>();
-    final deletedIds = <String>[];
-    final fakeRepo = _DelayedDeleteRepo(
-      entries: [
-        makeDiary('r1', 'one').copyWith(show: false),
-        makeDiary('r2', 'two').copyWith(show: false),
-        makeDiary('r3', 'three').copyWith(show: false),
-      ],
-      onDelete: (id) async {
-        if (id == 'r1') {
-          firstDeleteStarted.complete();
-          await allowFirstDelete.future;
-        }
-        deletedIds.add(id);
-        return true;
-      },
-    );
-    final container = ProviderContainer.test(
-      retry: (_, _) => null,
-      overrides: [diaryRepositoryProvider.overrideWithValue(fakeRepo)],
-    );
-    final sub = container.listen(recycleBinDiariesProvider, (_, _) {});
-    expect(await container.read(recycleBinDiariesProvider.future), hasLength(3));
+  test(
+    'recycle bin clear finishes all deletes after listener leaves',
+    () async {
+      final firstDeleteStarted = Completer<void>();
+      final allowFirstDelete = Completer<void>();
+      final deletedIds = <String>[];
+      final fakeRepo = _DelayedDeleteRepo(
+        entries: [
+          makeDiary('r1', 'one').copyWith(show: false),
+          makeDiary('r2', 'two').copyWith(show: false),
+          makeDiary('r3', 'three').copyWith(show: false),
+        ],
+        onDelete: (id) async {
+          if (id == 'r1') {
+            firstDeleteStarted.complete();
+            await allowFirstDelete.future;
+          }
+          deletedIds.add(id);
+          return true;
+        },
+      );
+      final container = ProviderContainer.test(
+        retry: (_, _) => null,
+        overrides: [diaryRepositoryProvider.overrideWithValue(fakeRepo)],
+      );
+      final sub = container.listen(recycleBinDiariesProvider, (_, _) {});
+      expect(
+        await container.read(recycleBinDiariesProvider.future),
+        hasLength(3),
+      );
 
-    final clearing = container.read(recycleBinDiariesProvider.notifier).clear();
-    await firstDeleteStarted.future;
-    // Simulate leaving the recycle bin route while deletion is in flight.
-    sub.close();
-    await container.pump();
-    allowFirstDelete.complete();
+      final clearing = container
+          .read(recycleBinDiariesProvider.notifier)
+          .clear();
+      await firstDeleteStarted.future;
+      // Simulate leaving the recycle bin route while deletion is in flight.
+      sub.close();
+      await container.pump();
+      allowFirstDelete.complete();
 
-    expect(await clearing, 3);
-    expect(deletedIds, ['r1', 'r2', 'r3']);
-  });
+      expect(await clearing, 3);
+      expect(deletedIds, ['r1', 'r2', 'r3']);
+    },
+  );
 }
 
 class _DelayedDeleteRepo extends Fake implements DiaryRepository {

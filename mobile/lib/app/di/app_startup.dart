@@ -48,8 +48,8 @@ Future<void> appStartup(Ref ref) async {
 
     // Phase 3: database, sync logger, legacy gate, theme, router, data startup.
     await Future.wait<void>([
-      ref.watch(moodiaryDatabaseAsyncProvider.future),
-      ref.watch(syncLoggerAsyncProvider.future),
+      ref.read(moodiaryDatabaseAsyncProvider.future),
+      ref.read(syncLoggerAsyncProvider.future),
     ]);
     final coordinator = ref.read(startupMigrationCoordinatorProvider);
     if (await coordinator.probeLegacy() == LegacyDatabaseState.abandoning) {

@@ -130,45 +130,41 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  test(
-    'old second page completing before sort rebuild flush does not publish stale rows',
-    () async {
-      KVStore.installForTesting(MemoryKVStorage());
-      addTearDown(KVStore.resetForTesting);
-      final newFirstPage = Completer<List<Diary>>();
-      final repository = _PagedDiaries()
-        ..pendingLastModifiedFirstPage = newFirstPage;
-      final container = ProviderContainer.test(
-        retry: (_, _) => null,
-        overrides: [diaryRepositoryProvider.overrideWithValue(repository)],
-      );
-      final provider = diaryControllerProvider();
-      final sub = container.listen(provider, (_, _) {});
-      addTearDown(sub.close);
+  test('old second page completing before sort rebuild flush does not publish stale rows', () async {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+    final newFirstPage = Completer<List<Diary>>();
+    final repository = _PagedDiaries()
+      ..pendingLastModifiedFirstPage = newFirstPage;
+    final container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [diaryRepositoryProvider.overrideWithValue(repository)],
+    );
+    final provider = diaryControllerProvider();
+    final sub = container.listen(provider, (_, _) {});
+    addTearDown(sub.close);
 
-      final initial = await container.read(provider.future);
-      expect(initial.first.id, 'entry-31');
+    final initial = await container.read(provider.future);
+    expect(initial.first.id, 'entry-31');
 
-      final pendingLoadMore = container.read(provider.notifier).loadMore();
-      MoodiaryKVs.homeSortMode.set(DiarySort.lastModifiedDesc.number);
-      // Complete old page 2 BEFORE container.pump() flushes the sort rebuild,
-      // while the new sort's first-page query stays pending.
-      repository.secondPage.complete([repository.rows.first]);
-      await pendingLoadMore;
+    final pendingLoadMore = container.read(provider.notifier).loadMore();
+    MoodiaryKVs.homeSortMode.set(DiarySort.lastModifiedDesc.number);
+    // Complete old page 2 BEFORE container.pump() flushes the sort rebuild,
+    // while the new sort's first-page query stays pending.
+    repository.secondPage.complete([repository.rows.first]);
+    await pendingLoadMore;
 
-      // The notifier must stay loading the new sort and never have published
-      // the stale page-2 data or marked noMore=true on the new epoch.
-      expect(container.read(provider).isLoading, isTrue);
-      expect(container.read(provider.notifier).noMore, isFalse);
+    // The notifier must stay loading the new sort and never have published
+    // the stale page-2 data or marked noMore=true on the new epoch.
+    expect(container.read(provider).isLoading, isTrue);
+    expect(container.read(provider.notifier).noMore, isFalse);
 
-      final expected =
-          (repository.rows.toList()
-                ..sort(diarySortComparator(.lastModifiedDesc)))
-              .take(30)
-              .toList();
-      newFirstPage.complete(expected);
-      await container.pump();
-      expect(await container.read(provider.future), expected);
-    },
-  );
+    final expected =
+        (repository.rows.toList()..sort(diarySortComparator(.lastModifiedDesc)))
+            .take(30)
+            .toList();
+    newFirstPage.complete(expected);
+    await container.pump();
+    expect(await container.read(provider.future), expected);
+  });
 }

@@ -43,39 +43,6 @@ final class _PlatformDirectoriesProvider
 String _$_platformDirectoriesHash() =>
     r'5cd10b0bc55cc6c1aa0972c3312d9ea1d05bb081';
 
-@ProviderFor(_dataStartup)
-final _dataStartupProvider = _DataStartupProvider._();
-
-final class _DataStartupProvider
-    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
-    with $FutureModifier<void>, $FutureProvider<void> {
-  _DataStartupProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'_dataStartupProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$_dataStartupHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<void> create(Ref ref) {
-    return _dataStartup(ref);
-  }
-}
-
-String _$_dataStartupHash() => r'666be33381371125e2e3af5fcd7734cbdd84dd4f';
-
 @ProviderFor(resetDataAction)
 final resetDataActionProvider = ResetDataActionProvider._();
 

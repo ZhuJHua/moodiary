@@ -12,7 +12,8 @@ class StartupMigrationCoordinator {
   final Set<void Function()> _gateListeners = {};
   Future<void>? _startup;
 
-  void addGateListener(void Function() listener) => _gateListeners.add(listener);
+  void addGateListener(void Function() listener) =>
+      _gateListeners.add(listener);
 
   void removeGateListener(void Function() listener) =>
       _gateListeners.remove(listener);

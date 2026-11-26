@@ -77,19 +77,17 @@ Future<void> showUserKeySheet(
           return;
         }
         Navigator.of(ctx).pop();
-        final ran = await ref
-            .read(syncOperationGuardProvider)
-            .tryWithOperation(
-              (operation) async {
-                await ensureSyncKeyReady(
-                  operation: operation,
-                  context: context,
-                  ref: ref,
-                  backend: backend,
-                );
-                return true;
-              },
+        final ran = await ref.read(syncOperationGuardProvider).tryWithOperation(
+          (operation) async {
+            await ensureSyncKeyReady(
+              operation: operation,
+              context: context,
+              ref: ref,
+              backend: backend,
             );
+            return true;
+          },
+        );
         if (ran == null && context.mounted) {
           toast.info(message: l10n.sync.statusRunning);
         }
@@ -101,19 +99,17 @@ Future<void> showUserKeySheet(
           return;
         }
         Navigator.of(ctx).pop();
-        final ran = await ref
-            .read(syncOperationGuardProvider)
-            .tryWithOperation(
-              (operation) async {
-                await resetAndOfferNewKey(
-                  operation: operation,
-                  context: context,
-                  ref: ref,
-                  backend: backend,
-                );
-                return true;
-              },
+        final ran = await ref.read(syncOperationGuardProvider).tryWithOperation(
+          (operation) async {
+            await resetAndOfferNewKey(
+              operation: operation,
+              context: context,
+              ref: ref,
+              backend: backend,
             );
+            return true;
+          },
+        );
         if (ran == null && context.mounted) {
           toast.info(message: l10n.sync.statusRunning);
         }

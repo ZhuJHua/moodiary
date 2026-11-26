@@ -101,7 +101,6 @@ class _EagerInitialization extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(appStartupProvider);
     ref.watch(autoSyncWatcherProvider);
     ref.watch(embedQueueWatcherProvider);
     return child;

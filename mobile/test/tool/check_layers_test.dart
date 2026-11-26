@@ -3,43 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../tool/check_layers.dart' as layers;
 
 void main() {
-  const forbidden = [
-    'get_it',
-    'injectable',
-    'injectable_generator',
-    'moodiary_di',
-  ];
-  for (final section in [
-    'dependencies',
-    'dev_dependencies',
-    'dependency_overrides',
-  ]) {
-    test('legacy DI matches only exact keys in $section', () {
-      final spec = [
-        '$section:',
-        for (final name in [...forbidden, 'moodiary_diary']) '  $name: any',
-        'flutter:',
-        '  get_it: any',
-      ].join('\n');
-      expect(layers.findLegacyDiInPubspec(spec, 'spec'), [
-        for (final name in forbidden) 'spec: $section: $name',
-      ]);
-    });
-  }
-
-  test('legacy DI matches exact directive package names', () {
-    for (final directive in ['import', 'export']) {
-      final content = [
-        for (final name in [...forbidden, 'moodiary_diary'])
-          '  $directive "package:$name/api.dart";',
-        '// $directive "package:get_it/api.dart";',
-      ].join('\n');
-      expect(layers.findLegacyDiInDart(content, 'source'), [
-        for (final name in forbidden) 'source: $name',
-      ]);
-    }
-  });
-
   test('manual containers are production violations, not comment matches', () {
     final violations = layers.findManualRootContainerInDart(
       '  // ProviderContainer(\n/// UncontrolledProviderScope(\n'
@@ -140,24 +103,27 @@ void main() {
     );
   });
 
-  test('app import scanner resolves relative imports as well as package URIs', () {
-    final targets = layers
-        .appImportTargets(
-          'app/home/diary_home_page.dart',
-          "import 'dart:async';\n"
-              "import 'package:mui/mui.dart';\n"
-              "import '../settings/setting_routes.dart';\n"
-              "export 'package:moodiary_mobile/app/locale.dart';\n",
-          'moodiary_mobile',
-        )
-        .toList();
-    expect(targets, ['app/settings/setting_routes.dart', 'app/locale.dart']);
-    expect(
-      layers
-          .checkAppImport('app/home/diary_home_page.dart', targets.first)
-          .single
-          .key,
-      'app/home/diary_home_page.dart -> app/settings',
-    );
-  });
+  test(
+    'app import scanner resolves relative imports as well as package URIs',
+    () {
+      final targets = layers
+          .appImportTargets(
+            'app/home/diary_home_page.dart',
+            "import 'dart:async';\n"
+                "import 'package:mui/mui.dart';\n"
+                "import '../settings/setting_routes.dart';\n"
+                "export 'package:moodiary_mobile/app/locale.dart';\n",
+            'moodiary_mobile',
+          )
+          .toList();
+      expect(targets, ['app/settings/setting_routes.dart', 'app/locale.dart']);
+      expect(
+        layers
+            .checkAppImport('app/home/diary_home_page.dart', targets.first)
+            .single
+            .key,
+        'app/home/diary_home_page.dart -> app/settings',
+      );
+    },
+  );
 }

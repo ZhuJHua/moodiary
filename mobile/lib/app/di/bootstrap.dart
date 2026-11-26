@@ -41,11 +41,7 @@ Future<void> bootstrapPlatform(Ref ref) async {
   AppLogger.configure(logFilePath: AppFiles.getErrorLogPath());
 }
 
-Future<void> resumeDataStartup(Ref ref) =>
-    ref.read(_dataStartupProvider.future);
-
-@Riverpod(keepAlive: true)
-Future<void> _dataStartup(Ref ref) async {
+Future<void> resumeDataStartup(Ref ref) async {
   try {
     await StartupMigrationCoordinator.migrateVersion(
       ref.read(kvStorageProvider),
@@ -72,7 +68,6 @@ Future<void> _dataStartup(Ref ref) async {
     MoodiaryKVs.syncPendingLocal.set(true);
     if (upgradedFrom < 3) MoodiaryKVs.pendingMoodNotice.set(true);
   }
-  await ref.read(syncOperationGuardProvider).tryRun(purgeSyncMediaTemp);
   ref.read(autoSyncWatcherProvider).start();
   ref.read(embedQueueWatcherProvider).start();
   runStartupMaintenance(ref);
@@ -82,6 +77,7 @@ void runStartupMaintenance(Ref ref) {
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     if (!ref.mounted) return;
     unawaited(purgeExpiredTombstones(ref.read(tombstoneRepositoryProvider)));
+    unawaited(ref.read(syncOperationGuardProvider).tryRun(purgeSyncMediaTemp));
     unawaited(ref.read(embedIndexServiceProvider).drain());
     if (!Platform.isAndroid) return;
     await ref.read(mcpKeepAliveProvider).restore();

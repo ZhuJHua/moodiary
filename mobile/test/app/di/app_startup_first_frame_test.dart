@@ -16,9 +16,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           retry: (_, _) => null,
-          overrides: [
-            appStartupProvider.overrideWith((ref) => startup.future),
-          ],
+          overrides: [appStartupProvider.overrideWith((ref) => startup.future)],
           child: AppStartupWidget(onFirstFrameReady: () => releases++),
         ),
       );

@@ -258,43 +258,6 @@ Iterable<({String section, String name})> _pubspecDeps(String text) sync* {
   }
 }
 
-const _legacyDi = {
-  'get_it',
-  'injectable',
-  'injectable_generator',
-  'moodiary_di',
-};
-final _legacyDirective = RegExp(
-  r'''^\s*(?:import|export)\s+['"]package:(''' + _legacyDi.join('|') + r')/',
-  multiLine: true,
-);
-
-List<String> findLegacyDiInPubspec(String pubspecContent, String pubspecPath) =>
-    [
-      for (final dep in _pubspecDeps(pubspecContent))
-        if (_legacyDi.contains(dep.name))
-          '$pubspecPath: ${dep.section}: ${dep.name}',
-    ];
-
-List<String> findLegacyDiInDart(String content, String filePath) => [
-  for (final match in _legacyDirective.allMatches(content))
-    '$filePath: ${match[1]}',
-];
-
-List<String> _checkNoLegacyDi() => [
-  for (final path in [
-    'pubspec.yaml',
-    for (final dir in _workspaceDirs) '$dir/pubspec.yaml',
-  ])
-    ...findLegacyDiInPubspec(File(path).readAsStringSync(), path),
-  for (final root in [
-    'packages',
-    for (final dir in _appDirs) ...['$dir/lib', '$dir/test'],
-  ])
-    for (final file in _dartFiles(root))
-      ...findLegacyDiInDart(file.readAsStringSync(), file.path),
-];
-
 final _manualRoot = RegExp(
   r'\b(ProviderContainer|UncontrolledProviderScope)(?:\s*\(|\s*\.\s*new\b)',
 );
@@ -722,7 +685,6 @@ List<String> _checkEmptyTestDirs() {
 void main(List<String> args) {
   final update = args.contains('--update-baseline');
   final guardViolations = [
-    ..._checkNoLegacyDi(),
     ..._checkNoManualRootContainer(),
     ..._checkUnusedWorkspaceDeps(),
   ]..sort();

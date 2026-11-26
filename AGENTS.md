@@ -77,7 +77,7 @@ Within `core` and `feature_base`, dependencies may only point to an earlier tier
 | 2 | files | components, migration, preferences, semantic |
 | 3 | theme, ml | tools, editor |
 
-- `moodiary_picker` was folded into `mobile/lib/app/picker/`; shared code consumes ports, not the mobile picker implementation.
+- Mobile media pickers live in `mobile/lib/app/picker/`; shared packages consume ports rather than the mobile picker implementation.
 - **`moodiary_storage` stays at tier 0**: mobile startup passes `rootDir` and `secureKv` to `MmkvKVStorage.create`; storage does not resolve the file layout.
 - **`moodiary_logging` stays in foundation** because the release log path is injected via `AppLogger.configure`; reading `AppFiles` directly would float the package above core, out of reach of almost everyone.
 
@@ -96,7 +96,7 @@ Routes carry no path or query parameters, because the app never targets the web.
 - Use generated `@riverpod` / `@Riverpod` providers for DI and state. `mobile/lib/main.dart` mounts one `ProviderScope(retry: (_, _) => null, overrides: buildMobilePortOverrides())`. After changing provider definitions run `fvm dart tool/task.dart build-runner` and commit the generated files.
 - Process-level facades such as `AppLogger`, `PlatformService`, `KVStore` / `SecureKVStore`, `Fast*Runtime` and `LegacyDatabaseGuard` remain outside Riverpod.
 - Shared packages declare unimplemented keepAlive ports: `filePickerProvider`, `heifDecoderProvider`, `notificationPermissionProvider`, `diaryShareHandlerProvider`, `videoPlayerPortFactoryProvider`, `videoSurfaceBuilderProvider` and `videoAmbientPortFactoryProvider`. Bind them in `mobile/lib/app/di/overrides.dart` and verify them in `mobile/test/app/di/port_overrides_test.dart`.
-- `moodiary_di` was removed. `tool/check_layers.dart` forbids it, `get_it`, `injectable` and `injectable_generator`, and forbids manual `ProviderContainer` / `UncontrolledProviderScope` construction in production `lib/`.
+- `tool/check_layers.dart` forbids manual `ProviderContainer` / `UncontrolledProviderScope` construction in production `lib/`.
 - Construct repositories directly in tests (`XxxRepository(MoodiaryDatabase.forTesting(...))`). Above repositories, supply doubles via `ProviderContainer.test(retry: (_, _) => null, overrides: [...])` or a widget `ProviderScope(retry: (_, _) => null, overrides: [...])`.
 
 ### mui: a supplement to material, not a replacement
