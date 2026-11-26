@@ -58,7 +58,6 @@ dependencies:
   provider: 6.1.5+1
   wechat_assets_picker: 10.1.3
   wechat_picker_library: 1.0.7
-  async: 2.13.1
   path: 1.9.1
   platform_image_converter: 2.2.0
 

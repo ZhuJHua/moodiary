@@ -53,49 +53,35 @@ Future<void> _dataStartup(Ref ref) async {
   } catch (error, stack) {
     logger.e('version migration failed', error: error, stackTrace: stack);
   }
+  try {
+    await ref
+        .read(startupMigrationCoordinatorProvider)
+        .refreshEditorGate(ref.read(diaryRepositoryProvider));
+  } catch (error, stack) {
+    logger.e('migration gate probe failed', error: error, stackTrace: stack);
+  }
+  try {
+    await ref.read(reminderServiceProvider).initialize();
+  } catch (error, stack) {
+    logger.e('Reminder initialization failed', error: error, stackTrace: stack);
+  }
   final db = ref.read(moodiaryDatabaseProvider);
-  await Future.wait([
-    () async {
-      try {
-        await ref
-            .read(startupMigrationCoordinatorProvider)
-            .refreshEditorGate(ref.read(diaryRepositoryProvider));
-      } catch (error, stack) {
-        logger.e(
-          'migration gate probe failed',
-          error: error,
-          stackTrace: stack,
-        );
-      }
-    }(),
-    () async {
-      try {
-        await ref.read(reminderServiceProvider).initialize();
-      } catch (error, stack) {
-        logger.e(
-          'Reminder initialization failed',
-          error: error,
-          stackTrace: stack,
-        );
-      }
-    }(),
-    db.applyLegacyMoodScenes((scene) => scene.labelOf(l10n)),
-  ]);
+  await db.applyLegacyMoodScenes((scene) => scene.labelOf(l10n));
   final upgradedFrom = db.upgradedFrom;
   if (upgradedFrom != null) {
     MoodiaryKVs.syncPendingLocal.set(true);
     if (upgradedFrom < 3) MoodiaryKVs.pendingMoodNotice.set(true);
   }
+  await ref.read(syncOperationGuardProvider).tryRun(purgeSyncMediaTemp);
   ref.read(autoSyncWatcherProvider).start();
+  ref.read(embedQueueWatcherProvider).start();
   runStartupMaintenance(ref);
 }
 
 void runStartupMaintenance(Ref ref) {
-  ref.read(embedQueueWatcherProvider).start();
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     if (!ref.mounted) return;
     unawaited(purgeExpiredTombstones(ref.read(tombstoneRepositoryProvider)));
-    unawaited(ref.read(syncOperationGuardProvider).tryRun(purgeSyncMediaTemp));
     unawaited(ref.read(embedIndexServiceProvider).drain());
     if (!Platform.isAndroid) return;
     await ref.read(mcpKeepAliveProvider).restore();
@@ -196,10 +182,20 @@ Future<void> resetAllData(Ref ref) async {
   }
   if (KVStore.isInstalled) {
     await step('kv.clear', () async => KVStore.instance.clear());
+  } else {
+    await step(
+      'kv.deleteDir',
+      () => AppFiles.deleteDir(AppFiles.getRealPath('mmkv', '')),
+    );
   }
   await Future.wait([
     if (SecureKVStore.isInstalled)
-      step('secureKv.clear', SecureKVStore.instance.clear),
+      step('secureKv.clear', SecureKVStore.instance.clear)
+    else
+      step(
+        'secureKv.clear',
+        () async => (await FlutterSecureStorageKVStorage.create()).clear(),
+      ),
     step('legacyPrefs.clear', LegacyPrefsKVSource.clearStore),
     step('media.reset', AppFiles.resetUserMediaDirs),
     step('cache.clear', () => AppFiles.clearCache(protectWorkspaces: false)),

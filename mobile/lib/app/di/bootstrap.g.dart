@@ -74,7 +74,7 @@ final class _DataStartupProvider
   }
 }
 
-String _$_dataStartupHash() => r'da0a944d37682ee6d35eeb62eccd7e757fb7dd26';
+String _$_dataStartupHash() => r'666be33381371125e2e3af5fcd7734cbdd84dd4f';
 
 @ProviderFor(resetDataAction)
 final resetDataActionProvider = ResetDataActionProvider._();

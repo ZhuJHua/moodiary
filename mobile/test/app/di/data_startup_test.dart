@@ -57,9 +57,14 @@ class _Reminders extends Fake implements ReminderService {
 }
 
 class _AutoSync extends Fake implements AutoSyncWatcher {
+  _AutoSync(this.onStart);
+  final void Function() onStart;
   int starts = 0;
   @override
-  void start() => starts++;
+  void start() {
+    starts++;
+    onStart();
+  }
 }
 
 class _Tombstones extends Fake implements TombstoneRepository {
@@ -116,7 +121,16 @@ void main() {
         final database = _Database(version);
         final diaries = _Diaries();
         final reminders = _Reminders();
-        final autoSync = _AutoSync();
+        final stagingFile =
+            File(
+                '${PlatformService.get().applicationCachePath}/sync-media/stale.bin',
+              )
+              ..createSync(recursive: true)
+              ..writeAsBytesSync([1, 2, 3]);
+        var stagingPurgedBeforeAutoSync = false;
+        final autoSync = _AutoSync(() {
+          stagingPurgedBeforeAutoSync = !stagingFile.existsSync();
+        });
         final queue = _Queue();
         final container = ProviderContainer.test(
           retry: (_, _) => null,
@@ -155,8 +169,8 @@ void main() {
         expect(await coordinator.probeLegacy(), LegacyDatabaseState.none);
         final startup = coordinator.startData(activate);
         await reminders.entered.future;
-        // Independent DB startup work overlaps reminder initialization.
-        expect(database.sceneMigrations, 1);
+        // Sequential startup runs legacy scene migration after reminders finish.
+        expect(database.sceneMigrations, 0);
         final concurrent = [
           startup,
           coordinator.startData(activate),
@@ -170,6 +184,7 @@ void main() {
         expect(activations, 1);
         expect(reminders.calls, 1);
         expect(database.sceneMigrations, 1);
+        expect(stagingPurgedBeforeAutoSync, isTrue);
         expect(autoSync.starts, 1);
         expect(queue.starts, 1);
         expect(container.read(migrationGateProvider).canEnterHome, isTrue);

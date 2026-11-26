@@ -50,6 +50,7 @@ void main() {
   late _Database database;
   late List<File> files;
   late int openCallCount;
+  late int secureDeleteAllCalls;
 
   setUpAll(() {
     root = Directory.systemTemp.createTempSync('mobile-reset-');
@@ -73,6 +74,17 @@ void main() {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockDecodedMessageHandler(channel, (_) async => [null]);
     addTearDown(() => messenger.setMockDecodedMessageHandler(channel, null));
+    secureDeleteAllCalls = 0;
+    const secureChannel = MethodChannel(
+      'plugins.it_nomads.com/flutter_secure_storage',
+    );
+    messenger.setMockMethodCallHandler(secureChannel, (call) async {
+      if (call.method == 'deleteAll') {
+        secureDeleteAllCalls++;
+      }
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(secureChannel, null));
 
     openCallCount = 0;
     database = _Database();
@@ -102,6 +114,10 @@ void main() {
   });
 
   test('reset before opening removes SQLite and sidecars without opening the database', () async {
+    final mmkvDir = Directory('${root.path}/support/mmkv')
+      ..createSync(recursive: true);
+    final mmkvFile = File('${mmkvDir.path}/mmkv.default')
+      ..writeAsStringSync('prefs');
     final unrelated = File('${files.first.parent.path}/keep.db')
       ..writeAsStringSync('keep');
     expect(ref.exists(moodiaryDatabaseAsyncProvider), isFalse);
@@ -112,6 +128,8 @@ void main() {
     for (final file in files) {
       expect(file.existsSync(), isFalse, reason: file.path);
     }
+    expect(mmkvFile.existsSync(), isFalse);
+    expect(secureDeleteAllCalls, 1);
     expect(unrelated.readAsStringSync(), 'keep');
   });
 

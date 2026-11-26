@@ -1,7 +1,6 @@
 import 'dart:async' show unawaited;
 import 'dart:io';
 
-import 'package:async/async.dart' show Result;
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
@@ -29,40 +28,31 @@ Future<void> appStartup(Ref ref) async {
   try {
     _configureSystemUi();
 
-    // Wave 0: start independent initializers concurrently; Result.capture
-    // attaches error handlers immediately so early failures are never uncaught.
-    final glass = Result.capture(MGlassApp.initialize());
-    final fastImage = Result.capture(FastImageRuntime.init());
-    final secureKv = Result.capture(FlutterSecureStorageKVStorage.create());
-    await bootstrapPlatform(ref);
+    // Phase 1: pure native/platform initializers (zero business state).
+    await Future.wait<void>([
+      MGlassApp.initialize(),
+      FastImageRuntime.init(),
+      bootstrapPlatform(ref),
+    ]);
 
-    // Wave 1: platform dirs exist — run DB, sync logger, and storage/probe
-    // concurrently.
-    final coordinator = ref.read(startupMigrationCoordinatorProvider);
-    final (legacyState, _, _) = await (
-      () async {
-        final store = await Result.release(secureKv);
-        SecureKVStore.install(store);
-        final kv = await MmkvKVStorage.create(
-          rootDir: path.join(
-            PlatformService.get().applicationSupportPath,
-            'mmkv',
-          ),
-          secureKv: store,
-        );
-        KVStore.install(kv);
-        final (_, _, state) = await (
-          AppLockPin.load(),
-          _initLocaleSafely(),
-          coordinator.probeLegacy(),
-        ).wait;
-        return state;
-      }(),
+    // Phase 2: local storage and basic prefs — strictly before DB open.
+    final secureKv = await FlutterSecureStorageKVStorage.create();
+    SecureKVStore.install(secureKv);
+    final kv = await MmkvKVStorage.create(
+      rootDir: path.join(PlatformService.get().applicationSupportPath, 'mmkv'),
+      secureKv: secureKv,
+    );
+    KVStore.install(kv);
+    await AppLockPin.load();
+    await _initLocaleSafely();
+
+    // Phase 3: database, sync logger, legacy gate, theme, router, data startup.
+    await Future.wait<void>([
       ref.watch(moodiaryDatabaseAsyncProvider.future),
       ref.watch(syncLoggerAsyncProvider.future),
-    ).wait;
-
-    if (legacyState == LegacyDatabaseState.abandoning) {
+    ]);
+    final coordinator = ref.read(startupMigrationCoordinatorProvider);
+    if (await coordinator.probeLegacy() == LegacyDatabaseState.abandoning) {
       try {
         await coordinator.abandonLegacy(
           diaries: ref.read(diaryRepositoryProvider),
@@ -76,18 +66,11 @@ Future<void> appStartup(Ref ref) async {
         );
       }
     }
-
-    // Wave 2: theme, data startup (with syncLogger ready), and Wave 0 tasks.
-    final canStartData = ref.read(migrationGateProvider).canStartData;
-    await (
-      _initTheme(ref),
-      canStartData
-          ? coordinator.startData(() => resumeDataStartup(ref))
-          : Future<void>.value(),
-      Result.release(glass),
-      Result.release(fastImage),
-    ).wait;
+    await _initTheme(ref);
     ref.read(appRouterProvider);
+    if (ref.read(migrationGateProvider).canStartData) {
+      await coordinator.startData(() => resumeDataStartup(ref));
+    }
   } catch (error, stack) {
     logger.f('bootstrap failed', error: error, stackTrace: stack);
     rethrow;
