@@ -47,7 +47,7 @@ For full verification, use `test --all` alongside the analysis and Rust commands
 
 **Tests are one process**: one `flutter test` at the repo root over the affected packages' `test/` dirs, so hooks and the frontend compiler run once, not once per package.
 
-- The root dev-depends on `moodiary_data` only to pull `sqlite3_simple` / `sqlite3_vec` into the hook tree: a hook runs only for the cwd package's deps.
+- The root dev-depends on `moodiary_data` (to pull `sqlite3_simple` / `sqlite3_vec` into the hook tree) and `mui` (to pull `material_ui` shaders and `mui` test assets into `build/unit_test_assets`): hooks and test assets only build for the cwd package's deps.
 - cwd is the repo root, so tests read repo files through `repoRoot` (`moodiary_lint/testing.dart`), never a relative path, and write only into their own `createTempSync` directory.
 
 **Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.

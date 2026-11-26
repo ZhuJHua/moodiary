@@ -361,8 +361,11 @@ List<String> _checkUnusedWorkspaceDeps() {
         analysisOptionPkgs: _referencedAnalysisPkgs(
           File('${entry.key}/analysis_options.yaml'),
         ),
-        // Pull SQLite extension hooks into the root's single-process Flutter tests.
-        allowedDevDeps: entry.key == '.' ? const {'moodiary_data'} : const {},
+        // Pull SQLite extension hooks and mui/material_ui test assets/shaders
+        // into the root's single-process Flutter tests.
+        allowedDevDeps: entry.key == '.'
+            ? const {'moodiary_data', 'mui'}
+            : const {},
       ),
   ];
 }
