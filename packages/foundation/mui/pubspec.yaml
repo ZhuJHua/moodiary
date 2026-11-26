@@ -25,6 +25,7 @@ dependencies:
   skeletonizer: 3.0.0
   slang: 4.19.2 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   slang_flutter: 4.19.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  swift_transitions: 0.3.0
 
 dev_dependencies:
   flutter_test:

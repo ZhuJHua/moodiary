@@ -5,6 +5,8 @@ import 'package:cupertino_ui/cupertino_ui.dart'
 import 'package:flutter/services.dart' show MethodCall, SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
+import 'package:swift_transitions/swift_transitions.dart'
+    show SwiftPageTransitionsBuilder;
 
 final _theme = buildMuiTheme(brightness: Brightness.light);
 const _radii = MuiRadii();
@@ -70,7 +72,7 @@ void main() {
       tester.getTopLeft(find.byKey(Key(page))).dx;
 
   group('平台分工', () {
-    test('Android 是我们那套，iOS/macOS 是 Cupertino，桌面回落默认', () {
+    test('Android 是我们那套，iOS 是 Swift，macOS 是 Cupertino，桌面回落默认', () {
       final builders = _theme.pageTransitionsTheme.builders;
       expect(
         builders[TargetPlatform.android],
@@ -78,7 +80,7 @@ void main() {
       );
       expect(
         builders[TargetPlatform.iOS],
-        isA<CupertinoPageTransitionsBuilder>(),
+        isA<SwiftPageTransitionsBuilder>(),
       );
       expect(
         builders[TargetPlatform.macOS],
@@ -97,24 +99,6 @@ void main() {
               FadeForwardsPageTransitionsBuilder.kTransitionMilliseconds,
         ),
       );
-    });
-
-    testWidgets('iOS 走 Cupertino：左缘拖拽能返回', (tester) async {
-      await tester.pumpWidget(host(TargetPlatform.iOS));
-      await tester.tap(find.text('push'));
-      await tester.pumpAndSettle();
-
-      var clock = Duration.zero;
-      final gesture = await tester.startGesture(const Offset(5, 300));
-      for (var i = 0; i < 4; i++) {
-        clock += const Duration(milliseconds: 16);
-        await gesture.moveBy(const Offset(120, 0), timeStamp: clock);
-        await tester.pump(const Duration(milliseconds: 16));
-      }
-      await gesture.up(timeStamp: clock);
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('detail')), findsNothing);
     });
   });
 

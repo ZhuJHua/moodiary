@@ -9,6 +9,8 @@ import 'package:mui/src/themes/mui_tokens.dart';
 import 'package:mui/src/themes/page_transitions.dart';
 import 'package:mui/src/themes/tokens.dart';
 import 'package:mui/src/themes/typography.dart';
+import 'package:swift_transitions/swift_transitions.dart'
+    show SwiftPageTransitionsBuilder;
 
 Widget _backIcon(BuildContext context) => const Icon(LucideIcons.arrowLeft);
 
@@ -106,7 +108,7 @@ ThemeData buildMuiTheme({
     pageTransitionsTheme: PageTransitionsTheme(
       builders: {
         TargetPlatform.android: pageTransitions,
-        TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
+        TargetPlatform.iOS: const SwiftPageTransitionsBuilder(),
         TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
       },
     ),
