@@ -391,10 +391,18 @@ class _AudioActionState extends State<_AudioAction>
       try {
         final file = await widget.localFile();
         if (!mounted || file == null) return null;
-        final controller = _controller ??= (AudioPlaybackController(file.path)
-          ..progress.addListener(_update));
-        await controller.prepare();
-        return mounted ? controller : null;
+        final controller = AudioPlaybackController(file.path);
+        try {
+          await controller.prepare();
+        } catch (_) {
+          controller.dispose();
+          rethrow;
+        }
+        if (!mounted) {
+          controller.dispose();
+          return null;
+        }
+        return _controller = controller..progress.addListener(_update);
       } finally {
         _loading = null;
       }

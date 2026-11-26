@@ -85,7 +85,11 @@ class AudioPlaybackController {
   static Future<void> _releasePlaybackSession() async {
     try {
       final session = await AudioSession.instance;
-      await session.setActive(false);
+      await session.setActive(
+        false,
+        avAudioSessionSetActiveOptions:
+            AVAudioSessionSetActiveOptions.notifyOthersOnDeactivation,
+      );
     } catch (_) {}
   }
 
@@ -118,9 +122,11 @@ class AudioPlaybackController {
       if (_disposed) return;
       logger.e('[audio] playback error', error: error);
       _loadFuture = null;
-      if (identical(_active, this)) _active = null;
+      final wasActive = identical(_active, this);
+      if (wasActive) _active = null;
       _emit(playing: false);
       unawaited(_player.pause().catchError((_) {}));
+      if (wasActive) unawaited(_releaseSession());
     }, onError: (_, _) {});
   }
 
@@ -145,7 +151,12 @@ class AudioPlaybackController {
       await _player.pause();
       if (_disposed || _player.playing || _seekSeq != seq) return;
       await _player.seek(.zero);
-      if (!_disposed && _seekSeq == seq) _emit(position: .zero);
+      if (_disposed || _seekSeq != seq) return;
+      _emit(position: .zero);
+      if (identical(_active, this)) {
+        _active = null;
+        unawaited(_releaseSession());
+      }
     } catch (_) {}
   }
 
@@ -183,6 +194,10 @@ class AudioPlaybackController {
     try {
       await prepare();
       if (_disposed || !identical(_active, this)) return;
+      if (_player.processingState == .idle) {
+        await _player.load();
+        if (_disposed || !identical(_active, this)) return;
+      }
       await _configureSession();
       if (_disposed || !identical(_active, this)) return;
       final total = progress.value.duration;
@@ -200,33 +215,43 @@ class AudioPlaybackController {
           if (_disposed || e is PlayerInterruptedException) return;
           logger.e('[audio] play failed', error: e, stackTrace: s);
           _loadFuture = null;
-          if (identical(_active, this)) _active = null;
+          final wasActive = identical(_active, this);
+          if (wasActive) _active = null;
           _emit(playing: false);
           unawaited(_player.pause().catchError((_) {}));
+          if (wasActive) unawaited(_releaseSession());
         }),
       );
     } catch (e, s) {
       if (_disposed || e is PlayerInterruptedException) return;
       logger.e('[audio] play failed', error: e, stackTrace: s);
-      if (identical(_active, this)) _active = null;
+      final wasActive = identical(_active, this);
+      if (wasActive) _active = null;
       _emit(playing: false);
+      if (wasActive) unawaited(_releaseSession());
     }
   }
 
   Future<void> pause() async {
     if (_disposed) return;
-    if (identical(_active, this)) _active = null;
+    final wasActive = identical(_active, this);
+    if (wasActive) _active = null;
+    if (!wasActive && !progress.value.playing && !_player.playing) return;
     _emit(playing: false);
     try {
       if (_player.playing) {
         await _player.pause();
-      } else if (_player.processingState == .ready ||
-          _player.processingState == .buffering) {
-        // Clears just_audio's pending interruption-resume flag while keeping position.
+      } else if (wasActive &&
+          (_player.processingState == .ready ||
+              _player.processingState == .buffering)) {
+        // Only the active owner could have been paused by an interruption;
+        // stop() clears just_audio's pending auto-resume flag while keeping position.
         await _player.stop();
       }
     } catch (e, s) {
       logger.e('[audio] pause failed', error: e, stackTrace: s);
+    } finally {
+      if (wasActive && !_disposed) unawaited(_releaseSession());
     }
   }
 
@@ -244,6 +269,10 @@ class AudioPlaybackController {
     try {
       await prepare();
       if (_disposed) return;
+      if (_player.processingState == .idle) {
+        await _player.load();
+        if (_disposed) return;
+      }
       await _player.seek(target);
     } catch (e, s) {
       if (_disposed || e is PlayerInterruptedException) return;

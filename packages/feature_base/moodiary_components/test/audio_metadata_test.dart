@@ -69,6 +69,13 @@ class _FakePlayer implements AudioPlayer {
   }) => _load('url:$url');
 
   @override
+  Future<Duration?> load() async {
+    calls.add('load');
+    emitState(processingState: ProcessingState.ready);
+    return _duration;
+  }
+
+  @override
   Future<void> play() async {
     calls.add('play');
     _playing = true;
@@ -339,21 +346,53 @@ void main() {
     },
   );
 
-  test('explicit pause on an already-interrupted clip calls stop to clear resume intent', () async {
+  test('pause skips stop on prepared-but-unplayed clips and reloads only after stop', () async {
     final player = _FakePlayer();
-    final audio = AudioPlaybackController.forTesting('/audio.mp3', player);
+    var releases = 0;
+    final audio = AudioPlaybackController.forTesting(
+      '/audio.mp3',
+      player,
+      releaseSession: () async => releases++,
+    );
     addTearDown(audio.dispose);
 
+    // Prepared but never played: pause() must NOT call stop() or release focus.
+    await audio.prepare();
+    await audio.pause();
+    expect(player.calls, ['file:/audio.mp3']);
+    expect(releases, 0);
+
+    // Play then pause normally: calls pause() and releases session; a second
+    // pause() (e.g. pauseMedia) does not tear down the ready player.
+    await audio.toggle();
+    await _pump();
+    await audio.pause();
+    await _pump();
+    expect(player.calls, ['file:/audio.mp3', 'play', 'pause']);
+    expect(releases, 1);
+
+    await audio.pause();
+    expect(player.calls, ['file:/audio.mp3', 'play', 'pause']);
+    expect(releases, 1);
+
+    // Interrupted active clip: pause() calls stop() to clear auto-resume,
+    // and next toggle() calls load() before play().
     await audio.toggle();
     await _pump();
     player.emitState(playing: false, processingState: ProcessingState.ready);
     await _pump();
-
     await audio.pause();
-    expect(player.calls, ['file:/audio.mp3', 'play', 'stop']);
+    await _pump();
+    expect(player.calls.last, 'stop');
+    expect(releases, 2);
+
+    await audio.toggle();
+    await _pump();
+    expect(player.calls.sublist(player.calls.length - 2), ['load', 'play']);
+    expect(audio.progress.value.playing, true);
   });
 
-  test('disposing active player releases audio session, but handoff or idle disposal does not', () async {
+  test('natural completion and active disposal release session, while handoff keeps it active', () async {
     var releases = 0;
     final a = AudioPlaybackController.forTesting(
       '/a.mp3',
@@ -384,6 +423,22 @@ void main() {
     b.dispose();
     await _pump();
     expect(releases, 1);
+
+    final playerC = _FakePlayer();
+    final c = AudioPlaybackController.forTesting(
+      '/c.mp3',
+      playerC,
+      releaseSession: () async => releases++,
+    );
+    addTearDown(c.dispose);
+    await c.toggle();
+    await _pump();
+    playerC.emitState(
+      playing: true,
+      processingState: ProcessingState.completed,
+    );
+    await _pump();
+    expect(releases, 2);
   });
 
   test(
