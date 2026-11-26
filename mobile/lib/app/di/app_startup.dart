@@ -23,26 +23,73 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_startup.g.dart';
 
+typedef _Outcome<T> = ({T? value, Object? error, StackTrace? stack});
+
+Future<_Outcome<T>> _capture<T>(Future<T> future) => future.then<_Outcome<T>>(
+  (value) => (value: value, error: null, stack: null),
+  onError: (Object error, StackTrace stack) =>
+      (value: null, error: error, stack: stack),
+);
+
+void _rethrowIfError(_Outcome<Object?> outcome) {
+  if (outcome.error != null) {
+    Error.throwWithStackTrace(outcome.error!, outcome.stack!);
+  }
+}
+
+T _unwrap<T>(_Outcome<T> outcome) {
+  _rethrowIfError(outcome);
+  return outcome.value as T;
+}
+
 @Riverpod(keepAlive: true)
 Future<void> appStartup(Ref ref) async {
   try {
-    await MGlassApp.initialize();
-    await FastImageRuntime.init();
+    _configureSystemUi();
+
+    // Wave 0: start independent native/platform initializers concurrently,
+    // attaching error handlers immediately so early failures never escape.
+    final glassOutcome = _capture(MGlassApp.initialize());
+    final fastImageOutcome = _capture(FastImageRuntime.init());
+    final secureKvOutcome = _capture(FlutterSecureStorageKVStorage.create());
     await bootstrapPlatform(ref);
-    final secureKv = await FlutterSecureStorageKVStorage.create();
-    SecureKVStore.install(secureKv);
-    final kv = await MmkvKVStorage.create(
-      rootDir: path.join(PlatformService.get().applicationSupportPath, 'mmkv'),
-      secureKv: secureKv,
-    );
-    KVStore.install(kv);
-    await AppLockPin.load();
-    await Future.wait([
-      ref.watch(moodiaryDatabaseAsyncProvider.future),
-      ref.watch(syncLoggerAsyncProvider.future),
-    ]);
+
+    // Wave 1: once platform dirs exist, run DB open, sync logger init, and
+    // MMKV -> (AppLock + Locale + legacy probe) concurrently.
     final coordinator = ref.read(startupMigrationCoordinatorProvider);
-    if (await coordinator.probeLegacy() == LegacyDatabaseState.abandoning) {
+    final storageOutcome = _capture(() async {
+      final secureKv = _unwrap(await secureKvOutcome);
+      SecureKVStore.install(secureKv);
+      final kv = await MmkvKVStorage.create(
+        rootDir: path.join(
+          PlatformService.get().applicationSupportPath,
+          'mmkv',
+        ),
+        secureKv: secureKv,
+      );
+      KVStore.install(kv);
+      final results = await Future.wait<Object?>([
+        AppLockPin.load(),
+        _initLocaleSafely(),
+        coordinator.probeLegacy(),
+      ]);
+      return results[2]! as LegacyDatabaseState;
+    }());
+    final dbOutcome = _capture(ref.watch(moodiaryDatabaseAsyncProvider.future));
+    final syncLoggerOutcome = _capture(
+      ref.watch(syncLoggerAsyncProvider.future),
+    );
+
+    final wave1 = await Future.wait([
+      storageOutcome,
+      dbOutcome,
+      syncLoggerOutcome,
+    ]);
+    final legacyState = _unwrap(wave1[0] as _Outcome<LegacyDatabaseState>);
+    _rethrowIfError(wave1[1]);
+    _rethrowIfError(wave1[2]);
+
+    if (legacyState == LegacyDatabaseState.abandoning) {
       try {
         await coordinator.abandonLegacy(
           diaries: ref.read(diaryRepositoryProvider),
@@ -56,13 +103,20 @@ Future<void> appStartup(Ref ref) async {
         );
       }
     }
+
+    // Wave 2: theme build, data startup (with syncLogger already ready), and
+    // any still-in-flight Wave 0 native initializers.
     final canStartData = ref.read(migrationGateProvider).canStartData;
-    await _initLocaleSafely();
-    await Future.wait<void>([
-      _initTheme(ref),
-      if (canStartData) coordinator.startData(() => resumeDataStartup(ref)),
+    final wave2 = await Future.wait([
+      _capture(_initTheme(ref)),
+      if (canStartData)
+        _capture(coordinator.startData(() => resumeDataStartup(ref))),
+      glassOutcome,
+      fastImageOutcome,
     ]);
-    await _configureSystemUi();
+    for (final outcome in wave2) {
+      _rethrowIfError(outcome);
+    }
     ref.read(appRouterProvider);
   } catch (error, stack) {
     logger.f('bootstrap failed', error: error, stackTrace: stack);
@@ -107,11 +161,11 @@ Future<void> _initTheme(Ref ref) async {
   }
 }
 
-Future<void> _configureSystemUi() async {
+void _configureSystemUi() {
   if (Platform.isAndroid) {
     unawaited(_enableHighRefreshRate());
   }
-  await SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
+  unawaited(SystemChrome.setEnabledSystemUIMode(.edgeToEdge));
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.transparent,
@@ -125,10 +179,6 @@ Future<void> _enableHighRefreshRate() async {
   try {
     await FlutterDisplayMode.setHighRefreshRate();
   } catch (error, stack) {
-    logger.e(
-      'high refresh rate unavailable',
-      error: error,
-      stackTrace: stack,
-    );
+    logger.e('high refresh rate unavailable', error: error, stackTrace: stack);
   }
 }

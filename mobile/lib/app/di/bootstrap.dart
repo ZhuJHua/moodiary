@@ -53,20 +53,34 @@ Future<void> _dataStartup(Ref ref) async {
   } catch (error, stack) {
     logger.e('version migration failed', error: error, stackTrace: stack);
   }
-  try {
-    await ref
-        .read(startupMigrationCoordinatorProvider)
-        .refreshEditorGate(ref.read(diaryRepositoryProvider));
-  } catch (error, stack) {
-    logger.e('migration gate probe failed', error: error, stackTrace: stack);
-  }
-  try {
-    await ref.read(reminderServiceProvider).initialize();
-  } catch (error, stack) {
-    logger.e('Reminder initialization failed', error: error, stackTrace: stack);
-  }
   final db = ref.read(moodiaryDatabaseProvider);
-  await db.applyLegacyMoodScenes((scene) => scene.labelOf(l10n));
+  await Future.wait([
+    () async {
+      try {
+        await ref
+            .read(startupMigrationCoordinatorProvider)
+            .refreshEditorGate(ref.read(diaryRepositoryProvider));
+      } catch (error, stack) {
+        logger.e(
+          'migration gate probe failed',
+          error: error,
+          stackTrace: stack,
+        );
+      }
+    }(),
+    () async {
+      try {
+        await ref.read(reminderServiceProvider).initialize();
+      } catch (error, stack) {
+        logger.e(
+          'Reminder initialization failed',
+          error: error,
+          stackTrace: stack,
+        );
+      }
+    }(),
+    db.applyLegacyMoodScenes((scene) => scene.labelOf(l10n)),
+  ]);
   final upgradedFrom = db.upgradedFrom;
   if (upgradedFrom != null) {
     MoodiaryKVs.syncPendingLocal.set(true);
@@ -77,15 +91,16 @@ Future<void> _dataStartup(Ref ref) async {
 }
 
 void runStartupMaintenance(Ref ref) {
+  ref.read(embedQueueWatcherProvider).start();
   WidgetsBinding.instance.addPostFrameCallback((_) async {
-    if (!ref.mounted || !Platform.isAndroid) return;
+    if (!ref.mounted) return;
+    unawaited(purgeExpiredTombstones(ref.read(tombstoneRepositoryProvider)));
+    unawaited(ref.read(syncOperationGuardProvider).tryRun(purgeSyncMediaTemp));
+    unawaited(ref.read(embedIndexServiceProvider).drain());
+    if (!Platform.isAndroid) return;
     await ref.read(mcpKeepAliveProvider).restore();
     await ref.read(mcpServiceProvider).restore();
   });
-  unawaited(purgeExpiredTombstones(ref.read(tombstoneRepositoryProvider)));
-  unawaited(purgeSyncMediaTemp());
-  unawaited(ref.read(embedIndexServiceProvider).drain());
-  ref.read(embedQueueWatcherProvider).start();
 }
 
 @Riverpod(keepAlive: true)

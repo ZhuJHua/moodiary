@@ -155,6 +155,8 @@ void main() {
         expect(await coordinator.probeLegacy(), LegacyDatabaseState.none);
         final startup = coordinator.startData(activate);
         await reminders.entered.future;
+        // Independent DB startup work overlaps reminder initialization.
+        expect(database.sceneMigrations, 1);
         final concurrent = [
           startup,
           coordinator.startData(activate),
