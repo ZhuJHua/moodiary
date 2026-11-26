@@ -49,7 +49,6 @@ android {
 
     defaultConfig {
         applicationId = "cn.yooss.moodiary"
-        // 28 起才认 DT_ANDROID_RELR；native_toolchain_rust 把 apiTarget 硬编码成 35，26/27 会静默跳过全部重定位
         minSdk = 28
         targetSdk = 36
         versionCode = flutter.versionCode
