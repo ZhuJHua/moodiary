@@ -187,27 +187,6 @@ Future<void> _i18n() async {
 }
 
 final Map<String, Future<void> Function(List<String> rest)> _tasks = {
-  'setup': (rest) async {
-    final hasSdkPath =
-        rest.any(
-          (arg) => arg == '--sdk-path' || arg.startsWith('--sdk-path='),
-        ) ||
-        (Platform.environment['MELOS_SDK_PATH']?.isNotEmpty ?? false);
-    if (!hasSdkPath && !Directory('.fvm/flutter_sdk').existsSync()) {
-      stderr.writeln(
-        '✗ 找不到 .fvm/flutter_sdk。请先运行 `fvm use` 初始化当前工作区的 Flutter SDK，或通过 `--sdk-path` / `MELOS_SDK_PATH` 指定。',
-      );
-      exit(1);
-    }
-    await _run('fvm', [
-      'dart',
-      'run',
-      'melos',
-      'bootstrap',
-      if (!hasSdkPath) '--sdk-path=.fvm/flutter_sdk',
-      ...rest,
-    ]);
-  },
   'run': (rest) async {
     await _flutter(['run', ...rest]);
   },

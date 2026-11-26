@@ -15,7 +15,7 @@ Moodiary is a Flutter + Rust diary app. Shared packages under `packages/` form f
 ```bash
 # Setup
 fvm use
-fvm dart tool/task.dart setup          # melos bootstrap (syncs shared deps + pub get)
+fvm dart run melos bs                  # melos bootstrap (syncs shared deps + pub get)
 
 # Run & Build (mobile app)
 fvm dart tool/task.dart run -- --flavor production # Android
@@ -50,7 +50,7 @@ For full verification, use `test --all` alongside the analysis and Rust commands
 - The root dev-depends on `moodiary_data` (to pull `sqlite3_simple` / `sqlite3_vec` into the hook tree) and `mui` (to pull `material_ui` shaders and `mui` test assets into `build/unit_test_assets`): hooks and test assets only build for the cwd package's deps.
 - cwd is the repo root, so tests read repo files through `repoRoot` (`moodiary_lint/testing.dart`), never a relative path, and write only into their own `createTempSync` directory.
 
-**Melos**: `melos bootstrap` (`fvm dart tool/task.dart setup`) syncs shared dependencies and SDK constraints from `melos.command.bootstrap` in the root `pubspec.yaml`, runs `pub get`, and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.
+**Melos**: `melos bootstrap` (`fvm dart run melos bs`) syncs shared dependencies and SDK constraints from `melos.command.bootstrap` in the root `pubspec.yaml`, runs `pub get`, and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.
 
 **Release**: `tool/release.dart` bumps `mobile/pubspec.yaml`, prepends a git-cliff section to `CHANGELOG.md` for review, opens the `chore(release): X.Y.Z` PR and dispatches `build.yml` from the release branch. The build reads the version from the pubspec and the notes from that section, then leaves a **draft** release — no tag yet. Merging the PR fires `publish-release.yml`, which undrafts it; undrafting is what creates the tag, at the squash commit. Changelog generation never runs in CI. The release script also dispatches `ios-release.yml` to upload TestFlight; after testing, manually run `ios-submit.yml` with the build number (the `app-store` environment gates review submission). iOS requires repository secrets `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (base64 .p8), `IOS_DIST_CERT_P12` (base64 .p12) and `IOS_DIST_CERT_PASSWORD`; the two fastlane `release_notes.txt` hold a generic bug-fix line, so list new features or significant changes there before submitting (App Review 2.3.12) and restore it afterwards (submit the first version by hand with `skip_metadata`). To keep a PR out of the changelog, put `Changelog: skip` in the squashed commit body or use a skipped scope (`chore(deps|readme|pr|pull)`); `chore(release)` skips the release commit itself.
 
