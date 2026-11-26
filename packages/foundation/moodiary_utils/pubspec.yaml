@@ -12,10 +12,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  image_size_getter: 2.4.1
   intl: 0.20.3 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   synchronized: 3.6.1+1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
-  image_size_getter: 2.4.1
   tyme: 1.5.1
   uuid: 4.6.0
 

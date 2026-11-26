@@ -13,13 +13,13 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_rust_bridge: 2.13.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
-  rust_hook: 0.0.1
   path: 1.9.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   photo_view: 0.15.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   pool: 1.5.3 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  rust_hook: 0.0.1
 
 dev_dependencies:
+  ffigen: 23.0.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   flutter_test:
     sdk: flutter
-  ffigen: 23.0.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   moodiary_lint: 0.0.1

@@ -10,32 +10,30 @@ environment:
   flutter: ">=3.50.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dependencies:
-  riverpod_annotation: 4.0.8 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
-  flutter_riverpod: 3.5.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   flutter:
     sdk: flutter
-
+  flutter_riverpod: 3.5.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   moodiary_content: 0.0.1
-  moodiary_i18n: 0.0.1
-  moodiary_router: 0.0.1
-  moodiary_theme: 0.0.1
-  mui: 0.0.1
-  share_plus: 13.3.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
-  url_launcher: 6.3.3 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
-  moodiary_files: 0.0.1
-  moodiary_logging: 0.0.1
-  moodiary_storage: 0.0.1
   moodiary_data: 0.0.1
+  moodiary_files: 0.0.1
+  moodiary_i18n: 0.0.1
+  moodiary_logging: 0.0.1
   moodiary_models: 0.0.1
   moodiary_platform: 0.0.1
-
+  moodiary_router: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_theme: 0.0.1
+  mui: 0.0.1
   path: 1.9.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   pub_semver: 2.2.1
+  riverpod_annotation: 4.0.8 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  share_plus: 13.3.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  url_launcher: 6.3.3 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dev_dependencies:
-  riverpod_generator: 4.0.10 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   build_runner: 2.17.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   drift: 2.35.4 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
+  riverpod_generator: 4.0.10 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml

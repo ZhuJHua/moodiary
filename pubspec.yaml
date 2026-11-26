@@ -91,9 +91,9 @@ hooks:
     fast_zip: {build_assets: true}
 
 dev_dependencies:
-  melos: 8.10.1
   flutter_test:
     sdk: flutter
+  melos: 8.10.1
   moodiary_data: 0.0.1
   mui: 0.0.1
 

@@ -16,7 +16,7 @@ dependencies:
   rust_hook: 0.0.1
 
 dev_dependencies:
+  ffigen: 23.0.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   flutter_test:
     sdk: flutter
-  ffigen: 23.0.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   moodiary_lint: 0.0.1

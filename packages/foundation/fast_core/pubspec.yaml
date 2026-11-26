@@ -13,13 +13,13 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_rust_bridge: 2.13.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
-  rust_hook: 0.0.1
   freezed_annotation: 3.1.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  rust_hook: 0.0.1
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
   build_runner: 2.17.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   ffigen: 23.0.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  flutter_test:
+    sdk: flutter
   freezed: 4.0.3 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   moodiary_lint: 0.0.1

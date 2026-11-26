@@ -12,7 +12,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   logger: 2.8.0
 
 dev_dependencies:
