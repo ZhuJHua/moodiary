@@ -85,12 +85,17 @@ class AudioPlaybackController {
   static Future<void> _releasePlaybackSession() async {
     try {
       final session = await AudioSession.instance;
+      if (_active != null) return;
       await session.setActive(
         false,
         avAudioSessionSetActiveOptions:
             AVAudioSessionSetActiveOptions.notifyOthersOnDeactivation,
       );
     } catch (_) {}
+  }
+
+  void _releaseSessionIfIdle() {
+    if (_active == null) unawaited(_releaseSession());
   }
 
   AudioPlaybackController._(
@@ -126,7 +131,7 @@ class AudioPlaybackController {
       if (wasActive) _active = null;
       _emit(playing: false);
       unawaited(_player.pause().catchError((_) {}));
-      if (wasActive) unawaited(_releaseSession());
+      if (wasActive) _releaseSessionIfIdle();
     }, onError: (_, _) {});
   }
 
@@ -155,7 +160,7 @@ class AudioPlaybackController {
       _emit(position: .zero);
       if (identical(_active, this)) {
         _active = null;
-        unawaited(_releaseSession());
+        _releaseSessionIfIdle();
       }
     } catch (_) {}
   }
@@ -219,7 +224,7 @@ class AudioPlaybackController {
           if (wasActive) _active = null;
           _emit(playing: false);
           unawaited(_player.pause().catchError((_) {}));
-          if (wasActive) unawaited(_releaseSession());
+          if (wasActive) _releaseSessionIfIdle();
         }),
       );
     } catch (e, s) {
@@ -228,7 +233,7 @@ class AudioPlaybackController {
       final wasActive = identical(_active, this);
       if (wasActive) _active = null;
       _emit(playing: false);
-      if (wasActive) unawaited(_releaseSession());
+      if (wasActive) _releaseSessionIfIdle();
     }
   }
 
@@ -251,7 +256,7 @@ class AudioPlaybackController {
     } catch (e, s) {
       logger.e('[audio] pause failed', error: e, stackTrace: s);
     } finally {
-      if (wasActive && !_disposed) unawaited(_releaseSession());
+      if (wasActive && !_disposed) _releaseSessionIfIdle();
     }
   }
 
@@ -290,7 +295,7 @@ class AudioPlaybackController {
     _durSub.cancel();
     _errSub.cancel();
     unawaited(_player.dispose().catchError((_) {}));
-    if (wasActive) unawaited(_releaseSession());
+    if (wasActive) _releaseSessionIfIdle();
     progress.dispose();
   }
 }

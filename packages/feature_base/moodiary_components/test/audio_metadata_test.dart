@@ -13,6 +13,7 @@ class _FakePlayer implements AudioPlayer {
   final errors = StreamController<PlayerException>.broadcast();
 
   Completer<Duration?>? pendingLoad;
+  Completer<void>? pendingPause;
   Completer<void>? pendingSeek;
   Object? loadError;
   Object? playError;
@@ -87,6 +88,7 @@ class _FakePlayer implements AudioPlayer {
   Future<void> pause() async {
     calls.add('pause');
     emitState(playing: false);
+    if (pendingPause != null) await pendingPause!.future;
   }
 
   @override
@@ -462,4 +464,36 @@ void main() {
       expect(player.seeks, [Duration.zero]);
     },
   );
+
+  test('pausing A while B starts does not release B audio session', () async {
+    var releases = 0;
+    final playerA = _FakePlayer()..pendingPause = Completer<void>();
+    final a = AudioPlaybackController.forTesting(
+      '/a.mp3',
+      playerA,
+      releaseSession: () async => releases++,
+    );
+    final b = AudioPlaybackController.forTesting(
+      '/b.mp3',
+      _FakePlayer(),
+      releaseSession: () async => releases++,
+    );
+    addTearDown(a.dispose);
+    addTearDown(b.dispose);
+
+    await a.toggle();
+    await _pump();
+    final pausingA = a.pause();
+    await _pump();
+
+    // User quickly starts B before A's pause finishes.
+    await b.toggle();
+    await _pump();
+    playerA.pendingPause!.complete();
+    await pausingA;
+    await _pump();
+
+    expect(releases, 0);
+    expect(b.progress.value.playing, true);
+  });
 }
