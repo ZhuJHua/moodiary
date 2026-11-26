@@ -2107,6 +2107,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  swift_transitions:
+    dependency: transitive
+    description:
+      name: swift_transitions
+      sha256: f15e3bc9ee789161ec3468c89ae7a1fbba5648dbc02670162ec412d1eec3df44
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.0"
   synchronized:
     dependency: transitive
     description:
