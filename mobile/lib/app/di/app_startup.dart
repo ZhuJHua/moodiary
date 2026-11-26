@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 import 'dart:io';
 
+import 'package:async/async.dart' show Result;
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
@@ -23,71 +24,43 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_startup.g.dart';
 
-typedef _Outcome<T> = ({T? value, Object? error, StackTrace? stack});
-
-Future<_Outcome<T>> _capture<T>(Future<T> future) => future.then<_Outcome<T>>(
-  (value) => (value: value, error: null, stack: null),
-  onError: (Object error, StackTrace stack) =>
-      (value: null, error: error, stack: stack),
-);
-
-void _rethrowIfError(_Outcome<Object?> outcome) {
-  if (outcome.error != null) {
-    Error.throwWithStackTrace(outcome.error!, outcome.stack!);
-  }
-}
-
-T _unwrap<T>(_Outcome<T> outcome) {
-  _rethrowIfError(outcome);
-  return outcome.value as T;
-}
-
 @Riverpod(keepAlive: true)
 Future<void> appStartup(Ref ref) async {
   try {
     _configureSystemUi();
 
-    // Wave 0: start independent native/platform initializers concurrently,
-    // attaching error handlers immediately so early failures never escape.
-    final glassOutcome = _capture(MGlassApp.initialize());
-    final fastImageOutcome = _capture(FastImageRuntime.init());
-    final secureKvOutcome = _capture(FlutterSecureStorageKVStorage.create());
+    // Wave 0: start independent initializers concurrently; Result.capture
+    // attaches error handlers immediately so early failures are never uncaught.
+    final glass = Result.capture(MGlassApp.initialize());
+    final fastImage = Result.capture(FastImageRuntime.init());
+    final secureKv = Result.capture(FlutterSecureStorageKVStorage.create());
     await bootstrapPlatform(ref);
 
-    // Wave 1: once platform dirs exist, run DB open, sync logger init, and
-    // MMKV -> (AppLock + Locale + legacy probe) concurrently.
+    // Wave 1: platform dirs exist — run DB, sync logger, and storage/probe
+    // concurrently.
     final coordinator = ref.read(startupMigrationCoordinatorProvider);
-    final storageOutcome = _capture(() async {
-      final secureKv = _unwrap(await secureKvOutcome);
-      SecureKVStore.install(secureKv);
-      final kv = await MmkvKVStorage.create(
-        rootDir: path.join(
-          PlatformService.get().applicationSupportPath,
-          'mmkv',
-        ),
-        secureKv: secureKv,
-      );
-      KVStore.install(kv);
-      final results = await Future.wait<Object?>([
-        AppLockPin.load(),
-        _initLocaleSafely(),
-        coordinator.probeLegacy(),
-      ]);
-      return results[2]! as LegacyDatabaseState;
-    }());
-    final dbOutcome = _capture(ref.watch(moodiaryDatabaseAsyncProvider.future));
-    final syncLoggerOutcome = _capture(
+    final (legacyState, _, _) = await (
+      () async {
+        final store = await Result.release(secureKv);
+        SecureKVStore.install(store);
+        final kv = await MmkvKVStorage.create(
+          rootDir: path.join(
+            PlatformService.get().applicationSupportPath,
+            'mmkv',
+          ),
+          secureKv: store,
+        );
+        KVStore.install(kv);
+        final (_, _, state) = await (
+          AppLockPin.load(),
+          _initLocaleSafely(),
+          coordinator.probeLegacy(),
+        ).wait;
+        return state;
+      }(),
+      ref.watch(moodiaryDatabaseAsyncProvider.future),
       ref.watch(syncLoggerAsyncProvider.future),
-    );
-
-    final wave1 = await Future.wait([
-      storageOutcome,
-      dbOutcome,
-      syncLoggerOutcome,
-    ]);
-    final legacyState = _unwrap(wave1[0] as _Outcome<LegacyDatabaseState>);
-    _rethrowIfError(wave1[1]);
-    _rethrowIfError(wave1[2]);
+    ).wait;
 
     if (legacyState == LegacyDatabaseState.abandoning) {
       try {
@@ -104,19 +77,16 @@ Future<void> appStartup(Ref ref) async {
       }
     }
 
-    // Wave 2: theme build, data startup (with syncLogger already ready), and
-    // any still-in-flight Wave 0 native initializers.
+    // Wave 2: theme, data startup (with syncLogger ready), and Wave 0 tasks.
     final canStartData = ref.read(migrationGateProvider).canStartData;
-    final wave2 = await Future.wait([
-      _capture(_initTheme(ref)),
-      if (canStartData)
-        _capture(coordinator.startData(() => resumeDataStartup(ref))),
-      glassOutcome,
-      fastImageOutcome,
-    ]);
-    for (final outcome in wave2) {
-      _rethrowIfError(outcome);
-    }
+    await (
+      _initTheme(ref),
+      canStartData
+          ? coordinator.startData(() => resumeDataStartup(ref))
+          : Future<void>.value(),
+      Result.release(glass),
+      Result.release(fastImage),
+    ).wait;
     ref.read(appRouterProvider);
   } catch (error, stack) {
     logger.f('bootstrap failed', error: error, stackTrace: stack);
