@@ -27,7 +27,6 @@ Iterable<String> appImportTargets(
 ({int layer, String module}) classifyAppFile(String rel) {
   final parts = rel.split('/');
   final module = switch (parts) {
-    ['gen', _, ...] => 'gen',
     ['app', 'di', 'bootstrap.dart' || 'bootstrap.g.dart'] => 'app/di/bootstrap',
     ['app', 'di', 'app_startup.dart' || 'app_startup.g.dart'] =>
       'app/di/app_startup',
@@ -35,7 +34,6 @@ Iterable<String> appImportTargets(
     _ => rel,
   };
   final layer = switch (module) {
-    'gen' ||
     'app/locale.dart' ||
     'app/build_badge.dart' ||
     'app/licenses.dart' ||

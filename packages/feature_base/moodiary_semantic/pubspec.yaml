@@ -6,18 +6,18 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
-  riverpod_annotation: 4.0.7
-  flutter_riverpod: 3.4.3
+  riverpod_annotation: 4.0.8
+  flutter_riverpod: 3.5.0
   flutter:
     sdk: flutter
 
   moodiary_content: 0.0.1
-  crypto: 3.0.7
-  drift: 2.35.0
+  crypto: 3.0.8
+  drift: 2.35.4
   moodiary_data: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_ml: 0.0.1
@@ -25,9 +25,9 @@ dependencies:
   moodiary_storage: 0.0.1
 
 dev_dependencies:
-  riverpod_generator: 4.0.9
+  riverpod_generator: 4.0.10
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  build_runner: 2.16.1
-  sqlite3_vec: 0.1.2
+  build_runner: 2.17.1
+  sqlite3_vec: 0.1.3

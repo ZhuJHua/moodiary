@@ -6,11 +6,11 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
-  riverpod_annotation: 4.0.7
+  riverpod_annotation: 4.0.8
   flutter:
     sdk: flutter
 
@@ -26,34 +26,24 @@ dependencies:
   moodiary_utils: 0.0.1
   mui: 0.0.1
 
-  flutter_riverpod: 3.4.3
+  flutter_riverpod: 3.5.0
   path: 1.9.1
 
-  cached_network_image_ce: 4.10.1
+  cached_network_image_ce: 4.13.2
 
-  flutter_svg: 2.3.0
+  flutter_svg: 2.5.1
   re_highlight: 0.0.3
   photo_view: 0.15.0
-  dismissible_page: 1.0.2
-  audioplayers: 6.8.1
+  dismissible_page: 2.1.1
+  audioplayers: 7.0.0-dev.0
 
 dev_dependencies:
-  riverpod_generator: 4.0.9
+  riverpod_generator: 4.0.10
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  build_runner: 2.16.1
-  flutter_gen_runner: 5.15.0
+  build_runner: 2.17.1
 
 flutter:
   assets:
     - assets/brand/
-
-# package_parameter_enabled 必须开：被 import 的包，产物要带 package 名，否则运行时才炸。
-flutter_gen:
-  output: lib/src/gen/
-  integrations:
-    flutter_svg: true
-  assets:
-    outputs:
-      package_parameter_enabled: true

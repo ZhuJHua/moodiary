@@ -6,11 +6,11 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
-  flutter_riverpod: 3.4.3
+  flutter_riverpod: 3.5.0
   flutter:
     sdk: flutter
 
@@ -18,23 +18,23 @@ dependencies:
   sqlite3_simple:
     git:
       url: https://github.com/ZhuJHua/sqlite3_simple.git
-      ref: b69cb32
+      ref: e63079e8cc3be8fd47e84ae6360b17e949f0a5c9
   moodiary_files: 0.0.1
   moodiary_storage: 0.0.1
-  drift: 2.35.0
-  sqlite3: 3.5.2
+  drift: 2.35.4
+  sqlite3: 3.9.2
   moodiary_logging: 0.0.1
   moodiary_models: 0.0.1
-  sqlite3_vec: 0.1.2
+  sqlite3_vec: 0.1.3
 
   meta: 1.19.0
 
-  riverpod_annotation: 4.0.7
+  riverpod_annotation: 4.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  build_runner: 2.16.1
-  riverpod_generator: 4.0.9
-  drift_dev: 2.35.0
+  build_runner: 2.17.1
+  riverpod_generator: 4.0.10
+  drift_dev: 2.35.3

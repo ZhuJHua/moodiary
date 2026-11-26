@@ -6,13 +6,13 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  go_router: 18.0.1
+  go_router: 18.1.4
 
 dev_dependencies:
   flutter_test:

@@ -7,15 +7,17 @@ import 'package:moodiary_components/moodiary_components.dart';
 class _Player implements AudioPlayer {
   final calls = <String>[];
   Completer<Duration?>? metadata;
+  Completer<void>? pendingResume;
   final metadataStarted = Completer<void>();
   Duration? seekTarget;
+  final states = StreamController<PlayerState>.broadcast(sync: true);
   final completed = StreamController<void>.broadcast(sync: true);
   @override
   Stream<Duration> get onPositionChanged => const Stream.empty();
   @override
   Stream<Duration> get onDurationChanged => const Stream.empty();
   @override
-  Stream<PlayerState> get onPlayerStateChanged => const Stream.empty();
+  Stream<PlayerState> get onPlayerStateChanged => states.stream;
   @override
   Stream<void> get onPlayerComplete => completed.stream;
   @override
@@ -30,7 +32,13 @@ class _Player implements AudioPlayer {
   }
 
   @override
-  Future<void> resume() async => calls.add('resume');
+  Future<void> resume() async {
+    calls.add('resume');
+    if (pendingResume != null) await pendingResume!.future;
+  }
+
+  @override
+  Future<void> pause() async => calls.add('pause');
   @override
   Future<void> play(
     Source source, {
@@ -38,6 +46,7 @@ class _Player implements AudioPlayer {
     double? balance,
     AudioContext? ctx,
     Duration? position,
+    // ignore: deprecated_member_use
     PlayerMode? mode,
   }) async => calls.add('play');
   @override
@@ -45,6 +54,7 @@ class _Player implements AudioPlayer {
   @override
   Future<void> dispose() async {
     calls.add('dispose');
+    await states.close();
     await completed.close();
   }
 
@@ -109,5 +119,25 @@ void main() {
     await audio.toggle('/audio.mp3');
     expect(player.calls, ['play', 'play']);
     expect(audio.progress.value.playing, true);
+  });
+  test('pause during pending resume pauses once playback starts', () async {
+    final player = _Player()..pendingResume = Completer<void>();
+    final audio = AudioPlaybackController.forTesting(player);
+    addTearDown(audio.dispose);
+    await audio.prepare('/audio.mp3');
+    final startFuture = audio.toggle('/audio.mp3');
+    await Future<void>.delayed(Duration.zero);
+    await audio.pause();
+    player.states.add(PlayerState.playing);
+    player.pendingResume!.complete();
+    await startFuture;
+    expect(audio.progress.value.playing, false);
+    expect(player.calls, [
+      'release:stop',
+      'source',
+      'resume',
+      'pause',
+      'pause',
+    ]);
   });
 }

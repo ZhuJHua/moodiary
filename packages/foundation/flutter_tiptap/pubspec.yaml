@@ -5,13 +5,14 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
     sdk: flutter
   characters: 1.4.1
+  cupertino_ui: 1.1.7
   html: 0.15.7
   linkifydart: 0.1.0
 

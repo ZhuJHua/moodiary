@@ -120,9 +120,9 @@ void main() {
       ..writeAsStringSync('prefs');
     final unrelated = File('${files.first.parent.path}/keep.db')
       ..writeAsStringSync('keep');
-    expect(ref.exists(moodiaryDatabaseAsyncProvider), isFalse);
+    expect(ref.read(moodiaryDatabaseAsyncProvider.exists), isFalse);
     await resetAllData(ref);
-    expect(ref.exists(moodiaryDatabaseAsyncProvider), isFalse);
+    expect(ref.read(moodiaryDatabaseAsyncProvider.exists), isFalse);
     expect(openCallCount, 0);
     expect(database.clearCalls, 0);
     for (final file in files) {

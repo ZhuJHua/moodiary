@@ -3,9 +3,11 @@ import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mui/mui.dart';
 
-import '../gen/assets.gen.dart';
-
 class MoodiaryLogo extends StatelessWidget {
+  static const _package = 'moodiary_components';
+  static const _logoDark = 'assets/brand/logo_dark.svg';
+  static const _logoLight = 'assets/brand/logo_light.svg';
+
   final double size;
 
   final Brightness? brightness;
@@ -16,11 +18,15 @@ class MoodiaryLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark =
         (brightness ?? Theme.of(context).brightness) == Brightness.dark;
-    return _asset(dark).svg(width: size, height: size);
+    return SvgPicture.asset(
+      _assetPath(dark),
+      package: _package,
+      width: size,
+      height: size,
+    );
   }
 
-  static SvgGenImage _asset(bool dark) =>
-      dark ? Assets.brand.logoDark : Assets.brand.logoLight;
+  static String _assetPath(bool dark) => dark ? _logoDark : _logoLight;
 
   static final Map<String, ui.Image> _rasterCache = {};
 
@@ -35,7 +41,7 @@ class MoodiaryLogo extends StatelessWidget {
     try {
       // context 传 null：SvgAssetLoader 会回落到 rootBundle，离屏那侧拿不到 context
       final info = await vg.loadPicture(
-        SvgAssetLoader(_asset(dark).path, packageName: SvgGenImage.package),
+        SvgAssetLoader(_assetPath(dark), packageName: _package),
         null,
       );
       final recorder = ui.PictureRecorder();

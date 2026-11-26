@@ -43,6 +43,8 @@ class AudioPlaybackController {
   Duration _position = .zero;
   Duration _duration = .zero;
   bool _playing = false;
+  bool _desiredPlaying = false;
+  int _pendingStarts = 0;
   bool _muted = false;
   bool _completed = false;
   bool _disposed = false;
@@ -70,10 +72,16 @@ class AudioPlaybackController {
     _durSub = _player.onDurationChanged.listen((d) {
       if (d > Duration.zero) _emit(duration: d);
     });
-    _stateSub = _player.onPlayerStateChanged.listen(
-      (s) => _emit(playing: s == .playing),
-    );
+    _stateSub = _player.onPlayerStateChanged.listen((s) {
+      if (s == .playing) {
+        if (_desiredPlaying) _emit(playing: true);
+      } else if (_pendingStarts == 0) {
+        _desiredPlaying = false;
+        _emit(playing: false);
+      }
+    });
     _completeSub = _player.onPlayerComplete.listen((_) {
+      _desiredPlaying = false;
       _completed = true;
       _emit(position: .zero, playing: false);
     });
@@ -103,6 +111,7 @@ class AudioPlaybackController {
     if (_disposed) return Future.value();
     if (activePath.value == path) return _preparing ?? Future.value();
     activePath.value = path;
+    _desiredPlaying = false;
     _completed = false;
     _position = .zero;
     _duration = .zero;
@@ -131,23 +140,38 @@ class AudioPlaybackController {
     }
   }
 
+  Future<void> _startPlayback(Future<void> Function() action) async {
+    _desiredPlaying = true;
+    _emit(playing: true);
+    _pendingStarts++;
+    try {
+      await action();
+    } finally {
+      _pendingStarts--;
+    }
+    if (!_disposed && !_desiredPlaying) {
+      await _player.pause();
+    }
+  }
+
   Future<void> toggle(String path) async {
     try {
       if (activePath.value == path) {
         await _preparing;
         if (_disposed) return;
         if (_playing) {
+          _desiredPlaying = false;
           _emit(playing: false);
           await _player.pause();
         } else if (_completed) {
           _completed = false;
-          _emit(playing: true);
-          await _player.play(
-            isNetworkMedia(path) ? UrlSource(path) : DeviceFileSource(path),
+          await _startPlayback(
+            () => _player.play(
+              isNetworkMedia(path) ? UrlSource(path) : DeviceFileSource(path),
+            ),
           );
         } else {
-          _emit(playing: true);
-          await _player.resume();
+          await _startPlayback(_player.resume);
         }
       } else {
         activePath.value = path;
@@ -155,17 +179,18 @@ class AudioPlaybackController {
         _pendingSeek = null;
         _position = .zero;
         _duration = .zero;
-        _emit(playing: true);
-        await _player.play(DeviceFileSource(path));
+        await _startPlayback(() => _player.play(DeviceFileSource(path)));
       }
     } catch (e, s) {
       logger.e('[audio] play failed', error: e, stackTrace: s);
+      _desiredPlaying = false;
       _emit(playing: false);
     }
   }
 
   Future<void> pause() async {
     if (_disposed || !_playing) return;
+    _desiredPlaying = false;
     _emit(playing: false);
     try {
       await _player.pause();

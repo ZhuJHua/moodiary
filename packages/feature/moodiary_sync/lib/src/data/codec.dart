@@ -100,13 +100,9 @@ class SyncCipher {
     }
   }
 
-  static bool _startsWith(Uint8List bytes, Uint8List prefix) {
-    if (bytes.length < prefix.length) return false;
-    for (var i = 0; i < prefix.length; i++) {
-      if (bytes[i] != prefix[i]) return false;
-    }
-    return true;
-  }
+  static bool _startsWith(Uint8List bytes, Uint8List prefix) =>
+      bytes.length >= prefix.length &&
+      bytes.rangeEquals(0, prefix.length, prefix);
 
   static Future<bool> isCipherFile(String path) async {
     final magicBytes = utf8.encode(magic);
@@ -115,11 +111,8 @@ class SyncCipher {
 
   static bool isCipherText(Uint8List bytes) {
     final magicBytes = utf8.encode(magic);
-    if (bytes.length <= magicBytes.length) return false;
-    for (var i = 0; i < magicBytes.length; i++) {
-      if (bytes[i] != magicBytes[i]) return false;
-    }
-    return true;
+    return bytes.length > magicBytes.length &&
+        bytes.rangeEquals(0, magicBytes.length, magicBytes);
   }
 
   static Uint8List _framed(Uint8List cipher) {

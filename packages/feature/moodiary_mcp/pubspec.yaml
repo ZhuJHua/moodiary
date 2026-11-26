@@ -6,16 +6,16 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0"
+  flutter: ">=3.50.0"
 
 dependencies:
-  riverpod_annotation: 4.0.7
-  flutter_riverpod: 3.4.3
+  riverpod_annotation: 4.0.8
+  flutter_riverpod: 3.5.0
   flutter:
     sdk: flutter
 
-  gap: 3.0.1
+  gap: 3.1.0
   moodiary_files: 0.0.1
   moodiary_router: 0.0.1
   moodiary_semantic: 0.0.1
@@ -29,15 +29,15 @@ dependencies:
   moodiary_storage: 0.0.1
   moodiary_utils: 0.0.1
 
-  mcp_dart: 2.4.3
-  synchronized: 3.4.1+2
+  mcp_dart: 2.4.4
+  synchronized: 3.6.1+1
 
 dev_dependencies:
-  riverpod_generator: 4.0.9
+  riverpod_generator: 4.0.10
   moodiary_content: 0.0.1
   moodiary_models: 0.0.1
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  drift: 2.35.0
-  build_runner: 2.16.1
+  drift: 2.35.4
+  build_runner: 2.17.1

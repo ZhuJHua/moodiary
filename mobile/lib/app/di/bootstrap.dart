@@ -113,7 +113,7 @@ Future<void> resetAllData(Ref ref) async {
   ]);
 
   MoodiaryDatabase? database;
-  if (ref.exists(moodiaryDatabaseAsyncProvider)) {
+  if (ref.read(moodiaryDatabaseAsyncProvider.exists)) {
     try {
       database = await ref.read(moodiaryDatabaseAsyncProvider.future);
     } catch (error, stack) {
@@ -135,13 +135,13 @@ Future<void> resetAllData(Ref ref) async {
         error: error,
         stackTrace: stack,
       );
-      if (ref.exists(autoSyncWatcherProvider)) {
+      if (ref.read(autoSyncWatcherProvider.exists)) {
         await step(
           'autoSyncWatcher.dispose',
           () => ref.read(autoSyncWatcherProvider).dispose(),
         );
       }
-      if (ref.exists(embedQueueWatcherProvider)) {
+      if (ref.read(embedQueueWatcherProvider.exists)) {
         await step(
           'embedQueueWatcher.dispose',
           () => ref.read(embedQueueWatcherProvider).dispose(),

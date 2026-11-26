@@ -107,7 +107,7 @@ void main() {
     expect(record, isNotNull);
     subscription.close();
     await container.pump();
-    expect(container.exists(placeControllerProvider), isFalse);
+    expect(container.read(placeControllerProvider.exists), isFalse);
     container.dispose();
 
     expect(await notifier.undoMerge(record!), isTrue);
