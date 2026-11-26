@@ -19,25 +19,30 @@ subprojects {
 
 subprojects {
     afterEvaluate {
-        if (plugins.hasPlugin("com.android.application") ||
-            plugins.hasPlugin("com.android.library")
-        ) {
-            (extensions.getByName("android") as com.android.build.gradle.BaseExtension).apply {
-                compileSdkVersion(36)
-                buildToolsVersion = "36.0.0"
+        val targetCompat: (() -> String)? = when (val ext = extensions.findByName("android")) {
+            is com.android.build.api.dsl.ApplicationExtension -> {
+                ext.compileSdk = 36
+                ext.buildToolsVersion = "36.0.0"
+                if (ext.namespace == null) {
+                    ext.namespace = project.group.toString()
+                }
+                ({ ext.compileOptions.targetCompatibility.toString() })
             }
+            is com.android.build.api.dsl.LibraryExtension -> {
+                ext.compileSdk = 36
+                ext.buildToolsVersion = "36.0.0"
+                if (ext.namespace == null) {
+                    ext.namespace = project.group.toString()
+                }
+                ({ ext.compileOptions.targetCompatibility.toString() })
+            }
+            else -> null
         }
-        extensions.findByName("android")?.let { ext ->
-            val android = ext as com.android.build.gradle.BaseExtension
-            if (android.namespace == null) {
-                android.namespace = project.group.toString()
-            }
+        if (targetCompat != null) {
             tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
                 compilerOptions.jvmTarget.set(
                     project.provider {
-                        org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(
-                            android.compileOptions.targetCompatibility.toString(),
-                        )
+                        org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(targetCompat())
                     },
                 )
             }

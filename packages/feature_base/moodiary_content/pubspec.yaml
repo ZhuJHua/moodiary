@@ -6,14 +6,13 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  flutter: ">=3.50.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dependencies:
+  characters: 1.4.1 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   flutter:
     sdk: flutter
-
-  characters: 1.4.1
   markdown: 7.3.1
 
 dev_dependencies:

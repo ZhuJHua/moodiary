@@ -1,7 +1,8 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
@@ -9,210 +10,292 @@ class AudioProgress {
   final Duration position;
   final Duration duration;
   final bool playing;
-  final bool muted;
 
   const AudioProgress({
-    required this.position,
-    required this.duration,
-    required this.playing,
-    required this.muted,
+    this.position = .zero,
+    this.duration = .zero,
+    this.playing = false,
   });
 
-  static const zero = AudioProgress(
-    position: .zero,
-    duration: .zero,
-    playing: false,
-    muted: false,
+  static const zero = AudioProgress();
+
+  AudioProgress copyWith({
+    Duration? position,
+    Duration? duration,
+    bool? playing,
+  }) => AudioProgress(
+    position: position ?? this.position,
+    duration: duration ?? this.duration,
+    playing: playing ?? this.playing,
   );
 }
 
 class AudioPlaybackController {
+  static AudioPlaybackController? _active;
+
+  final String path;
   final AudioPlayer _player;
+  final Future<void> Function() _configureSession;
+  final Future<void> Function() _releaseSession;
 
-  final ValueNotifier<String?> activePath = ValueNotifier(null);
+  final ValueNotifier<AudioProgress> progress = ValueNotifier(.zero);
 
-  final ValueNotifier<AudioProgress> progress = ValueNotifier(
-    AudioProgress.zero,
-  );
-
-  late final StreamSubscription<Duration> _posSub;
-  late final StreamSubscription<Duration> _durSub;
   late final StreamSubscription<PlayerState> _stateSub;
-  late final StreamSubscription<void> _completeSub;
+  late final StreamSubscription<Duration> _posSub;
+  late final StreamSubscription<Duration?> _durSub;
+  late final StreamSubscription<PlayerException> _errSub;
 
-  Duration _position = .zero;
-  Duration _duration = .zero;
-  bool _playing = false;
-  bool _muted = false;
-  bool _completed = false;
+  Future<void>? _loadFuture;
+  int _seekSeq = 0;
   bool _disposed = false;
-  Future<void>? _preparing;
 
-  // ExoPlayer seek 后会瞬时回报旧位置，需按目标显示直到流回报追上再跟随
-  Duration? _pendingSeek;
-  Timer? _seekGuard;
-
-  AudioPlaybackController() : this._(AudioPlayer());
+  AudioPlaybackController(String path)
+    : this._(
+        path,
+        AudioPlayer(useProxyForRequestHeaders: false),
+        _configurePlaybackSession,
+        _releasePlaybackSession,
+      );
 
   @visibleForTesting
-  AudioPlaybackController.forTesting(AudioPlayer player) : this._(player);
+  AudioPlaybackController.forTesting(
+    String path,
+    AudioPlayer player, {
+    Future<void> Function()? configureSession,
+    Future<void> Function()? releaseSession,
+  }) : this._(
+         path,
+         player,
+         configureSession ?? _noopSession,
+         releaseSession ?? _noopSession,
+       );
 
-  AudioPlaybackController._(this._player) {
-    _posSub = _player.onPositionChanged.listen((d) {
-      final pending = _pendingSeek;
-      if (pending != null) {
-        if ((d - pending).abs() > const Duration(seconds: 1)) return;
-        _pendingSeek = null;
-      }
-      _emit(position: d);
-    });
-    // ExoPlayer 在 seek/缓冲边界可能回报 0 或哨兵时长，非正值一律忽略
-    _durSub = _player.onDurationChanged.listen((d) {
-      if (d > Duration.zero) _emit(duration: d);
-    });
-    _stateSub = _player.onPlayerStateChanged.listen(
-      (s) => _emit(playing: s == .playing),
-    );
-    _completeSub = _player.onPlayerComplete.listen((_) {
-      _completed = true;
-      _emit(position: .zero, playing: false);
-    });
+  @visibleForTesting
+  static void resetActiveForTest() => _active = null;
+
+  static Future<void> _noopSession() async {}
+
+  static Future<void> _configurePlaybackSession() async {
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.music());
+    } catch (_) {}
   }
 
-  void _emit({
-    Duration? position,
-    Duration? duration,
-    bool? playing,
-    bool? muted,
-  }) {
+  static Future<void> _releasePlaybackSession() async {
+    try {
+      final session = await AudioSession.instance;
+      if (_active != null) return;
+      await session.setActive(
+        false,
+        avAudioSessionSetActiveOptions:
+            AVAudioSessionSetActiveOptions.notifyOthersOnDeactivation,
+      );
+    } catch (_) {}
+  }
+
+  void _releaseSessionIfIdle() {
+    if (_active == null) unawaited(_releaseSession());
+  }
+
+  AudioPlaybackController._(
+    this.path,
+    this._player,
+    this._configureSession,
+    this._releaseSession,
+  ) {
+    _stateSub = _player.playerStateStream.listen((state) {
+      if (_disposed) return;
+      if (state.processingState == .completed) {
+        _emit(position: state.playing ? .zero : null, playing: false);
+        if (state.playing) unawaited(_resetAfterCompletion());
+        return;
+      }
+      _emit(playing: state.playing && state.processingState != .idle);
+    }, onError: (_, _) {});
+    _posSub = _player.positionStream.listen((pos) {
+      if (_disposed) return;
+      final total = progress.value.duration;
+      final clamped = total > .zero && pos > total ? total : pos;
+      _emit(position: clamped < .zero ? .zero : clamped);
+    }, onError: (_, _) {});
+    _durSub = _player.durationStream.listen((d) {
+      if (_disposed || d == null || d <= .zero) return;
+      _emit(duration: d);
+    }, onError: (_, _) {});
+    _errSub = _player.errorStream.listen((error) {
+      if (_disposed) return;
+      logger.e('[audio] playback error', error: error);
+      _loadFuture = null;
+      final wasActive = identical(_active, this);
+      if (wasActive) _active = null;
+      _emit(playing: false);
+      unawaited(_player.pause().catchError((_) {}));
+      if (wasActive) _releaseSessionIfIdle();
+    }, onError: (_, _) {});
+  }
+
+  void _emit({Duration? position, Duration? duration, bool? playing}) {
     if (_disposed) return;
-    _position = position ?? _position;
-    _duration = duration ?? _duration;
-    _playing = playing ?? _playing;
-    _muted = muted ?? _muted;
-    progress.value = AudioProgress(
-      position: _position,
-      duration: _duration,
-      playing: _playing,
-      muted: _muted,
+    final next = progress.value.copyWith(
+      position: position,
+      duration: duration,
+      playing: playing,
     );
+    if (next.position == progress.value.position &&
+        next.duration == progress.value.duration &&
+        next.playing == progress.value.playing) {
+      return;
+    }
+    progress.value = next;
+  }
+
+  Future<void> _resetAfterCompletion() async {
+    final seq = _seekSeq;
+    try {
+      await _player.pause();
+      if (_disposed || _player.playing || _seekSeq != seq) return;
+      await _player.seek(.zero);
+      if (_disposed || _seekSeq != seq) return;
+      _emit(position: .zero);
+      if (identical(_active, this)) {
+        _active = null;
+        _releaseSessionIfIdle();
+      }
+    } catch (_) {}
   }
 
   /// Resolve metadata without starting playback.
-  Future<void> prepare(String path) {
+  Future<void> prepare() {
     if (_disposed) return Future.value();
-    if (activePath.value == path) return _preparing ?? Future.value();
-    activePath.value = path;
-    _completed = false;
-    _position = .zero;
-    _duration = .zero;
-    _emit(playing: false);
-    return _preparing = _prepare(path)
-        .catchError((Object error, StackTrace stack) {
-          if (!_disposed && activePath.value == path) activePath.value = null;
-          Error.throwWithStackTrace(error, stack);
-        });
+    return _loadFuture ??= _load();
   }
 
-  Future<void> _prepare(String path) async {
-    // Keep the source after the track ends so paused and end-of-track seeks
-    // stay valid; the plugin's default release mode clears it.
-    await _player.setReleaseMode(ReleaseMode.stop);
-    if (_disposed || activePath.value != path) return;
-    await _player.setSource(
-      isNetworkMedia(path) ? UrlSource(path) : DeviceFileSource(path),
-    );
-    final duration = await _player.getDuration();
-    if (!_disposed &&
-        activePath.value == path &&
-        duration != null &&
-        duration > Duration.zero) {
-      _emit(duration: duration);
+  Future<void> _load() async {
+    try {
+      final duration = isNetworkMedia(path)
+          ? await _player.setUrl(path)
+          : await _player.setFilePath(path);
+      if (!_disposed && duration != null && duration > .zero) {
+        _emit(duration: duration);
+      }
+    } catch (_) {
+      _loadFuture = null;
+      rethrow;
     }
   }
 
-  Future<void> toggle(String path) async {
+  Future<void> toggle() async {
+    if (_disposed) return;
+    if (progress.value.playing) {
+      await pause();
+      return;
+    }
+    final previous = _active;
+    _active = this;
+    if (previous != null && !identical(previous, this)) {
+      unawaited(previous.pause());
+    }
     try {
-      if (activePath.value == path) {
-        await _preparing;
-        if (_disposed) return;
-        if (_playing) {
-          _emit(playing: false);
-          await _player.pause();
-        } else if (_completed) {
-          _completed = false;
-          _emit(playing: true);
-          await _player.play(
-            isNetworkMedia(path) ? UrlSource(path) : DeviceFileSource(path),
-          );
-        } else {
-          _emit(playing: true);
-          await _player.resume();
-        }
-      } else {
-        activePath.value = path;
-        _completed = false;
-        _pendingSeek = null;
-        _position = .zero;
-        _duration = .zero;
-        _emit(playing: true);
-        await _player.play(DeviceFileSource(path));
+      await prepare();
+      if (_disposed || !identical(_active, this)) return;
+      if (_player.processingState == .idle) {
+        await _player.load();
+        if (_disposed || !identical(_active, this)) return;
       }
+      await _configureSession();
+      if (_disposed || !identical(_active, this)) return;
+      final total = progress.value.duration;
+      if (_player.processingState == .completed ||
+          (total > .zero && progress.value.position >= total)) {
+        _seekSeq++;
+        await _player.seek(.zero);
+        if (_disposed || !identical(_active, this)) return;
+        _emit(position: .zero);
+      }
+      _seekSeq++;
+      _emit(playing: true);
+      unawaited(
+        _player.play().catchError((Object e, StackTrace s) {
+          if (_disposed || e is PlayerInterruptedException) return;
+          logger.e('[audio] play failed', error: e, stackTrace: s);
+          _loadFuture = null;
+          final wasActive = identical(_active, this);
+          if (wasActive) _active = null;
+          _emit(playing: false);
+          unawaited(_player.pause().catchError((_) {}));
+          if (wasActive) _releaseSessionIfIdle();
+        }),
+      );
     } catch (e, s) {
+      if (_disposed || e is PlayerInterruptedException) return;
       logger.e('[audio] play failed', error: e, stackTrace: s);
+      final wasActive = identical(_active, this);
+      if (wasActive) _active = null;
       _emit(playing: false);
+      if (wasActive) _releaseSessionIfIdle();
     }
   }
 
   Future<void> pause() async {
-    if (_disposed || !_playing) return;
+    if (_disposed) return;
+    final wasActive = identical(_active, this);
+    if (wasActive) _active = null;
+    if (!wasActive && !progress.value.playing && !_player.playing) return;
     _emit(playing: false);
     try {
-      await _player.pause();
+      if (_player.playing) {
+        await _player.pause();
+      } else if (wasActive &&
+          (_player.processingState == .ready ||
+              _player.processingState == .buffering)) {
+        // Only the active owner could have been paused by an interruption;
+        // stop() clears just_audio's pending auto-resume flag while keeping position.
+        await _player.stop();
+      }
     } catch (e, s) {
       logger.e('[audio] pause failed', error: e, stackTrace: s);
+    } finally {
+      if (wasActive && !_disposed) _releaseSessionIfIdle();
     }
   }
 
   Future<void> seek(double fraction, {Duration? fallbackTotal}) async {
     if (_disposed) return;
-    final totalMs = _duration.inMilliseconds > 0
-        ? _duration.inMilliseconds
-        : (fallbackTotal?.inMilliseconds ?? 0);
-    if (totalMs <= 0) return;
+    final total = progress.value.duration > .zero
+        ? progress.value.duration
+        : (fallbackTotal ?? .zero);
+    if (total <= .zero) return;
     final target = Duration(
-      milliseconds: (fraction.clamp(0, 1) * totalMs).round(),
+      milliseconds: (fraction.clamp(0, 1) * total.inMilliseconds).round(),
     );
-    if (_preparing != null) _completed = target.inMilliseconds >= totalMs;
-    _pendingSeek = target;
+    _seekSeq++;
     _emit(position: target);
-    _seekGuard?.cancel();
-    _seekGuard = Timer(
-      const Duration(milliseconds: 600),
-      () => _pendingSeek = null,
-    );
     try {
-      await _preparing;
+      await prepare();
       if (_disposed) return;
+      if (_player.processingState == .idle) {
+        await _player.load();
+        if (_disposed) return;
+      }
       await _player.seek(target);
-    } catch (_) {}
-  }
-
-  Future<void> toggleMute() async {
-    final next = !_muted;
-    _emit(muted: next);
-    await _player.setVolume(next ? 0 : 1);
+    } catch (e, s) {
+      if (_disposed || e is PlayerInterruptedException) return;
+      logger.e('[audio] seek failed', error: e, stackTrace: s);
+    }
   }
 
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
-    _seekGuard?.cancel();
+    final wasActive = identical(_active, this);
+    if (wasActive) _active = null;
+    _stateSub.cancel();
     _posSub.cancel();
     _durSub.cancel();
-    _stateSub.cancel();
-    _completeSub.cancel();
-    _player.dispose();
-    activePath.dispose();
+    _errSub.cancel();
+    unawaited(_player.dispose().catchError((_) {}));
+    if (wasActive) _releaseSessionIfIdle();
     progress.dispose();
   }
 }

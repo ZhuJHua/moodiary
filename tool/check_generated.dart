@@ -22,7 +22,7 @@ void _check(String pkgDir) {
 
   final pinned = grab(
     '$pkgDir/pubspec.yaml',
-    RegExp(r'^\s*flutter_rust_bridge:\s*(\S+)\s*$', multiLine: true),
+    RegExp(r'^\s*flutter_rust_bridge:\s*(\S+)(?:\s+#.*)?\s*$', multiLine: true),
   );
   if (pinned == null) {
     stderr.writeln('✗ 读不到 $pkgDir/pubspec.yaml 里的 flutter_rust_bridge 版本');
@@ -108,7 +108,7 @@ void _checkConsistency() {
     if (File('$dir/flutter_rust_bridge.yaml').existsSync()) {
       final pubspec = File('$dir/pubspec.yaml').readAsStringSync();
       String? pin(String name) => RegExp(
-        '^\\s*$name:\\s*(\\S+)\\s*\$',
+        '^\\s*$name:\\s*(\\S+)(?:\\s+#.*)?\\s*\$',
         multiLine: true,
       ).firstMatch(pubspec)?.group(1);
       frbPins[dir] = pin('flutter_rust_bridge') ?? '?';

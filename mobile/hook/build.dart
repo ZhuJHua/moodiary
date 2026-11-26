@@ -63,7 +63,7 @@ List<Uri> _externalLicenseManifests(Uri repoRoot) {
   );
   if (!config.existsSync()) {
     throw StateError(
-      '${config.path} is missing; run `dart tool/task.dart setup` first.',
+      '${config.path} is missing; run `fvm dart run melos bs` first.',
     );
   }
   final packages =

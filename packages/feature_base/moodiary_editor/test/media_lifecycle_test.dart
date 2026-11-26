@@ -27,10 +27,12 @@ List<ft.Node> _tail() => [
 ];
 
 class _Audio implements components.AudioPlaybackController {
+  _Audio(this.path);
+
+  @override
+  final String path;
   @override
   final progress = ValueNotifier(components.AudioProgress.zero);
-  @override
-  final activePath = ValueNotifier<String?>(null);
   int prepares = 0, disposals = 0;
 
   void tick(Duration position, {bool playing = true}) {
@@ -38,19 +40,17 @@ class _Audio implements components.AudioPlaybackController {
       position: position,
       duration: const Duration(minutes: 1),
       playing: playing,
-      muted: false,
     );
   }
 
   @override
-  Future<void> prepare(String path) async {
+  Future<void> prepare() async {
     prepares++;
-    activePath.value = path;
     tick(Duration.zero, playing: false);
   }
 
   @override
-  Future<void> toggle(String path) async =>
+  Future<void> toggle() async =>
       tick(progress.value.position, playing: !progress.value.playing);
 
   @override
@@ -65,7 +65,6 @@ class _Audio implements components.AudioPlaybackController {
   @override
   void dispose() {
     disposals++;
-    activePath.dispose();
     progress.dispose();
   }
 
@@ -138,8 +137,8 @@ class _Harness {
         MoodiaryEditor(initialContent: _document(nodes), readOnly: true);
     host = MoodiaryEditorHost(
       this.configuration,
-      audioControllerFactory: () {
-        final audio = _Audio();
+      audioControllerFactory: (path) {
+        final audio = _Audio(path);
         audios.add(audio);
         return audio;
       },
@@ -229,7 +228,7 @@ class _Harness {
 
   Future<void> play(String type) async {
     if (type == 'audio') {
-      await audios.first.toggle('https://example.com/same');
+      await audios.first.toggle();
       audios.first.tick(const Duration(seconds: 5));
     } else {
       await host.resumeVideo(
@@ -376,7 +375,7 @@ void main() {
       await harness.back(tester);
       if (type == 'audio') {
         expect(harness.audios, hasLength(2));
-        await harness.audios.last.toggle('https://example.com/same');
+        await harness.audios.last.toggle();
       } else {
         expect(harness.videos, hasLength(2));
         await harness.host.resumeVideo(
@@ -520,7 +519,7 @@ void main() {
         await harness.mount(tester);
         if (type == 'audio') {
           expect(harness.audios, hasLength(2));
-          await harness.audios.first.toggle('https://example.com/same');
+          await harness.audios.first.toggle();
           expect(harness.audios.last.progress.value.playing, false);
         } else {
           expect(harness.videos, hasLength(2));

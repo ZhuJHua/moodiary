@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-// 构建钩子生成，跑 build_runner 时可能还不存在，不走 flutter_gen
+// 由 mobile/hook/build.dart 在构建期生成。
 const _manifest = 'assets/licenses/third_party.json';
 
 const _qweatherIcons = '''

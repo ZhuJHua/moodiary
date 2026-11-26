@@ -16,7 +16,8 @@ void main() {
   CodeConfig code(
     OS os, {
     Architecture architecture = Architecture.arm64,
-    IOSSdk sdk = IOSSdk.iPhoneOS,
+    AppleVersion? iosVersion,
+    AppleVersion? macosVersion,
   }) {
     final builder = BuildInputBuilder()
       ..setupShared(
@@ -32,11 +33,18 @@ void main() {
           targetArchitecture: architecture,
           linkModePreference: LinkModePreference.dynamic,
           iOS: os == OS.iOS
-              ? IOSCodeConfig(targetSdk: sdk, targetVersion: 15)
+              ? IOSCodeConfig(
+                  targetSdk: IOSSdk.iPhoneOS,
+                  deploymentVersion: iosVersion ?? AppleVersion(16),
+                )
               : null,
-          macOS: os == OS.macOS ? MacOSCodeConfig(targetVersion: 12) : null,
+          macOS: os == OS.macOS
+              ? MacOSCodeConfig(
+                  deploymentVersion: macosVersion ?? AppleVersion(13),
+                )
+              : null,
           android: os == OS.android
-              ? AndroidCodeConfig(targetNdkApi: 24)
+              ? AndroidCodeConfig(targetNdkApi: 28)
               : null,
         ),
       );
@@ -44,61 +52,63 @@ void main() {
     return builder.build().config.code;
   }
 
-  test('iOS device keeps the deployment target', () {
+  test('iOS formats the deployment target', () {
     expect(rustCargoEnvironment(code(OS.iOS)), {
-      'IPHONEOS_DEPLOYMENT_TARGET': '15.0',
+      'IPHONEOS_DEPLOYMENT_TARGET': '16.0',
     });
+    expect(
+      rustCargoEnvironment(
+        code(OS.iOS, iosVersion: AppleVersion(16, minor: 4)),
+      ),
+      {'IPHONEOS_DEPLOYMENT_TARGET': '16.4'},
+    );
+    expect(
+      rustCargoEnvironment(
+        code(OS.iOS, iosVersion: AppleVersion(16, minor: 4, patch: 1)),
+      ),
+      {'IPHONEOS_DEPLOYMENT_TARGET': '16.4.1'},
+    );
   });
 
-  for (final architecture in [Architecture.arm64, Architecture.x64]) {
-    test('iOS $architecture simulator needs no SDKROOT', () {
-      expect(
-        rustCargoEnvironment(
-          code(OS.iOS, architecture: architecture, sdk: IOSSdk.iPhoneSimulator),
-        ),
-        {'IPHONEOS_DEPLOYMENT_TARGET': '15.0'},
-      );
-    });
-  }
-
-  test('macOS keeps the deployment target', () {
+  test('macOS formats the deployment target', () {
     expect(rustCargoEnvironment(code(OS.macOS)), {
-      'MACOSX_DEPLOYMENT_TARGET': '12.0',
+      'MACOSX_DEPLOYMENT_TARGET': '13.0',
     });
+    expect(
+      rustCargoEnvironment(
+        code(OS.macOS, macosVersion: AppleVersion(14, minor: 2)),
+      ),
+      {'MACOSX_DEPLOYMENT_TARGET': '14.2'},
+    );
   });
 
   for (final (architecture, target) in [
-    (Architecture.arm64, 'AARCH64_LINUX_ANDROID'),
-    (Architecture.arm, 'ARMV7_LINUX_ANDROIDEABI'),
-    (Architecture.x64, 'X86_64_LINUX_ANDROID'),
+    (Architecture.arm64, 'aarch64_linux_android'),
+    (Architecture.arm, 'armv7_linux_androideabi'),
+    (Architecture.x64, 'x86_64_linux_android'),
   ]) {
-    test('Android $architecture uses 16 KB pages without CMake', () {
+    test('Android $architecture with CMake sets toolchain and NDK root', () {
+      final ndkRoot = temp.uri.resolve('ndk/');
       expect(
-        rustCargoEnvironment(code(OS.android, architecture: architecture)),
+        rustCargoEnvironment(
+          code(OS.android, architecture: architecture),
+          androidNdkRoot: ndkRoot,
+        ),
         {
-          'CARGO_TARGET_${target}_RUSTFLAGS':
-              '-C link-arg=-Wl,-z,max-page-size=16384',
+          'CMAKE_TOOLCHAIN_FILE_$target': ndkRoot
+              .resolve('build/cmake/android.toolchain.cmake')
+              .toFilePath(),
+          'ANDROID_NDK_ROOT': Directory.fromUri(ndkRoot).path,
         },
       );
     });
   }
 
-  test('Android arm64 adds CMake without dropping the 16 KB flag', () {
-    final ndkRoot = temp.uri.resolve('ndk/');
-    expect(rustCargoEnvironment(code(OS.android), androidNdkRoot: ndkRoot), {
-      'CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS':
-          '-C link-arg=-Wl,-z,max-page-size=16384',
-      'CMAKE_TOOLCHAIN_FILE_aarch64_linux_android': ndkRoot
-          .resolve('build/cmake/android.toolchain.cmake')
-          .toFilePath(),
-      'ANDROID_NDK_ROOT': Directory.fromUri(ndkRoot).path,
-    });
-  });
-
-  test('unsupported Android architectures still throw', () {
+  test('unsupported Android architectures throw when CMake is enabled', () {
     expect(
       () => rustCargoEnvironment(
         code(OS.android, architecture: Architecture.ia32),
+        androidNdkRoot: temp.uri.resolve('ndk/'),
       ),
       throwsUnsupportedError,
     );

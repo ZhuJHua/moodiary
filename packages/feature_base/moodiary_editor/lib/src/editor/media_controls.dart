@@ -65,7 +65,7 @@ extension on _MediaNodeState {
             ),
             path == null || audio == null
                 ? null
-                : () => unawaited(audio.toggle(path)),
+                : () => unawaited(audio.toggle()),
             size: 40,
             filled: true,
           ),

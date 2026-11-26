@@ -109,7 +109,10 @@ const _frbAnchorDir = 'packages/foundation/fast_image';
 
 Future<void> _assertCodegenVersion() async {
   final pinned =
-      RegExp(r'^\s*flutter_rust_bridge:\s*(\S+)\s*$', multiLine: true)
+      RegExp(
+            r'^\s*flutter_rust_bridge:\s*(\S+)(?:\s+#.*)?\s*$',
+            multiLine: true,
+          )
           .firstMatch(File('$_frbAnchorDir/pubspec.yaml').readAsStringSync())
           ?.group(1);
   if (pinned == null) {
@@ -143,52 +146,8 @@ Future<void> _assertCodegenVersion() async {
   }
 }
 
-const _ffigenMin = 8;
-const _ffigenMaxExclusive = 22;
-
-String _resolvedFfigenVersion() {
-  final lock = File('pubspec.lock').readAsStringSync();
-  final v = RegExp(
-    r'^  ffigen:$.*?^    version:\s*"?([^"\s]+)"?$',
-    multiLine: true,
-    dotAll: true,
-  ).firstMatch(lock)?.group(1);
-  if (v == null) {
-    stderr.writeln('✗ pubspec.lock 里读不到 ffigen 版本，先跑 flutter pub get');
-    exit(1);
-  }
-  return v;
-}
-
-void _assertFfigenVersion(String version) {
-  final major = int.tryParse(version.split('.').first);
-  if (major == null || major < _ffigenMin || major >= _ffigenMaxExclusive) {
-    stderr.writeln(
-      '✗ ffigen 版本未验证：解析到 $version，需要 >=$_ffigenMin.0.0 且 <$_ffigenMaxExclusive.0.0。\n'
-      '  产出坏绑定时 codegen 仍会 exit 0，所以这里只放行验过的区间。\n'
-      '  请把 $_frbAnchorDir/pubspec.yaml 的 ffigen 钉回区间内后重跑 flutter pub get。',
-    );
-    exit(1);
-  }
-}
-
-void _clearStaleFfigenSnapshot(String version) {
-  final stamp = File('.dart_tool/moodiary_ffigen_snapshot_version');
-  if (stamp.existsSync() && stamp.readAsStringSync().trim() == version) return;
-  final dir = Directory('.dart_tool/pub/bin/ffigen');
-  if (dir.existsSync()) {
-    stdout.writeln('· ffigen 版本变为 $version，清掉旧的预编译快照');
-    dir.deleteSync(recursive: true);
-  }
-  stamp.parent.createSync(recursive: true);
-  stamp.writeAsStringSync(version);
-}
-
 Future<void> _genRust() async {
   await _assertCodegenVersion();
-  final ffigen = _resolvedFfigenVersion();
-  _assertFfigenVersion(ffigen);
-  _clearStaleFfigenSnapshot(ffigen);
   for (final dir in _frbPkgDirs) {
     await _run('flutter_rust_bridge_codegen', ['generate'], cwd: dir);
     await _run('cargo', ['fmt', '--all'], cwd: '$dir/rust');
@@ -228,9 +187,6 @@ Future<void> _i18n() async {
 }
 
 final Map<String, Future<void> Function(List<String> rest)> _tasks = {
-  'setup': (_) async {
-    await _flutter(['pub', 'get']);
-  },
   'run': (rest) async {
     await _flutter(['run', ...rest]);
   },

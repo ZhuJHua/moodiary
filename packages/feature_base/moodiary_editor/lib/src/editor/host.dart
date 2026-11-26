@@ -25,7 +25,8 @@ class _EditorChange {
 class MoodiaryEditorHost extends ChangeNotifier {
   MoodiaryEditorHost(
     MoodiaryEditor configuration, {
-    components.AudioPlaybackController Function()? audioControllerFactory,
+    components.AudioPlaybackController Function(String path)?
+    audioControllerFactory,
     this._videoPortFactory,
     Future<FastImageProbe> Function({required String filePath})? imageProbe,
   }) : _configuration = configuration,
@@ -99,7 +100,8 @@ class MoodiaryEditorHost extends ChangeNotifier {
     return _decodedMeta!;
   }
 
-  final components.AudioPlaybackController Function() _audioControllerFactory;
+  final components.AudioPlaybackController Function(String path)
+  _audioControllerFactory;
   final VideoPlaybackPortFactory? _videoPortFactory;
   final Future<FastImageProbe> Function({required String filePath}) _imageProbe;
   final Map<int, _MediaPlayback> _media = {};

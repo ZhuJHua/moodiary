@@ -343,11 +343,21 @@ class _MImageBrowserState extends ConsumerState<MImageBrowser> {
           onDismissed: _dismiss,
           onDragUpdate: (details) => setState(() => _chrome = details.opacity),
           direction: .vertical,
-          backgroundColor: Colors.black,
-          minScale: 0.2,
-          dragSensitivity: 0.8,
-          startingOpacity: 0.9,
-          maxTransformValue: 0.6,
+          background: DismissiblePageBackground.fadeOut(
+            Colors.black,
+            startOpacity: 0.9,
+          ),
+          gesture: const DismissiblePageGesture(
+            dismissThresholds: {
+              DismissiblePageSide.up: 0.12,
+              DismissiblePageSide.down: 0.12,
+            },
+          ),
+          transform: const DismissiblePageTransform(
+            minScale: 0.2,
+            dragSensitivity: 0.8,
+            maxTransformValue: 0.6,
+          ),
           child: _buildGallery(),
         ),
         Positioned(

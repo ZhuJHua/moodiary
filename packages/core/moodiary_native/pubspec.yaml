@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  flutter: ">=3.50.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dependencies:
   flutter:
@@ -16,7 +16,7 @@ dependencies:
 
 dev_dependencies:
   moodiary_lint: 0.0.1
-  pigeon: 29.0.8
+  pigeon: 30.0.4
 
 flutter:
   plugin:

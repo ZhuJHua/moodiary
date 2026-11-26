@@ -261,6 +261,8 @@ class _MoodiaryEditorViewState extends ConsumerState<MoodiaryEditorView> {
   }
 
   Future<void> _recordAudio() async {
+    await _controller.pauseMedia();
+    if (!mounted) return;
     final result = await MSheet.show<RecordSaveResult>(
       context,
       builder: (_) => const RecordSheet(),

@@ -3,6 +3,7 @@ include: package:flutter_lints/flutter.yaml
 linter:
   rules:
     directives_ordering: true
+    sort_pub_dependencies: true
     use_null_aware_elements: true
     prefer_const_constructors: true
     prefer_const_literals_to_create_immutables: true

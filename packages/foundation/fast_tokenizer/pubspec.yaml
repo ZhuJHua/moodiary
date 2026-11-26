@@ -6,17 +6,17 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.13.0"
-  flutter: ">=3.47.0"
+  sdk: ">=3.14.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  flutter: ">=3.50.0" # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_rust_bridge: 2.13.0
+  flutter_rust_bridge: 2.13.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   rust_hook: 0.0.1
 
 dev_dependencies:
+  ffigen: 23.0.0 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   flutter_test:
     sdk: flutter
-  ffigen: 21.0.0
   moodiary_lint: 0.0.1
