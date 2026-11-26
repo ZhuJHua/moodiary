@@ -3,15 +3,59 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:synchronized/synchronized.dart';
 
 import '../tools/register_moodiary_tools.dart';
 import '../transport/mcp_http_endpoint.dart';
+
+part 'mcp_service.g.dart';
+
+@Riverpod(keepAlive: true, name: 'mcpServerStateProvider')
+class McpServerController extends _$McpServerController {
+  McpService? _owner;
+
+  @override
+  McpServerState build() {
+    ref.onDispose(() => _owner = null);
+    return const McpServerState();
+  }
+
+  McpServerState _snapshot(McpService owner) =>
+      identical(owner, _owner) ? state : const McpServerState();
+
+  void _publish(McpService owner, McpServerState value) {
+    _owner = owner;
+    state = value;
+  }
+
+  void _release(McpService owner) {
+    if (!identical(owner, _owner)) return;
+    _owner = null;
+    state = const McpServerState();
+  }
+}
+
+@Riverpod(keepAlive: true)
+McpService mcpService(Ref ref) {
+  final service = McpService(
+    ref.watch(diaryRepositoryProvider),
+    ref.watch(categoryRepositoryProvider),
+    ref.watch(tagRepositoryProvider),
+    ref.watch(moodInsightsRepositoryProvider),
+    ref.watch(mcpServerStateProvider.notifier),
+    ref.watch(embedIndexServiceProvider),
+    ref.watch(heifDecoderProvider),
+  );
+  ref.onDispose(() => unawaited(service.dispose()));
+  return service;
+}
 
 enum McpServerStatus { stopped, starting, running, failed }
 
@@ -47,14 +91,15 @@ class McpServerState {
 }
 
 /// Owns the local MCP endpoint, tool catalog and bearer token.
-@lazySingleton
 class McpService {
   McpService(
     this._diaries,
     this._categories,
     this._tags,
-    this._insights, [
+    this._insights,
+    this._controller, [
     this._semantic,
+    this._heifDecoder,
   ]) : _endpointFactory = null,
        _networkChanges = null;
 
@@ -64,22 +109,35 @@ class McpService {
     this._categories,
     this._tags,
     this._insights,
+    this._controller,
     this._endpointFactory,
     this._networkChanges,
-  ) : _semantic = null;
+  ) : _semantic = null,
+      _heifDecoder = null;
 
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
   final TagRepository _tags;
   final MoodInsightsRepository _insights;
   final EmbedIndexService? _semantic;
+  final IHeifDecoder? _heifDecoder;
   final McpHttpEndpoint Function()? _endpointFactory;
   final Stream<Object?>? _networkChanges;
   final Lock _lock = Lock();
 
-  final ValueNotifier<McpServerState> state = ValueNotifier(
-    const McpServerState(),
-  );
+  final McpServerController _controller;
+  bool _disposed = false;
+  McpServerState get _state =>
+      _disposed ? const McpServerState() : _controller._snapshot(this);
+  set _state(McpServerState value) {
+    if (!_disposed) _controller._publish(this, value);
+  }
+
+  Future<void> dispose() async {
+    _disposed = true;
+    await _lock.synchronized(_teardown);
+    _controller._release(this);
+  }
 
   McpHttpEndpoint? _transport;
   StreamSubscription<Object?>? _networkSubscription;
@@ -119,14 +177,14 @@ class McpService {
   /// Applies a port or LAN policy change, restarting a running server.
   Future<void> updateConfig({int? port, bool? lan}) =>
       _lock.synchronized(() async {
-        final previous = state.value;
+        final previous = _state;
         if (port != null) MoodiaryKVs.mcpPort.set(port);
         if (lan != null) MoodiaryKVs.mcpAllowLan.set(lan);
         if (previous.running) {
           await _stop();
           await _start();
         } else {
-          state.value = McpServerState(
+          _state = McpServerState(
             status: previous.status,
             port: configuredPort,
             failure: previous.failure,
@@ -136,8 +194,8 @@ class McpService {
       });
 
   Future<void> _start() async {
-    if (!enabled || state.value.running) return;
-    state.value = const McpServerState(status: .starting);
+    if (_disposed || !enabled || _state.running) return;
+    _state = const McpServerState(status: .starting);
     try {
       final token = await _ensureToken();
       final version = await _appVersion();
@@ -150,17 +208,18 @@ class McpService {
               tags: _tags,
               insights: _insights,
               semantic: _semantic,
+              heifDecoder: _heifDecoder,
               appVersion: version,
               iconUri: iconUri,
             ),
           );
       _transport = transport;
       transport.onEndpointsChanged = (endpoints) {
-        if (_transport != transport || !state.value.running) return;
-        state.value = McpServerState(
+        if (_transport != transport || !_state.running) return;
+        _state = McpServerState(
           status: .running,
           port: transport.port,
-          endpoints: endpoints,
+          endpoints: List.unmodifiable(endpoints),
         );
       };
       await transport.start(
@@ -168,10 +227,10 @@ class McpService {
         allowLan: allowLan,
         token: token,
       );
-      state.value = McpServerState(
+      _state = McpServerState(
         status: .running,
         port: transport.port,
-        endpoints: transport.endpoints,
+        endpoints: List.unmodifiable(transport.endpoints),
       );
       if (allowLan) {
         _networkSubscription = (_networkChanges ?? NetworkStatus.changes)
@@ -181,7 +240,7 @@ class McpService {
     } catch (e, s) {
       logger.e('MCP server failed to start', error: e, stackTrace: s);
       await _teardown();
-      state.value = McpServerState(
+      _state = McpServerState(
         status: .failed,
         port: configuredPort,
         failure: e is McpPortInUseException ? .portInUse : .unknown,
@@ -192,14 +251,14 @@ class McpService {
   Future<void> stop() => _lock.synchronized(_stop);
 
   Future<void> _stop() async {
-    if (state.value.status == .stopped) return;
+    if (_state.status == .stopped) return;
     await _teardown();
-    state.value = const McpServerState();
+    _state = const McpServerState();
   }
 
   /// Rotates the bearer token; a running server is restarted to use it.
   Future<String> regenerateToken() => _lock.synchronized(() async {
-    final wasRunning = state.value.running;
+    final wasRunning = _state.running;
     final token = await _generateToken();
     if (wasRunning) {
       await _stop();

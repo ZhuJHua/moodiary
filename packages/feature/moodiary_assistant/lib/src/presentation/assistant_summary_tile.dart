@@ -1,26 +1,27 @@
 import 'dart:async';
 
-import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
-class AssistantSummaryTile extends StatefulWidget {
+class AssistantSummaryTile extends ConsumerStatefulWidget {
   const AssistantSummaryTile({super.key});
 
   @override
-  State<AssistantSummaryTile> createState() => _AssistantSummaryTileState();
+  ConsumerState<AssistantSummaryTile> createState() =>
+      _AssistantSummaryTileState();
 }
 
-class _AssistantSummaryTileState extends State<AssistantSummaryTile> {
+class _AssistantSummaryTileState extends ConsumerState<AssistantSummaryTile> {
   LlmProvider? _active;
   bool _keyConfigured = false;
   bool _loaded = false;
   StreamSubscription<void>? _sub;
 
-  late final _repo = getIt<LlmProviderRepository>();
+  late final _repo = ref.read(llmProviderRepositoryProvider);
 
   @override
   void initState() {

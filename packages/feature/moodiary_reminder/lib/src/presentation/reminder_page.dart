@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -12,33 +12,22 @@ import 'reminder_edit_sheet.dart';
 import 'reminder_labels.dart';
 import 'reminder_permission.dart';
 
-class ReminderPage extends StatefulWidget {
+class ReminderPage extends ConsumerStatefulWidget {
   const ReminderPage({super.key});
   factory ReminderPage.fromRoute(GoRouterState state) => const ReminderPage();
 
   @override
-  State<ReminderPage> createState() => _ReminderPageState();
+  ConsumerState<ReminderPage> createState() => _ReminderPageState();
 }
 
-class _ReminderPageState extends State<ReminderPage> {
-  late final _service = getIt<ReminderService>();
+class _ReminderPageState extends ConsumerState<ReminderPage> {
+  late final _service = ref.read(reminderServiceProvider);
   bool _busy = false;
 
   @override
   void initState() {
     super.initState();
-    _service.addListener(_changed);
     _run(_service.checkPermission);
-  }
-
-  void _changed() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _service.removeListener(_changed);
-    super.dispose();
   }
 
   Future<void> _run(Future<void> Function() action) async {
@@ -80,20 +69,21 @@ class _ReminderPageState extends State<ReminderPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final state = ref.watch(reminderStateProvider);
     final theme = context.theme;
-    final items = _service.reminders;
+    final items = state.reminders;
     final canAdd = items.length < Reminder.maxCount;
     final addColor = canAdd
         ? theme.colors.primary
         : theme.colors.onSurfaceVariant;
-    final summary = reminderStatusLabel(l10n, _service);
+    final summary = reminderStatusLabel(l10n, state);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.reminder.title)),
       body: Padding(
         padding: const .symmetric(horizontal: 16),
         child: CustomScrollView(
           slivers: [
-            if (_service.enabled && !_service.notificationsEnabled)
+            if (state.enabled && !state.notificationsEnabled)
               SliverPadding(
                 padding: const .only(bottom: 12),
                 sliver: SliverToBoxAdapter(
@@ -115,7 +105,7 @@ class _ReminderPageState extends State<ReminderPage> {
                   title: l10n.reminder.enable,
                   subtitle: summary,
                   secondary: const Icon(LucideIcons.bell),
-                  value: _service.enabled,
+                  value: state.enabled,
                   onChanged: items.isEmpty
                       ? null
                       : (enabled) => _run(() async {
@@ -135,7 +125,7 @@ class _ReminderPageState extends State<ReminderPage> {
               children: [
                 ...items.map((reminder) {
                   final days = reminderDaysLabel(l10n, reminder.weekdays);
-                  final color = _service.enabled && reminder.enabled
+                  final color = state.enabled && reminder.enabled
                       ? theme.colors.onSurface
                       : theme.colors.onSurfaceVariant;
                   return SettingListTile(
@@ -183,7 +173,7 @@ class _ReminderPageState extends State<ReminderPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        _service.tapAction == ReminderTapAction.openApp
+                        state.tapAction == ReminderTapAction.openApp
                             ? l10n.reminder.openApp
                             : l10n.reminder.newDiary,
                         style: theme.typography.bodyMedium.withColor(
@@ -198,7 +188,7 @@ class _ReminderPageState extends State<ReminderPage> {
                     final picked = await MSheet.picker<ReminderTapAction>(
                       context,
                       title: l10n.reminder.tapAction,
-                      selected: _service.tapAction,
+                      selected: state.tapAction,
                       options: [
                         MSheetOption(
                           value: ReminderTapAction.openApp,

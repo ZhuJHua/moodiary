@@ -1,9 +1,10 @@
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:mui/mui.dart';
 
-class BootFailurePage extends StatefulWidget {
+class BootFailurePage extends ConsumerStatefulWidget {
   final Object error;
 
   final StackTrace stackTrace;
@@ -15,11 +16,13 @@ class BootFailurePage extends StatefulWidget {
   });
 
   @override
-  State<BootFailurePage> createState() => _BootFailurePageState();
+  ConsumerState<BootFailurePage> createState() => _BootFailurePageState();
 }
 
-class _BootFailurePageState extends State<BootFailurePage> {
+class _BootFailurePageState extends ConsumerState<BootFailurePage> {
   bool _copied = false;
+
+  bool _resetting = false;
 
   bool _resetArmed = false;
 
@@ -47,11 +50,15 @@ class _BootFailurePageState extends State<BootFailurePage> {
       setState(() => _resetArmed = true);
       return;
     }
+    if (_resetting) return;
+    setState(() => _resetting = true);
     try {
-      await resetAllData();
+      await ref.read(resetDataActionProvider)();
       if (mounted) setState(() => _resetDone = true);
     } catch (e) {
       if (mounted) setState(() => _resetError = e);
+    } finally {
+      if (mounted) setState(() => _resetting = false);
     }
   }
 
@@ -123,7 +130,7 @@ class _BootFailurePageState extends State<BootFailurePage> {
                       ),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: _reset,
+                        onPressed: _resetting ? null : _reset,
                         child: Text(
                           _resetError != null
                               ? '清空失败 / Reset failed: $_resetError'

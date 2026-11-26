@@ -1,10 +1,10 @@
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sync_stats_controller.g.dart';
@@ -38,13 +38,13 @@ class SyncStats {
 
 @riverpod
 Future<SyncStats> syncStats(Ref ref) async {
-  final diaries = await getIt<DiaryRepository>().getAllDiaries();
+  final backend = ref.watch(activeSyncBackendProvider);
+  final categories = ref.watch(categoryRepositoryProvider);
+  final tags = ref.watch(tagRepositoryProvider);
+  final diaries = await ref.watch(diaryRepositoryProvider).getAllDiaries();
   final localDiaries = diaries.length;
-  final localCategories =
-      (await getIt<CategoryRepository>().getAllCategoriesForSync()).length;
-  final localTags = (await getIt<TagRepository>().getAllTags(
-    includeDeleted: true,
-  )).length;
+  final localCategories = (await categories.getAllCategoriesForSync()).length;
+  final localTags = (await tags.getAllTags(includeDeleted: true)).length;
   final localMedia = {
     for (final d in diaries)
       for (final e in collectDiaryMediaEntries(d))
@@ -57,7 +57,6 @@ Future<SyncStats> syncStats(Ref ref) async {
   int? remoteMedia;
   String? remoteError;
 
-  final backend = getIt<IRemoteSyncBackend>();
   if (!await backend.isReady()) {
     remoteError = l10n.sync.errNoBackend;
   } else {

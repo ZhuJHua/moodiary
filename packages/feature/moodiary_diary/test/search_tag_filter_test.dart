@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/search_controller.dart';
 import 'package:moodiary_diary/src/presentation/search/search_page.dart';
 import 'package:moodiary_diary/src/presentation/search/search_result_card.dart';
@@ -47,8 +46,8 @@ void main() {
   testWidgets('tag chip applies and clears a tag with an empty query', (
     tester,
   ) async {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-    addTearDown(getIt.reset);
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
     MoodiaryKVs.searchIndexBackfilled.set(true);
     await tester.pumpWidget(
       muiTestApp(

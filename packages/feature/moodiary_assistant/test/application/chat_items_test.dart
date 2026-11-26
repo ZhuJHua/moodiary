@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
+import 'package:moodiary_assistant/src/data/chat_repository.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+
+class _ChatRepository extends Fake implements ChatRepository {}
 
 void main() {
   group('ChatMessage 往返', () {
@@ -113,7 +116,7 @@ void main() {
     );
 
     setUp(() {
-      controller = AssistantChatController();
+      controller = AssistantChatController(repository: _ChatRepository());
     });
 
     tearDown(() => controller.dispose());

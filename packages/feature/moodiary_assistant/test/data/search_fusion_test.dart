@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_assistant/src/data/assistant_tool_definitions.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
+import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 
 class _SemanticIndex extends Fake implements EmbedIndexService {
   _SemanticIndex(this.ids);
@@ -34,18 +36,23 @@ class _SemanticIndex extends Fake implements EmbedIndexService {
 
 void main() {
   late MoodiaryDatabase db;
+  late AssistantToolContext context;
+  late _SemanticIndex index;
   late DiaryRepository repo;
   setUp(() {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
     repo = DiaryRepository(db);
-    getIt.registerSingleton<DiaryRepository>(repo);
-    getIt.registerSingleton<TagRepository>(TagRepository(db));
-    getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
-    getIt.registerSingleton<MoodInsightsRepository>(MoodInsightsRepository(db));
-  });
-  tearDown(() async {
-    await getIt.reset();
-    await db.close();
+    index = _SemanticIndex(['shared', 'meaning']);
+    context = AssistantToolContext(
+      diaries: repo,
+      tags: TagRepository(db),
+      categories: CategoryRepository(db),
+      insights: MoodInsightsRepository(db),
+      memory: MemoryRepository(db),
+      semantic: index,
+      heifDecoder: null,
+    );
   });
   Diary diary(String id, String title, int day) => Diary.create(
     title: title,
@@ -58,7 +65,7 @@ void main() {
   ).copyWith(id: id, time: DateTime.utc(2026, 1, day));
   Future<Map<String, dynamic>> search(Map<String, dynamic> args) async =>
       (jsonDecode(
-        await AssistantToolRegistry.byId('search_diaries')!.run(args),
+        await AssistantToolRegistry.byId('search_diaries')!.run(args, context),
       ) as Map).cast<String, dynamic>();
 
   test('assistant passes semantic retrieval to shared search', () async {
@@ -67,8 +74,6 @@ void main() {
       diary('shared', 'Orchard notes', 2),
       diary('meaning', 'Spring', 3),
     ]);
-    final index = _SemanticIndex(['shared', 'meaning']);
-    getIt.registerSingleton<EmbedIndexService>(index);
     final out = await search({'query': 'Orchard', 'limit': 4});
     expect(out['total'], 3);
     expect(out['totalIsLowerBound'], false);

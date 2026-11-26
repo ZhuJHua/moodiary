@@ -2,16 +2,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_editor/src/data/markdown_media.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_theme/moodiary_theme.dart';
+import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
@@ -19,7 +20,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../toolbar/editor_toolbar_host.dart';
 import '../../toolbar/insert_panel.dart';
 
-class MoodiaryEditorView extends StatefulWidget {
+class MoodiaryEditorView extends ConsumerStatefulWidget {
   final String initialContent;
   final String? initialContentText;
   final ValueChanged<TiptapMetadata>? onMetadataChanged;
@@ -101,10 +102,10 @@ class MoodiaryEditorView extends StatefulWidget {
   });
 
   @override
-  State<MoodiaryEditorView> createState() => _MoodiaryEditorViewState();
+  ConsumerState<MoodiaryEditorView> createState() => _MoodiaryEditorViewState();
 }
 
-class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
+class _MoodiaryEditorViewState extends ConsumerState<MoodiaryEditorView> {
   late final _controller = widget.controller ?? MoodiaryEditorController();
 
   Future<void> _onInsertMedia(InsertItem item) async {
@@ -121,9 +122,11 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   Future<void> _insertMedia(InsertItem item) async {
     switch (item) {
       case .gallery:
-        await _insertImages(await getIt<IFilePicker>().pickImages(context));
+        await _insertImages(
+          await ref.read(filePickerProvider).pickImages(context),
+        );
       case .camera:
-        final photo = await getIt<IFilePicker>().takePhoto();
+        final photo = await ref.read(filePickerProvider).takePhoto();
         if (photo != null) await _insertImages([photo]);
       case .video:
         await _pickVideo();
@@ -139,14 +142,19 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
 
   Future<void> _insertImages(List<XFile> files) async {
     for (final file in files) {
-      final name = await MediaManager.saveImage(file);
+      if (!mounted) return;
+      final name = await MediaManager.saveImage(
+        file,
+        decoder: ref.read(heifDecoderProvider),
+      );
+      if (!mounted) return;
       if (name == null) continue;
       await _controller.exec(.insertImage, {'name': name});
     }
   }
 
   Future<void> _pickAttachment() async {
-    final file = await getIt<IFilePicker>().pickFile();
+    final file = await ref.read(filePickerProvider).pickFile();
     if (file == null) return;
     final saved = await MediaManager.saveAttachment(file);
     if (saved == null) {
@@ -185,8 +193,11 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
 
   Future<String?> _saveDataUriImage(String dataUri, String fallbackName) async {
     final xfile = await _dataUriToTempFile(dataUri, fallbackName);
-    if (xfile == null) return null;
-    final saved = await MediaManager.saveImages(imageFileList: [xfile]);
+    if (xfile == null || !mounted) return null;
+    final saved = await MediaManager.saveImages(
+      decoder: ref.read(heifDecoderProvider),
+      imageFileList: [xfile],
+    );
     return saved[xfile.path];
   }
 
@@ -213,7 +224,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   }
 
   Future<void> _pickVideo() async {
-    final file = await getIt<IFilePicker>().pickVideo(context);
+    final file = await ref.read(filePickerProvider).pickVideo(context);
     if (file == null) return;
     final saved = await MediaManager.saveVideo(videoFileList: [file]);
     final name = saved[file.path];
@@ -223,7 +234,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   Future<void> _pickAudioFile() async {
     String? name;
     try {
-      final file = await getIt<IFilePicker>().pickAudio();
+      final file = await ref.read(filePickerProvider).pickAudio();
       if (file == null) return;
       final ext = p.extension(file.path);
       name = 'audio-${uuidV7()}$ext';
@@ -288,10 +299,9 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   Future<List<DiaryLinkCandidate>> _linkCandidates(String query) async {
     final q = query.trim();
     if (q.isEmpty) return const [];
-    final hits = await getIt<DiaryRepository>().searchDiaries(
-      query: q,
-      limit: 12,
-    );
+    final hits = await ref
+        .read(diaryRepositoryProvider)
+        .searchDiaries(query: q, limit: 12);
     return [
       for (final hit in hits)
         (id: hit.diary.id, label: _candidateLabel(hit.diary)),
@@ -324,6 +334,9 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   }
 
   Widget _buildEditor() {
+    final editorFont = ref.watch(
+      appSettingsControllerProvider.select((settings) => settings.editorFont),
+    );
     return MoodiaryEditor(
       controller: _controller,
       readOnly: !widget.editable,
@@ -363,7 +376,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onOpenGraph: widget.onOpenGraph,
       firstLineIndent: widget.firstLineIndent,
       fontScale: widget.fontScale,
-      fontResolver: () => getIt<ThemeManager>().editorFont,
+      fontResolver: () => editorFont,
       mediaResolver: appMediaResolver,
     );
   }

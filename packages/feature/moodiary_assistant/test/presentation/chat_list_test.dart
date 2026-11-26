@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
+import 'package:moodiary_assistant/src/data/chat_repository.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:mui/mui.dart';
 
@@ -42,6 +43,8 @@ class _ProbeState extends State<_Probe> {
   );
 }
 
+class _ChatRepository extends Fake implements ChatRepository {}
+
 void main() {
   late AssistantChatController controller;
   late ScrollController scroll;
@@ -50,7 +53,7 @@ void main() {
   late Map<String, int> builds;
 
   setUp(() {
-    controller = AssistantChatController();
+    controller = AssistantChatController(repository: _ChatRepository());
     scroll = ScrollController();
     listKey = GlobalKey<AssistantChatListState>();
     builds = {};

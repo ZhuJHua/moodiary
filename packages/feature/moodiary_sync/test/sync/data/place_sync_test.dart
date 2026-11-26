@@ -2,20 +2,24 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation_token.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 
 import '../sync_test_harness.dart';
 
 void main() {
+  late SyncTestEnv env;
   late SyncLogger logger;
 
   setUp(() async {
-    logger = (await setUpSyncEnv()).logger;
-    await configureBackend(.webdav);
+    env = await setUpSyncEnv();
+    logger = env.logger;
+    await env.configureBackend(.webdav);
   });
 
   tearDown(tearDownSyncEnv);
@@ -39,6 +43,11 @@ void main() {
     return IncrementalSyncEngine(
       backend,
       logger: logger,
+      cancellation: SyncCancellationToken(),
+      openDiaries: env.container.read(openDiaryRegistryProvider),
+      dirty: env.container.read(syncDirtyDiaryIdsProvider.notifier),
+      pending: env.container.read(syncPendingStateProvider.notifier),
+      configuredBackends: env.configuredBackends,
       diaryStore: FakeDiaryStore(const [], tombstoneStore),
       categoryStore: FakeCategoryStore(const [], tombstoneStore),
       tagStore: FakeTagStore(),
@@ -118,6 +127,11 @@ void main() {
     await IncrementalSyncEngine(
       backend,
       logger: logger,
+      cancellation: SyncCancellationToken(),
+      openDiaries: env.container.read(openDiaryRegistryProvider),
+      dirty: env.container.read(syncDirtyDiaryIdsProvider.notifier),
+      pending: env.container.read(syncPendingStateProvider.notifier),
+      configuredBackends: env.configuredBackends,
       diaryStore: diaries,
       categoryStore: FakeCategoryStore(const [], tombstones),
       tagStore: FakeTagStore(),
@@ -187,6 +201,11 @@ void main() {
     await IncrementalSyncEngine(
       backend,
       logger: logger,
+      cancellation: SyncCancellationToken(),
+      openDiaries: env.container.read(openDiaryRegistryProvider),
+      dirty: env.container.read(syncDirtyDiaryIdsProvider.notifier),
+      pending: env.container.read(syncPendingStateProvider.notifier),
+      configuredBackends: env.configuredBackends,
       diaryStore: FakeDiaryStore([buildDiary(id: 'd1', modifiedMs: 9000)]),
       categoryStore: FakeCategoryStore(),
       tagStore: FakeTagStore(),

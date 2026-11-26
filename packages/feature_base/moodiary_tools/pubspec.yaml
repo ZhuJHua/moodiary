@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  moodiary_content: 0.0.1
+  moodiary_semantic: 0.0.1
   moodiary_data: 0.0.1
   moodiary_models: 0.0.1
   moodiary_utils: 0.0.1
@@ -22,7 +24,6 @@ dependencies:
 
 dev_dependencies:
   fast_image: 0.0.1
-  moodiary_di: 0.0.1
   moodiary_platform: 0.0.1
   moodiary_storage: 0.0.1
   flutter_test:

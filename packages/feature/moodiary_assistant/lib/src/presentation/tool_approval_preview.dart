@@ -1,9 +1,10 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/src/application/tool_approval.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
@@ -28,6 +29,7 @@ class ToolApprovalPreview {
 }
 
 Future<ToolApprovalPreview> buildToolApprovalPreview(
+  WidgetRef ref,
   ToolApprovalRequest request,
   Translations l10n, {
   DateTime Function()? now,
@@ -36,8 +38,9 @@ Future<ToolApprovalPreview> buildToolApprovalPreview(
   final ids = assistantToolIds(request.args);
   return switch (request.tool) {
     .createDiary => _createDiary(l10n, items, now: (now ?? DateTime.now)()),
-    .updateDiary => _updateDiary(l10n, items),
+    .updateDiary => _updateDiary(ref, l10n, items),
     .deleteDiary => _diaries(
+      ref,
       l10n,
       ids,
       confirmLabel: l10n.assistant.approvalConfirmTrash,
@@ -55,8 +58,8 @@ Future<ToolApprovalPreview> buildToolApprovalPreview(
         confirmLabel: l10n.assistant.approvalConfirmCreate,
       ),
     ),
-    .updateCategory => _updateCategory(l10n, items),
-    .deleteCategory => _categories(l10n, ids),
+    .updateCategory => _updateCategory(ref, l10n, items),
+    .deleteCategory => _categories(ref, l10n, ids),
     .rememberFact => Future.value(
       ToolApprovalPreview(
         subtitle: l10n.assistant.approvalItemCount(count: items.length),
@@ -67,7 +70,7 @@ Future<ToolApprovalPreview> buildToolApprovalPreview(
         confirmLabel: l10n.assistant.approvalConfirmRemember,
       ),
     ),
-    .forgetFact => _facts(l10n, ids),
+    .forgetFact => _facts(ref, l10n, ids),
     _ => Future.value(
       ToolApprovalPreview(
         subtitle: '',
@@ -145,11 +148,12 @@ List<ToolApprovalLine> _timeChange(
 }
 
 Future<ToolApprovalPreview> _updateDiary(
+  WidgetRef ref,
   Translations l10n,
   List<Map<String, dynamic>> items,
 ) async {
-  final diaries = getIt<DiaryRepository>();
-  final categories = getIt<CategoryRepository>();
+  final diaries = ref.read(diaryRepositoryProvider);
+  final categories = ref.read(categoryRepositoryProvider);
   final rewrites = items.any((item) => item.containsKey('content'));
   if (items.isEmpty) {
     return ToolApprovalPreview(
@@ -264,11 +268,12 @@ Future<ToolApprovalPreview> _updateDiary(
 }
 
 Future<ToolApprovalPreview> _diaries(
+  WidgetRef ref,
   Translations l10n,
   List<String> ids, {
   required String confirmLabel,
 }) async {
-  final repo = getIt<DiaryRepository>();
+  final repo = ref.read(diaryRepositoryProvider);
   final lines = <ToolApprovalLine>[];
   for (final id in ids.take(_kPreviewRows)) {
     final diary = await repo.getDiaryByBusinessId(id);
@@ -291,10 +296,11 @@ Future<ToolApprovalPreview> _diaries(
 }
 
 Future<ToolApprovalPreview> _updateCategory(
+  WidgetRef ref,
   Translations l10n,
   List<Map<String, dynamic>> items,
 ) async {
-  final repo = getIt<CategoryRepository>();
+  final repo = ref.read(categoryRepositoryProvider);
   final lines = <ToolApprovalLine>[];
   for (final item in items.take(_kPreviewRows)) {
     final current = await repo.getCategoryById(_str(item['id']));
@@ -323,10 +329,11 @@ Future<ToolApprovalPreview> _updateCategory(
 }
 
 Future<ToolApprovalPreview> _categories(
+  WidgetRef ref,
   Translations l10n,
   List<String> ids,
 ) async {
-  final repo = getIt<CategoryRepository>();
+  final repo = ref.read(categoryRepositoryProvider);
   final lines = <ToolApprovalLine>[];
   for (final id in ids.take(_kPreviewRows)) {
     final category = await repo.getCategoryById(id);
@@ -340,8 +347,12 @@ Future<ToolApprovalPreview> _categories(
   );
 }
 
-Future<ToolApprovalPreview> _facts(Translations l10n, List<String> ids) async {
-  final repo = getIt<MemoryRepository>();
+Future<ToolApprovalPreview> _facts(
+  WidgetRef ref,
+  Translations l10n,
+  List<String> ids,
+) async {
+  final repo = ref.read(memoryRepositoryProvider);
   final lines = <ToolApprovalLine>[];
   for (final id in ids.take(_kPreviewRows)) {
     final fact = await repo.get(id);

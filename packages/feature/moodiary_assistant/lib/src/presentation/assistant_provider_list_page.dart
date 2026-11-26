@@ -1,11 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:moodiary_assistant/src/data/chat_repository.dart';
-import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -13,16 +12,17 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-class AssistantProviderListPage extends StatefulWidget {
+class AssistantProviderListPage extends ConsumerStatefulWidget {
   const AssistantProviderListPage({super.key});
 
   @override
-  State<AssistantProviderListPage> createState() =>
+  ConsumerState<AssistantProviderListPage> createState() =>
       _AssistantProviderListPageState();
 }
 
-class _AssistantProviderListPageState extends State<AssistantProviderListPage> {
-  late final _repo = getIt<LlmProviderRepository>();
+class _AssistantProviderListPageState
+    extends ConsumerState<AssistantProviderListPage> {
+  late final _repo = ref.read(llmProviderRepositoryProvider);
 
   List<LlmProvider> _providers = const [];
   Set<String> _withKey = const {};
@@ -75,9 +75,9 @@ class _AssistantProviderListPageState extends State<AssistantProviderListPage> {
 
   Future<void> _delete(LlmProvider provider) async {
     final l10n = context.l10n;
-    final affected = await getIt<ChatRepository>().countSessionsByProvider(
-      provider.id,
-    );
+    final affected = await ref
+        .read(chatRepositoryProvider)
+        .countSessionsByProvider(provider.id);
     if (!mounted) return;
     final message = [
       l10n.assistant.modelProviderDeleteContent(name: provider.name),

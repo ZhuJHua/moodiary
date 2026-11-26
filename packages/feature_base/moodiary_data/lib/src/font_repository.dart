@@ -1,14 +1,11 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:moodiary_theme/moodiary_theme.dart';
 
 import 'db/database.dart';
 
-@lazySingleton
 class FontRepository {
   FontRepository(this._db);
 
@@ -23,14 +20,6 @@ class FontRepository {
   Future<List<Font>> getAllFonts() async {
     final rows = await _db.select(_db.fonts).get();
     return [for (final r in rows) _toFont(r)];
-  }
-
-  Future<List<Font>> scanDiskFonts() async {
-    final scanned = await FontManager.scanFontFiles();
-    return [
-      for (final f in scanned)
-        Font(fontFileName: f.fileName, fontWghtAxisMap: f.wghtAxis),
-    ];
   }
 
   Future<Font?> getFontByFontFamily(String fontFamily) async {
@@ -63,9 +52,4 @@ class FontRepository {
     if (family == null || family.isEmpty) return null;
     return getFontByFontFamily(family);
   }
-}
-
-extension FontThemeDescriptor on Font {
-  ActiveFontDescriptor get themeDescriptor =>
-      (family: fontFamily, fileName: fontFileName, wghtAxis: fontWghtAxisMap);
 }

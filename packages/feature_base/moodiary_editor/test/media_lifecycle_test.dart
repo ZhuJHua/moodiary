@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 import 'package:moodiary_components/moodiary_components.dart' as components;
@@ -162,29 +163,41 @@ class _Harness {
     host.dispose();
   }
 
-  Widget build() => TranslationProvider(
-    child: MaterialApp(
-      theme: buildMuiTheme(brightness: Brightness.light),
-      localizationsDelegates: const [
-        ...GlobalMaterialLocalizations.delegates,
-        GlobalMuiLocalizations.delegate,
-      ],
-      builder: (context, child) => MaterialUiCompatibilityBridge(child: child!),
-      home: Scaffold(
-        body: Center(
-          child: SizedBox(
-            width: 400,
-            height: 360,
-            child: ft.TiptapEditor(
-              controller: host.editor,
-              scrollController: host.scroll,
-              readOnly: host.readOnly,
-              nodeViews: host.nodeViews,
-              nodeHeightEstimator: (node, width) => switch (node.type) {
-                'audio' => 76,
-                'video' => width * 9 / 16,
-                _ => null,
-              },
+  Widget build() => ProviderScope(
+    retry: (_, _) => null,
+    overrides: [
+      components.videoSurfaceBuilderProvider.overrideWithValue(
+        (_) => const SizedBox.shrink(),
+      ),
+      components.videoAmbientPortFactoryProvider.overrideWithValue(
+        () => const {},
+      ),
+    ],
+    child: TranslationProvider(
+      child: MaterialApp(
+        theme: buildMuiTheme(brightness: Brightness.light),
+        localizationsDelegates: const [
+          ...GlobalMaterialLocalizations.delegates,
+          GlobalMuiLocalizations.delegate,
+        ],
+        builder: (context, child) =>
+            MaterialUiCompatibilityBridge(child: child!),
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 400,
+              height: 360,
+              child: ft.TiptapEditor(
+                controller: host.editor,
+                scrollController: host.scroll,
+                readOnly: host.readOnly,
+                nodeViews: host.nodeViews,
+                nodeHeightEstimator: (node, width) => switch (node.type) {
+                  'audio' => 76,
+                  'video' => width * 9 / 16,
+                  _ => null,
+                },
+              ),
             ),
           ),
         ),

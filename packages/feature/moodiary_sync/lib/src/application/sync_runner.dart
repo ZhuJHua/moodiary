@@ -1,14 +1,8 @@
-import 'package:flutter/foundation.dart';
-import 'package:injectable/injectable.dart';
-import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
-import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/sync_cancellation.dart';
-import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation_token.dart';
 
 enum SyncDirection { push, pull, sync }
 
@@ -66,9 +60,12 @@ class SyncOutcome {
   bool get ok => kind == .upToDate || kind == .changed;
 }
 
+typedef SyncLastRun = ({SyncOutcome outcome, bool bannerDismissed});
+
 class SyncStatus {
   final SyncActivity? running;
-  final SyncOutcome? last;
+  final SyncLastRun? last;
+  final bool stopping;
   final SyncHealth health;
 
   final DateTime? healthSince;
@@ -77,6 +74,7 @@ class SyncStatus {
 
   const SyncStatus({
     this.running,
+    this.stopping = false,
     this.last,
     this.health = .unknown,
     this.healthSince,
@@ -88,7 +86,8 @@ class SyncStatus {
   SyncStatus copyWith({
     SyncActivity? running,
     bool clearRunning = false,
-    SyncOutcome? last,
+    bool? stopping,
+    SyncLastRun? last,
     SyncHealth? health,
     DateTime? healthSince,
     String? healthDetail,
@@ -96,6 +95,7 @@ class SyncStatus {
   }) => SyncStatus(
     running: clearRunning ? null : (running ?? this.running),
     last: last ?? this.last,
+    stopping: stopping ?? this.stopping,
     health: health ?? this.health,
     healthSince: healthSince ?? this.healthSince,
     healthDetail: clearHealthDetail
@@ -104,55 +104,41 @@ class SyncStatus {
   );
 }
 
-@singleton
 class SyncRunner {
-  SyncRunner(this._cancellation, this._logger)
-    : _engineFactory = IncrementalSyncEngine.forCloud;
+  SyncRunner(this._engineFactory);
 
-  @visibleForTesting
-  SyncRunner.withEngine(this._cancellation, this._logger, this._engineFactory);
-
-  final SyncCancellation _cancellation;
-  final SyncLogger _logger;
-  final Future<IncrementalSyncEngine> Function(
-    IRemoteSyncBackend backend, {
-    SyncTrigger? trigger,
-  })
+  final IncrementalSyncEngine Function(
+    IRemoteSyncBackend,
+    SyncCancellationToken,
+    SyncTrigger,
+  )
   _engineFactory;
+  SyncCancellationToken? _current;
 
-  final ValueNotifier<SyncStatus> _status = ValueNotifier(const SyncStatus());
+  bool stop() {
+    final token = _current;
+    if (token == null || token.isRequested) return false;
+    token.requestStop();
+    return true;
+  }
 
-  ValueListenable<SyncStatus> get status => _status;
-
-  bool get isRunning => _status.value.isRunning;
-
-  IRemoteSyncBackend? get _backend => getIt.maybeGet<IRemoteSyncBackend>();
-
-  Future<SyncOutcome?> run(
-    SyncDirection direction, {
-    required SyncTrigger trigger,
-  }) async {
-    if (isRunning) return null;
-    final backend = _backend;
-    if (backend == null) return null;
+  Future<SyncOutcome> run(
+    IRemoteSyncBackend backend,
+    SyncDirection direction,
+    SyncTrigger trigger,
+  ) async {
+    if (_current != null) throw StateError('Sync already running');
+    final token = _current = SyncCancellationToken();
     final startedAt = DateTime.now();
-    _status.value = _status.value.copyWith(
-      running: SyncActivity(
-        trigger: trigger,
-        direction: direction,
-        startedAt: startedAt,
-        backendName: backend.displayName,
-      ),
-    );
-    late final SyncOutcome outcome;
     try {
-      final engine = await _engineFactory(backend, trigger: trigger);
+      if (!await backend.isReady()) throw backend.notReadyError;
+      final engine = _engineFactory(backend, token, trigger);
       final report = await switch (direction) {
         .push => engine.push(),
         .pull => engine.pull(),
         .sync => engine.sync(),
       };
-      outcome = SyncOutcome(
+      return SyncOutcome(
         at: DateTime.now(),
         trigger: trigger,
         direction: direction,
@@ -166,22 +152,19 @@ class SyncRunner {
         report: report,
         elapsed: report.elapsed,
       );
-      _setHealth(.reachable);
     } on SyncException catch (e) {
-      outcome = _failed(e, trigger, direction, startedAt);
-      if (e.kind.affectsHealth) _applyFailure(e.kind, e.message);
+      return _failed(e, trigger, direction, startedAt);
     } catch (e, st) {
       logger.e('sync failed (${trigger.name})', error: e, stackTrace: st);
-      outcome = _failed(
+      return _failed(
         SyncException(e.toString()),
         trigger,
         direction,
         startedAt,
       );
     } finally {
-      _status.value = _status.value.copyWith(clearRunning: true, last: outcome);
+      _current = null;
     }
-    return outcome;
   }
 
   SyncOutcome _failed(
@@ -197,81 +180,4 @@ class SyncRunner {
     error: e,
     elapsed: DateTime.now().difference(startedAt),
   );
-
-  Future<String?> probe({required SyncTrigger trigger}) async {
-    final backend = _backend;
-    if (backend == null) {
-      throw SyncException(l10n.sync.errNoBackend, kind: .notConfigured);
-    }
-    if (!await backend.isReady()) {
-      _setHealth(.notConfigured);
-      throw backend.notReadyError;
-    }
-    try {
-      final stat = await backend.statObject(SyncKeys.manifestPath);
-      _setHealth(.reachable);
-      return stat;
-    } on SyncException catch (e) {
-      _applyFailure(e.kind, e.message, force: true);
-      rethrow;
-    }
-  }
-
-  Future<void> testConnection() async {
-    final backend = _backend;
-    if (backend == null) {
-      throw SyncException(l10n.sync.errNoBackend, kind: .notConfigured);
-    }
-    try {
-      await backend.testConnection();
-      _setHealth(.reachable);
-    } on SyncException catch (e) {
-      _applyFailure(e.kind, e.message, force: true);
-      rethrow;
-    }
-  }
-
-  void stop() => _cancellation.requestStop();
-
-  void resetHealth() {
-    _status.value = _status.value.copyWith(
-      health: .unknown,
-      healthSince: DateTime.now(),
-      clearHealthDetail: true,
-    );
-  }
-
-  void _applyFailure(SyncErrorKind kind, String detail, {bool force = false}) {
-    final health = switch (kind) {
-      .auth => SyncHealth.authFailed,
-      .keyConflict => SyncHealth.keyConflict,
-      .notConfigured => SyncHealth.notConfigured,
-      .network || .server || .http => SyncHealth.unreachable,
-      _ => force ? SyncHealth.unreachable : null,
-    };
-    if (health == null) return;
-    _setHealth(health, detail: SyncErrorKind.stripTag(detail));
-  }
-
-  void _setHealth(SyncHealth health, {String? detail}) {
-    final current = _status.value;
-    final changed = current.health != health;
-    if (changed) {
-      if (health.isBad) {
-        _logger.warn(
-          .manifestRead,
-          reason: .probeFailed,
-          payload: {'health': health.name, 'detail': ?detail},
-        );
-      } else if (health == .reachable && current.health.isBad) {
-        _logger.info(.manifestRead, reason: .recovered);
-      }
-    }
-    _status.value = current.copyWith(
-      health: health,
-      healthSince: changed ? DateTime.now() : null,
-      healthDetail: detail,
-      clearHealthDetail: detail == null && changed,
-    );
-  }
 }

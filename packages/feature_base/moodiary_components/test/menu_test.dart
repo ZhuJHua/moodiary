@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
@@ -112,19 +111,19 @@ void main() {
 
     setUp(() async {
       log = [];
-      getIt.pushNewScope(
-        init: (gi) {
-          gi.registerSingleton<IKVStorage>(MemoryKVStorage());
-          gi.registerSingleton<ISecureKVStorage>(MemorySecureKVStorage());
-        },
-      );
+      KVStore.installForTesting(MemoryKVStorage());
+      addTearDown(KVStore.resetForTesting);
+      SecureKVStore.installForTesting(MemorySecureKVStorage());
+      addTearDown(SecureKVStore.resetForTesting);
+      final hasher = AppLockPin.hasher;
+      final verifier = AppLockPin.verifier;
+      addTearDown(() async {
+        await AppLockPin.clear();
+        AppLockPin.hasher = hasher;
+        AppLockPin.verifier = verifier;
+      });
       AppLockPin.hasher = (pin) async => r'$argon2id$' + pin;
       AppLockPin.verifier = (hash, pin) async => hash == r'$argon2id$' + pin;
-    });
-
-    tearDown(() async {
-      await AppLockPin.clear();
-      await getIt.popScope();
     });
 
     Widget guardHost() => muiTestApp(

@@ -1,8 +1,11 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/application/context_compaction_controller.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
+import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 class _FakeAssistant implements AssistantService {
@@ -17,6 +20,8 @@ class _FakeAssistant implements AssistantService {
     return Stream.value(AssistantStreamEvent.text(summary));
   }
 }
+
+class _Presets extends Fake implements LlmPresetRepository {}
 
 void main() {
   final provider = LlmProvider.create(
@@ -38,11 +43,18 @@ void main() {
 
   setUp(() {
     fake = _FakeAssistant('summary');
-    getIt.registerSingleton<AssistantService>(fake);
-    controller = ContextCompactionController();
+    final container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [
+        assistantServiceProvider.overrideWithValue(fake),
+        llmPresetRepositoryProvider.overrideWithValue(_Presets()),
+      ],
+    );
+    controller = ContextCompactionController(
+      container.read(assistantServiceProvider),
+      ModelResolver(container.read(llmPresetRepositoryProvider)),
+    );
   });
-
-  tearDown(getIt.reset);
 
   Future<ChatSession?> run({
     required int count,

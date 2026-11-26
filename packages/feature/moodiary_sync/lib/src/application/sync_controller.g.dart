@@ -13,7 +13,7 @@ part of 'sync_controller.dart';
 final syncControllerProvider = SyncControllerProvider._();
 
 final class SyncControllerProvider
-    extends $NotifierProvider<SyncController, SyncState> {
+    extends $NotifierProvider<SyncController, SyncStatus> {
   SyncControllerProvider._()
     : super(
         from: null,
@@ -33,27 +33,27 @@ final class SyncControllerProvider
   SyncController create() => SyncController();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SyncState value) {
+  Override overrideWithValue(SyncStatus value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<SyncState>(value),
+      providerOverride: $SyncValueProvider<SyncStatus>(value),
     );
   }
 }
 
-String _$syncControllerHash() => r'87b2dfd71f2bc7a835cd2bbcd6f7507193f3d2ce';
+String _$syncControllerHash() => r'754d7ea217ed99acd7b0fe6c65a439b22978a86a';
 
-abstract class _$SyncController extends $Notifier<SyncState> {
-  SyncState build();
+abstract class _$SyncController extends $Notifier<SyncStatus> {
+  SyncStatus build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<SyncState, SyncState>;
+    final ref = this.ref as $Ref<SyncStatus, SyncStatus>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<SyncState, SyncState>,
-              SyncState,
+              AnyNotifier<SyncStatus, SyncStatus>,
+              SyncStatus,
               Object?,
               Object?
             >;

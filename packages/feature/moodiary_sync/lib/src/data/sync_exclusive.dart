@@ -1,13 +1,8 @@
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 
-import 'sync_cancellation.dart';
+import 'sync_cancellation_token.dart';
 
-Future<T> runSyncExclusive<T>(Future<T> Function() body) =>
-    runMediaExclusive(() async {
-      try {
-        return await body();
-      } finally {
-        getIt<SyncCancellation>().reset();
-      }
-    });
+Future<T> runSyncExclusive<T>(
+  SyncCancellationToken cancellation,
+  Future<T> Function(SyncCancellationToken) operation,
+) => runMediaExclusive(() => operation(cancellation));

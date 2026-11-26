@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -127,7 +126,8 @@ String formatDistance(BuildContext context, double meters) {
 }
 
 Future<Place?> showPlaceEditor(
-  BuildContext context, {
+  BuildContext context,
+  WidgetRef ref, {
   Place? existing,
   double? latitude,
   double? longitude,
@@ -163,7 +163,7 @@ Future<Place?> showPlaceEditor(
           lastModified: DateTime.timestamp(),
         );
   try {
-    await getIt<PlaceRepository>().insertAPlace(place);
+    await ref.read(placeRepositoryProvider).insertAPlace(place);
   } catch (e, s) {
     logger.e('save place failed', error: e, stackTrace: s);
     if (context.mounted) toast.error(message: l10n.diary.placeSaveFailed);

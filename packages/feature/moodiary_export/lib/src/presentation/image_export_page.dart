@@ -1,15 +1,15 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
@@ -20,7 +20,7 @@ import '../data/export_service.dart';
 import '../data/image_composer.dart';
 import 'image_card/card_style.dart';
 
-class ImageExportPage extends StatefulWidget {
+class ImageExportPage extends ConsumerStatefulWidget {
   final String? diaryId;
 
   final ExportScope? scope;
@@ -36,10 +36,10 @@ class ImageExportPage extends StatefulWidget {
   bool get isSample => scope != null;
 
   @override
-  State<ImageExportPage> createState() => _ImageExportPageState();
+  ConsumerState<ImageExportPage> createState() => _ImageExportPageState();
 }
 
-class _ImageExportPageState extends State<ImageExportPage> {
+class _ImageExportPageState extends ConsumerState<ImageExportPage> {
   late final ExportSettings _settings = .decode(
     MoodiaryKVs.exportSettings.get() ?? '',
   );
@@ -75,6 +75,7 @@ class _ImageExportPageState extends State<ImageExportPage> {
       _brightness ?? Theme.of(context).brightness;
 
   ImageCardStyle _style({double? widthDp}) => ImageCardStyle.resolve(
+    settings: ref.read(appSettingsControllerProvider),
     brightness: _effectiveBrightness,
     fallback: Theme.of(context).brightness,
     widthDp: widthDp ?? _settings.image.widthDp,
@@ -92,14 +93,17 @@ class _ImageExportPageState extends State<ImageExportPage> {
 
   Future<void> _render() async {
     final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final palette = MoodPalette.of(context);
     final style = _style();
     try {
       final docs = _docs ??= await _loadDocs();
+      if (!mounted) return;
       if (docs.isEmpty) {
         setState(() => _error = _EmptyScope());
         return;
       }
       final preview = await ImageComposer.renderBands(
+        palette: palette,
         docs: docs,
         common: _settings.common,
         style: style,
@@ -119,16 +123,17 @@ class _ImageExportPageState extends State<ImageExportPage> {
   }
 
   Future<List<ExportDoc>> _loadDocs() async {
+    final service = ref.read(exportServiceProvider);
     final scope = widget.scope;
     final diaries = scope != null
-        ? await scope.resolve()
+        ? await service.resolve(scope)
         : [
-            ?await getIt<DiaryRepository>().getDiaryByBusinessId(
-              widget.diaryId ?? '',
-            ),
+            ?await ref
+                .read(diaryRepositoryProvider)
+                .getDiaryByBusinessId(widget.diaryId ?? ''),
           ];
     final picked = widget.isSample ? diaries.take(1).toList() : diaries;
-    return ExportService.previewDocs(
+    return service.previewDocs(
       picked,
       includePosition: _settings.common.includePosition,
     );
@@ -137,16 +142,19 @@ class _ImageExportPageState extends State<ImageExportPage> {
   Future<String?> _composeFile() async {
     final docs = _docs;
     if (docs == null || docs.isEmpty) return null;
+    final palette = MoodPalette.of(context);
+    final style = _style();
     final dir = Directory(
       p.join(PlatformService.get().applicationCachePath, 'export', 'share'),
     );
     if (dir.existsSync()) await dir.delete(recursive: true);
     await dir.create(recursive: true);
     final result = await ImageComposer.composeToFile(
+      palette: palette,
       docs: docs,
       common: _settings.common,
       options: _settings.image,
-      style: _style(),
+      style: style,
       outPath: p.join(
         dir.path,
         'moodiary-${DateTime.now().millisecondsSinceEpoch}.png',

@@ -1,8 +1,8 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:mui/mui.dart';
 
 import '../data/export_options.dart';
 import '../data/export_scope.dart';
@@ -66,6 +66,11 @@ Future<void> _exportSingle(
   required String diaryId,
 }) async {
   final l10n = context.l10n;
+  final service = ProviderScope.containerOf(
+    context,
+    listen: false,
+  ).read(exportServiceProvider);
+  final palette = MoodPalette.of(context);
   var settings = ExportSettings.decode(MoodiaryKVs.exportSettings.get() ?? '');
 
   // PDF 必须先有字体：typst 拿不到字体文件会在写文件那一步才失败。
@@ -88,7 +93,8 @@ Future<void> _exportSingle(
   };
   toast.loading(message: l10n.share.generating(format: label));
   try {
-    final outcome = await ExportService.run(
+    final outcome = await service.run(
+      palette: palette,
       format: format,
       scope: PickedScope({diaryId}),
       settings: settings.copyWith(

@@ -1,28 +1,23 @@
 import 'dart:io';
 
 import 'package:fast_zip/fast_zip.dart';
-import 'package:injectable/injectable.dart';
-import 'package:meta/meta.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
-import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:path/path.dart' as p;
 
 typedef _Entry = ({String path, String name, int size});
 
-@LazySingleton(as: LegacyDataExporter)
 class SyncLegacyDataExporter implements LegacyDataExporter {
-  SyncLegacyDataExporter()
-    : this.forTesting(
-        support: PlatformService.get().applicationSupportDirectory,
-        cache: PlatformService.get().applicationCacheDirectory,
+  SyncLegacyDataExporter({required Directory support, required Directory cache})
+    : this.withDependencies(
+        support: support,
+        cache: cache,
         openZip: (path) async {
           await FastZip.ensureInitialized();
           return Zip.newInstance(filePath: path);
         },
       );
 
-  @visibleForTesting
-  SyncLegacyDataExporter.forTesting({
+  SyncLegacyDataExporter.withDependencies({
     required this._support,
     required this._cache,
     required this._openZip,

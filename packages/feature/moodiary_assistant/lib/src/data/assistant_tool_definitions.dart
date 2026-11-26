@@ -1,8 +1,11 @@
 import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'memory_repository.dart';
 
@@ -11,15 +14,27 @@ final List<ToolDef> assistantToolDefinitions = List.unmodifiable([
   ...assistantOnlyTools,
 ]);
 
-ToolContext assistantToolContext() => ToolContext(
-  diaries: getIt<DiaryRepository>(),
-  categories: getIt<CategoryRepository>(),
-  tags: getIt<TagRepository>(),
-  insights: getIt<MoodInsightsRepository>(),
-  surface: ToolSurface.assistant,
-  semantic: getIt.isRegistered<EmbedIndexService>()
-      ? getIt<EmbedIndexService>()
-      : null,
+class AssistantToolContext extends ToolContext {
+  AssistantToolContext({
+    required super.diaries,
+    required super.categories,
+    required super.tags,
+    required super.insights,
+    required super.semantic,
+    required super.heifDecoder,
+    required this.memory,
+  }) : super(surface: ToolSurface.assistant);
+  final MemoryRepository memory;
+}
+
+AssistantToolContext assistantToolContext(Ref ref) => AssistantToolContext(
+  diaries: ref.watch(diaryRepositoryProvider),
+  categories: ref.watch(categoryRepositoryProvider),
+  tags: ref.watch(tagRepositoryProvider),
+  insights: ref.watch(moodInsightsRepositoryProvider),
+  memory: ref.watch(memoryRepositoryProvider),
+  semantic: ref.watch(embedIndexServiceProvider),
+  heifDecoder: ref.watch(heifDecoderProvider),
 );
 
 final List<ToolDef> assistantOnlyTools = [
@@ -49,8 +64,8 @@ final List<ToolDef> assistantOnlyTools = [
     ),
     output: _recallMemoryOutput,
     parse: (raw) => raw,
-    run: (raw, _) async {
-      final repo = getIt<MemoryRepository>();
+    run: (raw, context) async {
+      final repo = (context as AssistantToolContext).memory;
       final query = (raw['query'] as String? ?? '').trim();
       final limit = ((raw['limit'] as num?)?.toInt() ?? _memoryLimit.fallback)
           .clamp(_memoryLimit.min, _memoryLimit.max);
@@ -94,7 +109,10 @@ final List<ToolDef> assistantOnlyTools = [
     ),
     output: _factBatchOutput,
     parse: toolBatchItems,
-    run: (items, _) => runToolBatch(items, _rememberFact),
+    run: (items, context) => runToolBatch(
+      items,
+      (item) => _rememberFact(item, (context as AssistantToolContext).memory),
+    ),
   ),
   ToolDef(
     name: 'forget_fact',
@@ -109,9 +127,9 @@ final List<ToolDef> assistantOnlyTools = [
     input: (_) => objectSchema({'ids': toolIdsSchema(stringOutputSchema)}),
     output: _factBatchOutput,
     parse: toolBatchIds,
-    run: (items, _) => runToolBatch(items, (item) async {
+    run: (items, context) => runToolBatch(items, (item) async {
       final id = item['id']! as String;
-      if (!await getIt<MemoryRepository>().delete(id)) {
+      if (!await (context as AssistantToolContext).memory.delete(id)) {
         throw ToolFailure('no memory with id=$id');
       }
       return ToolResult({'id': id});
@@ -131,7 +149,10 @@ final _factBatchOutput = batchOutputSchema(
   ),
 );
 
-Future<ToolResult> _rememberFact(Map<String, Object?> raw) async {
+Future<ToolResult> _rememberFact(
+  Map<String, Object?> raw,
+  MemoryRepository repo,
+) async {
   final text = (raw['text']! as String).trim();
   if (text.isEmpty) throw const ToolFailure('the fact cannot be empty');
   final rawCategory = (raw['category'] as String? ?? 'fact').trim();
@@ -139,7 +160,6 @@ Future<ToolResult> _rememberFact(Map<String, Object?> raw) async {
       const {'preference', 'theme', 'goal', 'fact'}.contains(rawCategory)
       ? rawCategory
       : 'fact';
-  final repo = getIt<MemoryRepository>();
   final id = (raw['id'] as String? ?? '').trim();
   if (id.isNotEmpty) {
     final current = await repo.get(id);

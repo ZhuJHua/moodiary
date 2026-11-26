@@ -3,14 +3,16 @@ import 'dart:io';
 import 'package:fast_image/fast_image.dart';
 import 'package:fast_press/fast_press.dart' as press;
 import 'package:fast_zip/fast_zip.dart' as archive;
+import 'package:moodiary_components/moodiary_components.dart' show MoodPalette;
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../presentation/image_card/card_style.dart';
 import 'export_doc.dart';
@@ -19,6 +21,8 @@ import 'export_scope.dart';
 import 'image_composer.dart';
 import 'markdown_writer.dart';
 import 'tiptap_to_ir.dart';
+
+part 'export_service.g.dart';
 
 class ExportOutcome {
   final String path;
@@ -63,10 +67,29 @@ class ExportException implements Exception {
   String toString() => 'ExportException(${error.name})';
 }
 
-class ExportService {
-  const ExportService._();
+@Riverpod(keepAlive: true)
+ExportService exportService(Ref ref) => ExportService(
+  ref.watch(diaryRepositoryProvider),
+  ref.watch(categoryRepositoryProvider),
+  ref.watch(tagRepositoryProvider),
+  ref.watch(placeRepositoryProvider),
+);
 
-  static Future<ExportOutcome> run({
+class ExportService {
+  const ExportService(
+    this._diaries,
+    this._categories,
+    this._tags,
+    this._placeRepository,
+  );
+  final DiaryRepository _diaries;
+  final CategoryRepository _categories;
+  final TagRepository _tags;
+  final PlaceRepository _placeRepository;
+  Future<List<Diary>> resolve(ExportScope scope) =>
+      scope.resolve(_diaries, _categories);
+
+  Future<ExportOutcome> run({
     required ExportFormat format,
     required ExportScope scope,
     required ExportSettings settings,
@@ -80,11 +103,12 @@ class ExportService {
 
     press.CancelToken? cancel,
 
+    required MoodPalette palette,
     ImageCardStyle? imageStyle,
   }) async {
     await press.FastPress.ensureInitialized();
     final token = cancel ?? press.CancelToken();
-    final diaries = await scope.resolve();
+    final diaries = await resolve(scope);
     if (diaries.isEmpty) {
       throw const ExportException(.emptyScope);
     }
@@ -93,7 +117,7 @@ class ExportService {
     final workDir = await _freshWorkDir();
     try {
       final categories = await _categoryNames(diaries);
-      final tags = await getIt<TagRepository>().getTagsByIds(
+      final tags = await _tags.getTagsByIds(
         diaries.expand((diary) => diary.tagIds),
       );
       final places = await _places(diaries);
@@ -155,6 +179,7 @@ class ExportService {
           token,
         ),
         .image => await _writeImage(
+          palette,
           docs,
           settings,
           workDir,
@@ -187,12 +212,12 @@ class ExportService {
     if (token.isCancelled()) throw const ExportException(.cancelled);
   }
 
-  static Future<List<ExportDoc>> previewDocs(
+  Future<List<ExportDoc>> previewDocs(
     List<Diary> diaries, {
     required bool includePosition,
   }) async {
     final categories = await _categoryNames(diaries);
-    final tags = await getIt<TagRepository>().getTagsByIds(
+    final tags = await _tags.getTagsByIds(
       diaries.expand((diary) => diary.tagIds),
     );
     final places = await _places(diaries);
@@ -245,13 +270,13 @@ class ExportService {
     return media == null ? doc : media.apply(doc);
   }
 
-  static Future<Map<String, String>> _categoryNames(List<Diary> diaries) async {
+  Future<Map<String, String>> _categoryNames(List<Diary> diaries) async {
     final ids = diaries
         .map((d) => d.categoryId)
         .whereType<String>()
         .where((id) => id.isNotEmpty)
         .toSet();
-    final repository = getIt<CategoryRepository>();
+    final repository = _categories;
     final names = <String, String>{};
     for (final id in ids) {
       final category = await repository.getCategoryById(id);
@@ -262,10 +287,10 @@ class ExportService {
     return names;
   }
 
-  static Future<Map<String, Place>> _places(List<Diary> diaries) async {
+  Future<Map<String, Place>> _places(List<Diary> diaries) async {
     final ids = diaries.map((d) => d.placeId).whereType<String>().toSet();
     if (ids.isEmpty) return const {};
-    final all = await getIt<PlaceRepository>().getAllPlaces();
+    final all = await _placeRepository.getAllPlaces();
     return {
       for (final p in all)
         if (ids.contains(p.id)) p.id: p,
@@ -471,6 +496,7 @@ class ExportService {
   }
 
   static Future<String> _writeImage(
+    MoodPalette palette,
     List<ExportDoc> docs,
     ExportSettings settings,
     Directory workDir,
@@ -486,6 +512,7 @@ class ExportService {
     Future<String> compose(List<ExportDoc> group, String name) async {
       final path = p.join(outDir.path, name);
       final result = await ImageComposer.composeToFile(
+        palette: palette,
         docs: group,
         common: settings.common,
         options: settings.image,

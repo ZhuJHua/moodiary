@@ -1,19 +1,13 @@
 import 'package:flutter/widgets.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-typedef DiaryShareEntry = Future<void> Function(
+part 'diary_share.g.dart';
+
+typedef DiaryShareHandler = Future<void> Function(
   BuildContext context,
   String diaryId,
 );
 
-abstract final class DiaryShare {
-  static DiaryShareEntry? _handler;
-
-  static void register(DiaryShareEntry handler) => _handler = handler;
-
-  static bool get isRegistered => _handler != null;
-
-  static Future<void> open(BuildContext context, String diaryId) async {
-    assert(_handler != null, 'DiaryShare.register() 没被调用：组合根漏挂了分享入口');
-    await _handler?.call(context, diaryId);
-  }
-}
+@Riverpod(keepAlive: true)
+DiaryShareHandler diaryShareHandler(Ref ref) =>
+    throw UnimplementedError('diaryShareHandlerProvider must be overridden');

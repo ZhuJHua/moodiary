@@ -3,25 +3,25 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
-class StressTestTile extends StatefulWidget {
+class StressTestTile extends ConsumerStatefulWidget {
   final bool isFirst;
   final bool isLast;
 
   const StressTestTile({super.key, this.isFirst = false, this.isLast = false});
 
   @override
-  State<StressTestTile> createState() => _StressTestTileState();
+  ConsumerState<StressTestTile> createState() => _StressTestTileState();
 }
 
-class _StressTestTileState extends State<StressTestTile> {
+class _StressTestTileState extends ConsumerState<StressTestTile> {
   static const _prefix = '『压测』';
   static const _defaultTotal = 10000;
   static const _minTotal = 2;
@@ -99,8 +99,9 @@ class _StressTestTileState extends State<StressTestTile> {
     final base = DateTime.now().microsecondsSinceEpoch;
     final now = DateTime.now();
     String idFor(int i) => 'stress-$base-$i';
-    final progress = ValueNotifier<double>(0);
-    _showProgress(progress, l10n.app.stressGenerating, total);
+    final repository = ref.read(diaryRepositoryProvider);
+    final progress = StreamController<double>();
+    _showProgress(progress.stream, l10n.app.stressGenerating, total);
     var ok = true;
     try {
       for (var start = 0; start < total; start += _chunk) {
@@ -109,8 +110,8 @@ class _StressTestTileState extends State<StressTestTile> {
           for (var i = start; i < end; i++)
             _makeDiary(i, total, idFor, rng, now),
         ];
-        await getIt<DiaryRepository>().insertDiaries(batch);
-        progress.value = end / total;
+        await repository.insertDiaries(batch);
+        progress.add(end / total);
         await Future<void>.delayed(.zero); // 让进度条刷新
       }
     } catch (e, s) {
@@ -119,7 +120,7 @@ class _StressTestTileState extends State<StressTestTile> {
       if (mounted) toast.error(message: l10n.app.stressGenerateFailed);
     } finally {
       _dismissProgress();
-      progress.dispose();
+      unawaited(progress.close());
       if (mounted) setState(() => _busy = false);
     }
     if (ok && mounted) {
@@ -179,10 +180,11 @@ class _StressTestTileState extends State<StressTestTile> {
 
   Future<void> _clear() async {
     setState(() => _busy = true);
-    final progress = ValueNotifier<double>(0);
+    final repository = ref.read(diaryRepositoryProvider);
+    final progress = StreamController<double>();
     var count = 0;
     try {
-      final all = await getIt<DiaryRepository>().getAllDiaries();
+      final all = await repository.getAllDiaries();
       final ids = [
         for (final d in all)
           if (d.title.startsWith(_prefix)) d.id,
@@ -192,13 +194,11 @@ class _StressTestTileState extends State<StressTestTile> {
         if (mounted) toast.info(message: l10n.app.stressEmpty);
         return;
       }
-      _showProgress(progress, l10n.app.stressClearing, ids.length);
+      _showProgress(progress.stream, l10n.app.stressClearing, ids.length);
       for (var start = 0; start < ids.length; start += _chunk) {
         final end = min(start + _chunk, ids.length);
-        await getIt<DiaryRepository>().deleteDiariesByIds(
-          ids.sublist(start, end),
-        );
-        progress.value = end / ids.length;
+        await repository.deleteDiariesByIds(ids.sublist(start, end));
+        progress.add(end / ids.length);
         await Future<void>.delayed(.zero);
       }
     } catch (e, s) {
@@ -207,7 +207,7 @@ class _StressTestTileState extends State<StressTestTile> {
       return;
     } finally {
       _dismissProgress();
-      progress.dispose();
+      unawaited(progress.close());
       if (mounted) setState(() => _busy = false);
     }
     if (mounted && count > 0) {
@@ -215,7 +215,7 @@ class _StressTestTileState extends State<StressTestTile> {
     }
   }
 
-  void _showProgress(ValueNotifier<double> progress, String title, int total) {
+  void _showProgress(Stream<double> progress, String title, int total) {
     unawaited(
       showDialog<void>(
         context: context,
@@ -224,18 +224,24 @@ class _StressTestTileState extends State<StressTestTile> {
           _progressCtx = ctx;
           return AlertDialog(
             title: Text(title),
-            content: ValueListenableBuilder<double>(
-              valueListenable: progress,
-              builder: (_, v, _) => Column(
-                mainAxisSize: .min,
-                children: [
-                  LinearProgressIndicator(value: v == 0 ? null : v),
-                  const SizedBox(height: 12),
-                  Text(
-                    '${(v * 100).round()}%  (${(v * total).round()}/$total)',
-                  ),
-                ],
-              ),
+            content: StreamBuilder<double>(
+              stream: progress,
+              initialData: 0,
+              builder: (_, snapshot) {
+                final fraction = snapshot.requireData;
+                return Column(
+                  mainAxisSize: .min,
+                  children: [
+                    LinearProgressIndicator(
+                      value: fraction == 0 ? null : fraction,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '${(fraction * 100).round()}%  (${(fraction * total).round()}/$total)',
+                    ),
+                  ],
+                );
+              },
             ),
           );
         },

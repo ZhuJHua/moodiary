@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
@@ -12,7 +11,9 @@ part 'storage_controller.g.dart';
 
 @riverpod
 Stream<StorageReport> storageReport(Ref ref) async* {
-  final used = await getIt<DiaryRepository>().collectReferencedMedia();
+  final used = await ref
+      .watch(diaryRepositoryProvider)
+      .collectReferencedMedia();
   if (!ref.mounted) return;
   yield* StorageScanner().scan(
     StorageScanInput(
@@ -67,15 +68,6 @@ class StorageDisplayController extends _$StorageDisplayController {
       error: state.error,
     );
   }
-}
-
-@riverpod
-bool storageSyncBusy(Ref ref) {
-  final runner = getIt<SyncRunner>();
-  void changed() => ref.invalidateSelf();
-  runner.status.addListener(changed);
-  ref.onDispose(() => runner.status.removeListener(changed));
-  return ref.watch(syncControllerProvider) is SyncRunning || runner.isRunning;
 }
 
 enum ReclaimSafety { safe, careful }
@@ -171,6 +163,7 @@ class StorageSelection extends _$StorageSelection {
         !ref.read(storageDisplayControllerProvider).canClean) {
       return 0;
     }
+    final guard = ref.read(syncOperationGuardProvider);
     final selected = List<Reclaimable>.unmodifiable(confirmed);
     // Immutable candidate lists are captured before any await or refresh.
     state = state.copyWith(cleaning: true);
@@ -182,9 +175,7 @@ class StorageSelection extends _$StorageSelection {
             ref.mounted &&
             ref.read(storageDisplayControllerProvider).canClean &&
             item.available &&
-            item.candidates != null &&
-            (!(item.kind == .cache || item.kind == .unusedMedia) ||
-                !ref.read(storageSyncBusyProvider));
+            item.candidates != null;
         if (!allowed()) continue;
         Future<int> delete() async {
           // Revalidate after waiting for an export/import/sync to release the lock.
@@ -200,16 +191,21 @@ class StorageSelection extends _$StorageSelection {
             .cache => await AppFiles.clearCache(
               filePaths: item.candidates!.files.map((f) => f.path).toSet(),
             ),
-            .unusedMedia => await _deleteUnusedMedia(item.candidates!.files),
+            .unusedMedia => await _deleteUnusedMedia(
+              ref.read(diaryRepositoryProvider),
+              item.candidates!.files,
+            ),
             .legacyBackup => await LegacyBackups().delete(
               filePaths: item.candidates!.files.map((f) => f.path).toSet(),
             ),
           };
         }
 
-        freed += item.kind == .cache || item.kind == .unusedMedia
-            ? await runMediaExclusive(delete)
-            : await delete();
+        if (item.kind == .cache || item.kind == .unusedMedia) {
+          freed += await guard.tryRun(() => runMediaExclusive(delete)) ?? 0;
+        } else {
+          freed += await delete();
+        }
       }
       return freed;
     } finally {
@@ -260,10 +256,13 @@ Future<int> _deleteFiles(
   return freed;
 }
 
-Future<int> _deleteUnusedMedia(List<StorageCandidate> files) async {
+Future<int> _deleteUnusedMedia(
+  DiaryRepository repository,
+  List<StorageCandidate> files,
+) async {
   // Sync or an editor may have started using a file since the displayed scan.
   final fresh = StorageScanInput(
-    referencedMedia: await getIt<DiaryRepository>().collectReferencedMedia(),
+    referencedMedia: await repository.collectReferencedMedia(),
   );
   return _deleteFiles(
     files,

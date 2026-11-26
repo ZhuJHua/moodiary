@@ -15,34 +15,44 @@ mixin LoadMoreMixin<T> on AnyNotifier<AsyncValue<List<T>>, List<T>> {
   void markMissedEvent() => _missedEvent = true;
 
   Future<List<T>> init({bool refreshFirst = false}) async {
+    final operationRef = ref;
     if (refreshFirst) {
       await refresh();
     } else {
       await _load();
     }
+    if (!operationRef.mounted) return <T>[];
     if (_missedEvent) {
       _missedEvent = false;
       await refresh();
+      if (!operationRef.mounted) return <T>[];
     }
     return state.value ?? <T>[];
   }
 
   Future<void> _load({int offset = 0, bool refresh = false}) async {
+    final operationRef = ref;
     final epoch = _epoch;
     try {
       if (offset > 0) {
         state = const .loading();
       }
       final items = await load(limit: pageSize, offset: offset);
-      if (epoch != _epoch) return;
-      final current = refresh ? <T>[] : (state.value ?? <T>[]);
+      if (!operationRef.mounted || epoch != _epoch) return;
+      final existing = state.value;
+      if (!operationRef.mounted || epoch != _epoch) return;
+      final current = refresh ? <T>[] : (existing ?? <T>[]);
       final updated = [...current, ...?items];
       _noMore = items == null || items.length < pageSize;
       if (offset > 0 || refresh || current.isEmpty) {
         state = .data(updated);
       }
     } catch (e) {
-      if (epoch != _epoch) return;
+      if (!operationRef.mounted || epoch != _epoch) return;
+      if (offset > 0) {
+        final _ = state;
+        if (!operationRef.mounted || epoch != _epoch) return;
+      }
       if (offset == 0) {
         rethrow;
       } else {
@@ -58,10 +68,11 @@ mixin LoadMoreMixin<T> on AnyNotifier<AsyncValue<List<T>>, List<T>> {
   }
 
   Future<bool> loadMore() async {
+    final operationRef = ref;
     if (!_noMore && !state.isLoading) {
       await _load(offset: _offset);
     }
-    return !_noMore;
+    return operationRef.mounted && !_noMore;
   }
 
   @visibleForOverriding

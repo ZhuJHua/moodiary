@@ -1,11 +1,10 @@
 import 'dart:io';
 
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'media_controller.g.dart';
@@ -17,18 +16,19 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
 
   @override
   FutureOr<List<MediaItem>> build({required MediaType type}) async {
-    final sub = getIt<DiaryRepository>().diaryEvents.listen(_applyChange);
+    final sub = ref
+        .watch(diaryRepositoryProvider)
+        .diaryEvents
+        .listen(_applyChange);
     ref.onDispose(sub.cancel);
-    return init();
+    return init(refreshFirst: true);
   }
 
   @override
   Future<Iterable<MediaItem>?> load({required int limit, required int offset}) {
-    return getIt<DiaryRepository>().getMediaItems(
-      type: type,
-      offset: offset,
-      limit: limit,
-    );
+    return ref
+        .read(diaryRepositoryProvider)
+        .getMediaItems(type: type, offset: offset, limit: limit);
   }
 
   List<String> _namesOf(Diary d) => switch (type) {
@@ -39,9 +39,11 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
   };
 
   Future<void> rename(String fileName, String name) async {
+    final operationRef = ref;
     try {
-      await getIt<DiaryRepository>().renameMedia(type, fileName, name);
+      await ref.read(diaryRepositoryProvider).renameMedia(type, fileName, name);
     } catch (e, s) {
+      if (!operationRef.mounted) return;
       logger.e('rename media failed: $fileName', error: e, stackTrace: s);
     }
   }

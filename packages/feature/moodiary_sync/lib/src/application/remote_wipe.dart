@@ -9,6 +9,9 @@ import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 import 'package:pool/pool.dart';
 
+import '../data/sync_logger.dart';
+import 'sync_operation_guard.dart';
+
 class RemoteWipeReport {
   final int deleted;
   final int failed;
@@ -25,10 +28,13 @@ abstract final class RemoteWipe {
 
   static Future<RemoteWipeReport> run(
     IRemoteSyncBackend backend, {
+    required SyncOperation operation,
+    required SyncLogger logger,
     required String? passphrase,
     Set<String> configured = const {},
     ReCipherProgress? onProgress,
   }) async {
+    operation.checkActive();
     final key = passphrase == null ? null : await _newKey(passphrase);
     return IncrementalSyncEngine.runExclusive(
       () => RemoteLease.protect(backend, () async {
@@ -40,7 +46,7 @@ abstract final class RemoteWipe {
           SyncKeyManager.markKeyConflict(backend.persistentBackendId);
           rethrow;
         }
-      }),
+      }, logger: logger),
     );
   }
 

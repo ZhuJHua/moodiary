@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show listEquals;
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -15,6 +14,8 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
+
+import 'sync_operation_guard.dart';
 
 class ReCipherReport {
   final int diaryCount;
@@ -58,19 +59,20 @@ class CloudReCipher {
 
   static int _seq = 0;
 
-  CloudReCipher(this.backend, {SyncLogger? logger})
-    : _logger = logger ?? getIt<SyncLogger>();
+  CloudReCipher(this.backend, this._logger);
 
   Map<String, Object?> _backendPayload() => {
     'backend': backend.displayName,
     'backendId': backend.persistentBackendId ?? 'transient',
   };
 
-  Future<ReCipherReport?> run({
+  Future<ReCipherReport?> run(
+    SyncOperation operation, {
     required SyncCipher from,
     required SyncCipher to,
     ReCipherProgress? onProgress,
   }) {
+    operation.checkActive();
     return IncrementalSyncEngine.runExclusive(
       () => RemoteLease.protect(backend, () async {
         try {

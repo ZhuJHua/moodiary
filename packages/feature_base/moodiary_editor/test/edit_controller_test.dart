@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/src/application/edit_controller.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
@@ -90,14 +89,14 @@ void main() {
 
   setUp(() {
     repository = _Repository();
-    getIt.registerSingleton<DiaryRepository>(repository);
-    container = ProviderContainer();
+    container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [diaryRepositoryProvider.overrideWithValue(repository)],
+    );
   });
 
   tearDown(() async {
-    container.dispose();
     await repository.events.close();
-    await getIt.reset();
   });
 
   Future<EditControllerProvider> open({bool existing = true}) async {

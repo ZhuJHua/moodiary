@@ -1,9 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-@lazySingleton
 class MemoryRepository {
   MemoryRepository(this._db);
 

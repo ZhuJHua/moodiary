@@ -1,6 +1,5 @@
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 class ModelOption {
@@ -29,8 +28,10 @@ typedef ResolvedModel = ({
   LlmModelPreset? preset,
 });
 
-abstract final class ModelResolver {
-  static ResolvedModel resolve(LlmProvider provider, [String modelId = '']) {
+class ModelResolver {
+  ModelResolver(this._presets);
+  final LlmPresetRepository _presets;
+  ResolvedModel resolve(LlmProvider provider, [String modelId = '']) {
     final id = modelId.isEmpty ? provider.defaultModel : modelId;
     final preset = provider.isPreset ? _presetModel(provider, id) : null;
     return (
@@ -41,7 +42,7 @@ abstract final class ModelResolver {
     );
   }
 
-  static List<ModelOption> optionsFor(LlmProvider provider) {
+  List<ModelOption> optionsFor(LlmProvider provider) {
     if (!provider.isPreset) {
       final ids = <String>{...provider.models};
       if (provider.defaultModel.isNotEmpty) ids.add(provider.defaultModel);
@@ -53,7 +54,7 @@ abstract final class ModelResolver {
           ModelOption(id: id, label: id, preset: null, levels: levels),
       ];
     }
-    for (final preset in getIt<LlmPresetRepository>().cachedPresets()) {
+    for (final preset in _presets.cachedPresets()) {
       if (preset.id != provider.presetId) continue;
       return [
         for (final m in preset.models)
@@ -68,14 +69,14 @@ abstract final class ModelResolver {
     return const [];
   }
 
-  static List<String> levelsFor(LlmProvider provider, String modelId) {
+  List<String> levelsFor(LlmProvider provider, String modelId) {
     final preset = resolve(provider, modelId).preset;
     if (preset != null) return reasoningLevelsFor(preset);
     return provider.reasoning ? customReasoningLevels : const [];
   }
 
-  static LlmModelPreset? _presetModel(LlmProvider provider, String modelId) {
-    for (final preset in getIt<LlmPresetRepository>().cachedPresets()) {
+  LlmModelPreset? _presetModel(LlmProvider provider, String modelId) {
+    for (final preset in _presets.cachedPresets()) {
       if (preset.id != provider.presetId) continue;
       for (final model in preset.models) {
         if (model.id == modelId) return model;

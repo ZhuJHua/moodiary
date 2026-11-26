@@ -2,8 +2,8 @@
 
 import 'dart:ui' show CheckedState;
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/src/presentation/toolbar_setting_page.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -11,8 +11,10 @@ import 'package:moodiary_storage/testing.dart';
 import 'package:mui/mui.dart';
 
 void main() {
-  setUp(() => getIt.registerSingleton<IKVStorage>(MemoryKVStorage()));
-  tearDown(getIt.reset);
+  setUp(() {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+  });
 
   testWidgets('tool row exposes checked semantics only in removal mode', (
     tester,
@@ -20,16 +22,19 @@ void main() {
     final semantics = tester.ensureSemantics();
     try {
       await tester.pumpWidget(
-        TranslationProvider(
-          child: MaterialApp(
-            theme: buildMuiTheme(brightness: .light),
-            localizationsDelegates: const [
-              ...GlobalMaterialLocalizations.delegates,
-              GlobalMuiLocalizations.delegate,
-            ],
-            builder: (context, child) =>
-                MaterialUiCompatibilityBridge(child: child!),
-            home: const ToolbarSettingPage(),
+        ProviderScope(
+          retry: (_, _) => null,
+          child: TranslationProvider(
+            child: MaterialApp(
+              theme: buildMuiTheme(brightness: .light),
+              localizationsDelegates: const [
+                ...GlobalMaterialLocalizations.delegates,
+                GlobalMuiLocalizations.delegate,
+              ],
+              builder: (context, child) =>
+                  MaterialUiCompatibilityBridge(child: child!),
+              home: const ToolbarSettingPage(),
+            ),
           ),
         ),
       );

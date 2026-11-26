@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -7,26 +6,31 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 class VersionMigrator {
-  static Future<void> run() async {
+  static Future<void> run({IKVStorage? storage}) async {
     if (MmkvKVStorage.legacyMigrationPending) return;
     final packageInfo = await AppInfo.getPackageInfo();
     await apply(
+      storage: storage,
       currentVersion: '${packageInfo.version}+${packageInfo.buildNumber}',
     );
   }
 
   @visibleForTesting
-  static Future<void> apply({required String currentVersion}) async {
-    final appVersion = MoodiaryKVs.appVersion.get();
+  static Future<void> apply({
+    required String currentVersion,
+    IKVStorage? storage,
+  }) async {
+    final kv = storage ?? KVStore.instance;
+    final appVersion = kv.get<String>(MoodiaryKVs.appVersion.name);
     if (appVersion != null) {
-      await merge(lastAppVersion: appVersion);
+      await merge(lastAppVersion: appVersion, storage: kv);
     }
     if (appVersion == null) {
-      MoodiaryKVs.searchIndexBackfilled.set(true);
-      MoodiaryKVs.contentSchemaV2.set(true);
+      kv.set(MoodiaryKVs.searchIndexBackfilled.name, true);
+      kv.set(MoodiaryKVs.contentSchemaV2.name, true);
     }
     if (kDebugMode || appVersion == null || appVersion != currentVersion) {
-      MoodiaryKVs.appVersion.set(currentVersion);
+      kv.set(MoodiaryKVs.appVersion.name, currentVersion);
     }
   }
 
@@ -37,7 +41,11 @@ class VersionMigrator {
     return normalized < Version.parse(gate);
   }
 
-  static Future<void> merge({required String lastAppVersion}) async {
+  static Future<void> merge({
+    required String lastAppVersion,
+    IKVStorage? storage,
+  }) async {
+    late final kv = storage ?? KVStore.instance;
     bool below(String version) => versionBelow(lastAppVersion, version);
 
     if (below('2.6.3')) {
@@ -45,24 +53,27 @@ class VersionMigrator {
     }
 
     if (below('2.7.3')) {
-      MoodiaryKVs.customFont.set('');
+      kv.set(MoodiaryKVs.customFont.name, '');
     }
 
     if (below('2.8.0')) {
-      MoodiaryKVs.autoSync.set(false);
+      kv.set(MoodiaryKVs.autoSync.name, false);
     }
 
-    if (below('2.8.2') && MoodiaryKVs.assistantReasoningEffort.get() == '') {
-      MoodiaryKVs.assistantReasoningEffort.set('none');
+    if (below('2.8.2') &&
+        (kv.get<String>(MoodiaryKVs.assistantReasoningEffort.name) ??
+                MoodiaryKVs.assistantReasoningEffort.defaultValue) ==
+            '') {
+      kv.set(MoodiaryKVs.assistantReasoningEffort.name, 'none');
     }
 
     if (below('2.9.1')) {
-      await _purgeMoodLlmModel();
+      await _purgeMoodLlmModel(storage);
     }
   }
 }
 
-Future<void> _purgeMoodLlmModel() async {
+Future<void> _purgeMoodLlmModel(IKVStorage? storage) async {
   for (final name in const [
     'qwen3-0.6b-int8.onnx',
     'qwen3-0.6b-int8.tokenizer.json',
@@ -76,7 +87,7 @@ Future<void> _purgeMoodLlmModel() async {
     }
   }
   try {
-    getIt<IKVStorage>().remove('moodLlmModelId');
+    (storage ?? KVStore.instance).remove('moodLlmModelId');
   } catch (e, s) {
     logger.e('remove mood model key failed', error: e, stackTrace: s);
   }

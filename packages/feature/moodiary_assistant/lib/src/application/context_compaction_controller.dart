@@ -1,12 +1,14 @@
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 typedef CompactionMessage = ({String id, bool fromUser, String text});
 
 class ContextCompactionController {
+  ContextCompactionController(this._service, this._resolver);
+  final AssistantService _service;
+  final ModelResolver _resolver;
   final Set<String> _inFlight = <String>{};
 
   Future<ChatSession?> maybeCompact({
@@ -104,7 +106,7 @@ class ContextCompactionController {
       ),
     );
 
-    final route = ModelResolver.resolve(provider, model);
+    final route = _resolver.resolve(provider, model);
     final request = AssistantChatRequest(
       type: route.protocol,
       baseUrl: route.baseUrl,
@@ -117,7 +119,7 @@ class ContextCompactionController {
     );
 
     final buffer = StringBuffer();
-    await for (final event in getIt<AssistantService>().chat(request)) {
+    await for (final event in _service.chat(request)) {
       if (event.kind == .text) buffer.write(event.text);
     }
     return buffer.toString();

@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/search_controller.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
@@ -12,6 +11,7 @@ void main() {
 
   setUp(() async {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
     await db.customStatement('PRAGMA foreign_keys = ON');
     final repository = DiaryRepository(db);
     final tag = Tag.legacy('Travel');
@@ -30,14 +30,10 @@ void main() {
           type: .tiptap,
         ),
     ]);
-    getIt.registerSingleton<DiaryRepository>(repository);
-    container = ProviderContainer();
-  });
-
-  tearDown(() async {
-    container.dispose();
-    await getIt.reset();
-    await db.close();
+    container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [diaryRepositoryProvider.overrideWithValue(repository)],
+    );
   });
 
   test('换查询会作废在途的 loadMore，不会把分页卡死', () async {

@@ -24,7 +24,10 @@ final class MemoryKVStorage extends IKVStorage {
   }
 
   @override
-  void clear() => data.clear();
+  void clear() {
+    data.clear();
+    super.clear();
+  }
 }
 
 final class MemorySecureKVStorage implements ISecureKVStorage {

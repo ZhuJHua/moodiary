@@ -2,14 +2,12 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'assistant_tools.dart';
 
-@lazySingleton
 class ChatRepository {
   ChatRepository(this._db);
 
@@ -18,6 +16,8 @@ class ChatRepository {
   static const int _inChunk = 5000;
 
   final StreamController<void> _events = StreamController<void>.broadcast();
+
+  Future<void> dispose() => _events.close();
 
   Stream<void> get sessionEvents => _events.stream;
 
@@ -167,12 +167,12 @@ class ChatRepository {
     await _db
         .into(_db.chatSessions)
         .insertOnConflictUpdate(_toSessionCompanion(session));
-    _events.add(null);
+    if (!_events.isClosed) _events.add(null);
   }
 
   Future<void> deleteSession(String id) async {
     await (_db.delete(_db.chatSessions)..where((s) => s.id.equals(id))).go();
-    _events.add(null);
+    if (!_events.isClosed) _events.add(null);
   }
 
   Future<void> deleteMessage(String id) async {
@@ -207,6 +207,6 @@ class ChatRepository {
             .write(ChatSessionsCompanion(updatedAt: Value(updatedAt)));
       }
     });
-    _events.add(null);
+    if (!_events.isClosed) _events.add(null);
   }
 }

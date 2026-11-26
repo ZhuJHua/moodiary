@@ -3,12 +3,11 @@ import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
+import 'package:flutter/painting.dart';
 import 'package:gal/gal.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 import 'package:path/path.dart';
 
 import 'mime_sniff.dart';
@@ -18,11 +17,12 @@ class MediaManager {
 
   static Future<Map<String, String>> saveImages({
     required List<XFile> imageFileList,
+    IHeifDecoder? decoder,
   }) async {
     final imageNameMap = <String, String>{};
     await Future.wait(
       imageFileList.map((imageFile) async {
-        final name = await saveImage(imageFile);
+        final name = await saveImage(imageFile, decoder: decoder);
         if (name != null) imageNameMap[imageFile.path] = name;
       }),
     );
@@ -31,6 +31,7 @@ class MediaManager {
 
   static Future<String?> saveImage(
     XFile imageFile, {
+    IHeifDecoder? decoder,
     bool reuseExisting = true,
   }) async {
     final srcName = basename(imageFile.path);
@@ -42,9 +43,12 @@ class MediaManager {
       final mime = await sniffFileMime(imageFile.path);
       final String name;
       if (mime == 'image/heic' || mime == 'image/heif') {
+        if (decoder == null) {
+          throw StateError('IHeifDecoder is required to convert HEIC/HEIF');
+        }
         name = 'image-${uuidV7()}.jpg';
         MediaHolds.add(.image, name);
-        final out = await getIt<IHeifDecoder>().convert(
+        final out = await decoder.convert(
           imageFile.path,
           outputPath: AppFiles.getRealPath('image', name),
         );

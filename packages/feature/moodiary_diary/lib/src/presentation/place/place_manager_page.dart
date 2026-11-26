@@ -181,13 +181,13 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
   }
 
   Future<void> _onAddPlace() async {
-    final saved = await showPlaceEditor(context);
+    final saved = await showPlaceEditor(context, ref);
     if (saved == null || !mounted) return;
     toast.success(message: l10n.diary.placeCreated(name: saved.name));
   }
 
   Future<void> _onEditPlace(Place place) async {
-    final saved = await showPlaceEditor(context, existing: place);
+    final saved = await showPlaceEditor(context, ref, existing: place);
     if (saved == null || !mounted) return;
     toast.success(message: l10n.diary.placeSaved);
   }

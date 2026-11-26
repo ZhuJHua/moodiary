@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:injectable/injectable.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_editor/src/data/geo_repository.dart';
 import 'package:moodiary_editor/src/data/model/weather.dart';
@@ -10,7 +9,6 @@ import 'package:mui/mui.dart';
 
 typedef WeatherResult = ({DiaryWeather? weather, GeoFailure? failure});
 
-@lazySingleton
 class WeatherRepository {
   WeatherRepository(this._http);
 

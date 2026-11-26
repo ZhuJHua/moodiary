@@ -1,17 +1,18 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
-class AppLockTile extends StatefulWidget {
+class AppLockTile extends ConsumerStatefulWidget {
   const AppLockTile({super.key});
 
   @override
-  State<AppLockTile> createState() => _AppLockTileState();
+  ConsumerState<AppLockTile> createState() => _AppLockTileState();
 }
 
-class _AppLockTileState extends State<AppLockTile> {
+class _AppLockTileState extends ConsumerState<AppLockTile> {
   late final Future<IconData?> _bioIcon = () async {
     final (supported, icon) = await (
       BiometricAuth.canCheckBiometrics(),
@@ -33,6 +34,7 @@ class _AppLockTileState extends State<AppLockTile> {
 
   Future<void> _disable() async {
     await AppLockPin.clear();
+    if (mounted) ref.invalidate(appLockEnabledProvider);
     MoodiaryKVs.supportBiometrics.set(false);
     MoodiaryKVs.lockNow.set(false);
     toast.success(message: l10n.lock.turnedOff);
@@ -61,79 +63,74 @@ class _AppLockTileState extends State<AppLockTile> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: AppLockPin.enabled,
-      builder: (context, lock, _) {
-        return FutureBuilder<IconData?>(
-          future: _bioIcon,
-          builder: (context, snapshot) {
-            final rows = <Widget>[
-              SettingSwitchListTile(
-                title: context.l10n.lock.title,
-                subtitle: context.l10n.lock.subtitle,
-                secondary: const Icon(LucideIcons.lock),
-                value: lock,
-                onChanged: _toggleLock,
+    final lock = ref.watch(appLockEnabledProvider);
+    return FutureBuilder<IconData?>(
+      future: _bioIcon,
+      builder: (context, snapshot) {
+        final rows = <Widget>[
+          SettingSwitchListTile(
+            title: context.l10n.lock.title,
+            subtitle: context.l10n.lock.subtitle,
+            secondary: const Icon(LucideIcons.lock),
+            value: lock,
+            onChanged: _toggleLock,
+          ),
+          if (lock) ...[
+            SettingListTile(
+              title: context.l10n.lock.changePassword,
+              leading: const Icon(LucideIcons.keyRound),
+              onTap: _changePassword,
+            ),
+            ValueListenableBuilder(
+              valueListenable: MoodiaryKVs.lockNow.getNotifier(),
+              builder: (context, lockNow, _) {
+                return SettingSwitchListTile(
+                  title: context.l10n.lock.lockNow,
+                  subtitle: context.l10n.lock.lockNowSubtitle,
+                  secondary: const Icon(LucideIcons.lockKeyhole),
+                  value: lockNow,
+                  onChanged: (v) => MoodiaryKVs.lockNow.set(v),
+                );
+              },
+            ),
+            if (snapshot.data case final icon?)
+              ValueListenableBuilder(
+                valueListenable: MoodiaryKVs.supportBiometrics.getNotifier(),
+                builder: (context, bio, _) {
+                  return SettingSwitchListTile(
+                    title: context.l10n.lock.biometric,
+                    subtitle: context.l10n.lock.biometricSubtitle,
+                    secondary: Icon(icon),
+                    value: bio,
+                    onChanged: _toggleBiometric,
+                  );
+                },
               ),
-              if (lock) ...[
-                SettingListTile(
-                  title: context.l10n.lock.changePassword,
-                  leading: const Icon(LucideIcons.keyRound),
-                  onTap: _changePassword,
-                ),
-                ValueListenableBuilder(
-                  valueListenable: MoodiaryKVs.lockNow.getNotifier(),
-                  builder: (context, lockNow, _) {
-                    return SettingSwitchListTile(
-                      title: context.l10n.lock.lockNow,
-                      subtitle: context.l10n.lock.lockNowSubtitle,
-                      secondary: const Icon(LucideIcons.lockKeyhole),
-                      value: lockNow,
-                      onChanged: (v) => MoodiaryKVs.lockNow.set(v),
-                    );
-                  },
-                ),
-                if (snapshot.data case final icon?)
-                  ValueListenableBuilder(
-                    valueListenable: MoodiaryKVs.supportBiometrics
-                        .getNotifier(),
-                    builder: (context, bio, _) {
-                      return SettingSwitchListTile(
-                        title: context.l10n.lock.biometric,
-                        subtitle: context.l10n.lock.biometricSubtitle,
-                        secondary: Icon(icon),
-                        value: bio,
-                        onChanged: _toggleBiometric,
-                      );
-                    },
-                  ),
-              ],
-            ];
-            return Column(
-              children: [
-                for (var i = 0; i < rows.length; i++) ...[
-                  if (i > 0) const MSettingDivider(),
-                  rows[i],
-                ],
-              ],
-            );
-          },
+          ],
+        ];
+        return Column(
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              if (i > 0) const MSettingDivider(),
+              rows[i],
+            ],
+          ],
         );
       },
     );
   }
 }
 
-class _SetPasswordSheet extends StatefulWidget {
+class _SetPasswordSheet extends ConsumerStatefulWidget {
   final bool change;
 
   const _SetPasswordSheet({this.change = false});
 
   @override
-  State<_SetPasswordSheet> createState() => _SetPasswordSheetState();
+  ConsumerState<_SetPasswordSheet> createState() => _SetPasswordSheetState();
 }
 
-class _SetPasswordSheetState extends State<_SetPasswordSheet> {
+class _SetPasswordSheetState extends ConsumerState<_SetPasswordSheet> {
   final _pad = LockPinPadController();
   String? _first;
   String? _error;
@@ -141,6 +138,7 @@ class _SetPasswordSheetState extends State<_SetPasswordSheet> {
   Future<bool> _save(String pin) async {
     try {
       await AppLockPin.set(pin);
+      if (mounted) ref.invalidate(appLockEnabledProvider);
       return true;
     } catch (e, s) {
       logger.e('访问密码：写入 PIN 失败', error: e, stackTrace: s);

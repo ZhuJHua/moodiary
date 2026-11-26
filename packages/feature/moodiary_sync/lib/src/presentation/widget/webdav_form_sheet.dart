@@ -1,10 +1,9 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_sync/src/data/model/sync_provider.dart';
-import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 
-class WebDavFormSheet extends StatefulWidget {
+class WebDavFormSheet extends ConsumerStatefulWidget {
   const WebDavFormSheet({
     super.key,
     required this.initial,
@@ -15,12 +14,10 @@ class WebDavFormSheet extends StatefulWidget {
   final bool configured;
 
   @override
-  State<WebDavFormSheet> createState() => _WebDavFormSheetState();
+  ConsumerState<WebDavFormSheet> createState() => _WebDavFormSheetState();
 
-  static Future<bool?> show(BuildContext context) async {
-    final backend = getIt<IRemoteSyncBackend>(
-      instanceName: SyncProviderIds.webdav,
-    );
+  static Future<bool?> show(BuildContext context, WidgetRef ref) async {
+    final backend = ref.read(syncBackendProvider(.webdav));
     final (initial, configured) = await (
       backend.savedOptions(),
       backend.isReady(),
@@ -33,14 +30,11 @@ class WebDavFormSheet extends StatefulWidget {
   }
 }
 
-class _WebDavFormSheetState extends State<WebDavFormSheet> {
+class _WebDavFormSheetState extends ConsumerState<WebDavFormSheet> {
   late final TextEditingController _urlCtl;
   late final TextEditingController _userCtl;
   late final TextEditingController _passCtl;
 
-  late final _backend = getIt<IRemoteSyncBackend>(
-    instanceName: SyncProviderIds.webdav,
-  );
   late final bool _configured = widget.configured;
   late final String? _savedHost;
 
@@ -93,11 +87,12 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
     if (_saving || !_validate()) return;
     setState(() => _saving = true);
     try {
-      await _backend.saveOptions([
-        _urlCtl.text.trim(),
-        _userCtl.text.trim(),
-        _passCtl.text,
-      ]);
+      if (!await ref.read(activeSyncProviderTypeProvider.notifier).saveOptions(
+        .webdav,
+        [_urlCtl.text.trim(), _userCtl.text.trim(), _passCtl.text],
+      )) {
+        return;
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -119,7 +114,11 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
     if (!confirmed || !mounted) return;
     setState(() => _saving = true);
     try {
-      await _backend.clearOptions();
+      if (!await ref
+          .read(activeSyncProviderTypeProvider.notifier)
+          .clearOptions(.webdav)) {
+        return;
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -132,6 +131,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final busy = _saving || ref.watch(syncOperationBusyProvider);
     final l10n = context.l10n;
     return MSheetScaffold<bool>(
       title: l10n.sync.backupSyncWebdav,
@@ -140,12 +140,12 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
           : l10n.sync.backupSyncWebdavNoOption,
       icon: LucideIcons.cloud,
       actions: [
-        MAction(label: l10n.common.cancel, value: false, enabled: !_saving),
+        MAction(label: l10n.common.cancel, value: false, enabled: !busy),
         MAction(
           label: l10n.common.save,
           isPrimary: true,
           busy: _saving,
-          enabled: !_saving,
+          enabled: !busy,
           onPressed: _save,
         ),
       ],
@@ -158,7 +158,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
             controller: _urlCtl,
             label: l10n.sync.webdavOptionServer,
             errorText: _urlError,
-            enabled: !_saving,
+            enabled: !busy,
             keyboardType: .url,
             textInputAction: .next,
           ),
@@ -166,20 +166,20 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
             controller: _userCtl,
             label: l10n.sync.webdavOptionUsername,
             errorText: _userError,
-            enabled: !_saving,
+            enabled: !busy,
             textInputAction: .next,
           ),
           MField(
             controller: _passCtl,
             label: l10n.sync.webdavOptionPassword,
-            enabled: !_saving,
+            enabled: !busy,
             obscureText: true,
             onSubmitted: (_) => _save(),
           ),
           if (_configured)
             MDangerRow(
               label: l10n.sync.configClear,
-              onPressed: _saving ? null : _clear,
+              onPressed: busy ? null : _clear,
             ),
         ],
       ),

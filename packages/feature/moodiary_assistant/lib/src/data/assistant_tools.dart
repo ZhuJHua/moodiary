@@ -1,8 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
@@ -23,8 +21,8 @@ class AssistantToolSpec {
   Map<String, dynamic> get jsonSchema =>
       definition.input(ToolSurface.assistant).value;
   bool get replayResult => tool == AssistantTool.recallMemory;
-  Future<String> run(Map<String, dynamic> input) async =>
-      jsonEncode((await definition.call(input, assistantToolContext())).data);
+  Future<String> run(Map<String, dynamic> input, ToolContext context) async =>
+      jsonEncode((await definition.call(input, context)).data);
 
   @visibleForTesting
   String summaryOf(Map<String, dynamic> input, String output) =>
@@ -123,10 +121,6 @@ abstract final class AssistantToolRegistry {
   static void prepare(AssistantToolCall call) {
     if (call.done) summaryOf(call);
   }
-
-  static bool get semanticAvailable =>
-      getIt.isRegistered<EmbedIndexService>() &&
-      getIt<EmbedIndexService>().enabled;
 
   static String recordOf(List<AssistantToolCall> calls) {
     final lines = <String>[];

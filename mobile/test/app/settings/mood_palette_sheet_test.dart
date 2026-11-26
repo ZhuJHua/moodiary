@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/mood_palette_sheet.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -10,8 +9,10 @@ import 'package:moodiary_storage/testing.dart';
 
 void main() {
   setUpAll(setupPluralResolvers);
-  setUp(() => getIt.registerSingleton<IKVStorage>(MemoryKVStorage()));
-  tearDown(getIt.reset);
+  setUp(() {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+  });
 
   for (final brightness in Brightness.values) {
     testWidgets(
@@ -22,6 +23,7 @@ void main() {
         MoodiaryKVs.moodPalette.set(MoodPalette.blueOrange.name);
         await tester.pumpWidget(
           ProviderScope(
+            retry: (_, _) => null,
             child: TranslationProvider(
               child: ValueListenableBuilder<MuiAccent>(
                 valueListenable: accent,

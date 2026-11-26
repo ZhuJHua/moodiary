@@ -1,4 +1,4 @@
-import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:mui/mui.dart';
 
 IconData mediaKindIcon(MediaKind? kind) => switch (kind) {

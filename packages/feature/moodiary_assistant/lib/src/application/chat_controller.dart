@@ -3,14 +3,12 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/data/chat_repository.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 
 class AssistantChatController extends ChangeNotifier {
-  AssistantChatController({this.repository});
+  AssistantChatController({required ChatRepository repository})
+    : _repo = repository;
 
-  final ChatRepository? repository;
-
-  ChatRepository get _repo => repository ?? getIt<ChatRepository>();
+  final ChatRepository _repo;
 
   final List<AssistantChatItem> _items = [];
 

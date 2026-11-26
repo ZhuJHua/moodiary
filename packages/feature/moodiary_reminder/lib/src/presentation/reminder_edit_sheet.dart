@@ -1,7 +1,9 @@
 import 'package:clock/clock.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
+import '../application/reminder_service.dart';
 import '../data/reminder.dart';
 import 'reminder_labels.dart';
 
@@ -11,16 +13,16 @@ class ReminderEditResult {
   final bool deleted;
 }
 
-class ReminderEditSheet extends StatefulWidget {
+class ReminderEditSheet extends ConsumerStatefulWidget {
   const ReminderEditSheet({super.key, required this.id, this.reminder});
   final int id;
   final Reminder? reminder;
 
   @override
-  State<ReminderEditSheet> createState() => _ReminderEditSheetState();
+  ConsumerState<ReminderEditSheet> createState() => _ReminderEditSheetState();
 }
 
-class _ReminderEditSheetState extends State<ReminderEditSheet> {
+class _ReminderEditSheetState extends ConsumerState<ReminderEditSheet> {
   late final _now = clock.now();
   late int _hour = widget.reminder?.hour ?? _now.hour;
   late int _minute = widget.reminder?.minute ?? _now.minute;
@@ -33,6 +35,18 @@ class _ReminderEditSheetState extends State<ReminderEditSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = context.theme;
+    final enabled =
+        widget.reminder == null ||
+        ref.watch(
+          reminderStateProvider.select(
+            (state) =>
+                state.reminders
+                    .where((reminder) => reminder.id == widget.id)
+                    .firstOrNull
+                    ?.enabled ??
+                widget.reminder!.enabled,
+          ),
+        );
     final time = formatReminderTime(_hour, _minute);
     return MSheetScaffold<ReminderEditResult>(
       icon: LucideIcons.alarmClock,
@@ -53,7 +67,7 @@ class _ReminderEditSheetState extends State<ReminderEditSheet> {
                 hour: _hour,
                 minute: _minute,
                 weekdays: _days,
-                enabled: widget.reminder?.enabled ?? true,
+                enabled: enabled,
               ),
             ),
           ),

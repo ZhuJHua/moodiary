@@ -10,6 +10,8 @@ environment:
   flutter: ">=3.47.0"
 
 dependencies:
+  riverpod_annotation: 4.0.7
+  flutter_riverpod: 3.4.3
   flutter:
     sdk: flutter
 
@@ -19,11 +21,12 @@ dependencies:
   moodiary_platform: 0.0.1
   moodiary_components: 0.0.1
   moodiary_router: 0.0.1
-  mui: 0.0.1
 
 
 dev_dependencies:
-  moodiary_di: 0.0.1
+  riverpod_generator: 4.0.9
+  build_runner: 2.16.1
+  mui: 0.0.1
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

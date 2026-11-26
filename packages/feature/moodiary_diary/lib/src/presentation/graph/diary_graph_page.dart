@@ -5,7 +5,6 @@ import 'package:fast_core/graph.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_canvas.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_info_card.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_scene.dart';
@@ -20,7 +19,7 @@ part 'diary_graph_page.g.dart';
 
 @riverpod
 Future<DiaryGraphData> diaryGraph(Ref ref) async {
-  final repo = getIt<DiaryRepository>();
+  final repo = ref.watch(diaryRepositoryProvider);
   Timer? debounce;
   final sub = repo.diaryEvents.listen((_) {
     debounce?.cancel();
@@ -301,7 +300,9 @@ class _GraphViewState extends ConsumerState<_GraphView> {
   }
 
   Future<void> _open(DiaryGraphNode n) async {
-    final diary = await getIt<DiaryRepository>().getDiaryByBusinessId(n.id);
+    final diary = await ref
+        .read(diaryRepositoryProvider)
+        .getDiaryByBusinessId(n.id);
     if (diary == null || !mounted) return;
     openDiaryDetail(context, diary);
   }

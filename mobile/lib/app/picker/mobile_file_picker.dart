@@ -1,10 +1,8 @@
 import 'package:file_picker/file_picker.dart' as fp;
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_files/moodiary_files.dart';
-import 'package:moodiary_picker/moodiary_picker.dart';
+import 'package:moodiary_mobile/app/picker/asset_picker.dart';
 import 'package:mui/mui.dart';
 
-@LazySingleton(as: IFilePicker)
 class MobileFilePicker implements IFilePicker {
   @override
   Future<List<XFile>> pickImages(BuildContext context, {int maxAssets = 9}) {

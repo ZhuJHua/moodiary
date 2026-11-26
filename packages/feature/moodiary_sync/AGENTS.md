@@ -26,6 +26,8 @@
 
 ## Locking and operation state
 
+- `SyncOperationGuard` is one bidirectional exclusion lock: sync, poll, wipe, re-cipher, key changes, connection tests, config save/clear and provider switching must all exclude one another. Use a fresh `SyncCancellationToken` per run, never a process-wide cancellation flag.
+- `syncControllerProvider` owns operation state across pages; `syncBackendProvider(type)` resolves a backend and `activeSyncBackendProvider` selects the configured one.
 - Keep the process lock outside `RemoteLease`. Keep `sync.lock` plaintext, check
   ownership before renewal and release, and await pending renewal before release.
 - Count partial failures in `failed`; advance `lastSyncTime` only without failures

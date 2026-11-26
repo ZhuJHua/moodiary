@@ -1,26 +1,34 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/lan/lan_discovery.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/lan/lan_sender.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 import 'package:moodiary_sync/src/presentation/widget/lan_widgets.dart';
 import 'package:mui/mui.dart';
 
-class LanSendPage extends StatefulWidget {
+import '../data/sync_cancellation_token.dart';
+
+class LanSendPage extends ConsumerStatefulWidget {
   const LanSendPage({super.key});
 
   @override
-  State<LanSendPage> createState() => _LanSendPageState();
+  ConsumerState<LanSendPage> createState() => _LanSendPageState();
 }
 
-class _LanSendPageState extends State<LanSendPage> {
+class _LanSendPageState extends ConsumerState<LanSendPage> {
   late final TextEditingController _hostController = TextEditingController(
     text: MoodiaryKVs.lanSendTarget.get(),
   );
   final TextEditingController _pinController = TextEditingController();
-  final LanBrowser _browser = LanBrowser();
+  List<LanPeer> _peers = const [];
+  late final _browser = LanBrowser((peers) {
+    if (mounted) setState(() => _peers = peers);
+  });
 
   bool _running = false;
   LanSendProgress? _progress;
@@ -83,14 +91,23 @@ class _LanSendPageState extends State<LanSendPage> {
       _error = null;
     });
     try {
-      final result = await LanSender().send(
-        host: host,
-        port: port,
-        pin: pin,
-        onProgress: (p) {
-          if (mounted) setState(() => _progress = p);
-        },
-      );
+      final archive = ref.read(localArchiveProvider);
+      final result =
+          await LanSender(
+            http: ref.read(httpClientProvider),
+            archiveBuilder: (remote, password) => archive.exportDelta(
+              remote: remote,
+              zipPassword: password,
+              cancellation: SyncCancellationToken(),
+            ),
+          ).send(
+            host: host,
+            port: port,
+            pin: pin,
+            onProgress: (p) {
+              if (mounted) setState(() => _progress = p);
+            },
+          );
       if (!mounted) return;
       setState(() => _result = result.describe());
     } on SyncException catch (e) {
@@ -125,15 +142,12 @@ class _LanSendPageState extends State<LanSendPage> {
           ),
           const SizedBox(height: 20),
           _sectionLabel(context, context.l10n.sync.lanNearbyDevices),
-          ValueListenableBuilder(
-            valueListenable: _browser.peers,
-            builder: (context, peers, _) => _PeerList(
-              peers: peers,
-              selectedAddress: _hostController.text.trim(),
-              enabled: !_running,
-              addressOf: _peerAddress,
-              onPick: _pickPeer,
-            ),
+          _PeerList(
+            peers: _peers,
+            selectedAddress: _hostController.text.trim(),
+            enabled: !_running,
+            addressOf: _peerAddress,
+            onPick: _pickPeer,
           ),
           const SizedBox(height: 20),
           _sectionLabel(context, context.l10n.sync.lanReceiverAddress),

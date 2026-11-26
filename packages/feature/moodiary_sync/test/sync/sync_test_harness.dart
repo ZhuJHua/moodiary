@@ -2,19 +2,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
-import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
-import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
+import 'package:moodiary_sync/src/application/sync_operation_guard.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
-import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
@@ -56,12 +54,6 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
 
   @override
   Future<List<String>> savedOptions() async => const [];
-
-  @override
-  Future<void> saveOptions(List<String> options) async {}
-
-  @override
-  Future<void> clearOptions() async {}
 
   @override
   Future<void> testConnection() async {}
@@ -420,60 +412,62 @@ final class FakeMediaFiles implements SyncMediaFiles {
   String? realPath(String type, String filename) => null;
 }
 
-Future<({MemoryKVStorage kv, MemorySecureKVStorage secure, SyncLogger logger})>
-setUpSyncEnv() async {
-  await getIt.reset();
-  final kv = MemoryKVStorage();
-  final secure = MemorySecureKVStorage();
-  getIt.registerSingleton<IKVStorage>(kv);
-  getIt.registerSingleton<ISecureKVStorage>(secure);
+class SyncTestEnv {
+  SyncTestEnv(this.container, this.logger);
+  final ProviderContainer container;
+  final SyncLogger logger;
+  SyncOperationGuard get guard => container.read(syncOperationGuardProvider);
+  Future<Set<String>> configuredBackends() =>
+      container.read(configuredCloudBackendIdsProvider.future);
+  Future<void> configureBackend(SyncProviderType type) async {
+    final options = switch (type) {
+      .webdav => ['https://dav.example', 'user', 'pass'],
+      .s3 => ['https://s3.example', '', 'ak', 'sk', 'bucket', '1'],
+    };
+    expect(
+      await container
+          .read(activeSyncProviderTypeProvider.notifier)
+          .saveOptions(type, options),
+      isTrue,
+    );
+  }
+}
+
+Future<SyncTestEnv> setUpSyncEnv({IRemoteSyncBackend? activeBackend}) async {
+  KVStore.installForTesting(MemoryKVStorage());
+  addTearDown(KVStore.resetForTesting);
+  SecureKVStore.installForTesting(MemorySecureKVStorage());
+  addTearDown(SecureKVStore.resetForTesting);
   final logger = SyncLogger.memory();
-  getIt.registerSingleton<SyncLogger>(logger);
-  getIt.registerLazySingleton<SecureOptions>(
-    () => SecureOptions(.webDavOption),
-    instanceName: SyncProviderIds.webdav,
+  addTearDown(logger.dispose);
+  final tombstones = FakeTombstoneStore();
+  final container = ProviderContainer.test(
+    retry: (_, _) => null,
+    overrides: [
+      syncLoggerProvider.overrideWithValue(logger),
+      if (activeBackend != null)
+        activeSyncBackendProvider.overrideWithValue(activeBackend),
+      if (activeBackend != null)
+        syncArchiveStoresProvider.overrideWithValue((
+          diaries: FakeDiaryStore(const [], tombstones),
+          categories: FakeCategoryStore(const [], tombstones),
+          tags: FakeTagStore(),
+          places: FakePlaceStore(const [], tombstones),
+          tombstones: tombstones,
+        )),
+    ],
   );
-  getIt.registerLazySingleton<SecureOptions>(
-    () => SecureOptions(.s3Option),
-    instanceName: SyncProviderIds.s3,
-  );
-  getIt.registerLazySingleton<IRemoteSyncBackend>(
-    () => WebDavSyncBackend(
-      getIt<SecureOptions>(instanceName: SyncProviderIds.webdav),
-    ),
-    instanceName: SyncProviderIds.webdav,
-  );
-  getIt.registerLazySingleton<IRemoteSyncBackend>(
-    () => S3SyncBackend(getIt<SecureOptions>(instanceName: SyncProviderIds.s3)),
-    instanceName: SyncProviderIds.s3,
-  );
-  getIt.registerSingleton<OpenDiaryRegistry>(OpenDiaryRegistry());
-  getIt.registerSingleton<SyncPendingTracker>(SyncPendingTracker());
-  getIt.registerSingleton<SyncDirtyTracker>(SyncDirtyTracker());
-  getIt.registerSingleton<SyncCancellation>(SyncCancellation());
   MoodiaryKVs.syncDeviceId.set('test-device');
   RemoteLease.resetCasProbeCache();
   RemoteLease.readbackSettleDelay = Duration.zero;
   SyncKeyManager.resetForTest();
-  return (kv: kv, secure: secure, logger: logger);
+  return SyncTestEnv(container, logger);
 }
 
 Future<void> tearDownSyncEnv() async {
   RemoteLease.resetCasProbeCache();
   RemoteLease.readbackSettleDelay = null;
   SyncKeyManager.resetForTest();
-  await getIt.reset();
-}
-
-Future<void> configureBackend(SyncProviderType type) async {
-  switch (type) {
-    case .webdav:
-      await getIt<IRemoteSyncBackend>(instanceName: type.value)
-          .saveOptions(['https://dav.example', 'user', 'pass']);
-    case .s3:
-      await getIt<IRemoteSyncBackend>(instanceName: type.value)
-          .saveOptions(['https://s3.example', '', 'ak', 'sk', 'bucket', '1']);
-  }
 }
 
 final DateTime kBaseTime = .utc(2026, 1, 1);

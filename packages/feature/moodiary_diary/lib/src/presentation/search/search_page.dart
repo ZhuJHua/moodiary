@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/search_controller.dart';
 import 'package:moodiary_diary/src/presentation/search/search_result_card.dart';
 import 'package:moodiary_editor/moodiary_editor.dart' show TagPickerSheet;
@@ -415,20 +414,20 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 }
 
-class _SearchIndexBanner extends StatefulWidget {
+class _SearchIndexBanner extends ConsumerStatefulWidget {
   const _SearchIndexBanner();
 
   @override
-  State<_SearchIndexBanner> createState() => _SearchIndexBannerState();
+  ConsumerState<_SearchIndexBanner> createState() => _SearchIndexBannerState();
 }
 
-class _SearchIndexBannerState extends State<_SearchIndexBanner> {
+class _SearchIndexBannerState extends ConsumerState<_SearchIndexBanner> {
   bool _rebuilding = false;
 
   Future<void> _rebuild() async {
     setState(() => _rebuilding = true);
     try {
-      await getIt<DiaryRepository>().rebuildAllIndexes();
+      await ref.read(diaryRepositoryProvider).rebuildAllIndexes();
     } catch (e, s) {
       logger.e('搜索索引重建失败', error: e, stackTrace: s);
       if (mounted) setState(() => _rebuilding = false);

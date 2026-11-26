@@ -1,11 +1,9 @@
 import 'package:drift/drift.dart';
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'db/database.dart';
 import 'db/db_codec.dart';
 
-@lazySingleton
 class TombstoneRepository {
   TombstoneRepository(this._db);
 

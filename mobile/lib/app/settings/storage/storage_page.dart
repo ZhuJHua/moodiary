@@ -5,6 +5,7 @@ import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
 import 'package:moodiary_router/moodiary_router.dart';
+import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:mui/mui.dart';
 
 import 'storage_bar.dart';
@@ -75,7 +76,7 @@ class StoragePage extends ConsumerWidget {
       display,
       storageReclaimables(
         display.report,
-        syncBusy: ref.watch(storageSyncBusyProvider),
+        syncBusy: ref.watch(syncOperationBusyProvider),
         canClean: display.canClean,
       ),
       ref.watch(storageSelectionProvider),

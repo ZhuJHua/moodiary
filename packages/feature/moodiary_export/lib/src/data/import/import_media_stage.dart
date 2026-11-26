@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:mime/mime.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -15,14 +16,20 @@ abstract interface class ImportMediaStore {
 }
 
 class AppImportMediaStore implements ImportMediaStore {
-  const AppImportMediaStore();
+  const AppImportMediaStore(this.decoder);
+
+  final IHeifDecoder decoder;
 
   @override
   Future<String?> save(String path, ImportMediaKind kind) async {
     if (await _reuseLocal(path, kind) case final name?) return name;
     switch (kind) {
       case .image:
-        return MediaManager.saveImage(XFile(path), reuseExisting: false);
+        return MediaManager.saveImage(
+          XFile(path),
+          decoder: decoder,
+          reuseExisting: false,
+        );
       case .video:
         final saved = await MediaManager.saveVideo(
           videoFileList: [XFile(path)],

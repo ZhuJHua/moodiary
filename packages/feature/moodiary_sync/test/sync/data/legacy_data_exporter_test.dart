@@ -63,7 +63,7 @@ void main() {
     cache = await Directory(p.join(root.path, 'cache')).create();
     await put('database/default.isar', [0, 255, 13]);
     zip = _RecordingZip();
-    exporter = SyncLegacyDataExporter.forTesting(
+    exporter = SyncLegacyDataExporter.withDependencies(
       support: support,
       cache: cache,
       openZip: (path) async {
@@ -83,7 +83,7 @@ void main() {
         .create(unrelated.path);
     final regular = await File(p.join(cache.path, 'legacy-export-file'))
         .create();
-    exporter = SyncLegacyDataExporter.forTesting(
+    exporter = SyncLegacyDataExporter.withDependencies(
       support: support,
       cache: cache,
       openZip: (_) async {

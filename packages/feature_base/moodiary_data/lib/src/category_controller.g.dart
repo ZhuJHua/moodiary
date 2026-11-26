@@ -34,7 +34,7 @@ final class CategoryControllerProvider
 }
 
 String _$categoryControllerHash() =>
-    r'8502dfc8f45b6f6e845833e92ad527ebb813b9e7';
+    r'ded3ca1eab82cd9a636f4b11a157a54330c1dfc3';
 
 abstract class _$CategoryController extends $AsyncNotifier<List<Category>> {
   FutureOr<List<Category>> build();
@@ -99,7 +99,7 @@ final class OrderedCategoriesProvider
   }
 }
 
-String _$orderedCategoriesHash() => r'8530cfec8547fe7adba9d813b3fc808e7fbc5b25';
+String _$orderedCategoriesHash() => r'62d2bd6c6b69f84094efa3078c9b2bb687f06776';
 
 @ProviderFor(categoryDiaryCounts)
 final categoryDiaryCountsProvider = CategoryDiaryCountsProvider._();
@@ -140,7 +140,7 @@ final class CategoryDiaryCountsProvider
 }
 
 String _$categoryDiaryCountsHash() =>
-    r'eec1cedc4139168f4904fd4052abca2e292bdb90';
+    r'ab60edc154fd204f0cb343941d1f4907edcfa210';
 
 @ProviderFor(getCategory)
 final getCategoryProvider = GetCategoryFamily._();

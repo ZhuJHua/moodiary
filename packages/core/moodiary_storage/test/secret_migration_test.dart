@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 import 'package:moodiary_storage/testing.dart';
@@ -8,11 +7,9 @@ void main() {
   late MemorySecureKVStorage secure;
   late MemoryKVSource legacy;
 
-  setUp(() async {
-    await getIt.reset();
+  setUp(() {
     secure = MemorySecureKVStorage();
     legacy = MemoryKVSource();
-    getIt.registerSingleton<ISecureKVStorage>(secure);
   });
 
   group('SecretKVMigration', () {
@@ -22,20 +19,20 @@ void main() {
       legacy.data['qweatherKey'] = 'qw-key';
       legacy.data['tiandituKey'] = 'td-key';
 
-      await SecretKVMigration.run(legacy);
+      await SecretKVMigration.run(legacy, secure);
 
-      expect(await MoodiarySecureKVs.qweatherKey.get(), 'qw-key');
-      expect(await MoodiarySecureKVs.tiandituKey.get(), 'td-key');
-      expect(await MoodiarySecureKVs.password.get(), '1234');
+      expect(await secure.get('qweatherKey'), 'qw-key');
+      expect(await secure.get('tiandituKey'), 'td-key');
+      expect(await secure.get('password'), '1234');
     });
 
     test('旧仓库里没有的键不写空值进去', () async {
       legacy.data['qweatherKey'] = 'qw-key';
 
-      await SecretKVMigration.run(legacy);
+      await SecretKVMigration.run(legacy, secure);
 
-      expect(await MoodiarySecureKVs.password.get(), isNull);
-      expect(await MoodiarySecureKVs.tiandituKey.get(), isNull);
+      expect(await secure.get('password'), isNull);
+      expect(await secure.get('tiandituKey'), isNull);
     });
 
     test('钥匙串写失败时上抛，不吞', () async {
@@ -43,7 +40,7 @@ void main() {
       legacy.data['lock'] = true;
       legacy.data['password'] = '1234';
 
-      expect(() => SecretKVMigration.run(legacy), throwsStateError);
+      expect(() => SecretKVMigration.run(legacy, secure), throwsStateError);
     });
 
     test('旧的 lock 是关的 → 不搬 PIN，但另外两个照搬', () async {
@@ -51,20 +48,20 @@ void main() {
       legacy.data['password'] = '1234';
       legacy.data['qweatherKey'] = 'qw-key';
 
-      await SecretKVMigration.run(legacy);
+      await SecretKVMigration.run(legacy, secure);
 
-      expect(await MoodiarySecureKVs.password.get(), isNull);
-      expect(await MoodiarySecureKVs.qweatherKey.get(), 'qw-key');
+      expect(await secure.get('password'), isNull);
+      expect(await secure.get('qweatherKey'), 'qw-key');
     });
 
     test('重跑幂等', () async {
       legacy.data['lock'] = true;
       legacy.data['password'] = '1234';
 
-      await SecretKVMigration.run(legacy);
-      await SecretKVMigration.run(legacy);
+      await SecretKVMigration.run(legacy, secure);
+      await SecretKVMigration.run(legacy, secure);
 
-      expect(await MoodiarySecureKVs.password.get(), '1234');
+      expect(await secure.get('password'), '1234');
     });
   });
 }

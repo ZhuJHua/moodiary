@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart';
@@ -59,12 +58,13 @@ class SettingPage extends StatelessWidget {
   }
 }
 
-class _FeatureSection extends StatelessWidget {
+class _FeatureSection extends ConsumerWidget {
   const _FeatureSection();
 
   @override
-  Widget build(BuildContext context) {
-    final service = getIt<ReminderService>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reminder = ref.watch(reminderStateProvider);
+    final enabled = ref.watch(kvValueProvider(MoodiaryKVs.assistantEnabled));
     return MSliverSettingGroup(
       title: context.l10n.app.sectionFeature,
       children: [
@@ -74,51 +74,39 @@ class _FeatureSection extends StatelessWidget {
           trailing: _chevron(context),
           onTap: () => _openSetting(context, const DiarySettingRoute()),
         ),
-        ValueListenableBuilder<bool>(
-          valueListenable: MoodiaryKVs.assistantEnabled.getNotifier(),
-          builder: (context, enabled, _) => SettingListTile(
-            title: context.l10n.app.assistantEntry,
-            subtitle: enabled ? null : context.l10n.app.assistantStatusOff,
-            leading: _lead(context, LucideIcons.bot),
-            trailing: _chevron(context),
-            onTap: () => _openSetting(context, const AssistantSettingRoute()),
-          ),
+        SettingListTile(
+          title: context.l10n.app.assistantEntry,
+          subtitle: enabled ? null : context.l10n.app.assistantStatusOff,
+          leading: _lead(context, LucideIcons.bot),
+          trailing: _chevron(context),
+          onTap: () => _openSetting(context, const AssistantSettingRoute()),
         ),
         if (Platform.isAndroid) const _McpTile(),
-        ListenableBuilder(
-          listenable: service,
-          builder: (context, _) {
-            return SettingListTile(
-              title: context.l10n.reminder.title,
-              subtitle: reminderStatusLabel(context.l10n, service),
-              leading: _lead(context, LucideIcons.bell),
-              trailing: _chevron(context),
-              onTap: () => _openSetting(context, const ReminderRoute()),
-            );
-          },
+        SettingListTile(
+          title: context.l10n.reminder.title,
+          subtitle: reminderStatusLabel(context.l10n, reminder),
+          leading: _lead(context, LucideIcons.bell),
+          trailing: _chevron(context),
+          onTap: () => _openSetting(context, const ReminderRoute()),
         ),
       ],
     );
   }
 }
 
-class _McpTile extends StatelessWidget {
+class _McpTile extends ConsumerWidget {
   const _McpTile();
 
   @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: MoodiaryKVs.mcpEnabled.getNotifier(),
-      builder: (context, enabled, _) => ValueListenableBuilder<McpServerState>(
-        valueListenable: getIt<McpService>().state,
-        builder: (context, state, _) => SettingListTile(
-          title: context.l10n.app.mcpPageTitle,
-          subtitle: _summary(context, state, enabled: enabled),
-          leading: _lead(context, LucideIcons.server),
-          trailing: _chevron(context),
-          onTap: () => _openSetting(context, const McpRoute()),
-        ),
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(kvValueProvider(MoodiaryKVs.mcpEnabled));
+    final state = ref.watch(mcpServerStateProvider);
+    return SettingListTile(
+      title: context.l10n.app.mcpPageTitle,
+      subtitle: _summary(context, state, enabled: enabled),
+      leading: _lead(context, LucideIcons.server),
+      trailing: _chevron(context),
+      onTap: () => _openSetting(context, const McpRoute()),
     );
   }
 
@@ -150,44 +138,36 @@ class _DisplaySection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(appSettingsControllerProvider);
+    final mode = ref.watch(appSettingsControllerProvider).themeMode.index;
+    final index = ref.watch(kvValueProvider(MoodiaryKVs.themeAccentMode));
+    final accent = index >= 0 && index < ThemeAccentMode.values.length
+        ? ThemeAccentMode.values[index]
+        : ThemeAccentMode.neutral;
+    final palette = ref.watch(kvValueProvider(MoodiaryKVs.moodPalette));
     return MSliverSettingGroup(
       title: context.l10n.app.sectionDisplay,
       children: [
-        ValueListenableBuilder(
-          valueListenable: MoodiaryKVs.themeMode.getNotifier(),
-          builder: (context, mode, _) {
-            return SettingListTile(
-              title: context.l10n.app.themeMode,
-              leading: _lead(context, LucideIcons.contrast),
-              trailing: _value(
-                context,
-                _themeModeLabels(context.l10n)[mode.clamp(0, 2)],
-              ),
-              onTap: () => showDialog(
-                context: context,
-                builder: (_) => const ThemeModeDialog(),
-              ),
-            );
-          },
+        SettingListTile(
+          title: context.l10n.app.themeMode,
+          leading: _lead(context, LucideIcons.contrast),
+          trailing: _value(
+            context,
+            _themeModeLabels(context.l10n)[mode.clamp(0, 2)],
+          ),
+          onTap: () => showDialog(
+            context: context,
+            builder: (_) => const ThemeModeDialog(),
+          ),
         ),
-        ValueListenableBuilder(
-          valueListenable: MoodiaryKVs.themeAccentMode.getNotifier(),
-          builder: (context, index, _) {
-            final mode = index >= 0 && index < ThemeAccentMode.values.length
-                ? ThemeAccentMode.values[index]
-                : ThemeAccentMode.neutral;
-            return SettingListTile(
-              title: context.l10n.app.accentTitle,
-              leading: _lead(context, LucideIcons.palette),
-              trailing: _value(context, switch (mode) {
-                .neutral => context.l10n.app.accentNeutral,
-                .system => context.l10n.app.accentSystem,
-                .custom => context.l10n.common.custom,
-              }),
-              onTap: () => AccentSheet.show(context),
-            );
-          },
+        SettingListTile(
+          title: context.l10n.app.accentTitle,
+          leading: _lead(context, LucideIcons.palette),
+          trailing: _value(context, switch (accent) {
+            .neutral => context.l10n.app.accentNeutral,
+            .system => context.l10n.app.accentSystem,
+            .custom => context.l10n.common.custom,
+          }),
+          onTap: () => AccentSheet.show(context),
         ),
         SettingListTile(
           title: context.l10n.app.fontStyle,
@@ -195,43 +175,35 @@ class _DisplaySection extends ConsumerWidget {
           trailing: _chevron(context),
           onTap: () => _openSetting(context, const FontRoute()),
         ),
-        ValueListenableBuilder<String>(
-          valueListenable: MoodiaryKVs.moodPalette.getNotifier(),
-          builder: (context, palette, _) => SettingListTile(
-            title: context.l10n.app.moodColors,
-            leading: _lead(context, LucideIcons.smile),
-            trailing: _value(
-              context,
-              MoodPalette.fromName(palette).label(context),
-            ),
-            onTap: () => MoodPaletteSheet.show(context),
+        SettingListTile(
+          title: context.l10n.app.moodColors,
+          leading: _lead(context, LucideIcons.smile),
+          trailing: _value(
+            context,
+            MoodPalette.fromName(palette).label(context),
           ),
+          onTap: () => MoodPaletteSheet.show(context),
         ),
       ],
     );
   }
 }
 
-class _PrivacySection extends StatelessWidget {
+class _PrivacySection extends ConsumerWidget {
   const _PrivacySection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MSliverSettingGroup(
       title: context.l10n.app.sectionPrivacy,
       children: [
         const AppLockTile(),
-        ValueListenableBuilder(
-          valueListenable: MoodiaryKVs.backendPrivacy.getNotifier(),
-          builder: (context, on, _) {
-            return SettingSwitchListTile(
-              title: context.l10n.app.backgroundPrivacy,
-              subtitle: context.l10n.app.backgroundPrivacySubtitle,
-              secondary: _lead(context, LucideIcons.eyeOff),
-              value: on,
-              onChanged: (v) => MoodiaryKVs.backendPrivacy.set(v),
-            );
-          },
+        SettingSwitchListTile(
+          title: context.l10n.app.backgroundPrivacy,
+          subtitle: context.l10n.app.backgroundPrivacySubtitle,
+          secondary: _lead(context, LucideIcons.eyeOff),
+          value: ref.watch(kvValueProvider(MoodiaryKVs.backendPrivacy)),
+          onChanged: (v) => MoodiaryKVs.backendPrivacy.set(v),
         ),
       ],
     );
@@ -264,8 +236,7 @@ class _MoreSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(appSettingsControllerProvider);
-    final langCode = MoodiaryKVs.language.get() ?? Language.system.languageCode;
+    final langCode = ref.watch(kvValueProvider(MoodiaryKVs.language));
     final lang = Language.values.firstWhere(
       (e) => e.languageCode == langCode,
       orElse: () => Language.system,

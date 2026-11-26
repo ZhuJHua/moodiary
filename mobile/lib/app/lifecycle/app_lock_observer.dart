@@ -1,17 +1,18 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
-class AppLockObserver extends StatefulWidget {
+class AppLockObserver extends ConsumerStatefulWidget {
   final Widget child;
 
   const AppLockObserver({super.key, required this.child});
 
   @override
-  State<AppLockObserver> createState() => _AppLockObserverState();
+  ConsumerState<AppLockObserver> createState() => _AppLockObserverState();
 }
 
-class _AppLockObserverState extends State<AppLockObserver>
+class _AppLockObserverState extends ConsumerState<AppLockObserver>
     with WidgetsBindingObserver {
   bool _locking = false;
 
@@ -40,9 +41,11 @@ class _AppLockObserverState extends State<AppLockObserver>
       return;
     }
     if (_locking) return;
-    if (!AppLockPin.enabled.value || MoodiaryKVs.lockNow.get() != true) {
+    if (!ref.read(appLockEnabledProvider) ||
+        MoodiaryKVs.lockNow.get() != true) {
       return;
     }
+    final router = ref.read(appRouterProvider);
     final location = router.routerDelegate.currentConfiguration.uri.path;
     if (_skip.contains(location)) return;
 

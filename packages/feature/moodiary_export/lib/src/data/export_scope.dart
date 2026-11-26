@@ -1,5 +1,4 @@
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 enum ExportScopeKind { all, category, dateRange, picked }
@@ -7,7 +6,10 @@ enum ExportScopeKind { all, category, dateRange, picked }
 sealed class ExportScope {
   const ExportScope();
 
-  Future<List<Diary>> resolve();
+  Future<List<Diary>> resolve(
+    DiaryRepository diaries,
+    CategoryRepository categories,
+  );
 
   ExportScopeKind get kind;
 
@@ -18,8 +20,10 @@ class AllDiariesScope extends ExportScope {
   const AllDiariesScope();
 
   @override
-  Future<List<Diary>> resolve() async =>
-      _visibleSorted(await getIt<DiaryRepository>().getAllDiaries());
+  Future<List<Diary>> resolve(
+    DiaryRepository diaries,
+    CategoryRepository categories,
+  ) async => _visibleSorted(await diaries.getAllDiaries());
 
   @override
   ExportScopeKind get kind => .all;
@@ -34,11 +38,13 @@ class CategoryScope extends ExportScope {
   const CategoryScope(this.categoryIds, this.names);
 
   @override
-  Future<List<Diary>> resolve() async {
-    final all = await getIt<DiaryRepository>().getAllDiaries();
+  Future<List<Diary>> resolve(
+    DiaryRepository diaries,
+    CategoryRepository categories,
+  ) async {
+    final all = await diaries.getAllDiaries();
     final active = {
-      for (final category
-          in await getIt<CategoryRepository>().getAllCategories())
+      for (final category in await categories.getAllCategories())
         if (category.id.isNotEmpty) category.id,
     };
     return _visibleSorted(
@@ -64,8 +70,11 @@ class DateRangeScope extends ExportScope {
   const DateRangeScope(this.from, this.to);
 
   @override
-  Future<List<Diary>> resolve() async {
-    final all = await getIt<DiaryRepository>().getAllDiaries();
+  Future<List<Diary>> resolve(
+    DiaryRepository diaries,
+    CategoryRepository categories,
+  ) async {
+    final all = await diaries.getAllDiaries();
     final start = DateTime(from.year, from.month, from.day);
     final end = DateTime(to.year, to.month, to.day, 23, 59, 59, 999);
     return _visibleSorted(
@@ -92,8 +101,11 @@ class PickedScope extends ExportScope {
   const PickedScope(this.diaryIds);
 
   @override
-  Future<List<Diary>> resolve() async {
-    final repo = getIt<DiaryRepository>();
+  Future<List<Diary>> resolve(
+    DiaryRepository diaries,
+    CategoryRepository categories,
+  ) async {
+    final repo = diaries;
     final picked = <Diary>[];
     for (final id in diaryIds) {
       final d = await repo.getDiaryByBusinessId(id);

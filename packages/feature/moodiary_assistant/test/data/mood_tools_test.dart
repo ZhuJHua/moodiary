@@ -1,29 +1,33 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
+import 'package:moodiary_assistant/src/data/assistant_tool_definitions.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
+import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 void main() {
   late MoodiaryDatabase db;
+  late AssistantToolContext context;
   late DiaryRepository repo;
   setUp(() {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
     repo = DiaryRepository(db);
-    getIt.registerSingleton<DiaryRepository>(repo);
-    getIt.registerSingleton<TagRepository>(TagRepository(db));
-    getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
-    getIt.registerSingleton<MoodInsightsRepository>(MoodInsightsRepository(db));
-  });
-  tearDown(() async {
-    await getIt.reset();
-    await db.close();
+    context = AssistantToolContext(
+      diaries: repo,
+      tags: TagRepository(db),
+      categories: CategoryRepository(db),
+      insights: MoodInsightsRepository(db),
+      memory: MemoryRepository(db),
+      semantic: null,
+      heifDecoder: null,
+    );
   });
 
   Future<String> run(AssistantTool tool, Map<String, dynamic> input) =>
-      AssistantToolRegistry.byId(tool.id)!.run(input);
+      AssistantToolRegistry.byId(tool.id)!.run(input, context);
 
   test(
     'create defaults to unset; update can clear or preserve a mood',

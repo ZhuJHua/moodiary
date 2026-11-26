@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
 
 import '../prompts/diary_prompts.dart';
@@ -17,6 +19,7 @@ McpServer buildMoodiaryServer({
   required Uri iconUri,
   DiaryMediaStore? mediaStore,
   EmbedIndexService? semantic,
+  IHeifDecoder? heifDecoder,
 }) {
   final server = McpServer(
     Implementation(
@@ -45,6 +48,7 @@ McpServer buildMoodiaryServer({
     insights: insights,
     mediaStore: mediaStore,
     semantic: semantic,
+    heifDecoder: heifDecoder,
   );
   registerDiaryPrompts(server, diaries: diaries, insights: insights);
   return server;
@@ -58,6 +62,7 @@ void registerMoodiaryTools(
   required MoodInsightsRepository insights,
   DiaryMediaStore? mediaStore,
   EmbedIndexService? semantic,
+  IHeifDecoder? heifDecoder,
 }) {
   for (final def in toolsFor(ToolSurface.mcp)) {
     server.registerTool(
@@ -84,6 +89,7 @@ void registerMoodiaryTools(
               surface: ToolSurface.mcp,
               mediaStore: mediaStore,
               semantic: semantic,
+              heifDecoder: heifDecoder,
             ),
           );
           final json = jsonToolResult(result.data);

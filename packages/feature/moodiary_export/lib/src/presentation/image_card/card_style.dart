@@ -1,6 +1,5 @@
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_theme/moodiary_theme.dart';
+import 'package:moodiary_preferences/moodiary_preferences.dart';
 
 class ImageCardStyle {
   final Brightness brightness;
@@ -134,13 +133,14 @@ class ImageCardStyle {
   }
 
   factory ImageCardStyle.resolve({
+    required AppSettings settings,
     Brightness? brightness,
     required Brightness fallback,
     required double widthDp,
     required bool watermark,
   }) {
     return ImageCardStyle.of(
-      getIt<ThemeManager>().exportTheme(brightness ?? fallback),
+      settings.exportTheme(brightness ?? fallback),
       widthDp: widthDp,
       watermark: watermark,
     );

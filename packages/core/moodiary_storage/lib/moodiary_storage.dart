@@ -6,4 +6,7 @@ export 'src/kv/mmkv.dart';
 export 'src/kv/secret_migration.dart';
 export 'src/kv/secure.dart';
 export 'src/kv_keys.dart';
+export 'src/secret_controller.dart';
 export 'src/storage.dart';
+export 'src/storage_holder.dart';
+export 'src/storage_providers.dart';

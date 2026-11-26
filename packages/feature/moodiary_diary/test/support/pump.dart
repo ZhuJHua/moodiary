@@ -22,6 +22,7 @@ Widget muiTestApp(
   TransitionBuilder? builder,
 }) {
   return ProviderScope(
+    retry: (_, _) => null,
     overrides: overrides,
     child: TranslationProvider(
       child: MuiTheme(

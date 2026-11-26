@@ -1,10 +1,9 @@
 import 'dart:async';
 
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'diary_repository.dart';
+import 'data_providers.dart';
 import 'tag_repository.dart';
 
 part 'tag_catalog.g.dart';
@@ -13,7 +12,7 @@ part 'tag_catalog.g.dart';
 Future<({Map<String, Tag> byId, List<TagUsage> usage})> tagCatalog(
   Ref ref,
 ) async {
-  final repo = getIt<TagRepository>();
+  final repo = ref.watch(tagRepositoryProvider);
   Timer? timer;
   void invalidate(Object _) {
     timer?.cancel();
@@ -21,7 +20,10 @@ Future<({Map<String, Tag> byId, List<TagUsage> usage})> tagCatalog(
   }
 
   final tags = repo.tagEvents.listen(invalidate);
-  final diaries = getIt<DiaryRepository>().diaryEvents.listen(invalidate);
+  final diaries = ref
+      .watch(diaryRepositoryProvider)
+      .diaryEvents
+      .listen(invalidate);
   ref.onDispose(() {
     timer?.cancel();
     tags.cancel();

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -54,10 +53,9 @@ void main() {
 
     setUp(() {
       kv = MemoryKVStorage();
-      getIt.registerSingleton<IKVStorage>(kv);
+      KVStore.installForTesting(kv);
+      addTearDown(KVStore.resetForTesting);
     });
-
-    tearDown(getIt.reset);
 
     test('旧版写进去的空串变成 none', () async {
       kv.set<String>(MoodiaryKVs.assistantReasoningEffort.name, '');
@@ -97,7 +95,8 @@ void main() {
 
     setUp(() {
       kv = MemoryKVStorage();
-      getIt.registerSingleton<IKVStorage>(kv);
+      KVStore.installForTesting(kv);
+      addTearDown(KVStore.resetForTesting);
       modelDir = Directory(AppFiles.getRealPath('model', ''))..createSync();
       for (final name in [...moodFiles, embeddingFile]) {
         modelFile(name).writeAsStringSync(name);
@@ -106,7 +105,6 @@ void main() {
     });
 
     tearDown(() async {
-      await getIt.reset();
       if (modelDir.existsSync()) modelDir.deleteSync(recursive: true);
     });
 
@@ -142,8 +140,10 @@ void main() {
   });
 
   group('内容 schema v2 闸门', () {
-    setUp(() => getIt.registerSingleton<IKVStorage>(MemoryKVStorage()));
-    tearDown(getIt.reset);
+    setUp(() {
+      KVStore.installForTesting(MemoryKVStorage());
+      addTearDown(KVStore.resetForTesting);
+    });
 
     test(
       'older versions still reset the custom font and automatic sync',

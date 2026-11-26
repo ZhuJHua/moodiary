@@ -11,14 +11,14 @@ final class SecretKVMigration {
 
   static Set<String> get movedKeys => _moved.keys.toSet();
 
-  static Future<void> run(IKVSource legacy) async {
+  static Future<void> run(IKVSource legacy, ISecureKVStorage secureKv) async {
     final lockWasOn = legacy.get<bool>('lock') == true;
 
     for (final MapEntry(key: name, value: target) in _moved.entries) {
       if (target == MoodiarySecureKVs.password && !lockWasOn) continue;
       final value = legacy.get<String>(name);
       if (value == null || value.isEmpty) continue;
-      await target.set(value);
+      await secureKv.set(target.name, value);
     }
   }
 }

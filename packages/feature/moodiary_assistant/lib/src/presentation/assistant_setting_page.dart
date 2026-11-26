@@ -1,12 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:moodiary_assistant/src/assistant_providers.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/permission_mode_sheet.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -73,21 +73,21 @@ class _ProviderSection extends StatelessWidget {
   }
 }
 
-class _ProviderEntryTile extends StatefulWidget {
+class _ProviderEntryTile extends ConsumerStatefulWidget {
   const _ProviderEntryTile();
 
   @override
-  State<_ProviderEntryTile> createState() => _ProviderEntryTileState();
+  ConsumerState<_ProviderEntryTile> createState() => _ProviderEntryTileState();
 }
 
-class _ProviderEntryTileState extends State<_ProviderEntryTile> {
+class _ProviderEntryTileState extends ConsumerState<_ProviderEntryTile> {
   LlmProvider? _active;
   bool _loaded = false;
   StreamSubscription<void>? _sub;
   late final VoidCallback _activeListener;
   late final ValueNotifier<String> _activeNotifier;
 
-  late final _repo = getIt<LlmProviderRepository>();
+  late final _repo = ref.read(llmProviderRepositoryProvider);
 
   @override
   void initState() {

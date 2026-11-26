@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -13,7 +12,8 @@ void main() {
   setUp(() {
     support = Directory.systemTemp.createTempSync('legacy-backups-');
     root = Directory('${support.path}/database')..createSync();
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
     for (final name in [
       'default.isar.pre-sqlite.bak',
       'default.isar.v273bak',
@@ -24,7 +24,6 @@ void main() {
   });
   tearDown(() async {
     support.deleteSync(recursive: true);
-    await getIt.reset();
   });
 
   test('snapshot cleanup keeps a backup absent from that snapshot', () async {

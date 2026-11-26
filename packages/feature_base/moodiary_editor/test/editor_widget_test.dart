@@ -7,9 +7,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_editor/src/toolbar/divider_picker.dart';
 import 'package:moodiary_editor/src/toolbar/editor_toolbar_host.dart';
@@ -28,16 +28,19 @@ final _p = TestNodes(_schema).p;
 String _json(List<ft.Node> nodes) =>
     jsonEncode(_schema.node('doc', attrs: {'v': 2}, content: nodes).toJson());
 Widget _app(Widget child, {Brightness brightness = Brightness.light}) =>
-    TranslationProvider(
-      child: MaterialApp(
-        theme: buildMuiTheme(brightness: brightness),
-        localizationsDelegates: const [
-          ...GlobalMaterialLocalizations.delegates,
-          GlobalMuiLocalizations.delegate,
-        ],
-        builder: (context, child) =>
-            MaterialUiCompatibilityBridge(child: child!),
-        home: Scaffold(body: child),
+    ProviderScope(
+      retry: (_, _) => null,
+      child: TranslationProvider(
+        child: MaterialApp(
+          theme: buildMuiTheme(brightness: brightness),
+          localizationsDelegates: const [
+            ...GlobalMaterialLocalizations.delegates,
+            GlobalMuiLocalizations.delegate,
+          ],
+          builder: (context, child) =>
+              MaterialUiCompatibilityBridge(child: child!),
+          home: Scaffold(body: child),
+        ),
       ),
     );
 ft.TiptapEditor _editor(WidgetTester tester) =>
@@ -83,8 +86,10 @@ void main() {
       null,
     ),
   );
-  setUp(() => getIt.registerSingleton<IKVStorage>(MemoryKVStorage()));
-  tearDown(getIt.reset);
+  setUp(() {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+  });
 
   const interactionPlatforms = TargetPlatformVariant({
     TargetPlatform.iOS,

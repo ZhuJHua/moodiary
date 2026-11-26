@@ -5,9 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/application/diary_citation.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
+import 'package:moodiary_assistant/src/data/assistant_tool_definitions.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
+import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 AssistantToolCall _call(String name, String result, {bool done = true}) =>
@@ -77,6 +78,7 @@ void main() {
 
   group('从真实工具输出里抠日记引用', () {
     late MoodiaryDatabase db;
+    late AssistantToolContext context;
     late DiaryRepository repo;
     late Diary a;
     late Diary b;
@@ -95,26 +97,25 @@ void main() {
 
     setUp(() async {
       db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
       repo = DiaryRepository(db);
-      getIt.registerSingleton<DiaryRepository>(repo);
-      getIt.registerSingleton<MoodInsightsRepository>(
-        MoodInsightsRepository(db),
+      context = AssistantToolContext(
+        diaries: repo,
+        tags: TagRepository(db),
+        categories: CategoryRepository(db),
+        insights: MoodInsightsRepository(db),
+        memory: MemoryRepository(db),
+        semantic: null,
+        heifDecoder: null,
       );
-      getIt.registerSingleton<TagRepository>(TagRepository(db));
-      getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
       a = diary('搬家');
       b = diary('加班');
       hidden = diary('回收站里的', show: false);
       await repo.insertDiaries([a, b, hidden], index: .skip);
     });
 
-    tearDown(() async {
-      await getIt.reset();
-      await db.close();
-    });
-
     Future<String> run(AssistantTool tool, Map<String, dynamic> input) =>
-        AssistantToolRegistry.byId(tool.id)!.run(input);
+        AssistantToolRegistry.byId(tool.id)!.run(input, context);
 
     List<String> ids(List<DiaryCitation> c) => [for (final x in c) x.id];
 

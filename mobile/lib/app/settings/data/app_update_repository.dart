@@ -1,7 +1,13 @@
 import 'dart:math';
 
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_http/moodiary_http.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'app_update_repository.g.dart';
+
+@Riverpod(keepAlive: true)
+AppUpdateRepository appUpdateRepository(Ref ref) =>
+    AppUpdateRepository(ref.watch(httpClientProvider));
 
 class AppRelease {
   final String version;
@@ -15,7 +21,6 @@ class AppRelease {
   });
 }
 
-@lazySingleton
 class AppUpdateRepository {
   AppUpdateRepository(this._http);
 

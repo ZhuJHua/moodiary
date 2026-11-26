@@ -2,14 +2,12 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:drift/drift.dart';
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'db/database.dart';
 import 'db/db_codec.dart';
 import 'diary_repository.dart';
 
-@lazySingleton
 class PlaceRepository {
   PlaceRepository(this._db, this._diaries);
 
@@ -20,6 +18,8 @@ class PlaceRepository {
       StreamController<PlaceEvent>.broadcast();
 
   Stream<PlaceEvent> get placeEvents => _events.stream;
+
+  Future<void> dispose() => _events.close();
 
   static Place _toPlace(PlaceRow r) => Place(
     id: r.id,

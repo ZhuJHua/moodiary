@@ -1,8 +1,5 @@
 import 'dart:async';
 
-import 'package:injectable/injectable.dart';
-
-@singleton
 class OpenDiaryRegistry {
   final Map<String, int> _open = <String, int>{};
   final StreamController<String> _closed = StreamController<String>.broadcast();
@@ -46,4 +43,7 @@ class OpenDiaryRegistry {
   }
 
   Set<String> editingSnapshot() => Set<String>.unmodifiable(_editing);
+  Future<void> dispose() async {
+    await Future.wait([_closed.close(), _editingEnded.close()]);
+  }
 }

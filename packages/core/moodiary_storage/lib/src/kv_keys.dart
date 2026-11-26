@@ -1,4 +1,3 @@
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 enum MoodiaryKVs<T extends Object> {
@@ -142,11 +141,11 @@ enum MoodiaryKVs<T extends Object> {
 
   const MoodiaryKVs({this.defaultValue});
 
-  T? get() => getIt<IKVStorage>().get<T>(name) ?? defaultValue;
+  T? get() => KVStore.instance.get<T>(name) ?? defaultValue;
 
-  void set(T value) => getIt<IKVStorage>().set<T>(name, value);
+  void set(T value) => KVStore.instance.set<T>(name, value);
 
-  void remove() => getIt<IKVStorage>().remove(name);
+  void remove() => KVStore.instance.remove(name);
 
   void copyFrom(IKVSource source, {required IKVStorage into}) {
     final value = source.get<T>(name);
@@ -159,11 +158,11 @@ enum MoodiaryKVs<T extends Object> {
         'MoodiaryKVs.$name has no defaultValue; getNotifier() requires one.',
       );
     }
-    return getIt<IKVStorage>().getNotifier<T>(name, defaultValue as T);
+    return KVStore.instance.getNotifier<T>(name, defaultValue as T);
   }
 
   KVNotifier<T> getNotifierOr(T fallback) {
-    return getIt<IKVStorage>().getNotifier<T>(name, defaultValue ?? fallback);
+    return KVStore.instance.getNotifier<T>(name, defaultValue ?? fallback);
   }
 }
 
@@ -183,9 +182,9 @@ enum MoodiarySecureKVs {
 
   mcpToken;
 
-  Future<String?> get() => getIt<ISecureKVStorage>().get(name);
+  Future<String?> get() => SecureKVStore.instance.get(name);
 
-  Future<void> set(String value) => getIt<ISecureKVStorage>().set(name, value);
+  Future<void> set(String value) => SecureKVStore.instance.set(name, value);
 
-  Future<void> remove() => getIt<ISecureKVStorage>().remove(name);
+  Future<void> remove() => SecureKVStore.instance.remove(name);
 }

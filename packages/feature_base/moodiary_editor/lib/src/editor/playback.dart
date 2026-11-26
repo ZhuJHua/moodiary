@@ -30,7 +30,9 @@ class _MediaPlayback extends ChangeNotifier {
       final path = resolved.path;
       final controller = video = MVideoPlaybackController(
         source: VideoSource.fromPath(path),
-        portFactory: host._videoPortFactory,
+        portFactory:
+            host._videoPortFactory ??
+            (throw StateError('Missing video playback port factory')),
         autoPlay: false,
       );
       controller.state.addListener(_updated);

@@ -4,9 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_diary/src/application/diary_filter.dart';
-import 'package:moodiary_diary/src/application/diary_selection.dart';
+import 'package:moodiary_diary/src/presentation/controllers/diary_filter.dart';
+import 'package:moodiary_diary/src/presentation/controllers/diary_selection.dart';
 import 'package:moodiary_diary/src/presentation/widget/category_drawer.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
@@ -36,9 +35,6 @@ Widget wrap({
 );
 
 void main() {
-  setUp(() => getIt.registerSingleton(SyncPendingTracker()));
-  tearDown(getIt.reset);
-
   final three = [cat('tr', '旅行'), cat('dy', '日常'), cat('rd', '阅读')];
 
   testWidgets('uncategorized count is total minus the categorised ones', (
@@ -171,7 +167,10 @@ void main() {
     expect(noCategories, findsNothing);
     expect(noTags, findsNothing);
 
-    final tracker = getIt<SyncPendingTracker>();
+    final tracker = ProviderScope.containerOf(
+      t.element(find.byType(CategoryDrawer)),
+      listen: false,
+    ).read(syncPendingStateProvider.notifier);
     tracker.begin(
       newDiaryIds: {},
       updateDiaryIds: {},
@@ -394,12 +393,14 @@ void main() {
     container
         .read(homeDiaryFilterProvider.notifier)
         .select(const .category('c1'));
-    getIt<SyncPendingTracker>().begin(
-      newDiaryIds: {},
-      updateDiaryIds: {},
-      newCategoryIds: {'new'},
-      updateCategoryIds: {'c0'},
-    );
+    container
+        .read(syncPendingStateProvider.notifier)
+        .begin(
+          newDiaryIds: {},
+          updateDiaryIds: {},
+          newCategoryIds: {'new'},
+          updateCategoryIds: {'c0'},
+        );
     await t.enterText(find.byType(SearchBar), '分类0');
     await t.pump();
     expect(

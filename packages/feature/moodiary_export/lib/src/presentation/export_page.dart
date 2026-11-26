@@ -1,9 +1,9 @@
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -95,14 +95,14 @@ class _MarkdownImportSection extends StatelessWidget {
   }
 }
 
-class _BackupSection extends StatelessWidget {
+class _BackupSection extends ConsumerWidget {
   const _BackupSection();
 
-  Future<void> _restoreBackup(BuildContext context) async {
+  Future<void> _restoreBackup(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final file = await getIt<IFilePicker>().pickFile(
-      allowedExtensions: ['zip'],
-    );
+    final file = await ref
+        .read(filePickerProvider)
+        .pickFile(allowedExtensions: ['zip']);
     if (file == null || !context.mounted) return;
 
     final confirmed = await MAlert.confirm(
@@ -111,11 +111,11 @@ class _BackupSection extends StatelessWidget {
       message: l10n.export.restoreConfirmMessage,
       confirmLabel: l10n.export.restoreConfirmLabel,
     );
-    if (!confirmed) return;
+    if (!confirmed || !context.mounted) return;
 
     toast.loading(message: l10n.export.restoring);
     try {
-      final result = await getIt<IBackupArchive>().import(file.path);
+      final result = await ref.read(backupArchiveProvider).import(file.path);
       await toast.dismiss();
       final base = l10n.export.restoreSummary(
         diary: result.diaryCount,
@@ -148,13 +148,13 @@ class _BackupSection extends StatelessWidget {
     }
   }
 
-  Future<void> _exportBackup(BuildContext context) async {
+  Future<void> _exportBackup(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    if (!await AppAuth.verify(context, .dataExport)) return;
+    if (!await AppAuth.verify(context, .dataExport) || !context.mounted) return;
     toast.loading(message: l10n.export.packingBackup);
     final String zipPath;
     try {
-      zipPath = await getIt<IBackupArchive>().export();
+      zipPath = await ref.read(backupArchiveProvider).export();
       await toast.dismiss();
     } catch (e) {
       await toast.dismiss();
@@ -165,7 +165,7 @@ class _BackupSection extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MSliverSettingGroup(
       title: context.l10n.export.sectionBackup,
       children: [
@@ -174,14 +174,14 @@ class _BackupSection extends StatelessWidget {
           subtitle: context.l10n.export.backupExportSubtitle,
           leading: const Icon(LucideIcons.archive),
           trailing: const Icon(LucideIcons.chevronRight),
-          onTap: () => _exportBackup(context),
+          onTap: () => _exportBackup(context, ref),
         ),
         SettingListTile(
           title: context.l10n.export.restoreFromBackup,
           subtitle: context.l10n.export.backupRestoreSubtitle,
           leading: const Icon(LucideIcons.archiveRestore),
           trailing: const Icon(LucideIcons.chevronRight),
-          onTap: () => _restoreBackup(context),
+          onTap: () => _restoreBackup(context, ref),
         ),
       ],
     );

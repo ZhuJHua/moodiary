@@ -7,18 +7,23 @@ import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
-import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_change_flow.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
 import 'package:mui/mui.dart';
 
+import '../../application/sync_operation_guard.dart';
+
 Future<bool> ensureSyncKeyReady({
+  required SyncOperation operation,
   required BuildContext context,
   required WidgetRef ref,
   required IRemoteSyncBackend backend,
 }) async {
+  operation.checkActive();
+  final configured = await ref.read(configuredCloudBackendIdsProvider.future);
   if (!await backend.isReady()) return true;
 
   Uint8List? manifestBytes;
@@ -39,6 +44,7 @@ Future<bool> ensureSyncKeyReady({
     if (decrypted) {
       if (!context.mounted) return false;
       return resolveDecryptedRemote(
+        operation: operation,
         context: context,
         ref: ref,
         backend: backend,
@@ -82,7 +88,12 @@ Future<bool> ensureSyncKeyReady({
       confirmLabel: l10n.sync.keyResetAction,
     );
     if (reset && context.mounted) {
-      await resetAndOfferNewKey(context: context, ref: ref, backend: backend);
+      await resetAndOfferNewKey(
+        operation: operation,
+        context: context,
+        ref: ref,
+        backend: backend,
+      );
     }
     return false;
   }
@@ -138,7 +149,12 @@ Future<bool> ensureSyncKeyReady({
   );
   if (forgot) {
     if (context.mounted) {
-      await resetAndOfferNewKey(context: context, ref: ref, backend: backend);
+      await resetAndOfferNewKey(
+        operation: operation,
+        context: context,
+        ref: ref,
+        backend: backend,
+      );
     }
     return false;
   }
@@ -148,7 +164,7 @@ Future<bool> ensureSyncKeyReady({
     dek: unwrappedDek!,
     keyfile: keyfile,
     backendId: backend.persistentBackendId,
-    configured: await configuredCloudBackendIds(),
+    configured: configured,
   );
   if (context.mounted) ref.invalidate(syncDekControllerProvider);
   toast.success(message: l10n.sync.keyConfigured);

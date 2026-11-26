@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -700,7 +699,7 @@ class _PlaceSheetState extends ConsumerState<_PlaceSheet> {
   late Future<List<Diary>> _diaries = _load();
 
   Future<List<Diary>> _load() =>
-      getIt<DiaryRepository>().getDiariesAtPlace(widget.placeId);
+      ref.read(diaryRepositoryProvider).getDiariesAtPlace(widget.placeId);
 
   @override
   Widget build(BuildContext context) {

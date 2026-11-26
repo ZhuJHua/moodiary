@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_mcp/src/tools/register_moodiary_tools.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_tools/moodiary_tools.dart';
@@ -45,12 +45,14 @@ void main() {
   late Directory mediaRoot;
 
   setUpAll(() {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
   });
 
   setUp(() {
     mediaRoot = Directory.systemTemp.createTempSync('mcp-protocol-');
     db = openTestDatabase();
+    addTearDown(db.close);
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
     insights = MoodInsightsRepository(db);
@@ -66,12 +68,11 @@ void main() {
       ),
     );
     client = TestMcpClient(server: server);
-  });
 
-  tearDown(() async {
-    await client.close();
-    await db.close();
-    await mediaRoot.delete(recursive: true);
+    addTearDown(() async {
+      await client.close();
+      await mediaRoot.delete(recursive: true);
+    });
   });
 
   TestMcpClient withSemantic(EmbedIndexService index) {

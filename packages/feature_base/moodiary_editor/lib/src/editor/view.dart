@@ -1,6 +1,6 @@
 part of '../moodiary_editor.dart';
 
-class _MoodiaryEditorState extends State<MoodiaryEditor>
+class _MoodiaryEditorState extends ConsumerState<MoodiaryEditor>
     with WidgetsBindingObserver, RouteAware {
   late final MoodiaryEditorHost host;
   // The toolbar host floats a 44 px link bar 8 px above the editor's bottom
@@ -40,7 +40,11 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
   @override
   void initState() {
     super.initState();
-    host = MoodiaryEditorHost(widget);
+    host = MoodiaryEditorHost(
+      widget,
+      videoPortFactory: (source) =>
+          ref.read(components.videoPlayerPortFactoryProvider)(source),
+    );
     widget.controller?._bind(host);
     host._viewChanges.addListener(_changed);
     host.state.addListener(_stateChanged);

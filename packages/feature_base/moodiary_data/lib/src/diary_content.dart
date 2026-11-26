@@ -1,5 +1,5 @@
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
 class DiaryContent {
   final Diary _diary;

@@ -1,6 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
@@ -9,16 +9,16 @@ import '../data/export_scope.dart';
 
 enum _ScopeKind { all, category, dateRange, picked }
 
-class ScopePickerPage extends StatefulWidget {
+class ScopePickerPage extends ConsumerStatefulWidget {
   final ExportScope initial;
 
   const ScopePickerPage({super.key, required this.initial});
 
   @override
-  State<ScopePickerPage> createState() => _ScopePickerPageState();
+  ConsumerState<ScopePickerPage> createState() => _ScopePickerPageState();
 }
 
-class _ScopePickerPageState extends State<ScopePickerPage> {
+class _ScopePickerPageState extends ConsumerState<ScopePickerPage> {
   late _ScopeKind _kind = switch (widget.initial) {
     AllDiariesScope() => _ScopeKind.all,
     CategoryScope() => _ScopeKind.category,
@@ -55,7 +55,8 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
   }
 
   Future<void> _load() async {
-    final all = await getIt<DiaryRepository>().getAllDiaries();
+    final repository = ref.read(categoryRepositoryProvider);
+    final all = await ref.read(diaryRepositoryProvider).getAllDiaries();
     final visible = all.where((d) => d.show).toList()
       ..sort((a, b) => b.time.compareTo(a.time));
 
@@ -64,7 +65,6 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
         .whereType<String>()
         .where((id) => id.isNotEmpty)
         .toSet();
-    final repository = getIt<CategoryRepository>();
     final categories = (await repository.getAllCategories())
         .where((category) => ids.contains(category.id))
         .toList();

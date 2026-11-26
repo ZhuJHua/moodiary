@@ -2,6 +2,7 @@ library;
 
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_semantic/moodiary_semantic.dart';
 
 typedef _KeywordSearch = ({
   List<Diary> results,

@@ -1,15 +1,16 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_export/moodiary_export.dart';
 import 'package:moodiary_export/src/presentation/image_card/blocks.dart';
 import 'package:moodiary_export/src/presentation/image_card/card.dart';
 import 'package:moodiary_export/src/presentation/image_card/card_style.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
 String _resolve(String kind, String name) => '/data/$kind/$name';
 
@@ -746,26 +747,32 @@ void main() {
     'share card uses stored palette and export brightness in a detached tree',
     (tester) async {
       final storage = MemoryKVStorage();
-      getIt.registerSingleton<IKVStorage>(storage);
-      addTearDown(getIt.reset);
+      KVStore.installForTesting(storage);
+      addTearDown(KVStore.resetForTesting);
       MoodiaryKVs.moodPalette.set('blueOrange');
       final theme = buildMuiTheme(brightness: .dark);
+      final selected = MoodPalette.fromName(MoodiaryKVs.moodPalette.get());
+      final docs = [
+        ExportDoc(
+          id: 'mood',
+          title: '',
+          time: DateTime(2026),
+          mood: .awful,
+          blocks: const [],
+        ),
+      ];
+      final style = ImageCardStyle.of(theme, widthDp: 400, watermark: false);
       await tester.pumpWidget(
         Directionality(
           textDirection: .ltr,
-          child: ImageCard(
-            docs: [
-              ExportDoc(
-                id: 'mood',
-                title: '',
-                time: DateTime(2026),
-                mood: .awful,
-                blocks: const [],
-              ),
-            ],
-            common: const ExportCommon(),
-            style: ImageCardStyle.of(theme, widthDp: 400, watermark: false),
-            images: const {},
+          child: MoodPaletteScope(
+            palette: selected,
+            child: ImageCard(
+              docs: docs,
+              common: const ExportCommon(),
+              style: style,
+              images: const {},
+            ),
           ),
         ),
       );
@@ -775,12 +782,43 @@ void main() {
       expect(MoodPalette.of(context), MoodPalette.blueOrange);
       expect(context.theme.brightness, Brightness.dark);
       final chip = tester
-          .widgetList<Container>(find.byType(Container))
+          .widgetList<Container>(
+            find.ancestor(
+              of: find.byType(MoodGlyph),
+              matching: find.byType(Container),
+            ),
+          )
           .firstWhere((widget) => widget.decoration is BoxDecoration);
       expect(
         (chip.decoration! as BoxDecoration).color?.withValues(alpha: 1),
         MoodPalette.blueOrange.color(.awful, theme.colorScheme),
       );
+      Future<Uint8List> render(MoodPalette palette) async {
+        final preview = await ImageComposer.renderBands(
+          palette: palette,
+          docs: docs,
+          common: const ExportCommon(),
+          style: style,
+          devicePixelRatio: 1,
+        );
+        try {
+          final data = await preview.bands.single.toByteData();
+          return data!.buffer.asUint8List(
+            data.offsetInBytes,
+            data.lengthInBytes,
+          );
+        } finally {
+          preview.dispose();
+        }
+      }
+
+      final identicalPixels = await tester.runAsync(
+        () async => listEquals(
+          await render(selected),
+          await render(MoodPalette.classic),
+        ),
+      );
+      expect(identicalPixels, isFalse);
     },
   );
 

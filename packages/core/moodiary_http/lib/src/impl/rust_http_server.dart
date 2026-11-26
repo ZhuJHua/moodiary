@@ -2,10 +2,8 @@ import 'dart:convert';
 import 'dart:io' show Directory;
 
 import 'package:fast_core/http.dart' as rust;
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 
-@Injectable(as: IHttpServer)
 class RustHttpServer extends IHttpServer {
   rust.HttpServer? _server;
 

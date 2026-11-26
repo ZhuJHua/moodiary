@@ -46,7 +46,7 @@ final class StorageReportProvider
   }
 }
 
-String _$storageReportHash() => r'09d393344c0e5ca545f8bceffeb2bccfeae5b615';
+String _$storageReportHash() => r'd5ad012df6bef318416a0b47dbdcc03c1bb9bc9b';
 
 /// Rescans keep the last finished report on screen until the new scan completes.
 
@@ -107,47 +107,6 @@ abstract class _$StorageDisplayController extends $Notifier<StorageDisplay> {
   }
 }
 
-@ProviderFor(storageSyncBusy)
-final storageSyncBusyProvider = StorageSyncBusyProvider._();
-
-final class StorageSyncBusyProvider
-    extends $FunctionalProvider<bool, bool, bool>
-    with $Provider<bool> {
-  StorageSyncBusyProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'storageSyncBusyProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$storageSyncBusyHash();
-
-  @$internal
-  @override
-  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  bool create(Ref ref) {
-    return storageSyncBusy(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(bool value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<bool>(value),
-    );
-  }
-}
-
-String _$storageSyncBusyHash() => r'3dbd6bb3499e935de3edad0a66be1f1413c3118f';
-
 @ProviderFor(StorageSelection)
 final storageSelectionProvider = StorageSelectionProvider._();
 
@@ -180,7 +139,7 @@ final class StorageSelectionProvider
   }
 }
 
-String _$storageSelectionHash() => r'464ad37c96f94d0bc06dd675d42e1f8f25ff1d96';
+String _$storageSelectionHash() => r'3559d00a24468d99ef25546bd4bf1ba9339b8625';
 
 abstract class _$StorageSelection extends $Notifier<StorageSelectionState> {
   StorageSelectionState build();

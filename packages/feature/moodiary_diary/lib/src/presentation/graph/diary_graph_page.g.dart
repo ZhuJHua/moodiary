@@ -46,4 +46,4 @@ final class DiaryGraphProvider
   }
 }
 
-String _$diaryGraphHash() => r'87807fe1885a49e512d71680c747b163eee5f36a';
+String _$diaryGraphHash() => r'7e93f3de1df16394a924c28f8dcb1ec000e29c4f';

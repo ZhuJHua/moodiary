@@ -6,11 +6,11 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show internal;
 import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
 import '../media/diary_media.dart';
 import '../ops/diary_writes.dart';
@@ -330,6 +330,7 @@ Future<ToolResult> _addDiaryImage(
       kind: MediaType.image,
       fileName: 'upload.${mime.split('/').last}',
       mimeType: mime,
+      heifDecoder: ctx.heifDecoder,
     );
   } on DiaryMediaException catch (e) {
     return toolFailure('$subject: ${e.message}');
@@ -409,6 +410,7 @@ Future<SavedDiaryMedia> _saveMedia(
   required MediaType kind,
   required String fileName,
   String? mimeType,
+  IHeifDecoder? heifDecoder,
 }) async {
   final cache = Directory(AppFiles.getCachePath('import/mcp'));
   Directory? scratch;
@@ -421,7 +423,11 @@ Future<SavedDiaryMedia> _saveMedia(
     await file.writeAsBytes(bytes, flush: true);
     final input = XFile(file.path, name: fileName, mimeType: mimeType);
     if (kind == MediaType.image) {
-      final name = await MediaManager.saveImage(input, reuseExisting: false);
+      final name = await MediaManager.saveImage(
+        input,
+        decoder: heifDecoder,
+        reuseExisting: false,
+      );
       if (name != null) {
         final stat = await media.stat(kind, name);
         return SavedDiaryMedia(

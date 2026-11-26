@@ -19,40 +19,38 @@ class _FontPageState extends ConsumerState<FontPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
+    final currentFamily = ref.watch(kvValueProvider(MoodiaryKVs.customFont));
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.app.fontTitle)),
-      body: ValueListenableBuilder<String>(
-        valueListenable: MoodiaryKVs.customFont.getNotifier(),
-        builder: (context, currentFamily, _) => ListView(
-          padding: const .all(8),
-          children: [
-            SettingTitleTile(
-              title: context.l10n.app.fontTitle,
-              subtitle: context.l10n.app.fontImportSubtitle,
+      body: ListView(
+        padding: const .all(8),
+        children: [
+          SettingTitleTile(
+            title: context.l10n.app.fontTitle,
+            subtitle: context.l10n.app.fontImportSubtitle,
+          ),
+          Card.filled(
+            color: scheme.surfaceContainerLow,
+            margin: .zero,
+            child: Padding(
+              padding: const .symmetric(vertical: 16),
+              child: _FontPicker(currentFamily: currentFamily),
             ),
-            Card.filled(
-              color: scheme.surfaceContainerLow,
-              margin: .zero,
-              child: Padding(
-                padding: const .symmetric(vertical: 16),
-                child: _FontPicker(currentFamily: currentFamily),
-              ),
+          ),
+          const SizedBox(height: 4),
+          SettingTitleTile(
+            title: context.l10n.app.fontPreview,
+            subtitle: context.l10n.app.fontPreviewSubtitle,
+          ),
+          Card.filled(
+            color: scheme.surfaceContainerLow,
+            margin: .zero,
+            child: Padding(
+              padding: const .all(16),
+              child: _Preview(fontFamily: currentFamily),
             ),
-            const SizedBox(height: 4),
-            SettingTitleTile(
-              title: context.l10n.app.fontPreview,
-              subtitle: context.l10n.app.fontPreviewSubtitle,
-            ),
-            Card.filled(
-              color: scheme.surfaceContainerLow,
-              margin: .zero,
-              child: Padding(
-                padding: const .all(16),
-                child: _Preview(fontFamily: currentFamily),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

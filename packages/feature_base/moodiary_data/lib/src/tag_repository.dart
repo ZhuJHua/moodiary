@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'db/database.dart';
@@ -15,13 +14,14 @@ final class TagEvent {
   final bool fromSync;
 }
 
-@lazySingleton
 class TagRepository {
   TagRepository(this._db);
 
   final MoodiaryDatabase _db;
   final _events = StreamController<TagEvent>.broadcast();
   Stream<TagEvent> get tagEvents => _events.stream;
+
+  Future<void> dispose() => _events.close();
 
   static Tag _tag(TagRow row) => Tag(
     id: row.id,

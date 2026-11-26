@@ -3,7 +3,6 @@ import 'dart:collection';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:path/path.dart';
 
@@ -56,8 +55,8 @@ class FontManager {
     }
   }
 
-  static Future<XFile?> pickFont() {
-    return getIt<IFilePicker>().pickFile(allowedExtensions: ['ttf', 'otf']);
+  static Future<XFile?> pickFont(IFilePicker picker) {
+    return picker.pickFile(allowedExtensions: ['ttf', 'otf']);
   }
 
   static Future<List<({String fileName, Map<String, dynamic> wghtAxis})>>

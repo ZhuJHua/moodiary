@@ -1,10 +1,8 @@
 import 'dart:io';
 
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:platform_image_converter/platform_image_converter.dart';
 
-@LazySingleton(as: IHeifDecoder)
 class MobileHeifDecoder implements IHeifDecoder {
   @override
   Future<String?> convert(String srcPath, {required String outputPath}) async {

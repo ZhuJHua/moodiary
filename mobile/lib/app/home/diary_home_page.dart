@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -41,26 +40,12 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
   Map<String, Tag> _lastTags = const {};
 
   Widget _buildDiaryView(DiaryFilter filter) {
-    return ValueListenableBuilder(
-      valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
-      builder: (context, viewMode, _) {
-        return ValueListenableBuilder(
-          valueListenable: MoodiaryKVs.homeSortMode.getNotifier(),
-          builder: (context, sortMode, _) {
-            final viewModeType = ViewModeType.getType(viewMode);
-            final sort = DiarySort.getType(sortMode);
-            return AnimatedSwitcher(
-              duration: Durations.short3,
-              child: KeyedSubtree(
-                key: ValueKey('$viewMode-$sortMode-$filter'),
-                child: switch (viewModeType) {
-                  .timeline => DiaryTimelineView(filter: filter, sort: sort),
-                  .feed => DiaryFeedView(filter: filter, sort: sort),
-                },
-              ),
-            );
-          },
-        );
+    final mode = ref.watch(kvValueProvider(MoodiaryKVs.homeViewMode));
+    return AnimatedSwitcher(
+      duration: Durations.short3,
+      child: switch (ViewModeType.getType(mode)) {
+        .timeline => DiaryTimelineView(filter: filter),
+        .feed => DiaryFeedView(filter: filter),
       },
     );
   }
@@ -141,18 +126,19 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
   }
 
   PreferredSizeWidget _normalAppBar(BuildContext context, DiaryFilter filter) {
+    final pending = ref.watch(syncPendingStateProvider);
+    final viewModeType = ViewModeType.getType(
+      ref.watch(kvValueProvider(MoodiaryKVs.homeViewMode)),
+    );
     return AppBar(
       leadingWidth: 52,
-      leading: ValueListenableBuilder(
-        valueListenable: getIt<SyncPendingTracker>().listenable,
-        builder: (context, pending, _) => IconButton(
-          tooltip: context.l10n.diary.allCategories,
-          onPressed: widget.onOpenDrawer,
-          icon: Badge(
-            isLabelVisible: pending.newCategoryIds.isNotEmpty,
-            smallSize: 7,
-            child: const Icon(LucideIcons.menu),
-          ),
+      leading: IconButton(
+        tooltip: context.l10n.diary.allCategories,
+        onPressed: widget.onOpenDrawer,
+        icon: Badge(
+          isLabelVisible: pending.newCategoryIds.isNotEmpty,
+          smallSize: 7,
+          child: const Icon(LucideIcons.menu),
         ),
       ),
       titleSpacing: 0,
@@ -164,19 +150,13 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           onPressed: () => const DiarySearchRoute().push(context),
         ),
         const SyncStatusButton(),
-        ValueListenableBuilder(
-          valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
-          builder: (context, homeViewMode, _) {
-            final viewModeType = ViewModeType.getType(homeViewMode);
-            return IconButton(
-              tooltip: context.l10n.diary.pageViewModeButton,
-              icon: Icon(switch (viewModeType) {
-                .timeline => LucideIcons.gitCommitVertical,
-                .feed => LucideIcons.layoutList,
-              }),
-              onPressed: () => ViewModeSheet.show(context),
-            );
-          },
+        IconButton(
+          tooltip: context.l10n.diary.pageViewModeButton,
+          icon: Icon(switch (viewModeType) {
+            .timeline => LucideIcons.gitCommitVertical,
+            .feed => LucideIcons.layoutList,
+          }),
+          onPressed: () => ViewModeSheet.show(context),
         ),
       ],
     );

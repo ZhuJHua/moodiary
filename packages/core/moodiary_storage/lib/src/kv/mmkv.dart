@@ -1,20 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:injectable/injectable.dart';
 import 'package:mmkv/mmkv.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:path/path.dart';
 
-@Singleton(as: IKVStorage)
 final class MmkvKVStorage extends IKVStorage {
   // 改这个值等于丢弃全部现有配置
   static const _mmapId = 'moodiary';
-
-  // 改这个目录同样会丢数据
-  static const _rootDirName = 'mmkv';
 
   static const _migratedKey = '__migrated_from_prefs';
 
@@ -22,10 +15,16 @@ final class MmkvKVStorage extends IKVStorage {
 
   late final MMKV _mmkv;
 
-  // secure 只用于让 DI 保证 SecureKV 先于本类构造，函数体内不使用
-  @FactoryMethod(preResolve: true)
-  static Future<MmkvKVStorage> create(ISecureKVStorage secure) async {
-    final storage = MmkvKVStorage();
+  final String _rootDir;
+  final ISecureKVStorage _secureKv;
+
+  MmkvKVStorage._(this._rootDir, this._secureKv);
+
+  static Future<MmkvKVStorage> create({
+    required String rootDir,
+    required ISecureKVStorage secureKv,
+  }) async {
+    final storage = MmkvKVStorage._(rootDir, secureKv);
     await storage.init();
     return storage;
   }
@@ -33,7 +32,7 @@ final class MmkvKVStorage extends IKVStorage {
   @override
   Future<void> init() async {
     await MMKV.initialize(
-      rootDir: join(PlatformService.get().applicationSupportPath, _rootDirName),
+      rootDir: _rootDir,
       logLevel: kDebugMode ? MMKVLogLevel.Info : MMKVLogLevel.Error,
     );
     _mmkv = MMKV(_mmapId);
@@ -88,6 +87,7 @@ final class MmkvKVStorage extends IKVStorage {
   void clear() {
     _mmkv.clearAll();
     _mmkv.encodeBool(_migratedKey, true);
+    super.clear();
   }
 
   List<String>? _decodeStringList(String key) {
@@ -114,7 +114,7 @@ final class MmkvKVStorage extends IKVStorage {
     }
 
     try {
-      await SecretKVMigration.run(legacy);
+      await SecretKVMigration.run(legacy, _secureKv);
     } catch (e, s) {
       legacyMigrationPending = true;
       logger.e('KV 迁移：机密搬迁失败，本次整轮跳过', error: e, stackTrace: s);

@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -16,6 +15,8 @@ import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation_token.dart';
+import 'package:moodiary_sync/src/data/sync_stores.dart';
 import 'package:path/path.dart' as p;
 
 import '../sync_test_harness.dart';
@@ -90,10 +91,11 @@ final class _EditingTagRepository extends TagRepository {
 }
 
 void main() {
+  late SyncTestEnv env;
   late Directory tmp;
 
   setUp(() async {
-    await setUpSyncEnv();
+    env = await setUpSyncEnv();
     tmp = await Directory.systemTemp.createTemp('local-archive-test-');
   });
 
@@ -101,6 +103,25 @@ void main() {
     await tearDownSyncEnv();
     await tmp.delete(recursive: true);
   });
+
+  LocalArchive makeArchive({
+    SyncDiaryStore? diaries,
+    SyncCategoryStore? categories,
+    SyncTagStore? tags,
+    SyncPlaceStore? places,
+    SyncTombstoneStore? tombstones,
+  }) => LocalArchive(
+    (
+      diaries: diaries ?? FakeDiaryStore(),
+      categories: categories ?? FakeCategoryStore(),
+      tags: tags ?? FakeTagStore(),
+      places: places ?? FakePlaceStore(),
+      tombstones: tombstones ?? FakeTombstoneStore(),
+    ),
+    env.logger,
+    env.container.read(openDiaryRegistryProvider),
+    env.container.read(syncPendingStateProvider.notifier),
+  );
 
   Future<void> putMedia(String type, String name) async {
     final f = File(p.join(tmp.path, 'media-src', type, name));
@@ -110,6 +131,26 @@ void main() {
 
   String mediaSrc() => p.join(tmp.path, 'media-src');
 
+  test('a cancelled archive leaves a fresh export usable', () async {
+    Future<int> write(SyncCancellationToken token, MemoryArchiveSink sink) =>
+        LocalArchive.writeArchive(
+          cancellation: token,
+          sink: sink,
+          diaries: [buildDiary(id: 'entry')],
+          categories: [],
+          tombstones: [],
+          mediaBaseDir: mediaSrc(),
+        );
+    final cancelled = MemoryArchiveSink();
+    await expectLater(
+      write(SyncCancellationToken()..requestStop(), cancelled),
+      throwsStateError,
+    );
+    final next = MemoryArchiveSink();
+    expect(await write(SyncCancellationToken(), next), 1);
+    expect(next.entries, contains(SyncKeys.diaryObjectPath('entry')));
+  });
+
   group('writeArchive 布局', () {
     test('普通条目 + tombstone + 媒体缺失 → 与远端布局一致', () async {
       await putMedia('image', 'img-1.png');
@@ -118,6 +159,7 @@ void main() {
 
       final sink = MemoryArchiveSink();
       await LocalArchive.writeArchive(
+        cancellation: SyncCancellationToken(),
         sink: sink,
         diaries: [
           buildDiary(
@@ -178,6 +220,7 @@ void main() {
       await putMedia('image', 'shared.png');
       final sink = MemoryArchiveSink();
       await LocalArchive.writeArchive(
+        cancellation: SyncCancellationToken(),
         sink: sink,
         diaries: [
           buildDiary(id: 'a', images: ['shared.png']),
@@ -214,6 +257,7 @@ void main() {
       );
       final sink = MemoryArchiveSink();
       final count = await LocalArchive.writeArchive(
+        cancellation: SyncCancellationToken(),
         sink: sink,
         diaries: [
           buildDiary(id: 'newer-remote', modifiedMs: 1000),
@@ -263,6 +307,7 @@ void main() {
       );
       final sink = MemoryArchiveSink();
       await LocalArchive.writeArchive(
+        cancellation: SyncCancellationToken(),
         sink: sink,
         diaries: [
           buildDiary(
@@ -295,6 +340,7 @@ void main() {
       );
       final sink = MemoryArchiveSink();
       final count = await LocalArchive.writeArchive(
+        cancellation: SyncCancellationToken(),
         sink: sink,
         diaries: [buildDiary(id: 'a', modifiedMs: 1000)],
         categories: const [],
@@ -312,6 +358,7 @@ void main() {
     final tag = Tag.legacy('work');
     final sink = MemoryArchiveSink();
     final count = await LocalArchive.writeArchive(
+      cancellation: SyncCancellationToken(),
       sink: sink,
       diaries: [],
       categories: [],
@@ -336,6 +383,7 @@ void main() {
     }) async {
       final dir = p.join(tmp.path, 'archive');
       await LocalArchive.writeArchive(
+        cancellation: SyncCancellationToken(),
         sink: DirArchiveSink(dir),
         diaries: diaries,
         categories: categories,
@@ -369,22 +417,24 @@ void main() {
         final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
         addTearDown(db.close);
         final tags = TagRepository(db);
-        getIt.registerSingleton<TagRepository>(tags);
         await tags.insertATag(active.copyWith(lastModified: atMs(1)));
         final categories = FakeCategoryStore([
           category.copyWith(lastModified: atMs(1)),
         ]);
         final diaries = FakeDiaryStore();
-        final report = await LocalArchive.importDirectory(
-          dir,
-          policy: const RestorePolicy(),
-          diaryStore: diaries,
-          categoryStore: categories,
-          placeStore: FakePlaceStore(),
-          tombstoneStore: diaries.tombstones,
-          mediaFiles: FakeMediaFiles(),
-          cipherProvider: () async => SyncCipher.plaintext,
-        );
+        final report =
+            await makeArchive(
+              diaries: diaries,
+              categories: categories,
+              tombstones: diaries.tombstones,
+              tags: RepoSyncTagStore(tags),
+            ).importDirectory(
+              dir,
+              cancellation: SyncCancellationToken(),
+              policy: const RestorePolicy(),
+              mediaFiles: FakeMediaFiles(),
+              cipherProvider: () async => SyncCipher.plaintext,
+            );
         expect(report.failed, 0);
         expect(report.tagCount, 2);
         final ids = diaries.diaries['diary']!.tagIds;
@@ -421,18 +471,20 @@ void main() {
         addTearDown(db.close);
         final tags = TagRepository(db);
         final categories = CategoryRepository(db);
-        getIt.registerSingleton<TagRepository>(tags);
-        getIt.registerSingleton<CategoryRepository>(categories);
         final diaries = FakeDiaryStore();
 
-        final report = await LocalArchive.importDirectory(
-          dir,
-          policy: const RestorePolicy(),
-          diaryStore: diaries,
-          placeStore: FakePlaceStore(),
-          tombstoneStore: diaries.tombstones,
-          mediaFiles: FakeMediaFiles(),
-        );
+        final report =
+            await makeArchive(
+              diaries: diaries,
+              categories: RepoSyncCategoryStore(categories),
+              tombstones: diaries.tombstones,
+              tags: RepoSyncTagStore(tags),
+            ).importDirectory(
+              dir,
+              cancellation: SyncCancellationToken(),
+              policy: const RestorePolicy(),
+              mediaFiles: FakeMediaFiles(),
+            );
 
         expect(report.failed, 0);
         final restoredTag = await tags.getTagById(tag.id);
@@ -488,23 +540,25 @@ void main() {
           addTearDown(db.close);
           final categories = CategoryRepository(db);
           final tags = TagRepository(db);
-          getIt.registerSingleton<CategoryRepository>(categories);
-          getIt.registerSingleton<TagRepository>(tags);
           await categories.insertACategory(localCategory);
           await categories.insertACategory(deletedCategory);
           await tags.insertATag(localTag);
           await tags.insertATag(deletedTag);
           final diaries = FakeDiaryStore();
 
-          final report = await LocalArchive.importDirectory(
-            dir,
-            policy: policy,
-            diaryStore: diaries,
-            placeStore: FakePlaceStore(),
-            tombstoneStore: diaries.tombstones,
-            mediaFiles: FakeMediaFiles(),
-            cipherProvider: () async => SyncCipher.plaintext,
-          );
+          final report =
+              await makeArchive(
+                diaries: diaries,
+                categories: RepoSyncCategoryStore(categories),
+                tombstones: diaries.tombstones,
+                tags: RepoSyncTagStore(tags),
+              ).importDirectory(
+                dir,
+                cancellation: SyncCancellationToken(),
+                policy: policy,
+                mediaFiles: FakeMediaFiles(),
+                cipherProvider: () async => SyncCipher.plaintext,
+              );
 
           expect(report.failed, 0);
           expect(report.categoryCount, restoring ? 1 : 0);
@@ -544,7 +598,6 @@ void main() {
           final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
           addTearDown(db.close);
           final tags = TagRepository(db);
-          getIt.registerSingleton<TagRepository>(tags);
           final local = Tag.legacy('travel').copyWith(
             name: 'Local name',
             deleted: true,
@@ -562,16 +615,18 @@ void main() {
           final newTagEvent = tags.tagEvents.first;
           final beforeImport = DateTime.timestamp();
 
-          final report = await LocalArchive.importDirectory(
-            dir,
-            policy: policy,
-            diaryStore: diaries,
-            categoryStore: FakeCategoryStore(),
-            placeStore: FakePlaceStore(),
-            tombstoneStore: diaries.tombstones,
-            mediaFiles: FakeMediaFiles(),
-            cipherProvider: () async => SyncCipher.plaintext,
-          );
+          final report =
+              await makeArchive(
+                diaries: diaries,
+                tombstones: diaries.tombstones,
+                tags: RepoSyncTagStore(tags),
+              ).importDirectory(
+                dir,
+                cancellation: SyncCancellationToken(),
+                policy: policy,
+                mediaFiles: FakeMediaFiles(),
+                cipherProvider: () async => SyncCipher.plaintext,
+              );
 
           expect(report.failed, 0);
           final ids = diaries.diaries[diary.id]!.tagIds;
@@ -605,9 +660,7 @@ void main() {
       final local = archived.copyWith(lastModified: atMs(100));
       final edited = local.copyWith(title: 'Edited', lastModified: atMs(300));
       final diaries = FakeDiaryStore([local]);
-      getIt.registerSingleton<TagRepository>(
-        _EditingTagRepository(db, diaries, edited),
-      );
+      final tags = _EditingTagRepository(db, diaries, edited);
       final dir = await buildArchiveDir(diaries: [archived]);
       final legacy = archived.toJson()
         ..remove('tagIds')
@@ -615,16 +668,18 @@ void main() {
       await File(p.join(dir, SyncKeys.diaryObjectPath(archived.id)))
           .writeAsString(jsonEncode(legacy));
 
-      final report = await LocalArchive.importDirectory(
-        dir,
-        policy: const RestorePolicy(),
-        diaryStore: diaries,
-        categoryStore: FakeCategoryStore(),
-        placeStore: FakePlaceStore(),
-        tombstoneStore: diaries.tombstones,
-        mediaFiles: FakeMediaFiles(),
-        cipherProvider: () async => SyncCipher.plaintext,
-      );
+      final report =
+          await makeArchive(
+            diaries: diaries,
+            tombstones: diaries.tombstones,
+            tags: RepoSyncTagStore(tags),
+          ).importDirectory(
+            dir,
+            cancellation: SyncCancellationToken(),
+            policy: const RestorePolicy(),
+            mediaFiles: FakeMediaFiles(),
+            cipherProvider: () async => SyncCipher.plaintext,
+          );
 
       expect(report.failed, 0);
       expect(report.diaryCount, 0);
@@ -636,7 +691,10 @@ void main() {
       final dir = p.join(tmp.path, 'empty');
       await Directory(dir).create(recursive: true);
       await expectLater(
-        () => LocalArchive.importDirectory(dir),
+        () => makeArchive().importDirectory(
+          dir,
+          cancellation: SyncCancellationToken(),
+        ),
         throwsA(
           isA<SyncException>().having(
             (e) => e.message,
@@ -655,7 +713,10 @@ void main() {
         await Directory(p.join(dir, d)).create();
       }
       await expectLater(
-        () => LocalArchive.importDirectory(dir),
+        () => makeArchive().importDirectory(
+          dir,
+          cancellation: SyncCancellationToken(),
+        ),
         throwsA(
           isA<SyncException>().having(
             (e) => e.message,
@@ -671,7 +732,10 @@ void main() {
       await Directory(p.join(dir, 'database')).create(recursive: true);
       await File(p.join(dir, 'database', 'default.isar')).writeAsBytes([0]);
       await expectLater(
-        () => LocalArchive.importDirectory(dir),
+        () => makeArchive().importDirectory(
+          dir,
+          cancellation: SyncCancellationToken(),
+        ),
         throwsA(
           isA<SyncException>().having(
             (e) => e.message,
@@ -736,15 +800,17 @@ void main() {
 
       final diaryStore = FakeDiaryStore();
       final placeStore = FakePlaceStore();
-      final report = await LocalArchive.importDirectory(
-        dir,
-        diaryStore: diaryStore,
-        categoryStore: FakeCategoryStore(),
-        placeStore: placeStore,
-        tombstoneStore: diaryStore.tombstones,
-        mediaFiles: FakeMediaFiles(),
-        cipherProvider: () async => SyncCipher.plaintext,
-      );
+      final report =
+          await makeArchive(
+            diaries: diaryStore,
+            places: placeStore,
+            tombstones: diaryStore.tombstones,
+          ).importDirectory(
+            dir,
+            cancellation: SyncCancellationToken(),
+            mediaFiles: FakeMediaFiles(),
+            cipherProvider: () async => SyncCipher.plaintext,
+          );
       expect(report.failed, 0);
       expect(report.diaryCount, 2);
       final xihu = Place.idForName('杭州市 西湖区');
@@ -765,14 +831,15 @@ void main() {
         buildDiary(id: 'newer', modifiedMs: 1000, title: 'local'),
         buildDiary(id: 'older', modifiedMs: 2000, title: 'local'),
       ]);
-      final report = await LocalArchive.importDirectory(
-        dir,
-        diaryStore: diaryStore,
-        categoryStore: FakeCategoryStore(),
-        placeStore: FakePlaceStore(),
-        tombstoneStore: diaryStore.tombstones,
-        mediaFiles: FakeMediaFiles(),
-      );
+      final report =
+          await makeArchive(
+            diaries: diaryStore,
+            tombstones: diaryStore.tombstones,
+          ).importDirectory(
+            dir,
+            cancellation: SyncCancellationToken(),
+            mediaFiles: FakeMediaFiles(),
+          );
       expect(report.failed, 0);
       expect(report.diaryCount, 1);
       expect(diaryStore.diaries['newer']!.title, 'from-archive');
@@ -790,14 +857,16 @@ void main() {
       final diaryStore = FakeDiaryStore();
       final categoryStore = FakeCategoryStore();
       final mediaFiles = FakeMediaFiles();
-      final report = await LocalArchive.importDirectory(
-        dir,
-        diaryStore: diaryStore,
-        categoryStore: categoryStore,
-        placeStore: FakePlaceStore(),
-        tombstoneStore: diaryStore.tombstones,
-        mediaFiles: mediaFiles,
-      );
+      final report =
+          await makeArchive(
+            diaries: diaryStore,
+            categories: categoryStore,
+            tombstones: diaryStore.tombstones,
+          ).importDirectory(
+            dir,
+            cancellation: SyncCancellationToken(),
+            mediaFiles: mediaFiles,
+          );
       expect(report.failed, 0);
       expect(report.diaryCount, 1);
       expect(report.categoryCount, 1);
@@ -821,14 +890,15 @@ void main() {
         buildDiary(id: 'alive', modifiedMs: 2000),
       ]);
       final mediaFiles = FakeMediaFiles()..put('image', 'img-1.png');
-      final report = await LocalArchive.importDirectory(
-        dir,
-        diaryStore: diaryStore,
-        categoryStore: FakeCategoryStore(),
-        placeStore: FakePlaceStore(),
-        tombstoneStore: diaryStore.tombstones,
-        mediaFiles: mediaFiles,
-      );
+      final report =
+          await makeArchive(
+            diaries: diaryStore,
+            tombstones: diaryStore.tombstones,
+          ).importDirectory(
+            dir,
+            cancellation: SyncCancellationToken(),
+            mediaFiles: mediaFiles,
+          );
       expect(report.failed, 0);
       expect(diaryStore.diaries.containsKey('dead'), isFalse);
       expect(diaryStore.tombstones.rows.containsKey('d:dead'), isTrue);
@@ -855,15 +925,16 @@ void main() {
       ]);
       final mediaFiles = FakeMediaFiles()..put('image', 'img-1.png');
 
-      final report = await LocalArchive.importDirectory(
-        dir,
-        policy: const RestorePolicy(),
-        diaryStore: diaryStore,
-        categoryStore: FakeCategoryStore(),
-        placeStore: FakePlaceStore(),
-        tombstoneStore: diaryStore.tombstones,
-        mediaFiles: mediaFiles,
-      );
+      final report =
+          await makeArchive(
+            diaries: diaryStore,
+            tombstones: diaryStore.tombstones,
+          ).importDirectory(
+            dir,
+            cancellation: SyncCancellationToken(),
+            policy: const RestorePolicy(),
+            mediaFiles: mediaFiles,
+          );
 
       expect(report.failed, 0);
       expect(
@@ -887,15 +958,16 @@ void main() {
         modifiedMs: 5000,
       );
 
-      final report = await LocalArchive.importDirectory(
-        dir,
-        policy: const RestorePolicy(),
-        diaryStore: diaryStore,
-        categoryStore: FakeCategoryStore(),
-        placeStore: FakePlaceStore(),
-        tombstoneStore: diaryStore.tombstones,
-        mediaFiles: FakeMediaFiles(),
-      );
+      final report =
+          await makeArchive(
+            diaries: diaryStore,
+            tombstones: diaryStore.tombstones,
+          ).importDirectory(
+            dir,
+            cancellation: SyncCancellationToken(),
+            policy: const RestorePolicy(),
+            mediaFiles: FakeMediaFiles(),
+          );
 
       expect(report.diaryCount, 1);
       expect(diaryStore.diaries['oops']!.title, 'from-archive');
@@ -911,15 +983,16 @@ void main() {
         buildDiary(id: 'd1', modifiedMs: 3000, title: 'local-newer'),
       ]);
 
-      final report = await LocalArchive.importDirectory(
-        dir,
-        policy: const RestorePolicy(),
-        diaryStore: diaryStore,
-        categoryStore: FakeCategoryStore(),
-        placeStore: FakePlaceStore(),
-        tombstoneStore: diaryStore.tombstones,
-        mediaFiles: FakeMediaFiles(),
-      );
+      final report =
+          await makeArchive(
+            diaries: diaryStore,
+            tombstones: diaryStore.tombstones,
+          ).importDirectory(
+            dir,
+            cancellation: SyncCancellationToken(),
+            policy: const RestorePolicy(),
+            mediaFiles: FakeMediaFiles(),
+          );
 
       expect(diaryStore.diaries['d1']!.title, 'local-newer');
       expect(report.diaryCount, 0);
@@ -934,14 +1007,15 @@ void main() {
       final holder = IncrementalSyncEngine.runExclusive(() => gate.future);
 
       final diaryStore = FakeDiaryStore();
-      final importing = LocalArchive.importDirectory(
-        dir,
-        diaryStore: diaryStore,
-        categoryStore: FakeCategoryStore(),
-        placeStore: FakePlaceStore(),
-        tombstoneStore: diaryStore.tombstones,
-        mediaFiles: FakeMediaFiles(),
-      );
+      final importing =
+          makeArchive(
+            diaries: diaryStore,
+            tombstones: diaryStore.tombstones,
+          ).importDirectory(
+            dir,
+            cancellation: SyncCancellationToken(),
+            mediaFiles: FakeMediaFiles(),
+          );
       await pumpEventQueue();
       expect(diaryStore.diaries, isEmpty, reason: '锁被别的同步家族操作占着时，导入不得落库');
 
@@ -955,12 +1029,9 @@ void main() {
       final dir = await buildArchiveDir(
         diaries: [buildDiary(id: 'd1', modifiedMs: 100)],
       );
-      await LocalArchive.importDirectory(
+      await makeArchive().importDirectory(
         dir,
-        diaryStore: FakeDiaryStore(),
-        categoryStore: FakeCategoryStore(),
-        placeStore: FakePlaceStore(),
-        tombstoneStore: FakeTombstoneStore(),
+        cancellation: SyncCancellationToken(),
         mediaFiles: FakeMediaFiles(),
       );
       expect(MoodiaryKVs.lastSyncTime.get(), anyOf(isNull, 0));

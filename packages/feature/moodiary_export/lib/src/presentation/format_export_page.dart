@@ -1,12 +1,13 @@
 import 'dart:io';
 
 import 'package:fast_press/fast_press.dart' as press;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:mui/mui.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../data/export_options.dart';
@@ -18,7 +19,7 @@ import 'image_export_page.dart';
 import 'pdf_font_page.dart';
 import 'scope_picker_page.dart';
 
-class FormatExportPage extends StatefulWidget {
+class FormatExportPage extends ConsumerStatefulWidget {
   final ExportFormat format;
 
   final ExportScope? lockedScope;
@@ -29,10 +30,10 @@ class FormatExportPage extends StatefulWidget {
       FormatExportPage(format: .byId(state.params['format'] as String));
 
   @override
-  State<FormatExportPage> createState() => _FormatExportPageState();
+  ConsumerState<FormatExportPage> createState() => _FormatExportPageState();
 }
 
-class _FormatExportPageState extends State<FormatExportPage> {
+class _FormatExportPageState extends ConsumerState<FormatExportPage> {
   late ExportSettings _settings = .decode(
     MoodiaryKVs.exportSettings.get() ?? '',
   );
@@ -50,7 +51,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
   }
 
   Future<void> _refreshCount() async {
-    final diaries = await _scope.resolve();
+    final diaries = await ref.read(exportServiceProvider).resolve(_scope);
     if (mounted) setState(() => _scopeCount = diaries.length);
   }
 
@@ -668,6 +669,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
   Future<void> _run() async {
     final l10n = context.l10n;
     await press.FastPress.ensureInitialized();
+    if (!mounted) return;
     final token = press.CancelToken();
     setState(() {
       _running = true;
@@ -675,20 +677,23 @@ class _FormatExportPageState extends State<FormatExportPage> {
       _progress = const ExportProgress(.converting, 0, 1);
     });
     try {
-      final outcome = await ExportService.run(
-        cancel: token,
-        format: widget.format,
-        scope: _scope,
-        settings: _settings,
-        imageStyle: _isImage ? _imageStyle() : null,
-        untitledLabel: l10n.common.untitled,
-        videoLabel: l10n.common.video,
-        audioLabel: l10n.common.audio,
-        attachmentLabel: l10n.export.mediaAttachment,
-        onProgress: (progress) {
-          if (mounted) setState(() => _progress = progress);
-        },
-      );
+      final outcome = await ref
+          .read(exportServiceProvider)
+          .run(
+            palette: MoodPalette.of(context),
+            cancel: token,
+            format: widget.format,
+            scope: _scope,
+            settings: _settings,
+            imageStyle: _isImage ? _imageStyle() : null,
+            untitledLabel: l10n.common.untitled,
+            videoLabel: l10n.common.video,
+            audioLabel: l10n.common.audio,
+            attachmentLabel: l10n.export.mediaAttachment,
+            onProgress: (progress) {
+              if (mounted) setState(() => _progress = progress);
+            },
+          );
       if (mounted) await _reportAndShare(outcome, l10n);
     } on ExportException catch (e) {
       toast.error(
@@ -712,6 +717,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
   }
 
   ImageCardStyle _imageStyle() => ImageCardStyle.resolve(
+    settings: ref.read(appSettingsControllerProvider),
     brightness: _settings.image.brightness,
     fallback: Theme.of(context).brightness,
     widthDp: _settings.image.widthDp,

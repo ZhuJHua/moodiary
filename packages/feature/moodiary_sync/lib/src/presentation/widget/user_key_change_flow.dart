@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show listEquals;
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -12,15 +11,43 @@ import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
-import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
+
+import '../../application/sync_operation_guard.dart';
+import '../../data/sync_logger.dart';
 
 Future<bool> applyUserKeyChange({
   required BuildContext context,
   required WidgetRef ref,
   required String? newKey,
+  required IRemoteSyncBackend backend,
 }) async {
+  final result = await ref.read(syncOperationGuardProvider).tryWithOperation((
+    operation,
+  ) async {
+    if (!identical(ref.read(activeSyncBackendProvider), backend)) {
+      return false;
+    }
+    return _changeKey(context, ref, operation, backend, newKey);
+  });
+  if (result == null) {
+    if (context.mounted) toast.info(message: l10n.sync.statusRunning);
+    return false;
+  }
+  return result;
+}
+
+Future<bool> _changeKey(
+  BuildContext context,
+  WidgetRef ref,
+  SyncOperation operation,
+  IRemoteSyncBackend backend,
+  String? newKey,
+) async {
+  final logger = ref.read(syncLoggerProvider);
+  final configured = await ref.read(configuredCloudBackendIdsProvider.future);
   final dek = await SyncKeyManager.loadDek();
   final target = (newKey == null || newKey.trim().isEmpty)
       ? null
@@ -28,13 +55,12 @@ Future<bool> applyUserKeyChange({
 
   if (dek == null && target == null) return true;
 
-  final backend = currentSyncBackend();
-  final backendReady = backend != null && await backend.isReady();
+  final backendReady = await backend.isReady();
 
   if (dek != null && target != null) {
     final keyfile = await SyncKeyManager.wrapDek(dek: dek, passphrase: target);
     SyncKeyManager.cacheKeyfile(keyfile);
-    await SyncKeyManager.markPendingUpload(await configuredCloudBackendIds());
+    await SyncKeyManager.markPendingUpload(configured);
     if (backendReady) {
       final check = await SyncKeyManager.checkRemoteKeyfile(backend);
       if (check == .conflict) {
@@ -88,7 +114,8 @@ Future<bool> applyUserKeyChange({
       final outcome = await _adoptRemoteKey(
         context: context,
         ref: ref,
-        backend: backend!,
+        backend: backend,
+        configured: configured,
         keyfile: remoteKeyfile,
         passphrase: target,
       );
@@ -103,6 +130,7 @@ Future<bool> applyUserKeyChange({
             context: context,
             ref: ref,
             backend: backend,
+            operation: operation,
             passphrase: target,
           );
       }
@@ -142,7 +170,7 @@ Future<bool> applyUserKeyChange({
           )) {
             throw SyncKeyConflictException(l10n.sync.errKeyConflict);
           }
-        });
+        }, logger: logger);
       } catch (e) {
         if (context.mounted) {
           toast.error(message: l10n.sync.keyWriteFailed(error: '$e'));
@@ -154,12 +182,13 @@ Future<bool> applyUserKeyChange({
       dek: newDek,
       keyfile: keyfile,
       backendId: backendReady ? backend.persistentBackendId : null,
-      configured: await configuredCloudBackendIds(),
+      configured: configured,
     );
     if (context.mounted) ref.invalidate(syncDekControllerProvider);
 
     if (hasRemote) {
-      if (context.mounted) await _encryptCloud(context, backend, newDek);
+      if (!context.mounted) return false;
+      return _encryptCloud(context, operation, logger, backend, newDek);
     } else if (context.mounted) {
       toast.success(message: l10n.sync.keyEncryptionOn);
     }
@@ -181,6 +210,8 @@ Future<bool> applyUserKeyChange({
     if (!context.mounted) return false;
     final report = await _runWithProgress(
       context,
+      operation,
+      logger,
       backend: backend,
       from: .withKey(dek),
       to: .plaintext,
@@ -209,11 +240,15 @@ Future<bool> applyUserKeyChange({
 
 Future<bool> _encryptCloud(
   BuildContext context,
+  SyncOperation operation,
+  SyncLogger logger,
   IRemoteSyncBackend backend,
   List<int> dek,
 ) async {
   final report = await _runWithProgress(
     context,
+    operation,
+    logger,
     backend: backend,
     from: .plaintext,
     to: .withKey(dek),
@@ -230,10 +265,12 @@ Future<bool> _encryptCloud(
 enum _DecryptedChoice { turnOff, encrypt }
 
 Future<bool> resolveDecryptedRemote({
+  required SyncOperation operation,
   required BuildContext context,
   required WidgetRef ref,
   required IRemoteSyncBackend backend,
 }) async {
+  final logger = ref.read(syncLoggerProvider);
   final id = backend.persistentBackendId;
   final keyfile = SyncKeyManager.cachedKeyfile();
   final dek = await SyncKeyManager.loadDek();
@@ -293,7 +330,7 @@ Future<bool> resolveDecryptedRemote({
           if (!await SyncKeyManager.claimRemoteKeyfile(backend, keyfile!)) {
             throw SyncKeyConflictException(l10n.sync.errKeyConflict);
           }
-        });
+        }, logger: logger);
       } catch (e) {
         toast.error(message: l10n.sync.keyWriteFailed(error: '$e'));
         return false;
@@ -301,13 +338,14 @@ Future<bool> resolveDecryptedRemote({
       if (id != null) await SyncKeyManager.clearPendingUpload(id);
       SyncKeyManager.clearKeyConflict(id);
       if (!context.mounted) return false;
-      return _encryptCloud(context, backend, dek!);
+      return _encryptCloud(context, operation, logger, backend, dek!);
   }
 }
 
 enum _AdoptOutcome { unlocked, cancelled, reset }
 
 Future<_AdoptOutcome> _adoptRemoteKey({
+  required Set<String> configured,
   required BuildContext context,
   required WidgetRef ref,
   required IRemoteSyncBackend backend,
@@ -347,7 +385,7 @@ Future<_AdoptOutcome> _adoptRemoteKey({
         dek: unwrapped,
         keyfile: keyfile,
         backendId: backend.persistentBackendId,
-        configured: await configuredCloudBackendIds(),
+        configured: configured,
       );
       if (context.mounted) ref.invalidate(syncDekControllerProvider);
       if (context.mounted) toast.success(message: l10n.sync.keyUnlocked);
@@ -380,6 +418,7 @@ Future<bool> confirmRemoteReset(BuildContext context) {
 }
 
 Future<bool> resetRemote({
+  required SyncOperation operation,
   required BuildContext context,
   required WidgetRef ref,
   required IRemoteSyncBackend backend,
@@ -388,13 +427,16 @@ Future<bool> resetRemote({
   if (!await AppAuth.verify(context, .syncCloudReset) || !context.mounted) {
     return false;
   }
-  final configured = await configuredCloudBackendIds();
+  final logger = ref.read(syncLoggerProvider);
+  final configured = await ref.read(configuredCloudBackendIdsProvider.future);
   if (!context.mounted) return false;
   final result = await _showProgress<RemoteWipeReport>(
     context,
     title: l10n.sync.keyWiping,
     start: (onProgress) => RemoteWipe.run(
       backend,
+      logger: logger,
+      operation: operation,
       passphrase: passphrase,
       configured: configured,
       onProgress: onProgress,
@@ -423,7 +465,9 @@ Future<bool> _remoteExists(IRemoteSyncBackend backend) async {
 }
 
 Future<ReCipherReport?> _runWithProgress(
-  BuildContext context, {
+  BuildContext context,
+  SyncOperation operation,
+  SyncLogger logger, {
   required IRemoteSyncBackend backend,
   required SyncCipher from,
   required SyncCipher to,
@@ -431,8 +475,10 @@ Future<ReCipherReport?> _runWithProgress(
   final result = await _showProgress<ReCipherReport?>(
     context,
     title: l10n.sync.keyProcessing,
-    start: (onProgress) =>
-        CloudReCipher(backend).run(from: from, to: to, onProgress: onProgress),
+    start: (onProgress) => CloudReCipher(
+      backend,
+      logger,
+    ).run(operation, from: from, to: to, onProgress: onProgress),
   );
 
   if (result == null) return null;
@@ -454,12 +500,24 @@ Future<_ProgressResult<T>?> _showProgress<T>(
   BuildContext context, {
   required String title,
   required Future<T> Function(ReCipherProgress onProgress) start,
-}) => showDialog<_ProgressResult<T>>(
-  context: context,
-  barrierDismissible: false,
-  useRootNavigator: true,
-  builder: (_) => _ProgressDialog<T>(title: title, start: start),
-);
+}) async {
+  Future<T>? work;
+  final result = await showDialog<_ProgressResult<T>>(
+    context: context,
+    barrierDismissible: false,
+    useRootNavigator: true,
+    builder: (_) => _ProgressDialog<T>(
+      title: title,
+      start: (progress) => work ??= Future.sync(() => start(progress)),
+    ),
+  );
+  if (result != null || work == null) return result;
+  try {
+    return _ProgressResult(value: await work!);
+  } catch (error) {
+    return _ProgressResult(error: error.toString());
+  }
+}
 
 class _ProgressDialog<T> extends StatefulWidget {
   final String title;

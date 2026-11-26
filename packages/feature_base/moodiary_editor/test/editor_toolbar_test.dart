@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/src/ime/ime_height.dart';
 import 'package:moodiary_editor/src/ime/ime_panel.dart';
 import 'package:moodiary_editor/src/moodiary_editor.dart';
@@ -99,21 +99,24 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
-      TranslationProvider(
-        child: MuiTheme(
-          data: buildMuiTheme(brightness: .light),
-          child: MaterialApp(
-            home: Scaffold(
-              body: Align(
-                alignment: .bottomCenter,
-                child: EditorToolbar(
-                  contextKind: .text,
-                  tools: ToolbarTool.selection,
-                  toneOf: (_) => .plain,
-                  enabledOf: (_) => true,
-                  onTool: (_) {},
-                  keyboardShown: true,
-                  onKeyboardToggle: () {},
+      ProviderScope(
+        retry: (_, _) => null,
+        child: TranslationProvider(
+          child: MuiTheme(
+            data: buildMuiTheme(brightness: .light),
+            child: MaterialApp(
+              home: Scaffold(
+                body: Align(
+                  alignment: .bottomCenter,
+                  child: EditorToolbar(
+                    contextKind: .text,
+                    tools: ToolbarTool.selection,
+                    toneOf: (_) => .plain,
+                    enabledOf: (_) => true,
+                    onTool: (_) {},
+                    keyboardShown: true,
+                    onKeyboardToggle: () {},
+                  ),
                 ),
               ),
             ),
@@ -137,40 +140,43 @@ void main() {
   testWidgets('媒体名称标签显示名称，没有名称时显示类型，点击触发重命名', (tester) async {
     var renames = 0;
     Future<void> mount(EditorNodeType type, String? name) => tester.pumpWidget(
-      TranslationProvider(
-        child: MuiTheme(
-          data: buildMuiTheme(brightness: .light),
-          child: MaterialApp(
-            home: Scaffold(
-              body: Align(
-                alignment: .bottomCenter,
-                child: Builder(
-                  builder: (context) {
-                    final toolbar = buildToolbarContext(
-                      context,
-                      state: EditorState(
-                        selection: .node,
-                        node: (
-                          type: type,
-                          attrs: {'src': 'audio-1.m4a', 'name': name},
+      ProviderScope(
+        retry: (_, _) => null,
+        child: TranslationProvider(
+          child: MuiTheme(
+            data: buildMuiTheme(brightness: .light),
+            child: MaterialApp(
+              home: Scaffold(
+                body: Align(
+                  alignment: .bottomCenter,
+                  child: Builder(
+                    builder: (context) {
+                      final toolbar = buildToolbarContext(
+                        context,
+                        state: EditorState(
+                          selection: .node,
+                          node: (
+                            type: type,
+                            attrs: {'src': 'audio-1.m4a', 'name': name},
+                          ),
                         ),
-                      ),
-                      exec: (_, [_]) {},
-                      popover: null,
-                      onTogglePopover: (_) {},
-                      onRenameMedia: () => renames++,
-                    );
-                    return EditorToolbar(
-                      contextKind: toolbar.kind,
-                      contextItems: toolbar.items,
-                      tools: const [],
-                      toneOf: (_) => .plain,
-                      enabledOf: (_) => true,
-                      onTool: (_) {},
-                      keyboardShown: true,
-                      onKeyboardToggle: () {},
-                    );
-                  },
+                        exec: (_, [_]) {},
+                        popover: null,
+                        onTogglePopover: (_) {},
+                        onRenameMedia: () => renames++,
+                      );
+                      return EditorToolbar(
+                        contextKind: toolbar.kind,
+                        contextItems: toolbar.items,
+                        tools: const [],
+                        toneOf: (_) => .plain,
+                        enabledOf: (_) => true,
+                        onTool: (_) {},
+                        keyboardShown: true,
+                        onKeyboardToggle: () {},
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -201,8 +207,8 @@ void main() {
     testWidgets('后台收键盘保留焦点时安全区随工具栏，只有展开面板使用面板色：${brightness.name}', (
       tester,
     ) async {
-      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-      addTearDown(getIt.reset);
+      KVStore.installForTesting(MemoryKVStorage());
+      addTearDown(KVStore.resetForTesting);
       tester.view.physicalSize = const Size(1200, 2400);
       tester.view.devicePixelRatio = 3;
       tester.view.viewPadding = const FakeViewPadding(bottom: 60);
@@ -214,16 +220,19 @@ void main() {
         accent: const MuiAccent.seeded(Color(0xFF4F794A)),
       );
       await tester.pumpWidget(
-        TranslationProvider(
-          child: MaterialApp(
-            theme: theme,
-            home: Scaffold(
-              resizeToAvoidBottomInset: false,
-              body: EditorToolbarHost(
-                controller: controller,
-                editable: true,
-                onInsertMedia: (_) async {},
-                child: const SizedBox.expand(),
+        ProviderScope(
+          retry: (_, _) => null,
+          child: TranslationProvider(
+            child: MaterialApp(
+              theme: theme,
+              home: Scaffold(
+                resizeToAvoidBottomInset: false,
+                body: EditorToolbarHost(
+                  controller: controller,
+                  editable: true,
+                  onInsertMedia: (_) async {},
+                  child: const SizedBox.expand(),
+                ),
               ),
             ),
           ),
@@ -271,22 +280,25 @@ void main() {
   }
 
   testWidgets('打字时选中块保留键盘，键盘收起后才换成块面板', (tester) async {
-    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-    addTearDown(getIt.reset);
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
     addTearDown(tester.view.reset);
     final controller = MoodiaryEditorController();
     final focus = controller.focusTarget as ValueNotifier<EditorFocusTarget>;
     final state = controller.state as ValueNotifier<EditorState>;
     await tester.pumpWidget(
-      TranslationProvider(
-        child: MaterialApp(
-          home: Scaffold(
-            resizeToAvoidBottomInset: false,
-            body: EditorToolbarHost(
-              controller: controller,
-              editable: true,
-              onInsertMedia: (_) async {},
-              child: const SizedBox.expand(),
+      ProviderScope(
+        retry: (_, _) => null,
+        child: TranslationProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              resizeToAvoidBottomInset: false,
+              body: EditorToolbarHost(
+                controller: controller,
+                editable: true,
+                onInsertMedia: (_) async {},
+                child: const SizedBox.expand(),
+              ),
             ),
           ),
         ),
@@ -318,16 +330,19 @@ void main() {
     final previews = <int>[];
     final picks = <int?>[];
     Future<void> mount(int? current) => tester.pumpWidget(
-      TranslationProvider(
-        child: MuiTheme(
-          data: buildMuiTheme(brightness: .light),
-          child: MaterialApp(
-            home: Scaffold(
-              body: Center(
-                child: WidthPicker(
-                  current: current,
-                  onPreview: previews.add,
-                  onPick: picks.add,
+      ProviderScope(
+        retry: (_, _) => null,
+        child: TranslationProvider(
+          child: MuiTheme(
+            data: buildMuiTheme(brightness: .light),
+            child: MaterialApp(
+              home: Scaffold(
+                body: Center(
+                  child: WidthPicker(
+                    current: current,
+                    onPreview: previews.add,
+                    onPick: picks.add,
+                  ),
                 ),
               ),
             ),
@@ -431,7 +446,8 @@ void main() {
     late StreamController<double> heights;
 
     setUp(() {
-      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+      KVStore.installForTesting(MemoryKVStorage());
+      addTearDown(KVStore.resetForTesting);
       target = _FakeTarget();
       controller = ImePanelController<String>();
       heights = StreamController<double>.broadcast();
@@ -439,7 +455,6 @@ void main() {
 
     tearDown(() async {
       await heights.close();
-      await getIt.reset();
     });
 
     Future<void> mount(WidgetTester tester, {double insets = 0}) =>

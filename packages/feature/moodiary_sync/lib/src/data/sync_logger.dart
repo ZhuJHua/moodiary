@@ -4,13 +4,12 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:path/path.dart' as p;
+import 'package:synchronized/synchronized.dart';
 
-@singleton
 class SyncLogger {
   SyncLogger._();
 
@@ -29,6 +28,8 @@ class SyncLogger {
   final StreamController<SyncEvent> _controller =
       StreamController<SyncEvent>.broadcast();
 
+  final _disk = Lock();
+  bool _disposed = false;
   Directory? _dir;
   IOSink? _sink;
   String? _currentDayKey;
@@ -37,7 +38,6 @@ class SyncLogger {
 
   Stream<SyncEvent> get events => _controller.stream;
 
-  @FactoryMethod(preResolve: true)
   static Future<SyncLogger> create() async {
     final logger = SyncLogger._();
     await logger._init();
@@ -51,11 +51,13 @@ class SyncLogger {
       await _dir!.create(recursive: true);
       await _cleanupOldFiles();
     } catch (e, s) {
+      _dir = null;
       logger.e('SyncLogger 落盘不可用，降级为纯内存模式', error: e, stackTrace: s);
     }
   }
 
   void log(SyncEvent event) {
+    if (_disposed) return;
     _buffer.add(event);
     if (_buffer.length > _bufferLimit) {
       _buffer.removeRange(0, _buffer.length - _bufferLimit);
@@ -63,7 +65,7 @@ class SyncLogger {
     if (!_controller.isClosed) {
       _controller.add(event);
     }
-    unawaited(_persist(event));
+    if (_dir != null) unawaited(_disk.synchronized(() => _persist(event)));
   }
 
   void info(
@@ -136,11 +138,19 @@ class SyncLogger {
   }
 
   Future<List<SyncEvent>> readDay([DateTime? day]) async {
-    if (_dir == null) return const [];
     final key = _dayKey(day ?? .now());
-    final path = p.join(_dir!.path, '$_filePrefix$key$_fileSuffix');
-    if (!await File(path).exists()) return const [];
-    return Isolate.run(() => parseDayFile(path));
+    if (_dir == null) {
+      return [
+        for (final event in _buffer)
+          if (_dayKey(event.at) == key) event,
+      ];
+    }
+    return _disk.synchronized(() async {
+      await _sink?.flush();
+      final path = p.join(_dir!.path, '$_filePrefix$key$_fileSuffix');
+      if (!await File(path).exists()) return const [];
+      return Isolate.run(() => parseDayFile(path));
+    });
   }
 
   @visibleForTesting
@@ -178,30 +188,34 @@ class SyncLogger {
 
   Future<void> clearAll() async {
     _buffer.clear();
-    await _sink?.flush();
-    await _sink?.close();
-    _sink = null;
-    _currentDayKey = null;
-    if (_dir == null) return;
-    await for (final entity in _dir!.list()) {
-      if (entity is File) {
-        final name = p.basename(entity.path);
-        if (!name.startsWith(_filePrefix) || !name.endsWith(_fileSuffix)) {
-          continue;
+    await _disk.synchronized(() async {
+      await _sink?.flush();
+      await _sink?.close();
+      _sink = null;
+      _currentDayKey = null;
+      if (_dir == null) return;
+      await for (final entity in _dir!.list()) {
+        if (entity is File) {
+          final name = p.basename(entity.path);
+          if (!name.startsWith(_filePrefix) || !name.endsWith(_fileSuffix)) {
+            continue;
+          }
+          try {
+            await entity.delete();
+          } catch (_) {}
         }
-        try {
-          await entity.delete();
-        } catch (_) {}
       }
-    }
+    });
   }
 
-  @disposeMethod
   Future<void> dispose() async {
-    await _sink?.flush();
-    await _sink?.close();
-    _sink = null;
-    if (!_controller.isClosed) {
+    _disposed = true;
+    try {
+      await _disk.synchronized(() async {
+        await _sink?.close();
+        _sink = null;
+      });
+    } finally {
       await _controller.close();
     }
   }

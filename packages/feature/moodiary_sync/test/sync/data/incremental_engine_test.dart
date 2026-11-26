@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_content/moodiary_content.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -13,21 +13,22 @@ import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation_token.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
 import '../sync_test_harness.dart';
 
 void main() {
+  late SyncTestEnv env;
   late SyncLogger logger;
 
   setUp(() async {
-    logger = (await setUpSyncEnv()).logger;
-    await configureBackend(.webdav);
+    env = await setUpSyncEnv();
+    logger = env.logger;
+    await env.configureBackend(.webdav);
   });
 
   tearDown(tearDownSyncEnv);
@@ -40,6 +41,7 @@ void main() {
     FakeTombstoneStore? tombstones,
     FakeMediaFiles? media,
     Future<SyncCipher> Function()? cipherProvider,
+    SyncCancellationToken? cancellation,
     int concurrency = 4,
   }) {
     final tombstoneStore =
@@ -50,6 +52,11 @@ void main() {
     return IncrementalSyncEngine(
       backend,
       logger: logger,
+      cancellation: cancellation ?? SyncCancellationToken(),
+      openDiaries: env.container.read(openDiaryRegistryProvider),
+      dirty: env.container.read(syncDirtyDiaryIdsProvider.notifier),
+      pending: env.container.read(syncPendingStateProvider.notifier),
+      configuredBackends: env.configuredBackends,
       diaryStore: diaries ?? FakeDiaryStore(const [], tombstoneStore),
       categoryStore: categories ?? FakeCategoryStore(const [], tombstoneStore),
       tagStore: tags ?? FakeTagStore(),
@@ -70,6 +77,11 @@ void main() {
     await IncrementalSyncEngine(
       backend,
       logger: logger,
+      cancellation: SyncCancellationToken(),
+      openDiaries: env.container.read(openDiaryRegistryProvider),
+      dirty: env.container.read(syncDirtyDiaryIdsProvider.notifier),
+      pending: env.container.read(syncPendingStateProvider.notifier),
+      configuredBackends: env.configuredBackends,
       diaryStore: FakeDiaryStore(diaries.cast()),
       categoryStore: FakeCategoryStore(cats.cast()),
       tagStore: FakeTagStore(),
@@ -88,7 +100,7 @@ void main() {
     () async {
       final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
       addTearDown(db.close);
-      getIt.registerSingleton<TagRepository>(TagRepository(db));
+      final tags = TagRepository(db);
       addTearDown(() => LocaleSettings.setLocale(AppLocale.zh));
       for (final locale in AppLocale.values) {
         await LocaleSettings.setLocale(locale);
@@ -116,7 +128,7 @@ void main() {
         final report = await engineOn(
           backend,
           diaries: store,
-          tags: RepoSyncTagStore(),
+          tags: RepoSyncTagStore(tags),
         ).pull();
         expect(report.failed, 0);
         expect(store.diaries, hasLength(4));
@@ -136,7 +148,6 @@ void main() {
     final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
     final tags = TagRepository(db);
-    getIt.registerSingleton<TagRepository>(tags);
     final backend = FakeRemoteBackend();
     final diary = buildDiary(id: 'a', modifiedMs: 100);
     await seedRemote(backend, diaries: [diary]);
@@ -155,7 +166,7 @@ void main() {
     final report = await engineOn(
       backend,
       diaries: store,
-      tags: RepoSyncTagStore(),
+      tags: RepoSyncTagStore(tags),
     ).pull();
     expect(report.failed, 0);
     expect(report.diaryCount, 0);
@@ -377,8 +388,10 @@ void main() {
         buildDiary(id: 'open', modifiedMs: 100, title: 'editing'),
         buildDiary(id: 'closed', modifiedMs: 100, title: 'done'),
       ]);
-      getIt<OpenDiaryRegistry>().open('open');
-      addTearDown(() => getIt<OpenDiaryRegistry>().close('open'));
+      env.container.read(openDiaryRegistryProvider).open('open');
+      addTearDown(
+        () => env.container.read(openDiaryRegistryProvider).close('open'),
+      );
 
       final report = await engineOn(backend, diaries: store).push();
 
@@ -393,13 +406,15 @@ void main() {
       final backend = FakeRemoteBackend();
       final store = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 100)]);
 
-      getIt<OpenDiaryRegistry>().open('a');
-      addTearDown(() => getIt<OpenDiaryRegistry>().close('a'));
+      env.container.read(openDiaryRegistryProvider).open('a');
+      addTearDown(
+        () => env.container.read(openDiaryRegistryProvider).close('a'),
+      );
       final first = await engineOn(backend, diaries: store).push();
       expect(first.diaryCount, 0);
       expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isFalse);
 
-      getIt<OpenDiaryRegistry>().close('a');
+      env.container.read(openDiaryRegistryProvider).close('a');
       final second = await engineOn(backend, diaries: store).push();
       expect(second.diaryCount, 1);
       expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isTrue);
@@ -448,6 +463,11 @@ void main() {
       await IncrementalSyncEngine(
         backend,
         logger: logger,
+        cancellation: SyncCancellationToken(),
+        openDiaries: env.container.read(openDiaryRegistryProvider),
+        dirty: env.container.read(syncDirtyDiaryIdsProvider.notifier),
+        pending: env.container.read(syncPendingStateProvider.notifier),
+        configuredBackends: env.configuredBackends,
         diaryStore: FakeDiaryStore(const []),
         categoryStore: FakeCategoryStore(const []),
         tagStore: FakeTagStore(),
@@ -471,27 +491,37 @@ void main() {
     test('clears 待同步 for an uploaded diary after commit', () async {
       final backend = FakeRemoteBackend();
       final store = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 100)]);
-      getIt<SyncDirtyTracker>().markDirty('a');
-      addTearDown(() => getIt<SyncDirtyTracker>().clearDirty('a'));
+      env.container.read(syncDirtyDiaryIdsProvider.notifier).markDirty('a');
+      addTearDown(
+        () => env.container
+            .read(syncDirtyDiaryIdsProvider.notifier)
+            .clearDirty('a'),
+      );
 
       await engineOn(backend, diaries: store).push();
 
-      expect(getIt<SyncDirtyTracker>().listenable.value.contains('a'), isFalse);
+      expect(
+        env.container.read(syncDirtyDiaryIdsProvider).contains('a'),
+        isFalse,
+      );
     });
 
     test('keeps 待同步 for a diary skipped because it is open', () async {
       final backend = FakeRemoteBackend();
       final store = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 100)]);
-      getIt<SyncDirtyTracker>().markDirty('a');
-      getIt<OpenDiaryRegistry>().open('a');
+      env.container.read(syncDirtyDiaryIdsProvider.notifier).markDirty('a');
+      env.container.read(openDiaryRegistryProvider).open('a');
       addTearDown(() {
-        getIt<SyncDirtyTracker>().clearDirty('a');
-        getIt<OpenDiaryRegistry>().close('a');
+        env.container.read(syncDirtyDiaryIdsProvider.notifier).clearDirty('a');
+        env.container.read(openDiaryRegistryProvider).close('a');
       });
 
       await engineOn(backend, diaries: store).push();
 
-      expect(getIt<SyncDirtyTracker>().listenable.value.contains('a'), isTrue);
+      expect(
+        env.container.read(syncDirtyDiaryIdsProvider).contains('a'),
+        isTrue,
+      );
     });
   });
 
@@ -1001,8 +1031,10 @@ void main() {
         },
       });
       final local = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 1000)]);
-      getIt<OpenDiaryRegistry>().open('a');
-      addTearDown(() => getIt<OpenDiaryRegistry>().close('a'));
+      env.container.read(openDiaryRegistryProvider).open('a');
+      addTearDown(
+        () => env.container.read(openDiaryRegistryProvider).close('a'),
+      );
 
       final report = await engineOn(backend, diaries: local).pull();
       expect(report.diaryCount, 0);
@@ -1013,7 +1045,7 @@ void main() {
       );
       expect(local.tombstones.rows, isEmpty);
 
-      getIt<OpenDiaryRegistry>().close('a');
+      env.container.read(openDiaryRegistryProvider).close('a');
       final second = await engineOn(backend, diaries: local).pull();
       expect(second.diaryCount, 1);
       expect(local.diaries.containsKey('a'), isFalse);
@@ -1030,13 +1062,20 @@ void main() {
           buildDiary(id: 'a', modifiedMs: 100),
           buildDiary(id: 'b', modifiedMs: 200),
         ]);
-        getIt<SyncCancellation>().requestStop();
+        final token = SyncCancellationToken()..requestStop();
 
-        final report = await engineOn(backend, diaries: store).push();
+        final report = await engineOn(
+          backend,
+          diaries: store,
+          cancellation: token,
+        ).push();
         expect(report.cancelled, isTrue);
         expect(report.diaryCount, 0);
         expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isFalse);
         expect(MoodiaryKVs.lastSyncTime.get(), 0);
+        final next = await engineOn(backend, diaries: store).push();
+        expect(next.cancelled, isFalse);
+        expect(next.diaryCount, 2);
       },
     );
   });
@@ -1045,8 +1084,8 @@ void main() {
     test(
       'hard-deletes only after EVERY configured backend received the tombstone',
       () async {
-        await configureBackend(.webdav);
-        await configureBackend(.s3);
+        await env.configureBackend(.webdav);
+        await env.configureBackend(.s3);
 
         final webdav = FakeRemoteBackend(backendId: 'webdav');
         final s3 = FakeRemoteBackend(backendId: 's3');

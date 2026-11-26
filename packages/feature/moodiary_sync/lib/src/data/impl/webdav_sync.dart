@@ -1,28 +1,19 @@
 library;
 
-import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:fast_core/sync.dart' as rust;
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
-import 'package:moodiary_sync/src/data/remote_lease.dart';
-import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/sync_key_manager.dart';
+import 'package:synchronized/synchronized.dart';
 
-@Named(SyncProviderIds.webdav)
-@LazySingleton(as: IRemoteSyncBackend)
 class WebDavSyncBackend implements IRemoteSyncBackend {
-  WebDavSyncBackend(@Named(SyncProviderIds.webdav) this._config);
+  WebDavSyncBackend(this._options);
 
-  final SecureOptions _config;
-
-  Future<List<String>>? _options;
-  Future<rust.DavClient>? _cachedClient;
-
-  Future<List<String>> _read() => _options ??= _config.read();
+  final Future<List<String>> _options;
+  final _clientLock = Lock();
+  rust.DavClient? _cachedClient;
 
   static String _at(List<String> o, int i) => o.length > i ? o[i] : '';
 
@@ -39,24 +30,17 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   String get displayName => type.label;
 
   @override
-  Future<bool> isReady() async => _ready(await _read());
+  Future<bool> isReady() async => _ready(await _options);
 
-  Future<rust.DavClient> _client() {
-    final cached = _cachedClient;
-    if (cached != null) return cached;
-    final future = _buildClient().onError((
-      Object error,
-      StackTrace stackTrace,
-    ) {
-      _cachedClient = null;
-      Error.throwWithStackTrace(error, stackTrace);
-    });
-    _cachedClient = future;
-    return future;
+  Future<rust.DavClient> _client() async {
+    return _cachedClient ??
+        await _clientLock.synchronized(
+          () async => _cachedClient ??= await _buildClient(),
+        );
   }
 
   Future<rust.DavClient> _buildClient() async {
-    final opts = await _read();
+    final opts = await _options;
     await rust.FastCore.ensureInitialized();
     return rust.DavClient.newInstance(
       baseUrl: _at(opts, 0),
@@ -200,24 +184,5 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       SyncException(l10n.sync.errWebdavConfig, kind: .notConfigured);
 
   @override
-  Future<List<String>> savedOptions() => _read();
-
-  @override
-  Future<void> saveOptions(List<String> options) async {
-    await _config.save(options);
-    _options = null;
-    _cachedClient = null;
-    RemoteLease.resetCasProbeCache();
-    if (await SyncKeyManager.loadDek() != null) {
-      await SyncKeyManager.markPendingUpload([type.value]);
-    }
-  }
-
-  @override
-  Future<void> clearOptions() async {
-    await _config.clear();
-    _options = null;
-    _cachedClient = null;
-    RemoteLease.resetCasProbeCache();
-  }
+  Future<List<String>> savedOptions() => _options;
 }

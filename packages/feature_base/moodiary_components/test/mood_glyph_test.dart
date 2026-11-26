@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
@@ -8,8 +7,25 @@ import 'package:moodiary_storage/testing.dart';
 import 'support/pump.dart';
 
 void main() {
-  setUp(() => getIt.registerSingleton<IKVStorage>(MemoryKVStorage()));
-  tearDown(getIt.reset);
+  setUp(() {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+  });
+
+  testWidgets(
+    'a detached widget defaults to classic even with a stored palette',
+    (tester) async {
+      MoodiaryKVs.moodPalette.set('blueOrange');
+      await tester.pumpWidget(
+        Builder(
+          builder: (context) {
+            expect(MoodPalette.of(context), MoodPalette.classic);
+            return const SizedBox();
+          },
+        ),
+      );
+    },
+  );
 
   testWidgets('glyph is a circle bone only inside an enabled skeleton', (
     tester,

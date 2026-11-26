@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart' show Font;
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:path/path.dart' as p;
 
 enum LegacyDatabaseState { none, pending, abandoning, probeFailed }
@@ -43,10 +43,18 @@ abstract final class LegacyDatabaseGuard {
     }
   }
 
-  static Future<void> abandon() =>
-      _activeAbandon ??= _abandon().whenComplete(() => _activeAbandon = null);
+  static Future<void> abandon({
+    required DiaryRepository diaries,
+    required FontRepository fonts,
+  }) => _activeAbandon ??= _abandon(
+    diaries,
+    fonts,
+  ).whenComplete(() => _activeAbandon = null);
 
-  static Future<void> _abandon() async {
+  static Future<void> _abandon(
+    DiaryRepository diaries,
+    FontRepository fonts,
+  ) async {
     switch (await probe()) {
       case .none:
         return;
@@ -88,7 +96,7 @@ abstract final class LegacyDatabaseGuard {
     }
     _state = .abandoning;
     await Directory(destination).create(recursive: true);
-    final references = await getIt<DiaryRepository>().collectReferencedMedia();
+    final references = await diaries.collectReferencedMedia();
     if (references.images.isEmpty &&
         references.audios.isEmpty &&
         references.videos.isEmpty &&
@@ -107,12 +115,14 @@ abstract final class LegacyDatabaseGuard {
       destination,
     );
     await AppFiles.initCreateDir();
-    final fonts = getIt<FontRepository>();
     // 字体登记是尽力而为：坏字体文件会让整次扫描抛错，不能因此把放弃卡死在拦截页。
     // 文件本身留在 font/ 目录不动；SQLite 写入失败仍然抛出，保留 journal 重试。
     List<Font> diskFonts;
     try {
-      diskFonts = await fonts.scanDiskFonts();
+      diskFonts = [
+        for (final file in await FontManager.scanFontFiles())
+          Font(fontFileName: file.fileName, fontWghtAxisMap: file.wghtAxis),
+      ];
     } catch (error, stack) {
       logger.e('Legacy font scan failed', error: error, stackTrace: stack);
       diskFonts = const [];

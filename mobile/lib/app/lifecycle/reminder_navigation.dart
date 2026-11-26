@@ -1,52 +1,51 @@
 import 'dart:async';
 
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:moodiary_reminder/moodiary_reminder.dart';
 import 'package:mui/mui.dart';
 
-class ReminderNavigation extends StatefulWidget {
+class ReminderNavigation extends ConsumerStatefulWidget {
   const ReminderNavigation({super.key, required this.child});
   final Widget child;
 
   @override
-  State<ReminderNavigation> createState() => _ReminderNavigationState();
+  ConsumerState<ReminderNavigation> createState() => _ReminderNavigationState();
 }
 
-class _ReminderNavigationState extends State<ReminderNavigation> {
-  late final _service = getIt<ReminderService>();
+class _ReminderNavigationState extends ConsumerState<ReminderNavigation> {
+  late final _service = ref.read(reminderServiceProvider);
+  late final _router = ref.read(appRouterProvider);
   StreamSubscription<void>? _subscription;
-  bool _pending = false;
   bool _scheduled = false;
 
   @override
   void initState() {
     super.initState();
-    _pending = _service.launchedFromNotification;
-    _subscription = _service.taps.listen((_) {
-      _pending = true;
-      _drain();
-    });
-    router.routerDelegate.addListener(_drain);
+    _subscription = _service.taps.listen((_) => _drain());
+    _router.routerDelegate.addListener(_drain);
     _drain();
   }
 
   void _drain() {
-    if (!_pending || _scheduled) return;
+    if (!_service.launchedFromNotification || _scheduled) return;
     _scheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scheduled = false;
-      if (!mounted || !_pending) return;
+      if (!mounted || !_service.launchedFromNotification) return;
       final newDiary = _service.tapAction == ReminderTapAction.newDiary;
-      final routes = router.routerDelegate.currentConfiguration;
+      final routes = _router.routerDelegate.currentConfiguration;
+      if (routes.isEmpty) return;
       final path = routes.lastOrNull?.matchedLocation ?? routes.uri.path;
-      if (newDiary && isGateRoute(path)) {
+      if (isGateRoute(path)) {
         return;
       }
-      _pending = false;
-      _service.launchedFromNotification = false;
-      if (newDiary && !_hasNewDiary(routes.matches)) {
-        router.pushRoute(const NewDiaryRoute());
+      var openEditor = newDiary && !_hasNewDiary(routes.matches);
+      while (_service.consumeTap()) {
+        if (openEditor) {
+          _router.pushRoute(const NewDiaryRoute());
+          openEditor = false;
+        }
       }
     });
     WidgetsBinding.instance.ensureVisualUpdate();
@@ -62,7 +61,7 @@ class _ReminderNavigationState extends State<ReminderNavigation> {
 
   @override
   void dispose() {
-    router.routerDelegate.removeListener(_drain);
+    _router.routerDelegate.removeListener(_drain);
     unawaited(_subscription?.cancel());
     super.dispose();
   }

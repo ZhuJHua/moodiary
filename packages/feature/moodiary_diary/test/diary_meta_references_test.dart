@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/diary_meta_references.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
@@ -51,11 +50,11 @@ void main() {
   setUp(() {
     categories = _Categories();
     places = _Places();
-    getIt.registerSingleton<CategoryRepository>(categories);
-    getIt.registerSingleton<PlaceRepository>(places);
-    container = ProviderContainer(
+    container = ProviderContainer.test(
       retry: (_, _) => null,
       overrides: [
+        categoryRepositoryProvider.overrideWithValue(categories),
+        placeRepositoryProvider.overrideWithValue(places),
         // Ordering is irrelevant here; avoid initializing MMKV in this test.
         orderedPlacesProvider.overrideWith(
           (ref) => ref.watch(placeControllerProvider),
@@ -64,9 +63,7 @@ void main() {
     );
   });
   tearDown(() async {
-    container.dispose();
     await categories.events.close();
-    await getIt.reset();
   });
 
   test('cold references wait until both caches resolve', () async {

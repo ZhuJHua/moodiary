@@ -1,37 +1,81 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart'
-    show ValueListenable, ValueNotifier, visibleForTesting;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/widgets.dart' show AppLifecycleListener;
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/application/sync_runner.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_data_providers.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
-import 'package:moodiary_sync/src/data/sync_logger.dart';
-import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-@lazySingleton
+import 'sync_controller.dart';
+import 'sync_operation_guard.dart';
+
+part 'auto_sync_watcher.g.dart';
+
+@Riverpod(keepAlive: true)
+DateTime? autoSyncNextPollAt(Ref ref) {
+  final watcher = ref.watch(autoSyncWatcherProvider);
+  final subscription = watcher._scheduleChanges.stream.listen(
+    (_) => ref.invalidateSelf(),
+  );
+  ref.onDispose(() => unawaited(subscription.cancel()));
+  return watcher.nextPollAt;
+}
+
+@Riverpod(keepAlive: true)
+AutoSyncWatcher autoSyncWatcher(Ref ref) {
+  final watcher = AutoSyncWatcher(
+    ref.watch(syncOperationGuardProvider),
+    ref.watch(syncControllerProvider.notifier),
+    ref.watch(diaryRepositoryProvider),
+    ref.watch(categoryRepositoryProvider),
+    ref.watch(tagRepositoryProvider),
+    ref.watch(placeRepositoryProvider),
+    ref.watch(syncDirtyDiaryIdsProvider.notifier),
+    ref.watch(openDiaryRegistryProvider),
+    resolveBackend: () => ref.read(activeSyncBackendProvider),
+    configuredBackends: () =>
+        ref.read(configuredCloudBackendIdsProvider.future),
+    isDirty: (id) => ref.read(syncDirtyDiaryIdsProvider).contains(id),
+  );
+  ref.onDispose(() => unawaited(watcher.dispose()));
+  return watcher;
+}
+
 class AutoSyncWatcher {
   AutoSyncWatcher(
-    this._logger,
-    this._runner,
+    this._guard,
+    this._controller,
     this._diaries,
     this._categories,
     this._tags,
     this._places,
     this._dirty,
-    this._openDiaries,
-  );
+    this._openDiaries, {
+    required this.resolveBackend,
+    required this.configuredBackends,
+    required this._isDirty,
+    Stream<bool> Function() onlineChanges = _onlineChanges,
+  }) : _networkChanges = onlineChanges;
 
-  final SyncLogger _logger;
-  final SyncRunner _runner;
+  final SyncOperationGuard _guard;
+  final SyncController _controller;
+  final bool Function(String) _isDirty;
+  final _scheduleChanges = StreamController<void>.broadcast();
+  DateTime? _nextPollAt;
+  DateTime? get nextPollAt => _nextPollAt;
+  static Stream<bool> _onlineChanges() => NetworkStatus.onlineChanges;
+  final IRemoteSyncBackend Function() resolveBackend;
+  final Future<Set<String>> Function() configuredBackends;
+  final Stream<bool> Function() _networkChanges;
+
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
   final TagRepository _tags;
@@ -56,35 +100,32 @@ class AutoSyncWatcher {
   StreamSubscription<TagEvent>? _tagSub;
   StreamSubscription<PlaceEvent>? _placeSub;
   StreamSubscription<String>? _closedSub;
-  StreamSubscription<SyncEvent>? _syncSub;
+  StreamSubscription<bool>? _guardSub;
   StreamSubscription<bool>? _netSub;
   AppLifecycleListener? _lifecycle;
 
   int _probeFailStreak = 0;
   DateTime? _lastTickAt;
 
-  final ValueNotifier<DateTime?> _nextPollAt = ValueNotifier(null);
-
-  ValueListenable<DateTime?> get nextPollAt => _nextPollAt;
-
   Timer? _timer;
 
   DateTime? _timerDue;
   SyncTrigger _pendingTrigger = .change;
   Timer? _pollTimer;
-  bool _syncing = false;
-  bool _dirtyDuringSync = false;
+  int _localVersion = 0;
+  bool _retryAfterOperation = false;
 
   bool _started = false;
 
   void start() {
+    if (_started || _scheduleChanges.isClosed) return;
     _started = true;
     _diarySub ??= _diaries.diaryEvents.listen((event) async {
-      if (event.fromSync) return;
-      MoodiaryKVs.syncPendingLocal.set(true);
+      if (event.fromSync || !_started) return;
+      _markLocalChange();
       switch (event) {
         case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
-          if ((await configuredCloudBackendIds()).isNotEmpty) {
+          if ((await configuredBackends()).isNotEmpty && _started) {
             _dirty.markDirty(diary.id);
           }
           if (!_openDiaries.contains(diary.id)) _onLocalChange();
@@ -94,29 +135,28 @@ class AutoSyncWatcher {
       }
     });
     _categorySub ??= _categories.categoryEvents.listen((event) {
-      if (event.fromSync) return;
-      MoodiaryKVs.syncPendingLocal.set(true);
+      if (event.fromSync || !_started) return;
+      _markLocalChange();
       _onLocalChange();
     });
     _tagSub ??= _tags.tagEvents.listen((event) {
-      if (event.fromSync) return;
-      MoodiaryKVs.syncPendingLocal.set(true);
+      if (event.fromSync || !_started) return;
+      _markLocalChange();
       _onLocalChange();
     });
     _placeSub ??= _places.placeEvents.listen((event) {
-      if (event.fromSync) return;
-      MoodiaryKVs.syncPendingLocal.set(true);
+      if (event.fromSync || !_started) return;
+      _markLocalChange();
       _onLocalChange();
     });
     _closedSub ??= _openDiaries.closed.listen((id) {
-      if (!_dirty.listenable.value.contains(id) &&
-          MoodiaryKVs.syncPendingLocal.get() != true) {
+      if (!_isDirty(id) && MoodiaryKVs.syncPendingLocal.get() != true) {
         return;
       }
       _onLocalChange(trigger: .close, delay: _closeDebounce);
     });
-    _syncSub ??= _logger.events.listen(_onSyncEvent);
-    _netSub ??= NetworkStatus.onlineChanges.listen((online) {
+    _guardSub = _guard.changes.listen(_onGuardChanged);
+    _netSub ??= _networkChanges().listen((online) {
       if (online) _kick(.network);
     }, onError: (_) {});
     _lifecycle ??= AppLifecycleListener(onResume: _onResume, onHide: _onHide);
@@ -147,22 +187,25 @@ class AutoSyncWatcher {
     unawaited(_pollTick(trigger: trigger));
   }
 
-  @disposeMethod
   Future<void> dispose() async {
+    if (_scheduleChanges.isClosed) return;
     _started = false;
+    _nextPollAt = null;
+    _scheduleChanges.add(null);
+    final closed = _scheduleChanges.close();
     _timer?.cancel();
     _timer = null;
     _timerDue = null;
     _pollTimer?.cancel();
     _pollTimer = null;
-    _nextPollAt.value = null;
+    await _guardSub?.cancel();
+    _guardSub = null;
     MoodiaryKVs.syncPollInterval.getNotifier().removeListener(_schedulePoll);
     await _diarySub?.cancel();
     await _categorySub?.cancel();
     await _tagSub?.cancel();
     await _placeSub?.cancel();
     await _closedSub?.cancel();
-    await _syncSub?.cancel();
     await _netSub?.cancel();
     _lifecycle?.dispose();
     _lifecycle = null;
@@ -171,8 +214,8 @@ class AutoSyncWatcher {
     _tagSub = null;
     _placeSub = null;
     _closedSub = null;
-    _syncSub = null;
     _netSub = null;
+    await closed;
   }
 
   static int _resolvePollSeconds() {
@@ -187,7 +230,8 @@ class AutoSyncWatcher {
       base: _resolvePollSeconds(),
       failStreak: _probeFailStreak,
     );
-    _nextPollAt.value = DateTime.now().add(Duration(seconds: seconds));
+    _nextPollAt = DateTime.now().add(Duration(seconds: seconds));
+    _scheduleChanges.add(null);
     _pollTimer = Timer(Duration(seconds: seconds), () async {
       await _pollTick();
       if (_started) _schedulePoll();
@@ -207,33 +251,28 @@ class AutoSyncWatcher {
     return min(shifted, _maxBackoffSeconds);
   }
 
+  void _markLocalChange() {
+    _localVersion++;
+    MoodiaryKVs.syncPendingLocal.set(true);
+  }
+
   void _onLocalChange({
     SyncTrigger trigger = .change,
     Duration delay = _debounce,
   }) {
     if (MoodiaryKVs.autoSync.get() != true) return;
-    if (_syncing) {
-      _dirtyDuringSync = true;
+    if (!_started) return;
+    if (_guard.isBusy) {
+      _retryAfterOperation = true;
       return;
     }
     _scheduleDebounced(delay, trigger);
   }
 
-  void _onSyncEvent(SyncEvent event) {
-    switch (event.kind) {
-      case .syncStart:
-        _syncing = true;
-        _timer?.cancel();
-        _timer = null;
-        _timerDue = null;
-      case .syncEnd:
-        _syncing = false;
-        if (_dirtyDuringSync) {
-          _dirtyDuringSync = false;
-          _scheduleDebounced(_debounce, .change);
-        }
-      default:
-        break;
+  void _onGuardChanged(bool busy) {
+    if (!busy && _retryAfterOperation && _started) {
+      _retryAfterOperation = false;
+      _scheduleDebounced(_debounce, .change);
     }
   }
 
@@ -259,47 +298,61 @@ class AutoSyncWatcher {
     _timerDue = null;
     final trigger = _pendingTrigger;
     if (MoodiaryKVs.autoSync.get() != true) return;
-    await _runAutoSync(.push, trigger);
+    if (_guard.isBusy) {
+      _retryAfterOperation = true;
+      return;
+    }
+    await _guard.tryWithOperation((operation) async {
+      final backend = resolveBackend();
+      final version = _localVersion;
+      if (await backend.isReady()) {
+        await _runAutoSync(operation, backend, .push, trigger, version);
+      }
+    });
   }
 
   Future<void> _pollTick({SyncTrigger trigger = .poll}) async {
     if (MoodiaryKVs.autoSync.get() != true) return;
-    if (_syncing || _runner.isRunning) return;
-    final backend = getIt.maybeGet<IRemoteSyncBackend>();
-    if (backend == null) return;
-    if (!await backend.isReady()) return;
-    _lastTickAt = DateTime.now();
+    await _guard.tryWithOperation((operation) async {
+      final backend = resolveBackend();
+      final version = _localVersion;
+      if (!await backend.isReady()) return;
+      _lastTickAt = DateTime.now();
 
-    String? preStat;
-    final backendId = backend.persistentBackendId;
-    if (backendId != null) {
-      try {
-        final stat = await _runner.probe(trigger: trigger);
-        // 格式固定为 'id|串'，改了会导致老用户缓存的 stat 全部失配
-        preStat = '$backendId|${stat ?? ''}';
-      } catch (_) {
-        _probeFailStreak++;
-        return;
+      String? preStat;
+      final backendId = backend.persistentBackendId;
+      if (backendId != null) {
+        try {
+          final stat = await _controller.probe(operation, backend);
+          // 格式固定为 'id|串'，改了会导致老用户缓存的 stat 全部失配
+          preStat = '$backendId|${stat ?? ''}';
+        } catch (_) {
+          _probeFailStreak++;
+          return;
+        }
+        _probeFailStreak = 0;
+        if (shouldSkipPoll(
+          preStat: preStat,
+          cachedStat: MoodiaryKVs.syncManifestStat.get(),
+          pendingLocal: MoodiaryKVs.syncPendingLocal.get() ?? true,
+          lastSyncMs: MoodiaryKVs.lastSyncTime.get() ?? 0,
+          nowMs: DateTime.now().millisecondsSinceEpoch,
+          pollSeconds: _resolvePollSeconds(),
+        )) {
+          return;
+        }
       }
-      _probeFailStreak = 0;
-      if (shouldSkipPoll(
-        preStat: preStat,
-        cachedStat: MoodiaryKVs.syncManifestStat.get(),
-        pendingLocal: MoodiaryKVs.syncPendingLocal.get() ?? true,
-        lastSyncMs: MoodiaryKVs.lastSyncTime.get() ?? 0,
-        nowMs: DateTime.now().millisecondsSinceEpoch,
-        pollSeconds: _resolvePollSeconds(),
-      )) {
-        return;
-      }
-    }
-    await _runAutoSync(
-      .sync,
-      trigger,
-      onSuccess: preStat == null
-          ? null
-          : () => MoodiaryKVs.syncManifestStat.set(preStat!),
-    );
+      await _runAutoSync(
+        operation,
+        backend,
+        .sync,
+        trigger,
+        version,
+        onSuccess: preStat == null
+            ? null
+            : () => MoodiaryKVs.syncManifestStat.set(preStat!),
+      );
+    });
   }
 
   @visibleForTesting
@@ -319,32 +372,32 @@ class AutoSyncWatcher {
   }
 
   Future<void> _runAutoSync(
+    SyncOperation operation,
+    IRemoteSyncBackend backend,
     SyncDirection direction,
-    SyncTrigger trigger, {
+    SyncTrigger trigger,
+    int version, {
     void Function()? onSuccess,
   }) async {
-    if (_syncing || _runner.isRunning) return;
-    final backend = getIt.maybeGet<IRemoteSyncBackend>();
-    if (backend == null) return;
-    if (!await backend.isReady()) return;
-    if (SyncKeyManager.hasKeyConflict(backend.persistentBackendId)) return;
-
-    _syncing = true;
-    try {
-      final outcome = await _runner.run(direction, trigger: trigger);
-      final report = outcome?.report;
-      if (report != null && report.failed == 0 && !report.cancelled) {
-        if (clearsPendingLocal(report, dirtyDuringSync: _dirtyDuringSync)) {
-          MoodiaryKVs.syncPendingLocal.set(false);
-        }
-        onSuccess?.call();
+    if (!_started ||
+        SyncKeyManager.hasKeyConflict(backend.persistentBackendId)) {
+      return;
+    }
+    final outcome = await _controller.run(
+      operation,
+      backend,
+      direction,
+      trigger,
+    );
+    final report = outcome.report;
+    if (report != null && report.failed == 0 && !report.cancelled) {
+      if (clearsPendingLocal(
+        report,
+        dirtyDuringSync: version != _localVersion,
+      )) {
+        MoodiaryKVs.syncPendingLocal.set(false);
       }
-    } finally {
-      _syncing = false;
-      if (_dirtyDuringSync) {
-        _dirtyDuringSync = false;
-        _scheduleDebounced(_debounce, .change);
-      }
+      onSuccess?.call();
     }
   }
 }

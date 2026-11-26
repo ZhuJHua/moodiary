@@ -2,16 +2,56 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleListener;
-import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:synchronized/synchronized.dart';
 
 import '../data/reminder.dart';
 import '../data/reminder_notifications.dart';
+
+part 'reminder_service.g.dart';
+
+typedef ReminderState = ({
+  List<Reminder> reminders,
+  bool enabled,
+  ReminderTapAction tapAction,
+  bool notificationsEnabled,
+  DateTime? next,
+  DateTime now,
+});
+
+@Riverpod(keepAlive: true)
+ReminderNotifications reminderNotifications(Ref ref) =>
+    NativeReminderNotifications();
+
+@Riverpod(keepAlive: true)
+ReminderService reminderService(Ref ref) {
+  final service = ReminderService(
+    ref.watch(reminderNotificationsProvider),
+    ref.watch(notificationPermissionProvider),
+  );
+  ref.onDispose(() => unawaited(service.dispose()));
+  return service;
+}
+
+@Riverpod(keepAlive: true)
+ReminderState reminderState(Ref ref) {
+  final service = ref.watch(reminderServiceProvider);
+  final sub = service._changes.stream.listen((_) => ref.invalidateSelf());
+  ref.onDispose(sub.cancel);
+  return (
+    reminders: List.unmodifiable(service.reminders),
+    enabled: service.enabled,
+    tapAction: service.tapAction,
+    notificationsEnabled: service.notificationsEnabled,
+    next: service.next,
+    now: service.now,
+  );
+}
 
 enum ReminderTapAction { openApp, newDiary }
 
@@ -42,9 +82,9 @@ enum ReminderTapAction { openApp, newDiary }
   ),
 };
 
-@lazySingleton
-class ReminderService extends ChangeNotifier {
+class ReminderService {
   ReminderService(this._notifications, this.permission);
+  final _changes = StreamController<void>.broadcast(sync: true);
 
   final ReminderNotifications _notifications;
   final NotificationPermission permission;
@@ -56,7 +96,15 @@ class ReminderService extends ChangeNotifier {
   AppLifecycleListener? _lifecycle;
   Timer? _debounce;
   bool _disposed = false;
-  bool launchedFromNotification = false;
+  int _pendingTaps = 0;
+  bool get launchedFromNotification => _pendingTaps > 0;
+
+  bool consumeTap() {
+    if (_pendingTaps == 0) return false;
+    _pendingTaps--;
+    return true;
+  }
+
   bool _notificationsEnabled = true;
 
   Stream<void> get taps => _taps.stream;
@@ -127,7 +175,7 @@ class ReminderService extends ChangeNotifier {
 
   void _onTap() {
     if (_disposed) return;
-    launchedFromNotification = true;
+    _pendingTaps++;
     _taps.add(null);
   }
 
@@ -151,7 +199,7 @@ class ReminderService extends ChangeNotifier {
 
   void _changed() {
     if (_disposed) return;
-    notifyListeners();
+    _changes.add(null);
     _scheduleRefresh();
   }
 
@@ -188,7 +236,7 @@ class ReminderService extends ChangeNotifier {
         ],
       ),
     );
-    if (!_disposed) notifyListeners();
+    if (!_disposed) _changes.add(null);
   }
 
   ReminderSlot _slot(Reminder reminder) {
@@ -223,13 +271,14 @@ class ReminderService extends ChangeNotifier {
 
   Future<void> _write(VoidCallback write) async {
     write();
+    _reminders = null;
     _debounce?.cancel();
     await reconcile();
   }
 
   void setTapAction(ReminderTapAction value) {
     MoodiaryKVs.reminderTapAction.set(value.name);
-    notifyListeners();
+    if (!_disposed) _changes.add(null);
   }
 
   Future<void> sendTest() async {
@@ -246,22 +295,21 @@ class ReminderService extends ChangeNotifier {
         await permission.isEnabled() && await _notifications.isChannelEnabled();
     if (_notificationsEnabled != enabled) {
       _notificationsEnabled = enabled;
-      if (!_disposed) notifyListeners();
+      if (!_disposed) _changes.add(null);
     }
     return enabled;
   }
 
-  @disposeMethod
-  @override
-  void dispose() {
+  Future<void> dispose() async {
     _disposed = true;
     if (_initialization != null) _notifications.setTapHandler(null);
     _debounce?.cancel();
     _lifecycle?.dispose();
-    unawaited(_locale?.cancel());
+    final subscription = _locale;
     MoodiaryKVs.reminders.getNotifier().removeListener(_remindersChanged);
     MoodiaryKVs.reminderEnabled.getNotifier().removeListener(_changed);
-    unawaited(_taps.close());
-    super.dispose();
+    await subscription?.cancel();
+    await _changes.close();
+    await _taps.close();
   }
 }
