@@ -1,12 +1,13 @@
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_card_parts.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 
 final _mui = buildMuiTheme(brightness: Brightness.light);
 
@@ -14,7 +15,6 @@ Diary diary({
   String title = 'T',
   DiaryMood? mood,
   DiaryWeather? weather,
-  List<String> tags = const [],
   List<String> audio = const [],
   List<String> video = const [],
 }) => Diary(
@@ -30,7 +30,6 @@ Diary diary({
   imageName: const [],
   audioName: audio,
   videoName: video,
-  tagIds: tags.map(Tag.legacyId).toList(),
   type: DiaryType.tiptap.value,
 );
 
@@ -42,30 +41,10 @@ Place place() => Place(
   lastModified: DateTime(2026),
 );
 
-Category cat() =>
-    Category(id: 'a', categoryName: 'work', lastModified: DateTime(2026));
-
-Widget wrap(Widget child) => ProviderScope(
-  overrides: [
-    tagCatalogProvider.overrideWithValue(
-      AsyncData((
-        byId: {
-          for (final name in ['a', 'b', 'c', 'd', '旅行', '海'])
-            Tag.legacyId(name): Tag(
-              id: Tag.legacyId(name),
-              name: name,
-              lastModified: DateTime.utc(2026),
-            ),
-        },
-        usage: [],
-      )),
-    ),
-  ],
-  child: MuiTheme(
-    data: _mui,
-    child: MaterialApp(
-      home: Scaffold(body: ListView(children: [child])),
-    ),
+Widget wrap(Widget child) => MuiTheme(
+  data: _mui,
+  child: MaterialApp(
+    home: Scaffold(body: ListView(children: [child])),
   ),
 );
 
@@ -73,9 +52,7 @@ DiaryTimelineTile tile({
   Diary? d,
   bool dayStart = true,
   bool breakBefore = false,
-  Category? category,
   Place? place,
-  bool showCategoryLabel = true,
   bool selecting = false,
   bool selected = false,
   bool hasAbove = false,
@@ -87,9 +64,7 @@ DiaryTimelineTile tile({
     stamp: value.time,
     dayStart: dayStart,
     breakBefore: breakBefore,
-    category: category,
     place: place,
-    showCategoryLabel: showCategoryLabel,
     selecting: selecting,
     selected: selected,
     hasAbove: hasAbove,
@@ -98,6 +73,13 @@ DiaryTimelineTile tile({
 }
 
 void main() {
+  late Directory mediaDirectory;
+  setUpAll(() {
+    mediaDirectory = Directory.systemTemp.createTempSync('moodiary-media-');
+    PlatformService.get().applicationSupportPath = mediaDirectory.path;
+  });
+  tearDownAll(() => mediaDirectory.deleteSync(recursive: true));
+
   testWidgets('day column shows the day number only on the day start', (
     t,
   ) async {
@@ -113,56 +95,75 @@ void main() {
     expect(find.textContaining('9:15'), findsOneWidget);
   });
 
-  testWidgets('category label follows showCategoryLabel', (t) async {
-    await t.pumpWidget(wrap(tile(category: cat(), showCategoryLabel: true)));
-    expect(find.text('work'), findsOneWidget);
-
-    await t.pumpWidget(wrap(tile(category: cat(), showCategoryLabel: false)));
-    expect(find.text('work'), findsNothing);
-  });
-
-  testWidgets('selecting overlays a corner mark in place of the category', (
-    t,
-  ) async {
-    await t.pumpWidget(
-      wrap(tile(category: cat(), selecting: true, selected: true)),
-    );
-    expect(find.byType(MSelectMark), findsOneWidget);
-    expect(find.byIcon(LucideIcons.check), findsOneWidget);
-    expect(find.text('work'), findsNothing);
-  });
-
-  testWidgets('unselected entries still get an empty mark', (t) async {
-    await t.pumpWidget(
-      wrap(tile(category: cat(), selecting: true, selected: false)),
-    );
-    expect(find.byType(MSelectMark), findsOneWidget);
-    expect(find.byIcon(LucideIcons.check), findsNothing);
-  });
-
-  testWidgets('footer shows tags, location and media chips', (t) async {
+  testWidgets('selection mark leaves room for the title', (t) async {
     await t.pumpWidget(
       wrap(
         tile(
           d: diary(
-            tags: const ['旅行', '海'],
+            title: 'A long title that should leave room for the mark ' * 20,
+          ),
+          selecting: true,
+          selected: true,
+        ),
+      ),
+    );
+    expect(find.byType(MSelectMark), findsOneWidget);
+    expect(find.byIcon(LucideIcons.check), findsOneWidget);
+    expect(
+      t.getTopRight(find.textContaining('A long title')).dx,
+      lessThan(t.getTopLeft(find.byType(MSelectMark)).dx),
+    );
+  });
+
+  testWidgets('unselected entries still get an empty mark', (t) async {
+    await t.pumpWidget(wrap(tile(selecting: true)));
+    expect(find.byType(MSelectMark), findsOneWidget);
+    expect(find.byIcon(LucideIcons.check), findsNothing);
+  });
+
+  testWidgets('meta shows the place and microphone below the video cell', (
+    t,
+  ) async {
+    await t.pumpWidget(
+      wrap(
+        tile(
+          d: diary(
             audio: const ['a.m4a'],
             video: const ['video-1.mp4'],
-          ),
+          ).copyWith(aspect: 0.75),
           place: place(),
         ),
       ),
     );
-    expect(find.text('#旅行'), findsOneWidget);
-    expect(find.text('#海'), findsOneWidget);
-    expect(find.text('厦门 环岛路'), findsOneWidget);
-    expect(find.byIcon(LucideIcons.mic), findsOneWidget);
+    final cell = find.byType(DiaryMediaCell);
+    final size = t.getSize(cell);
+    expect(size.width / size.height, closeTo(1.6, 0.01));
     expect(find.byIcon(LucideIcons.video), findsOneWidget);
+    expect(find.textContaining('厦门 环岛路'), findsOneWidget);
+    expect(
+      t.getTopLeft(find.byIcon(LucideIcons.mic)).dy,
+      greaterThan(t.getBottomLeft(cell).dy),
+    );
   });
 
-  testWidgets('extra tags collapse into a +N counter', (t) async {
-    await t.pumpWidget(wrap(tile(d: diary(tags: const ['a', 'b', 'c', 'd']))));
-    expect(find.text('+2'), findsOneWidget);
+  testWidgets('timeline media uses three square columns', (t) async {
+    for (final count in [2, 5]) {
+      await t.pumpWidget(
+        wrap(
+          tile(
+            d: diary().copyWith(
+              imageName: List.generate(count, (index) => '$index.jpg'),
+            ),
+          ),
+        ),
+      );
+      final cells = find.byType(DiaryMediaCell);
+      final first = t.getRect(cells.first);
+      expect(cells, findsNWidgets(count.clamp(0, 3)));
+      expect(first.width, first.height);
+      expect(t.getRect(cells.at(1)).left - first.right, closeTo(4, 0.01));
+      expect(find.text('+2'), count == 5 ? findsOneWidget : findsNothing);
+    }
   });
 
   testWidgets('title is optional — body still renders without it', (t) async {
@@ -303,8 +304,12 @@ void main() {
           );
         }
 
-        expect(pixel(48, 13).a, 0, reason: 'the center must stay hollow');
-        expect(pixel(48, big ? 18 : 16.5), scheme.outline);
+        final context = t.element(find.byType(DiaryTimelineTile));
+        final style = context.theme.typography.titleMedium.emphasized.onSurface;
+        // 条目顶部留白 4 + 内容上内边距 6，再到标题首行中线
+        final dotY = 4 + 6 + diaryScaledLineHeight(context, style) / 2;
+        expect(pixel(48, dotY).a, 0, reason: 'the center must stay hollow');
+        expect(pixel(48, dotY + (big ? 5 : 3.5)), scheme.outline);
         expect(pixel(48, 1), scheme.outlineVariant);
         expect(
           pixel(48, size.height - 2),
@@ -343,7 +348,7 @@ void main() {
     );
     expect(find.byIcon(qweatherIcon('101')!), findsOneWidget);
     expect(find.byIcon(LucideIcons.cloud), findsNothing);
-    expect(find.textContaining('多云'), findsOneWidget);
+    expect(find.textContaining('26°'), findsOneWidget);
   });
 
   testWidgets('认不出的天气码退回通用的云', (tester) async {

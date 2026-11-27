@@ -88,17 +88,12 @@ class _DiaryFeedViewState extends ConsumerState<DiaryFeedView>
                     : DiaryCardSyncState.none;
                 return Consumer(
                   builder: (context, ref, _) {
-                    final category = ref.watch(
-                      categoryByIdProvider(diary.categoryId),
-                    );
                     final place = ref.watch(placeByIdProvider(diary.placeId));
                     return DiaryFeedTile(
                       key: ValueKey(diary.id),
                       diary: diary,
                       sort: page.sort,
-                      category: category,
                       place: place,
-                      showCategoryLabel: filter.isAll,
                       syncState: syncState,
                       selecting: selecting,
                       selected: selection.contains(diary.id),

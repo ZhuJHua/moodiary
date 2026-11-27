@@ -1,7 +1,9 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_card_parts.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:mui/mui.dart';
@@ -15,7 +17,6 @@ Diary diary({
   List<String> images = const [],
   List<String> videos = const [],
   List<String> audios = const [],
-  List<String> tags = const [],
   DiaryWeather? weather,
 }) => Diary(
   id: 'test',
@@ -30,7 +31,6 @@ Diary diary({
   imageName: images,
   audioName: audios,
   videoName: videos,
-  tagIds: tags.map(Tag.legacyId).toList(),
   type: DiaryType.tiptap.value,
 );
 
@@ -42,33 +42,9 @@ Place place() => Place(
   lastModified: DateTime(2026),
 );
 
-Category cat() =>
-    Category(id: 'a', categoryName: 'work', lastModified: DateTime(2026));
-
-Widget wrap(Widget child) => ProviderScope(
-  overrides: [
-    tagCatalogProvider.overrideWithValue(
-      AsyncData((
-        byId: {
-          for (final name in [
-            'a',
-            'b',
-            'c',
-            '夏天的第一杯冰美式与午后的碎碎念',
-            '夏天的第二杯冰美式与午后的碎碎念',
-          ])
-            Tag.legacyId(name): Tag(
-              id: Tag.legacyId(name),
-              name: name,
-              lastModified: DateTime.utc(2026),
-            ),
-        },
-        usage: [],
-      )),
-    ),
-  ],
-  child: MuiTheme(
-    data: _mui,
+Widget wrap(Widget child) => MuiTheme(
+  data: _mui,
+  child: TranslationProvider(
     child: MaterialApp(
       home: Scaffold(body: ListView(children: [child])),
     ),
@@ -76,23 +52,17 @@ Widget wrap(Widget child) => ProviderScope(
 );
 
 void main() {
+  late Directory mediaDirectory;
   setUpAll(() {
-    try {
-      PlatformService.get().applicationSupportPath = '/tmp/moodiary-test';
-    } catch (_) {}
+    mediaDirectory = Directory.systemTemp.createTempSync('moodiary-media-');
+    PlatformService.get().applicationSupportPath = mediaDirectory.path;
   });
+  tearDownAll(() => mediaDirectory.deleteSync(recursive: true));
 
   testWidgets('renders text-only entry inside a ListView without error', (
     t,
   ) async {
-    await t.pumpWidget(
-      wrap(
-        DiaryFeedTile(
-          diary: diary(title: '标题在这'),
-          category: cat(),
-        ),
-      ),
-    );
+    await t.pumpWidget(wrap(DiaryFeedTile(diary: diary(title: '标题在这'))));
     expect(t.takeException(), isNull);
     expect(find.textContaining('标题在这', findRichText: true), findsOneWidget);
   });
@@ -119,51 +89,40 @@ void main() {
             weather: const DiaryWeather(icon: '100', temp: '26', text: '晴'),
           ),
           place: place(),
-          category: cat(),
         ),
       ),
     );
     expect(t.takeException(), isNull);
-    final meta = t.widgetList<Text>(find.byType(Text)).firstWhere((w) {
-      final s = w.textSpan?.toPlainText() ?? '';
-      return s.contains('26°');
-    });
-    final plain = meta.textSpan!.toPlainText();
-    expect(plain, contains('work'));
-    expect(plain, contains('厦门 环岛路'));
+    final meta = t.widget<Text>(find.textContaining('26°'));
+    expect(find.byIcon(qweatherIcon('100')!), findsOneWidget);
+    expect(meta.textSpan!.toPlainText(), contains('厦门 环岛路'));
     expect(meta.maxLines, 1);
     expect(meta.overflow, TextOverflow.ellipsis);
+    expect(meta.textSpan!.toPlainText(), isNot(contains('晴')));
   });
 
-  testWidgets('category label follows showCategoryLabel', (t) async {
+  testWidgets('weather without a temperature shows the icon only', (t) async {
     await t.pumpWidget(
       wrap(
         DiaryFeedTile(
-          diary: diary(),
-          category: cat(),
-          showCategoryLabel: false,
+          diary: diary(
+            weather: const DiaryWeather(icon: '100', text: '晴'),
+          ),
         ),
       ),
     );
-    expect(find.textContaining('work'), findsNothing);
+    expect(find.byIcon(qweatherIcon('100')!), findsOneWidget);
+    expect(find.textContaining('晴'), findsNothing);
+    expect(find.textContaining('°'), findsNothing);
   });
 
-  testWidgets('tags show as chips and cap at two', (t) async {
-    await t.pumpWidget(
-      wrap(DiaryFeedTile(diary: diary(tags: const ['a', 'b', 'c']))),
-    );
-    expect(find.text('#a'), findsOneWidget);
-    expect(find.text('#b'), findsOneWidget);
-    expect(find.text('#c'), findsNothing);
-  });
-
-  testWidgets('selecting adds a corner mark without hiding the tags', (
-    t,
-  ) async {
+  testWidgets('selection mark leaves room for the title', (t) async {
     await t.pumpWidget(
       wrap(
         DiaryFeedTile(
-          diary: diary(tags: const ['a']),
+          diary: diary(
+            title: 'A long title that should leave room for the mark ' * 20,
+          ),
           selecting: true,
           selected: true,
         ),
@@ -171,10 +130,13 @@ void main() {
     );
     expect(find.byType(MSelectMark), findsOneWidget);
     expect(find.byIcon(LucideIcons.check), findsOneWidget);
-    expect(find.text('#a'), findsOneWidget);
+    expect(
+      t.getTopRight(find.textContaining('A long title')).dx,
+      lessThan(t.getTopLeft(find.byType(MSelectMark)).dx),
+    );
   });
 
-  testWidgets('audio-only entry shows the waveform bar', (t) async {
+  testWidgets('audio-only entry shows a microphone', (t) async {
     await t.pumpWidget(
       wrap(DiaryFeedTile(diary: diary(audios: const ['a.m4a']))),
     );
@@ -182,19 +144,38 @@ void main() {
     expect(find.byIcon(LucideIcons.mic), findsOneWidget);
   });
 
-  testWidgets(
-    'a single image goes to the side thumbnail, not a full-width row',
-    (t) async {
+  testWidgets('feed hero uses single, paired and mosaic layouts', (t) async {
+    for (final count in [1, 2, 3]) {
       await t.pumpWidget(
-        wrap(DiaryFeedTile(diary: diary(images: const ['1.jpg']))),
+        wrap(
+          DiaryFeedTile(
+            diary: diary(images: List.generate(count, (index) => '$index.jpg'))
+                .copyWith(aspect: 2),
+          ),
+        ),
       );
-      expect(t.takeException(), isNull);
-      final box = t
-          .widgetList<SizedBox>(find.byType(SizedBox))
-          .where((w) => w.width == 96 && w.height == 72);
-      expect(box, isNotEmpty);
-    },
-  );
+      final cells = find.byType(DiaryMediaCell);
+      final first = t.getRect(cells.at(0));
+      expect(cells, findsNWidgets(count));
+      if (count == 1) {
+        expect(first.width / first.height, closeTo(2, 0.01));
+      } else {
+        final second = t.getRect(cells.at(1));
+        expect(second.left - first.right, closeTo(3, 0.01));
+        expect(first.top, second.top);
+        if (count == 2) {
+          expect(first.size, second.size);
+          expect(first.height, closeTo((first.width * 2 + 3) * 0.55, 0.01));
+        } else {
+          final third = t.getRect(cells.at(2));
+          expect(first.width, closeTo(second.width * 2, 0.01));
+          expect(second.left, third.left);
+          expect(third.top - second.bottom, closeTo(3, 0.01));
+          expect(first.bottom, closeTo(third.bottom, 0.01));
+        }
+      }
+    }
+  });
 
   testWidgets('more than three media cells collapse into a +N overlay', (
     t,
@@ -211,42 +192,6 @@ void main() {
     expect(t.takeException(), isNull);
     expect(find.text('+2'), findsOneWidget);
     expect(find.byType(Image), findsNWidgets(3));
-  });
-
-  testWidgets('long tags never overflow the meta line', (t) async {
-    t.view.physicalSize = const Size(360 * 3, 800 * 3);
-    t.view.devicePixelRatio = 3.0;
-    addTearDown(t.view.reset);
-
-    const long = '夏天的第一杯冰美式与午后的碎碎念';
-    for (final (images, scale) in [
-      (const <String>[], 1.0),
-      (const ['1.jpg'], 1.0),
-      (const ['1.jpg', '2.jpg', '3.jpg'], 1.0),
-      (const ['1.jpg'], 1.3),
-    ]) {
-      await t.pumpWidget(
-        MediaQuery(
-          data: MediaQueryData(textScaler: TextScaler.linear(scale)),
-          child: wrap(
-            DiaryFeedTile(
-              diary: diary(
-                images: images,
-                tags: const [long, '夏天的第二杯冰美式与午后的碎碎念'],
-                weather: const DiaryWeather(icon: '100', temp: '26', text: '晴'),
-              ),
-              place: place(),
-              category: cat(),
-            ),
-          ),
-        ),
-      );
-      expect(
-        t.takeException(),
-        isNull,
-        reason: '图片数=${images.length} 字号=$scale',
-      );
-    }
   });
 
   testWidgets('audio stays visible when the entry also has images', (t) async {
@@ -283,9 +228,7 @@ void main() {
     expect(find.textContaining('8/20', findRichText: true), findsOneWidget);
   });
 
-  testWidgets('video takes the first cell and is marked as playable', (
-    t,
-  ) async {
+  testWidgets('video takes the first cell and carries a video mark', (t) async {
     await t.pumpWidget(
       wrap(
         DiaryFeedTile(
@@ -294,6 +237,10 @@ void main() {
       ),
     );
     expect(t.takeException(), isNull);
-    expect(find.byIcon(LucideIcons.circlePlay), findsOneWidget);
+    expect(find.byIcon(LucideIcons.video), findsOneWidget);
+    expect(
+      t.widget<DiaryMediaCell>(find.byType(DiaryMediaCell).first).isVideo,
+      isTrue,
+    );
   });
 }

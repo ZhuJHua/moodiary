@@ -6,6 +6,7 @@ import 'package:moodiary_diary/src/application/timeline_group.dart';
 import 'package:moodiary_diary/src/presentation/controllers/diary_controller.dart';
 import 'package:moodiary_diary/src/presentation/controllers/diary_filter.dart';
 import 'package:moodiary_diary/src/presentation/controllers/diary_selection.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_card_parts.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_page_scroll.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
@@ -75,6 +76,18 @@ class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
           final months = buildTimeline(diaries, page.sort);
           final flat = [for (final m in months) ...m.entries];
           final selNotifier = ref.read(diarySelectionProvider.notifier);
+          final headerHeight =
+              (diaryScaledLineHeight(
+                        context,
+                        context
+                            .theme
+                            .typography
+                            .titleSmall
+                            .emphasized
+                            .onSurface,
+                      ) +
+                      14)
+                  .clamp(34.0, double.infinity);
           var offset = 0;
 
           final slivers = <Widget>[];
@@ -86,6 +99,7 @@ class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
               delegate: _MonthHeaderDelegate(
                 month: month.month,
                 count: monthCounts?[month.month],
+                height: headerHeight,
               ),
             );
             final list = SliverList.builder(
@@ -103,9 +117,6 @@ class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
                     : DiaryCardSyncState.none;
                 return Consumer(
                   builder: (context, ref, _) {
-                    final category = ref.watch(
-                      categoryByIdProvider(diary.categoryId),
-                    );
                     final place = ref.watch(placeByIdProvider(diary.placeId));
                     final next = flatIndex == flat.length - 1
                         ? null
@@ -120,9 +131,7 @@ class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
                       hasAbove: flatIndex > 0,
                       moodBelow: next?.diary.mood,
                       hasBelow: next != null,
-                      category: category,
                       place: place,
-                      showCategoryLabel: filter.isAll,
                       syncState: syncState,
                       selecting: selecting,
                       selected: selection.contains(diary.id),
@@ -209,45 +218,86 @@ class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
 class _MonthHeaderDelegate extends SliverPersistentHeaderDelegate {
   final DateTime month;
   final int? count;
+  final double height;
 
-  const _MonthHeaderDelegate({required this.month, required this.count});
-
-  static const double _height = 34.0;
-
-  @override
-  double get minExtent => _height;
-
-  @override
-  double get maxExtent => _height;
+  const _MonthHeaderDelegate({
+    required this.month,
+    required this.count,
+    required this.height,
+  });
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlaps) {
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
+      _MonthHeader(month: month, count: count, height: height);
+
+  @override
+  bool shouldRebuild(covariant _MonthHeaderDelegate old) =>
+      old.month != month || old.count != count || old.height != height;
+}
+
+// 主题必须在子 Widget 里读：父级同帧重建时 header Element 的 dirty 会被
+// update() 清掉而不重跑 delegate.build，切深浅色后吸顶头就停在旧配色。
+class _MonthHeader extends StatelessWidget {
+  final DateTime month;
+  final int? count;
+  final double height;
+
+  const _MonthHeader({
+    required this.month,
+    required this.count,
+    required this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.theme.colors;
-    return Container(
-      height: _height,
-      alignment: .centerLeft,
-      color: colors.surface,
-      child: Row(
+    return Semantics(
+      header: true,
+      child: Stack(
+        clipBehavior: .none,
         children: [
-          Text(
-            TimeFormat.monthTitle(month),
-            style: context.theme.typography.titleSmall.emphasized.onSurface,
+          // 两个吸顶头交接在小数像素上，各自抗锯齿会透出上个月的时间轴。
+          // 靠前的分组后画、压在上面，所以由它的底色整块向下多盖 1px 封住交接行。
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: -1,
+            child: ColoredBox(color: colors.surface),
           ),
-          if (count != null) ...[
-            const SizedBox(width: 8),
-            Text(
-              context.l10n.diary.timelineMonthCount(count: count!),
-              style: context.theme.typography.labelSmall.onSurfaceVariant,
+          Container(
+            height: height,
+            alignment: .centerLeft,
+            child: Row(
+              children: [
+                Text(
+                  TimeFormat.monthTitle(month),
+                  style:
+                      context.theme.typography.titleSmall.emphasized.onSurface,
+                ),
+                if (count != null) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    context.l10n.diary.timelineMonthCount(count: count!),
+                    style: context.theme.typography.labelSmall.onSurfaceVariant
+                        .copyWith(fontFeatures: const [.tabularFigures()]),
+                  ),
+                ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Divider(height: 1, color: colors.outlineVariant),
+                ),
+              ],
             ),
-          ],
-          const SizedBox(width: 10),
-          Expanded(child: Divider(height: 1, color: colors.outlineVariant)),
+          ),
         ],
       ),
     );
   }
-
-  @override
-  bool shouldRebuild(covariant _MonthHeaderDelegate old) =>
-      old.month != month || old.count != count;
 }

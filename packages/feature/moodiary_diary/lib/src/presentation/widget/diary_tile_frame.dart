@@ -16,6 +16,9 @@ class DiaryTileFrame extends StatelessWidget {
 
   final bool selecting;
   final bool selected;
+
+  /// 勾选圈距右上角的距离：带图卡片要整个落进图片圆角里
+  final double markInset;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
@@ -28,12 +31,12 @@ class DiaryTileFrame extends StatelessWidget {
     this.borderRadius = AppBorderRadius.mediumBorderRadius,
     this.selecting = false,
     this.selected = false,
+    this.markInset = 8,
     this.onTap,
     this.onLongPress,
   });
 
   static const double _kMarkSize = 18.0;
-  static const double _kMarkInset = 8.0;
 
   @override
   Widget build(BuildContext context) {
@@ -42,16 +45,15 @@ class DiaryTileFrame extends StatelessWidget {
       padding: margin,
       child: AnimatedContainer(
         duration: Durations.short3,
+        // 选中色按设计系统取 secondaryContainer；整色在中性主题下太重，叠在底色上取六成
         decoration: BoxDecoration(
           color: selected
-              ? colors.primaryContainer.withValues(alpha: 0.4)
-              : (card ? colors.surfaceContainerLow : null),
+              ? Color.alphaBlend(
+                  colors.secondaryContainer.withValues(alpha: 0.6),
+                  card ? colors.surfaceContainerLow : colors.surface,
+                )
+              : (card ? colors.surfaceContainerLow : Colors.transparent),
           borderRadius: borderRadius,
-          // 未选中也画一圈透明描边：否则选中时会因为多出 1.5px 而整条抖一下。
-          border: .all(
-            color: selected ? colors.primary : Colors.transparent,
-            width: 1.5,
-          ),
         ),
         child: Semantics(
           container: true,
@@ -66,8 +68,8 @@ class DiaryTileFrame extends StatelessWidget {
                 Padding(padding: padding, child: child),
                 if (selecting)
                   Positioned(
-                    top: _kMarkInset,
-                    right: _kMarkInset,
+                    top: markInset,
+                    right: markInset,
                     width: _kMarkSize,
                     height: _kMarkSize,
                     child: ExcludeSemantics(
