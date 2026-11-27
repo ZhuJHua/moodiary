@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_card_parts.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -60,7 +61,7 @@ DiaryTimelineTile tile({
 }) {
   final value = d ?? diary();
   return DiaryTimelineTile(
-    diary: value,
+    diary: diarySummaryFromDiary(value),
     stamp: value.time,
     dayStart: dayStart,
     breakBefore: breakBefore,
@@ -160,6 +161,17 @@ void main() {
       final cells = find.byType(DiaryMediaCell);
       final first = t.getRect(cells.first);
       expect(cells, findsNWidgets(count.clamp(0, 3)));
+      expect(
+        find.descendant(
+          of: find.byType(DiaryTimelineTile),
+          matching: find.byType(LayoutBuilder),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        t.widget<DiaryMediaCell>(cells.first).width,
+        closeTo(first.width, 0.01),
+      );
       expect(first.width, first.height);
       expect(t.getRect(cells.at(1)).left - first.right, closeTo(4, 0.01));
       expect(find.text('+2'), count == 5 ? findsOneWidget : findsNothing);
@@ -197,7 +209,7 @@ void main() {
               children: [
                 DiaryTimelineTile(
                   key: const ValueKey('a'),
-                  diary: top,
+                  diary: diarySummaryFromDiary(top),
                   stamp: top.time,
                   dayStart: true,
                   breakBefore: false,
@@ -206,7 +218,7 @@ void main() {
                 ),
                 DiaryTimelineTile(
                   key: const ValueKey('b'),
-                  diary: bottom,
+                  diary: diarySummaryFromDiary(bottom),
                   stamp: bottom.time,
                   dayStart: true,
                   breakBefore: false,

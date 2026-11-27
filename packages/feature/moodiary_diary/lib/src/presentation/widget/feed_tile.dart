@@ -6,7 +6,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 class DiaryFeedTile extends StatelessWidget {
-  final Diary diary;
+  final DiarySummary diary;
   final DiarySort sort;
   final Place? place;
   final DiaryCardSyncState syncState;
@@ -29,13 +29,10 @@ class DiaryFeedTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cells = DiaryMediaCell.forDiary(
-      diary,
-      pending: syncState == .syncing,
-    );
-    final hasMedia = cells.isNotEmpty;
+    final media = diary.visualMedia;
+    final hasMedia = media.isNotEmpty;
     final title = diary.title.trim();
-    final body = diary.contentText.preview();
+    final body = diary.contentPreview;
     final typography = context.theme.typography;
     final textRows = <Widget>[
       if (title.isNotEmpty)
@@ -83,7 +80,12 @@ class DiaryFeedTile extends StatelessWidget {
         crossAxisAlignment: .start,
         children: [
           if (hasMedia) ...[
-            _HeroMedia(cells: cells, aspect: diary.aspect),
+            _HeroMedia(
+              media: media,
+              moreCount: diary.moreVisualCount,
+              aspect: diary.aspect,
+              pending: syncState == .syncing,
+            ),
             const SizedBox(height: 10),
           ],
           Padding(
@@ -101,29 +103,38 @@ class DiaryFeedTile extends StatelessWidget {
 }
 
 class _HeroMedia extends StatelessWidget {
-  final List<DiaryMediaCell> cells;
+  final List<DiaryVisualMedia> media;
+  final int moreCount;
+  final bool pending;
   final double? aspect;
 
-  const _HeroMedia({required this.cells, required this.aspect});
+  const _HeroMedia({
+    required this.media,
+    required this.moreCount,
+    required this.aspect,
+    required this.pending,
+  });
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final width = constraints.maxWidth;
-      if (width <= 0) return const SizedBox.shrink();
-      if (cells.length == 1) {
+      if (width <= (media.length == 1 ? 0 : 3)) return const SizedBox.shrink();
+      if (media.length == 1) {
         // 竖图按 4:3 居中裁切，整宽方图会占掉大半屏
-        final ratio = (cells.first.isVideo ? 1.6 : aspect ?? 1.6).clamp(
+        final ratio = (media.first.isVideo ? 1.6 : aspect ?? 1.6).clamp(
           4 / 3,
           2.0,
         );
         return SizedBox(
           width: width,
           height: width / ratio,
-          child: cells.first,
+          child: DiaryMediaCell(media.first, width: width, pending: pending),
         );
       }
-      final mosaic = cells.length == 3;
+      final mosaic = media.length == 3;
+      final leftWidth = mosaic ? (width - 3) * 2 / 3 : (width - 3) / 2;
+      final rightWidth = (width - 3) / (mosaic ? 3 : 2);
       return ClipRRect(
         borderRadius: AppBorderRadius.mediumBorderRadius,
         child: SizedBox(
@@ -132,18 +143,42 @@ class _HeroMedia extends StatelessWidget {
             spacing: 3,
             crossAxisAlignment: .stretch,
             children: [
-              Expanded(flex: mosaic ? 2 : 1, child: cells.first),
+              Expanded(
+                flex: mosaic ? 2 : 1,
+                child: DiaryMediaCell(
+                  media.first,
+                  width: leftWidth,
+                  pending: pending,
+                ),
+              ),
               Expanded(
                 child: mosaic
                     ? Column(
                         spacing: 3,
                         crossAxisAlignment: .stretch,
                         children: [
-                          Expanded(child: cells[1]),
-                          Expanded(child: cells[2]),
+                          Expanded(
+                            child: DiaryMediaCell(
+                              media[1],
+                              width: rightWidth,
+                              pending: pending,
+                            ),
+                          ),
+                          Expanded(
+                            child: DiaryMediaCell(
+                              media[2],
+                              width: rightWidth,
+                              pending: pending,
+                              moreCount: moreCount,
+                            ),
+                          ),
                         ],
                       )
-                    : cells[1],
+                    : DiaryMediaCell(
+                        media[1],
+                        width: rightWidth,
+                        pending: pending,
+                      ),
               ),
             ],
           ),

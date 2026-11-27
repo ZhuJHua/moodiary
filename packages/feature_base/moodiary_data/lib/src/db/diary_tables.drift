@@ -30,6 +30,8 @@ CREATE INDEX idx_diaries_show_cat_time
   ON diaries (show, category_id, time DESC, id DESC);
 CREATE INDEX idx_diaries_show_lastmod
   ON diaries (show, last_modified DESC, id DESC);
+CREATE INDEX idx_diaries_show_cat_lastmod
+  ON diaries (show, category_id, last_modified DESC, id DESC);
 
 -- 媒体引用（正文派生缓存，seq = 正文出现序）与标签。
 CREATE TABLE diary_media (

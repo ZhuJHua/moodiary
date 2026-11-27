@@ -5,7 +5,7 @@ export 'package:moodiary_diary/src/application/diary_stamp.dart'
     show diaryStampOf;
 
 class TimelineEntry {
-  final Diary diary;
+  final DiarySummary diary;
 
   final DateTime stamp;
 
@@ -28,7 +28,7 @@ class TimelineMonth {
   const TimelineMonth({required this.month, required this.entries});
 }
 
-List<TimelineMonth> buildTimeline(List<Diary> diaries, DiarySort sort) {
+List<TimelineMonth> buildTimeline(List<DiarySummary> diaries, DiarySort sort) {
   final months = <TimelineMonth>[];
   var entries = <TimelineEntry>[];
   DateTime? currentMonth;

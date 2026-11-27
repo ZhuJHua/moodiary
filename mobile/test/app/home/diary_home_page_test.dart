@@ -14,12 +14,13 @@ import 'package:mui/mui.dart';
 
 class _Diaries extends Fake implements DiaryRepository {
   final events = StreamController<DiaryEvent>.broadcast(sync: true);
+  int categoryCountQueries = 0;
 
   @override
   Stream<DiaryEvent> get diaryEvents => events.stream;
 
   @override
-  Future<List<Diary>> getDiaryByCategory({
+  Future<List<DiarySummary>> getDiarySummariesByCategory({
     String? categoryId,
     bool uncategorized = false,
     String? tagName,
@@ -35,6 +36,18 @@ class _Diaries extends Fake implements DiaryRepository {
     String? tagName,
     DiarySort sort = .timeDesc,
   }) async => {};
+
+  @override
+  Future<({Map<String, int> byCategory, int total})>
+  diaryCountByCategory() async {
+    categoryCountQueries++;
+    return (byCategory: <String, int>{}, total: 0);
+  }
+}
+
+class _Categories extends Fake implements CategoryRepository {
+  @override
+  Stream<CategoryEvent> get categoryEvents => const Stream.empty();
 }
 
 class _Backend extends Fake implements IRemoteSyncBackend {
@@ -99,9 +112,7 @@ Future<void> _pumpHome(
       diaryRepositoryProvider.overrideWithValue(diaries),
       orderedCategoriesProvider.overrideWithValue(const AsyncData([])),
       orderedPlacesProvider.overrideWithValue(const AsyncData([])),
-      categoryDiaryCountsProvider.overrideWith(
-        (_) async => (byCategory: <String, int>{}, total: 0),
-      ),
+      categoryRepositoryProvider.overrideWithValue(_Categories()),
       secretKvProvider(MoodiarySecureKVs.qweatherKey)
           .overrideWith((_) async => null),
       tagCatalogProvider.overrideWithValue(
@@ -133,6 +144,26 @@ Future<void> _pumpHome(
 );
 
 void main() {
+  testWidgets('all diaries title does not query category counts', (
+    tester,
+  ) async {
+    KVStore.installForTesting(MemoryKVStorage());
+    addTearDown(KVStore.resetForTesting);
+    final diaries = _Diaries();
+    addTearDown(diaries.events.close);
+    await _pumpHome(
+      tester,
+      diaries: diaries,
+      sync: _Sync(),
+      backend: _Backend(),
+      ready: () async => false,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.common.appName), findsOneWidget);
+    expect(diaries.categoryCountQueries, 0);
+  });
+
   test('selected tag follows surviving ids and prefers its current name', () {
     final first = Tag.create('Trip');
     final second = Tag.create('Trip');

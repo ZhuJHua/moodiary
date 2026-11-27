@@ -24,6 +24,7 @@ abstract final class MediaMarkup {
   static const int _lastOpen = 0xFDEF;
 
   static const String close = '\uFDD0';
+  static const int previewRawLimit = 400;
 
   static final RegExp _reserved = RegExp('[\uFDD0-\uFDEF]');
   static final RegExp _lineBreaks = RegExp(r'\s*[\r\n]+\s*');
@@ -42,6 +43,42 @@ abstract final class MediaMarkup {
   static String sanitizeName(String name) =>
       strip(name).replaceAll(_lineBreaks, ' ').replaceAll(_edgeSpace, '');
 
+  static bool hasMarkup(String text) {
+    for (var index = 0; index < text.length; index++) {
+      final unit = text.codeUnitAt(index);
+      if (unit >= _close && unit <= _lastOpen) return true;
+    }
+    return false;
+  }
+
+  static String preview(String text, {int maxLines = 4, int maxRunes = 240}) {
+    final raw = text.runes
+        .take(previewRawLimit + 1)
+        .takeWhile((rune) => rune != 0)
+        .toList();
+    final rawTruncated = raw.length > previewRawLimit;
+    final lines = String.fromCharCodes(raw.take(previewRawLimit))
+        .split('\n')
+        .map((line) => line.trimRight())
+        .where((line) => line.isNotEmpty)
+        .take(maxLines + 1);
+    final excerpt = lines.join('\n').trim();
+    final runes = excerpt.runes.take(maxRunes + 1).toList();
+    final runeTruncated = runes.length > maxRunes;
+    var end = runeTruncated ? maxRunes : runes.length;
+    final lastClose = end == 0 ? -1 : runes.lastIndexOf(_close, end - 1);
+    for (var index = lastClose + 1; index < end; index++) {
+      final rune = runes[index];
+      if (rune >= _firstOpen && rune <= _lastOpen) {
+        end = index;
+        break;
+      }
+    }
+    if (end == 0) return '';
+    if (!rawTruncated && !runeTruncated && end == runes.length) return excerpt;
+    return '${String.fromCharCodes(runes.take(end)).trimRight()}…';
+  }
+
   static String leadingExcerpt(String text, int length) {
     final runes = text.runes.toList();
     if (runes.length <= length) return text;
@@ -59,6 +96,7 @@ abstract final class MediaMarkup {
   }
 
   static List<MarkupRun> parse(String text) {
+    if (!hasMarkup(text)) return text.isEmpty ? const [] : [TextRun(text)];
     final runs = <MarkupRun>[];
     final buf = StringBuffer();
     MediaKind? kind;

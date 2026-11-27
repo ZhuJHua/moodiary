@@ -6429,6 +6429,10 @@ class DatabaseAtV4 extends GeneratedDatabase {
     'idx_diaries_show_lastmod',
     'CREATE INDEX idx_diaries_show_lastmod ON diaries (show, last_modified DESC, id DESC)',
   );
+  late final Index idxDiariesShowCatLastmod = Index(
+    'idx_diaries_show_cat_lastmod',
+    'CREATE INDEX idx_diaries_show_cat_lastmod ON diaries (show, category_id, last_modified DESC, id DESC)',
+  );
   late final DiaryMedia diaryMedia = DiaryMedia(this);
   late final Index idxDiaryMediaKind = Index(
     'idx_diary_media_kind',
@@ -6489,6 +6493,7 @@ class DatabaseAtV4 extends GeneratedDatabase {
     idxDiariesShowTime,
     idxDiariesShowCatTime,
     idxDiariesShowLastmod,
+    idxDiariesShowCatLastmod,
     diaryMedia,
     idxDiaryMediaKind,
     idxDiaryMediaFile,

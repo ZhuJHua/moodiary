@@ -100,6 +100,53 @@ final class OrderedPlacesProvider
 
 String _$orderedPlacesHash() => r'767b7d11fd9f070d2e7a5b4aec5db6d4cdfd42d1';
 
+@ProviderFor(placeMap)
+final placeMapProvider = PlaceMapProvider._();
+
+final class PlaceMapProvider
+    extends
+        $FunctionalProvider<
+          Map<String, Place>,
+          Map<String, Place>,
+          Map<String, Place>
+        >
+    with $Provider<Map<String, Place>> {
+  PlaceMapProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'placeMapProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$placeMapHash();
+
+  @$internal
+  @override
+  $ProviderElement<Map<String, Place>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  Map<String, Place> create(Ref ref) {
+    return placeMap(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<String, Place> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<String, Place>>(value),
+    );
+  }
+}
+
+String _$placeMapHash() => r'842ade9240cd5778a0ac89554e63f845eb4a5dec';
+
 @ProviderFor(placeById)
 final placeByIdProvider = PlaceByIdFamily._();
 
@@ -157,7 +204,7 @@ final class PlaceByIdProvider
   }
 }
 
-String _$placeByIdHash() => r'0497f60514a0d0d7735df7a99fa4e0d8c1595cd9';
+String _$placeByIdHash() => r'6913f755224303e1ad96523be767f93cc29c55ca';
 
 final class PlaceByIdFamily extends $Family
     with $FunctionalFamilyOverride<Place?, String?> {

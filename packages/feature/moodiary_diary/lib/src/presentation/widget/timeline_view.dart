@@ -12,6 +12,7 @@ import 'package:moodiary_diary/src/presentation/widget/diary_page_scroll.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 class DiaryTimelineView extends ConsumerStatefulWidget {
@@ -34,19 +35,20 @@ class DiaryTimelineView extends ConsumerStatefulWidget {
 
 class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
     with DiaryPageScroll<DiaryTimelineView> {
+  List<DiarySummary>? _cachedDiaries;
+  DiarySort? _cachedSort;
+  late List<TimelineMonth> _cachedMonths;
+  late List<TimelineEntry> _cachedFlat;
+
   @override
   Widget build(BuildContext context) {
     final filter = widget.filter;
-    final pending = ref.watch(syncPendingStateProvider);
-    final dirty = ref.watch(syncDirtyDiaryIdsProvider);
     final provider = diaryControllerProvider(
       categoryId: filter.categoryId,
       uncategorized: filter.uncategorized,
       tagName: filter.tagName,
     );
     final diaryAsync = ref.watch(provider);
-    final selection = ref.watch(diarySelectionProvider);
-    final selecting = selection.isNotEmpty;
 
     return diaryAsync.buildLoading(
       data: (page) {
@@ -73,8 +75,14 @@ class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
                 ),
               )
               .value;
-          final months = buildTimeline(diaries, page.sort);
-          final flat = [for (final m in months) ...m.entries];
+          if (!identical(diaries, _cachedDiaries) || page.sort != _cachedSort) {
+            _cachedMonths = buildTimeline(diaries, page.sort);
+            _cachedFlat = [for (final month in _cachedMonths) ...month.entries];
+            _cachedDiaries = diaries;
+            _cachedSort = page.sort;
+          }
+          final months = _cachedMonths;
+          final flat = _cachedFlat;
           final selNotifier = ref.read(diarySelectionProvider.notifier);
           final headerHeight =
               (diaryScaledLineHeight(
@@ -108,15 +116,19 @@ class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
                 final flatIndex = base + index;
                 final entry = flat[flatIndex];
                 final diary = entry.diary;
-                final syncState =
-                    (pending.updateDiaryIds.contains(diary.id) ||
-                        pending.newDiaryIds.contains(diary.id))
-                    ? DiaryCardSyncState.syncing
-                    : dirty.contains(diary.id)
-                    ? DiaryCardSyncState.dirty
-                    : DiaryCardSyncState.none;
                 return Consumer(
                   builder: (context, ref, _) {
+                    final syncState = watchDiaryCardSyncState(ref, diary.id);
+                    final selecting = ref.watch(
+                      diarySelectionProvider.select(
+                        (selection) => selection.isNotEmpty,
+                      ),
+                    );
+                    final selected = ref.watch(
+                      diarySelectionProvider.select(
+                        (selection) => selection.contains(diary.id),
+                      ),
+                    );
                     final place = ref.watch(placeByIdProvider(diary.placeId));
                     final next = flatIndex == flat.length - 1
                         ? null
@@ -134,10 +146,10 @@ class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
                       place: place,
                       syncState: syncState,
                       selecting: selecting,
-                      selected: selection.contains(diary.id),
+                      selected: selected,
                       onTap: selecting
                           ? () => selNotifier.toggle(diary.id)
-                          : () => openDiaryDetail(context, diary),
+                          : () => openDiaryDetail(context, diary.id),
                       onLongPress: selecting
                           ? null
                           : () => selNotifier.enter(diary.id),
@@ -170,29 +182,9 @@ class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
             sliver: SliverMainAxisGroup(slivers: slivers),
           );
         }
-        final showSummary =
-            filter.isAll &&
-            (pending.newDiaryIds.isNotEmpty ||
-                pending.updateDiaryIds.isNotEmpty);
         return Column(
           children: [
-            if (showSummary)
-              Padding(
-                padding: const .fromLTRB(12, 12, 12, 0),
-                child: SyncPendingSummaryCard(
-                  newCount: pending.newDiaryIds.length,
-                  updateCount: pending.updateDiaryIds.length,
-                  label: (newCount, updateCount) =>
-                      context.l10n.sync.pendingSummary(
-                        parts: [
-                          if (newCount > 0)
-                            context.l10n.sync.pendingNew(count: newCount),
-                          if (updateCount > 0)
-                            context.l10n.sync.pendingUpdate(count: updateCount),
-                        ].join(' · '),
-                      ),
-                ),
-              ),
+            if (filter.isAll) const SyncPendingBanner(),
             Expanded(
               child: MRefresh(
                 paginationKey: (filter, page.sort),

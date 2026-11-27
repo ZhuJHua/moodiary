@@ -21,9 +21,9 @@ class _PagedDiaries extends Fake implements DiaryRepository {
   final requests = <(DiarySort, int)>[];
   final limits = <int>[];
   final events = StreamController<DiaryEvent>.broadcast(sync: true);
-  var secondPage = Completer<List<Diary>>();
-  Completer<List<Diary>>? pendingLastModifiedFirstPage;
-  Completer<List<Diary>>? pendingFirstPage;
+  var secondPage = Completer<List<DiarySummary>>();
+  Completer<List<DiarySummary>>? pendingLastModifiedFirstPage;
+  Completer<List<DiarySummary>>? pendingFirstPage;
   final rows = [
     for (var day = 1; day <= 31; day++)
       Diary.empty(type: .markdown).copyWith(
@@ -38,7 +38,7 @@ class _PagedDiaries extends Fake implements DiaryRepository {
   Stream<DiaryEvent> get diaryEvents => events.stream;
 
   @override
-  Future<List<Diary>> getDiaryByCategory({
+  Future<List<DiarySummary>> getDiarySummariesByCategory({
     String? categoryId,
     bool uncategorized = false,
     String? tagName,
@@ -58,6 +58,7 @@ class _PagedDiaries extends Fake implements DiaryRepository {
     }
     return (rows.toList()..sort(diarySortComparator(sort)))
         .take(limit)
+        .map(diarySummaryFromDiary)
         .toList();
   }
 
@@ -77,6 +78,59 @@ void main() {
     ('feed', const DiaryFeedView()),
     ('timeline', const DiaryTimelineView()),
   ]) {
+    testWidgets('$name keeps unrelated tiles built during selection and sync', (
+      tester,
+    ) async {
+      KVStore.installForTesting(MemoryKVStorage());
+      addTearDown(KVStore.resetForTesting);
+      final repository = _PagedDiaries()..rows.removeRange(0, 29);
+      addTearDown(repository.events.close);
+      await tester.pumpWidget(
+        muiTestApp(
+          view,
+          overrides: [diaryRepositoryProvider.overrideWithValue(repository)],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      const firstId = 'entry-31';
+      const secondId = 'entry-30';
+      final first = find.byKey(const ValueKey(firstId));
+      final second = find.byKey(const ValueKey(secondId));
+      final container = ProviderScope.containerOf(
+        tester.element(first),
+        listen: false,
+      );
+      final selection = container.read(diarySelectionProvider.notifier);
+      selection.enter(firstId);
+      await tester.pumpAndSettle();
+      final firstTile = tester.widget(first);
+
+      Future<void> expectOnlySecondRebuilt(VoidCallback update) async {
+        final previous = tester.widget(second);
+        update();
+        await tester.pump();
+        expect(tester.widget(first), same(firstTile));
+        expect(tester.widget(second), isNot(same(previous)));
+      }
+
+      await expectOnlySecondRebuilt(() => selection.toggle(secondId));
+      await expectOnlySecondRebuilt(() {
+        container.read(syncDirtyDiaryIdsProvider.notifier).markDirty(secondId);
+      });
+      await expectOnlySecondRebuilt(() {
+        container
+            .read(syncPendingStateProvider.notifier)
+            .begin(
+              newDiaryIds: {},
+              updateDiaryIds: {secondId},
+              newCategoryIds: {},
+              updateCategoryIds: {},
+            );
+      });
+      expect(find.byType(SyncPendingSummaryCard), findsOneWidget);
+    });
+
     testWidgets('$name loads the next page as the list scrolls', (
       tester,
     ) async {
@@ -103,7 +157,9 @@ void main() {
         (DiarySort.timeDesc, 0),
         (DiarySort.timeDesc, 30),
       ]);
-      repository.secondPage.complete([repository.rows.first]);
+      repository.secondPage.complete([
+        diarySummaryFromDiary(repository.rows.first),
+      ]);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
@@ -301,7 +357,7 @@ void main() {
       (DiarySort.timeDesc, 30),
     ]);
     final first = repository.pendingLastModifiedFirstPage =
-        Completer<List<Diary>>();
+        Completer<List<DiarySummary>>();
     MoodiaryKVs.homeSortMode.set(DiarySort.lastModifiedDesc.number);
     await tester.pump();
     await tester.pump();
@@ -317,6 +373,7 @@ void main() {
     final expected =
         (repository.rows.toList()..sort(diarySortComparator(.lastModifiedDesc)))
             .take(30)
+            .map(diarySummaryFromDiary)
             .toList();
     first.complete(expected);
     await tester.pumpAndSettle();
@@ -326,7 +383,9 @@ void main() {
       DiarySort.lastModifiedDesc,
     );
     expect(scroll.pixels, 0);
-    repository.secondPage.complete([repository.rows.first]);
+    repository.secondPage.complete([
+      diarySummaryFromDiary(repository.rows.first),
+    ]);
     await pending;
     await tester.pumpAndSettle();
     expect(container.read(provider).requireValue.items, expected);
@@ -356,7 +415,7 @@ void main() {
   test('old second page completing before sort rebuild flush does not publish stale rows', () async {
     KVStore.installForTesting(MemoryKVStorage());
     addTearDown(KVStore.resetForTesting);
-    final newFirstPage = Completer<List<Diary>>();
+    final newFirstPage = Completer<List<DiarySummary>>();
     final repository = _PagedDiaries()
       ..pendingLastModifiedFirstPage = newFirstPage;
     addTearDown(repository.events.close);
@@ -375,7 +434,9 @@ void main() {
     MoodiaryKVs.homeSortMode.set(DiarySort.lastModifiedDesc.number);
     // Complete old page 2 BEFORE container.pump() flushes the sort rebuild,
     // while the new sort's first-page query stays pending.
-    repository.secondPage.complete([repository.rows.first]);
+    repository.secondPage.complete([
+      diarySummaryFromDiary(repository.rows.first),
+    ]);
     await pendingLoadMore;
 
     // The notifier must stay loading the new sort and never have published
@@ -386,6 +447,7 @@ void main() {
     final expected =
         (repository.rows.toList()..sort(diarySortComparator(.lastModifiedDesc)))
             .take(30)
+            .map(diarySummaryFromDiary)
             .toList();
     newFirstPage.complete(expected);
     await container.pump();
@@ -439,7 +501,9 @@ void main() {
         );
         expect(position.pixels, 320);
         summary.clear();
-        repository.secondPage.complete([repository.rows.first]);
+        repository.secondPage.complete([
+          diarySummaryFromDiary(repository.rows.first),
+        ]);
         await pending;
         await tester.pumpAndSettle();
         expect(
@@ -481,11 +545,13 @@ void main() {
     position.jumpTo(position.maxScrollExtent);
     await tester.pumpAndSettle();
     expect(repository.requests.map((request) => request.$2), [0, 30]);
-    repository.secondPage = Completer<List<Diary>>();
+    repository.secondPage = Completer<List<DiarySummary>>();
     await tester.tap(find.text(l10n.common.retry));
     await tester.pump();
     expect(repository.requests.map((request) => request.$2), [0, 30, 30]);
-    repository.secondPage.complete([repository.rows.first]);
+    repository.secondPage.complete([
+      diarySummaryFromDiary(repository.rows.first),
+    ]);
     await tester.pumpAndSettle();
     expect(find.text(l10n.common.retry), findsNothing);
     expect(find.byType(DiaryFeedTile), findsWidgets);
@@ -507,26 +573,44 @@ void main() {
       container.listen(provider, (_, _) {});
     });
 
+    test('events outside the loaded prefix preserve its identity', () async {
+      final first = await container.read(provider.future);
+      final outside = repository.rows.first;
+      repository.events.add(DiaryEvent.updated(outside));
+      expect(container.read(provider).requireValue.items, same(first.items));
+
+      final changed = outside.copyWith(time: DateTime(2027), title: 'Moved');
+      repository.events.add(DiaryEvent.updated(changed));
+      expect(
+        container.read(provider).requireValue.items.first,
+        diarySummaryFromDiary(changed),
+      );
+    });
+
     test('append errors retain the rows and allow one retry', () async {
       final first = await container.read(provider.future);
       final notifier = container.read(provider.notifier);
       final pending = notifier.loadMore();
+      expect(container.read(provider).requireValue.items, same(first.items));
       await notifier.loadMore();
       final error = StateError('SQL failed');
       repository.secondPage.completeError(error);
       await pending;
       final failed = container.read(provider).requireValue;
-      expect(failed.items, first.items);
+      expect(failed.items, same(first.items));
       expect(failed.isLoadingMore, isFalse);
       expect(failed.loadMoreError, same(error));
-      repository.secondPage = Completer<List<Diary>>();
+      repository.secondPage = Completer<List<DiarySummary>>();
       final retry = notifier.loadMore();
+      expect(container.read(provider).requireValue.items, same(first.items));
       expect(container.read(provider).requireValue.loadMoreError, isNull);
-      repository.secondPage.complete([repository.rows.first]);
+      repository.secondPage.complete([
+        diarySummaryFromDiary(repository.rows.first),
+      ]);
       await retry;
       expect(container.read(provider).requireValue.items, [
         ...first.items,
-        repository.rows.first,
+        diarySummaryFromDiary(repository.rows.first),
       ]);
       expect(container.read(provider).requireValue.hasMore, isFalse);
       expect(repository.requests.map((query) => query.$2), [0, 30, 30]);
@@ -538,7 +622,8 @@ void main() {
         final first = await container.read(provider.future);
         final notifier = container.read(provider.notifier);
         final append = notifier.loadMore();
-        final pending = repository.pendingFirstPage = Completer<List<Diary>>();
+        final pending = repository.pendingFirstPage =
+            Completer<List<DiarySummary>>();
         final refresh = notifier.refresh();
         expect(await notifier.loadMore(), isFalse);
         final error = StateError('First-page query failed');
@@ -550,7 +635,9 @@ void main() {
         expect(page.items, first.items);
         expect(page.hasMore, first.hasMore);
         expect(page.isLoadingMore, isFalse);
-        repository.secondPage.complete([repository.rows.first]);
+        repository.secondPage.complete([
+          diarySummaryFromDiary(repository.rows.first),
+        ]);
         expect(await append, isFalse);
         expect(container.read(provider).requireValue, same(page));
         await notifier.refresh();
@@ -564,40 +651,51 @@ void main() {
         () async {
           final first = await container.read(provider.future);
           final notifier = container.read(provider.notifier);
+          final firstDiary = repository.rows.firstWhere(
+            (diary) => diary.id == first.items.first.id,
+          );
           repository.rows.addAll([
             for (var day = 1; day <= 70; day++)
-              first.items.first.copyWith(
+              firstDiary.copyWith(
                 id: 'older-$day',
                 time: DateTime(2025, 1, day),
               ),
           ]);
           final ordered = repository.rows.toList()
             ..sort(diarySortComparator(.timeDesc));
-          repository.secondPage.complete(ordered.sublist(30, 60));
+          repository.secondPage.complete(
+            ordered.sublist(30, 60).map(diarySummaryFromDiary).toList(),
+          );
           await notifier.loadMore();
-          expect(container.read(provider).requireValue.items, ordered.take(60));
-          repository.secondPage = Completer<List<Diary>>();
+          expect(
+            container.read(provider).requireValue.items,
+            ordered.take(60).map(diarySummaryFromDiary),
+          );
+          repository.secondPage = Completer<List<DiarySummary>>();
           final pending = notifier.loadMore();
           if (insert) {
-            final newDiary = first.items.first.copyWith(
+            final newDiary = firstDiary.copyWith(
               id: 'new',
               time: DateTime(2027),
             );
             repository.rows.add(newDiary);
             repository.events.add(DiaryEvent.created(newDiary));
           } else {
-            repository.rows.remove(first.items.first);
+            repository.rows.remove(firstDiary);
             repository.events.add(DiaryEvent.deleted(first.items.first.id));
           }
           final length = container.read(provider).requireValue.items.length;
-          repository.secondPage.complete(ordered.sublist(60, 90));
+          repository.secondPage.complete(
+            ordered.sublist(60, 90).map(diarySummaryFromDiary).toList(),
+          );
           await pending;
           expect(repository.requests.map((query) => query.$2), [0, 30, 60, 0]);
           expect(repository.limits.last, length + 30);
           expect(
             container.read(provider).requireValue.items,
             (repository.rows.toList()..sort(diarySortComparator(.timeDesc)))
-                .take(length + 30),
+                .take(length + 30)
+                .map(diarySummaryFromDiary),
           );
           expect(container.read(provider).requireValue.hasMore, isTrue);
         },
@@ -608,16 +706,19 @@ void main() {
       'refresh reconciles an event received while page one is pending',
       () async {
         final old = await container.read(provider.future);
-        final first = repository.pendingFirstPage = Completer<List<Diary>>();
+        final first = repository.pendingFirstPage =
+            Completer<List<DiarySummary>>();
         final refreshed = container.read(provider.notifier).refresh();
-        repository.rows.remove(old.items.first);
+        repository.rows.removeWhere((diary) => diary.id == old.items.first.id);
         repository.events.add(DiaryEvent.deleted(old.items.first.id));
         first.complete(old.items);
         await refreshed;
         expect(repository.requests.map((query) => query.$2), [0, 0, 0]);
         expect(
           container.read(provider).requireValue.items,
-          repository.rows.toList()..sort(diarySortComparator(.timeDesc)),
+          (repository.rows.toList()..sort(diarySortComparator(.timeDesc))).map(
+            diarySummaryFromDiary,
+          ),
         );
       },
     );

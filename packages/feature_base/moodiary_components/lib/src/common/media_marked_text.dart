@@ -50,6 +50,9 @@ class MediaMarkedText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!MediaMarkup.hasMarkup(text)) {
+      return Text(text, style: style, maxLines: maxLines, overflow: overflow);
+    }
     return Text.rich(
       TextSpan(children: mediaMarkedSpans(text, style: style)),
       style: style,

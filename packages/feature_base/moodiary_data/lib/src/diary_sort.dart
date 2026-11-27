@@ -1,17 +1,33 @@
 import 'package:moodiary_models/moodiary_models.dart';
 
-Comparator<Diary> diarySortComparator(DiarySort sort) => switch (sort) {
-  // 第二排序键必须与 SQL 的 `, id DESC` 逐字段一致（分页 offset 依赖对齐）
-  .timeDesc => (a, b) {
-    final c = b.time.compareTo(a.time);
-    return c != 0 ? c : b.id.compareTo(a.id);
-  },
-  .timeAsc => (a, b) {
-    final c = a.time.compareTo(b.time);
-    return c != 0 ? c : a.id.compareTo(b.id);
-  },
-  .lastModifiedDesc => (a, b) {
-    final c = b.lastModified.compareTo(a.lastModified);
-    return c != 0 ? c : b.id.compareTo(a.id);
-  },
-};
+Comparator<Diary> diarySortComparator(DiarySort sort) => _comparator(
+  sort,
+  (Diary diary) => diary.id,
+  sort == .lastModifiedDesc
+      ? (diary) => diary.lastModified
+      : (diary) => diary.time,
+);
+
+Comparator<DiarySummary> diarySummarySortComparator(DiarySort sort) =>
+    _comparator(
+      sort,
+      (DiarySummary diary) => diary.id,
+      sort == .lastModifiedDesc
+          ? (diary) => diary.lastModified
+          : (diary) => diary.time,
+    );
+
+Comparator<T> _comparator<T>(
+  DiarySort sort,
+  String Function(T) id,
+  DateTime Function(T) time,
+) {
+  int ascending(T first, T second) {
+    final order = time(first).compareTo(time(second));
+    return order != 0 ? order : id(first).compareTo(id(second));
+  }
+
+  return sort == .timeAsc
+      ? ascending
+      : (first, second) => ascending(second, first);
+}

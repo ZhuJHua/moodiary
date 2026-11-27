@@ -35,16 +35,12 @@ class _DiaryFeedViewState extends ConsumerState<DiaryFeedView>
   @override
   Widget build(BuildContext context) {
     final filter = widget.filter;
-    final pending = ref.watch(syncPendingStateProvider);
-    final dirty = ref.watch(syncDirtyDiaryIdsProvider);
     final provider = diaryControllerProvider(
       categoryId: filter.categoryId,
       uncategorized: filter.uncategorized,
       tagName: filter.tagName,
     );
     final diaryAsync = ref.watch(provider);
-    final selection = ref.watch(diarySelectionProvider);
-    final selecting = selection.isNotEmpty;
 
     return diaryAsync.buildLoading(
       data: (page) {
@@ -79,15 +75,19 @@ class _DiaryFeedViewState extends ConsumerState<DiaryFeedView>
                   );
                 }
                 final diary = diaries[index];
-                final syncState =
-                    (pending.updateDiaryIds.contains(diary.id) ||
-                        pending.newDiaryIds.contains(diary.id))
-                    ? DiaryCardSyncState.syncing
-                    : dirty.contains(diary.id)
-                    ? DiaryCardSyncState.dirty
-                    : DiaryCardSyncState.none;
                 return Consumer(
                   builder: (context, ref, _) {
+                    final syncState = watchDiaryCardSyncState(ref, diary.id);
+                    final selecting = ref.watch(
+                      diarySelectionProvider.select(
+                        (selection) => selection.isNotEmpty,
+                      ),
+                    );
+                    final selected = ref.watch(
+                      diarySelectionProvider.select(
+                        (selection) => selection.contains(diary.id),
+                      ),
+                    );
                     final place = ref.watch(placeByIdProvider(diary.placeId));
                     return DiaryFeedTile(
                       key: ValueKey(diary.id),
@@ -96,10 +96,10 @@ class _DiaryFeedViewState extends ConsumerState<DiaryFeedView>
                       place: place,
                       syncState: syncState,
                       selecting: selecting,
-                      selected: selection.contains(diary.id),
+                      selected: selected,
                       onTap: selecting
                           ? () => selNotifier.toggle(diary.id)
-                          : () => openDiaryDetail(context, diary),
+                          : () => openDiaryDetail(context, diary.id),
                       onLongPress: selecting
                           ? null
                           : () => selNotifier.enter(diary.id),
@@ -110,29 +110,9 @@ class _DiaryFeedViewState extends ConsumerState<DiaryFeedView>
             ),
           );
         }
-        final showSummary =
-            filter.isAll &&
-            (pending.newDiaryIds.isNotEmpty ||
-                pending.updateDiaryIds.isNotEmpty);
         return Column(
           children: [
-            if (showSummary)
-              Padding(
-                padding: const .fromLTRB(12, 12, 12, 0),
-                child: SyncPendingSummaryCard(
-                  newCount: pending.newDiaryIds.length,
-                  updateCount: pending.updateDiaryIds.length,
-                  label: (newCount, updateCount) =>
-                      context.l10n.sync.pendingSummary(
-                        parts: [
-                          if (newCount > 0)
-                            context.l10n.sync.pendingNew(count: newCount),
-                          if (updateCount > 0)
-                            context.l10n.sync.pendingUpdate(count: updateCount),
-                        ].join(' · '),
-                      ),
-                ),
-              ),
+            if (filter.isAll) const SyncPendingBanner(),
             Expanded(
               child: MRefresh(
                 paginationKey: (filter, page.sort),

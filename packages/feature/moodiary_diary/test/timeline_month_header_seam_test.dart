@@ -30,14 +30,14 @@ class _TwoMonths extends Fake implements DiaryRepository {
   Stream<DiaryEvent> get diaryEvents => const Stream.empty();
 
   @override
-  Future<List<Diary>> getDiaryByCategory({
+  Future<List<DiarySummary>> getDiarySummariesByCategory({
     String? categoryId,
     bool uncategorized = false,
     String? tagName,
     int? offset,
     int? limit,
     DiarySort sort = .timeDesc,
-  }) async => offset! > 0 ? [] : rows;
+  }) async => offset! > 0 ? [] : rows.map(diarySummaryFromDiary).toList();
 
   @override
   Future<Map<DateTime, int>> diaryCountByMonth({

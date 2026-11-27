@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    show ProviderListenableSelect;
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -139,13 +141,15 @@ List<Place> applyPlaceOrder(List<Place> places, List<String> order) {
 }
 
 @riverpod
+Map<String, Place> placeMap(Ref ref) {
+  final places = ref.watch(placeControllerProvider).value ?? const <Place>[];
+  return Map.unmodifiable({for (final place in places) place.id: place});
+}
+
+@riverpod
 Place? placeById(Ref ref, String? id) {
   if (id == null) return null;
-  final places = ref.watch(placeControllerProvider).value ?? const [];
-  for (final p in places) {
-    if (p.id == id) return p;
-  }
-  return null;
+  return ref.watch(placeMapProvider.select((map) => map[id]));
 }
 
 @riverpod

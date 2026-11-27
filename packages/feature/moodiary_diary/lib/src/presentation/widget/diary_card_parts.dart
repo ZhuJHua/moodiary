@@ -6,104 +6,83 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 class DiaryMediaCell extends StatelessWidget {
-  final String name;
-  final bool isVideo;
+  final DiaryVisualMedia media;
+  final double width;
   final bool pending;
   final int moreCount;
 
   const DiaryMediaCell(
-    this.name, {
+    this.media, {
     super.key,
-    this.isVideo = false,
+    required this.width,
     required this.pending,
     this.moreCount = 0,
   });
-
-  static List<DiaryMediaCell> forDiary(Diary diary, {required bool pending}) {
-    final names = [...diary.videoName, ...diary.imageName];
-    return [
-      for (var index = 0; index < names.length && index < 3; index++)
-        DiaryMediaCell(
-          names[index],
-          isVideo: index < diary.videoName.length,
-          pending: pending,
-          moreCount: index == 2 ? names.length - 3 : 0,
-        ),
-    ];
-  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final path = AppFiles.getRealPath(isVideo ? 'thumbnail' : 'image', name);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final decodeWidth = (constraints.maxWidth * dpr).round();
-        return ClipRRect(
-          borderRadius: AppBorderRadius.mediumBorderRadius,
-          child: Stack(
-            fit: .expand,
-            children: [
-              ColoredBox(color: colors.surfaceContainerHighest),
-              Image(
-                key: ValueKey('$path#$pending'),
-                image: FastImage(
-                  path,
-                  tier: isVideo ? null : FastImageTier.fit(decodeWidth),
-                  decodeWidth: isVideo ? decodeWidth : null,
-                ),
-                fit: .cover,
-                gaplessPlayback: true,
-                errorBuilder: (context, _, _) => pending
-                    ? const SizedBox.shrink()
-                    : Icon(
-                        LucideIcons.imageOff,
-                        color: colors.onSurfaceVariant,
-                      ),
-              ),
-              if (isVideo)
-                Positioned(
-                  left: 6,
-                  bottom: 6,
-                  // 只标出类型：不加底板，靠阴影压住浅色封面
-                  child: Icon(
-                    LucideIcons.video,
-                    size: 16,
-                    color: context.theme.onMedia,
-                    shadows: [
-                      Shadow(
-                        color: colors.scrim.withValues(alpha: 0.5),
-                        blurRadius: 6,
-                      ),
-                    ],
-                  ),
-                ),
-              if (moreCount > 0)
-                ColoredBox(
-                  color: colors.scrim.withValues(alpha: 0.44),
-                  child: Center(
-                    child: Text(
-                      '+$moreCount',
-                      style: context
-                          .theme
-                          .typography
-                          .labelLarge
-                          .emphasized
-                          .onMedia,
-                    ),
-                  ),
-                ),
-            ],
+    final isVideo = media.isVideo;
+    final path = AppFiles.getRealPath(
+      isVideo ? 'thumbnail' : 'image',
+      media.name,
+    );
+    final decodeWidth = (width * dpr).round();
+    return ClipRRect(
+      borderRadius: AppBorderRadius.mediumBorderRadius,
+      child: Stack(
+        fit: .expand,
+        children: [
+          ColoredBox(color: colors.surfaceContainerHighest),
+          Image(
+            key: ValueKey('$path#$pending'),
+            image: FastImage(
+              path,
+              tier: isVideo ? null : FastImageTier.fit(decodeWidth),
+              decodeWidth: isVideo ? decodeWidth : null,
+            ),
+            fit: .cover,
+            gaplessPlayback: true,
+            errorBuilder: (context, _, _) => pending
+                ? const SizedBox.shrink()
+                : Icon(LucideIcons.imageOff, color: colors.onSurfaceVariant),
           ),
-        );
-      },
+          if (isVideo)
+            Positioned(
+              left: 6,
+              bottom: 6,
+              // 只标出类型：不加底板，靠阴影压住浅色封面
+              child: Icon(
+                LucideIcons.video,
+                size: 16,
+                color: context.theme.onMedia,
+                shadows: [
+                  Shadow(
+                    color: colors.scrim.withValues(alpha: 0.5),
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+            ),
+          if (moreCount > 0)
+            ColoredBox(
+              color: colors.scrim.withValues(alpha: 0.44),
+              child: Center(
+                child: Text(
+                  '+$moreCount',
+                  style: context.theme.typography.labelLarge.emphasized.onMedia,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
 
 class DiaryCardMeta extends StatelessWidget {
-  final Diary diary;
+  final DiarySummary diary;
   final String stamp;
   final Place? place;
   final DiaryCardSyncState syncState;
@@ -122,9 +101,9 @@ class DiaryCardMeta extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = context.theme.colors.onSurfaceVariant;
     final style = context.theme.typography.labelSmall.onSurfaceVariant;
-    final weather = diary.weather;
+    final icon = diary.weatherIcon;
     // 天气文案是写入时的快照（语言、长短都不定），卡片只给图标 + 温度
-    final temp = weather?.temp?.trim() ?? '';
+    final temp = diary.weatherTemp?.trim() ?? '';
     final placeName = place?.name.trim() ?? '';
     const separator = ' · ';
 
@@ -148,38 +127,37 @@ class DiaryCardMeta extends StatelessWidget {
         ],
         // 一段文字从尾部省略，正好是地点 → 天气 → 时间的让位顺序，尾部图标始终留住
         Expanded(
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(text: stamp),
-                if (weather != null) ...[
-                  const TextSpan(text: separator),
-                  WidgetSpan(
-                    alignment: .middle,
-                    child: Padding(
-                      padding: const .only(right: 2),
-                      child: Icon(
-                        qweatherIcon(weather.icon) ?? LucideIcons.cloud,
-                        size: 12,
-                        color: color,
+          child: icon == null
+              ? text(placeName.isEmpty ? stamp : '$stamp$separator$placeName')
+              : Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: stamp),
+                      const TextSpan(text: separator),
+                      WidgetSpan(
+                        alignment: .middle,
+                        child: Padding(
+                          padding: const .only(right: 2),
+                          child: Icon(
+                            qweatherIcon(icon) ?? LucideIcons.cloud,
+                            size: 12,
+                            color: color,
+                          ),
+                        ),
                       ),
-                    ),
+                      if (temp.isNotEmpty) TextSpan(text: '$temp°'),
+                      if (placeName.isNotEmpty)
+                        TextSpan(text: '$separator$placeName'),
+                    ],
                   ),
-                  if (temp.isNotEmpty) TextSpan(text: '$temp°'),
-                ],
-                if (placeName.isNotEmpty)
-                  TextSpan(text: '$separator$placeName'),
-              ],
-            ),
-            style: style,
-            maxLines: 1,
-            overflow: .ellipsis,
-          ),
+                  style: style,
+                  maxLines: 1,
+                  overflow: .ellipsis,
+                ),
         ),
-        if (diary.audioName.isNotEmpty)
-          attachment(LucideIcons.mic, diary.audioName.length),
-        if (diary.fileName.isNotEmpty)
-          attachment(LucideIcons.paperclip, diary.fileName.length),
+        if (diary.audioCount > 0) attachment(LucideIcons.mic, diary.audioCount),
+        if (diary.fileCount > 0)
+          attachment(LucideIcons.paperclip, diary.fileCount),
         if (syncState != .none) ...[
           const SizedBox(width: 5),
           DiarySyncBadge(state: syncState),

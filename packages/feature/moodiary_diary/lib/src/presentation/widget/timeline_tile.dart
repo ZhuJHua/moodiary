@@ -16,7 +16,7 @@ const double _kBottomPad = 14.0;
 const double _kFramePadV = 6.0;
 
 class DiaryTimelineTile extends StatelessWidget {
-  final Diary diary;
+  final DiarySummary diary;
 
   final DateTime stamp;
   final bool dayStart;
@@ -61,21 +61,18 @@ class DiaryTimelineTile extends StatelessWidget {
     final mood = diary.mood?.colorOf(context) ?? colors.outlineVariant;
     final typography = context.theme.typography;
     final title = diary.title.trim();
-    final body = diary.contentText.preview();
+    final body = diary.contentPreview;
     final bodyStyle = title.isEmpty
         ? typography.bodyMedium.onSurface
         : typography.bodyMedium.onSurfaceVariant;
     final titleStyle = typography.titleMedium.emphasized.onSurface;
-    final cells = DiaryMediaCell.forDiary(
-      diary,
-      pending: syncState == .syncing,
-    );
+    final media = diary.visualMedia;
     final firstLineStyle = title.isNotEmpty
         ? titleStyle
         : body.isNotEmpty
         ? bodyStyle
         : typography.labelSmall.onSurfaceVariant;
-    final mediaFirst = title.isEmpty && body.isEmpty && cells.isNotEmpty;
+    final mediaFirst = title.isEmpty && body.isEmpty && media.isNotEmpty;
     final textRows = <Widget>[
       if (title.isNotEmpty)
         Text(title, maxLines: 1, overflow: .ellipsis, style: titleStyle),
@@ -86,7 +83,13 @@ class DiaryTimelineTile extends StatelessWidget {
           overflow: .ellipsis,
           style: bodyStyle,
         ),
-      if (cells.isNotEmpty) _TimelineMedia(cells: cells, aspect: diary.aspect),
+      if (media.isNotEmpty)
+        _TimelineMedia(
+          media: media,
+          moreCount: diary.moreVisualCount,
+          aspect: diary.aspect,
+          pending: syncState == .syncing,
+        ),
       DiaryCardMeta(
         diary: diary,
         stamp: TimeFormat.clock(stamp),
@@ -188,18 +191,25 @@ class _DateColumn extends StatelessWidget {
 }
 
 class _TimelineMedia extends StatelessWidget {
-  final List<DiaryMediaCell> cells;
+  final List<DiaryVisualMedia> media;
+  final int moreCount;
+  final bool pending;
   final double? aspect;
 
-  const _TimelineMedia({required this.cells, required this.aspect});
+  const _TimelineMedia({
+    required this.media,
+    required this.moreCount,
+    required this.aspect,
+    required this.pending,
+  });
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final width = constraints.maxWidth;
       if (width <= 0) return const SizedBox.shrink();
-      if (cells.length == 1) {
-        final ratio = cells.first.isVideo ? 1.6 : aspect ?? 1.6;
+      if (media.length == 1) {
+        final ratio = media.first.isVideo ? 1.6 : aspect ?? 1.6;
         final portrait = ratio < 1;
         final cellWidth = portrait ? width * 0.5 : width;
         final cellRatio = portrait
@@ -208,7 +218,11 @@ class _TimelineMedia extends StatelessWidget {
         return SizedBox(
           width: cellWidth,
           height: cellWidth / cellRatio,
-          child: cells.first,
+          child: DiaryMediaCell(
+            media.first,
+            width: cellWidth,
+            pending: pending,
+          ),
         );
       }
       const gap = 4.0;
@@ -217,8 +231,16 @@ class _TimelineMedia extends StatelessWidget {
       return Row(
         spacing: gap,
         children: [
-          for (final cell in cells)
-            SizedBox.square(dimension: size, child: cell),
+          for (final (index, item) in media.indexed)
+            SizedBox.square(
+              dimension: size,
+              child: DiaryMediaCell(
+                item,
+                width: size,
+                pending: pending,
+                moreCount: index == 2 ? moreCount : 0,
+              ),
+            ),
         ],
       );
     },

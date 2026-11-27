@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_card_parts.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -10,7 +11,7 @@ import 'package:mui/mui.dart';
 
 final _mui = buildMuiTheme(brightness: Brightness.light);
 
-Diary diary({
+DiarySummary diary({
   String title = 'T',
   String text = 'body',
   DiaryMood? mood,
@@ -18,20 +19,22 @@ Diary diary({
   List<String> videos = const [],
   List<String> audios = const [],
   DiaryWeather? weather,
-}) => Diary(
-  id: 'test',
-  title: title,
-  content: '',
-  contentText: text,
-  time: DateTime(2026, 7, 20, 9, 15),
-  lastModified: DateTime(2026, 7, 20, 9, 15),
-  show: true,
-  mood: mood,
-  weather: weather,
-  imageName: images,
-  audioName: audios,
-  videoName: videos,
-  type: DiaryType.tiptap.value,
+}) => diarySummaryFromDiary(
+  Diary(
+    id: 'test',
+    title: title,
+    content: '',
+    contentText: text,
+    time: DateTime(2026, 7, 20, 9, 15),
+    lastModified: DateTime(2026, 7, 20, 9, 15),
+    show: true,
+    mood: mood,
+    weather: weather,
+    imageName: images,
+    audioName: audios,
+    videoName: videos,
+    type: DiaryType.tiptap.value,
+  ),
 );
 
 Place place() => Place(
@@ -116,6 +119,17 @@ void main() {
     expect(find.textContaining('°'), findsNothing);
   });
 
+  testWidgets('metadata without weather uses plain text', (tester) async {
+    await tester.pumpWidget(
+      wrap(DiaryFeedTile(diary: diary(), place: place())),
+    );
+    final metadata = tester.widget<Text>(find.textContaining(place().name));
+    expect(metadata.data, endsWith(' · ${place().name}'));
+    expect(metadata.textSpan, isNull);
+    expect(metadata.maxLines, 1);
+    expect(metadata.overflow, TextOverflow.ellipsis);
+  });
+
   testWidgets('selection mark leaves room for the title', (t) async {
     await t.pumpWidget(
       wrap(
@@ -157,6 +171,20 @@ void main() {
       final cells = find.byType(DiaryMediaCell);
       final first = t.getRect(cells.at(0));
       expect(cells, findsNWidgets(count));
+      expect(
+        find.descendant(
+          of: find.byType(DiaryFeedTile),
+          matching: find.byType(LayoutBuilder),
+        ),
+        findsOneWidget,
+      );
+      for (var index = 0; index < count; index++) {
+        final cell = cells.at(index);
+        expect(
+          t.widget<DiaryMediaCell>(cell).width,
+          closeTo(t.getSize(cell).width, 0.01),
+        );
+      }
       if (count == 1) {
         expect(first.width / first.height, closeTo(2, 0.01));
       } else {
@@ -206,19 +234,21 @@ void main() {
   });
 
   testWidgets('the shown timestamp follows the sort key', (t) async {
-    final d = Diary(
-      id: 'x',
-      title: 'T',
-      content: '',
-      contentText: 'body',
-      time: DateTime(2026, 7, 1, 9, 15),
-      lastModified: DateTime(2026, 8, 20, 21, 30),
-      show: true,
-      mood: null,
-      imageName: const [],
-      audioName: const [],
-      videoName: const [],
-      type: DiaryType.tiptap.value,
+    final d = diarySummaryFromDiary(
+      Diary(
+        id: 'x',
+        title: 'T',
+        content: '',
+        contentText: 'body',
+        time: DateTime(2026, 7, 1, 9, 15),
+        lastModified: DateTime(2026, 8, 20, 21, 30),
+        show: true,
+        mood: null,
+        imageName: const [],
+        audioName: const [],
+        videoName: const [],
+        type: DiaryType.tiptap.value,
+      ),
     );
 
     await t.pumpWidget(wrap(DiaryFeedTile(diary: d, sort: .timeDesc)));
@@ -239,7 +269,7 @@ void main() {
     expect(t.takeException(), isNull);
     expect(find.byIcon(LucideIcons.video), findsOneWidget);
     expect(
-      t.widget<DiaryMediaCell>(find.byType(DiaryMediaCell).first).isVideo,
+      t.widget<DiaryMediaCell>(find.byType(DiaryMediaCell).first).media.isVideo,
       isTrue,
     );
   });

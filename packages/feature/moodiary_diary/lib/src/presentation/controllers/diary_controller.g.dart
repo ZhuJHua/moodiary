@@ -51,7 +51,7 @@ final class DiaryControllerProvider
   }
 }
 
-String _$diaryControllerHash() => r'a1d5dc4c047a19242a844d768fef2b7186c99e2e';
+String _$diaryControllerHash() => r'17da6c71cf085785f4a1bb4dfe542ad1a0e95d18';
 
 final class DiaryControllerFamily extends $Family
     with
@@ -147,7 +147,7 @@ final class RecycleBinDiariesProvider
   RecycleBinDiaries create() => RecycleBinDiaries();
 }
 
-String _$recycleBinDiariesHash() => r'd99666be68513cffa2958779cc7d4f09a99a9636';
+String _$recycleBinDiariesHash() => r'6063bf0df6deafe92864b0bef41047ccb2937246';
 
 abstract class _$RecycleBinDiaries extends $AsyncNotifier<List<Diary>> {
   FutureOr<List<Diary>> build();
