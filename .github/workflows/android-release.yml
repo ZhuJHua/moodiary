@@ -13,9 +13,6 @@ on:
         default: false
         type: boolean
   workflow_dispatch:
-  push:
-    branches:
-      - 'fdroid_inclusion_sqlite_build'
 
 jobs:
   build-apk:
