@@ -166,7 +166,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
         .read(diaryRepositoryProvider)
         .getDiaryByBusinessId(n.id);
     if (diary == null || !mounted) return;
-    openDiaryDetail(context, diary);
+    openDiaryDetail(context, diary.id);
   }
 
   static (int, int) _degrees(GraphScene scene, int i) {

@@ -1,6 +1,12 @@
+import 'dart:collection';
+
 import 'package:meta/meta.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+final class _FrozenList<T> extends UnmodifiableListView<T> {
+  _FrozenList(List<T> source) : super(List<T>.of(source));
+}
 
 @immutable
 class PagedList<T> {
@@ -14,7 +20,7 @@ class PagedList<T> {
     required this.hasMore,
     this.isLoadingMore = false,
     this.loadMoreError,
-  }) : items = List.unmodifiable(items);
+  }) : items = items is _FrozenList<T> ? items : _FrozenList<T>(items);
 
   PagedList<T> copyWith({
     List<T>? items,

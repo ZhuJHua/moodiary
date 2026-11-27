@@ -1,7 +1,58 @@
+import 'package:flutter/foundation.dart' show internal;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 enum DiaryCardSyncState { none, dirty, syncing }
+
+@internal
+DiaryCardSyncState watchDiaryCardSyncState(WidgetRef ref, String id) {
+  final syncing = ref.watch(
+    syncPendingStateProvider.select(
+      (pending) =>
+          pending.updateDiaryIds.contains(id) ||
+          pending.newDiaryIds.contains(id),
+    ),
+  );
+  if (syncing) return .syncing;
+  final dirty = ref.watch(
+    syncDirtyDiaryIdsProvider.select((ids) => ids.contains(id)),
+  );
+  return dirty ? .dirty : .none;
+}
+
+@internal
+class SyncPendingBanner extends ConsumerWidget {
+  const SyncPendingBanner({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final (newCount, updateCount) = ref.watch(
+      syncPendingStateProvider.select(
+        (pending) =>
+            (pending.newDiaryIds.length, pending.updateDiaryIds.length),
+      ),
+    );
+    if (newCount == 0 && updateCount == 0) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const .fromLTRB(12, 12, 12, 0),
+      child: SyncPendingSummaryCard(
+        newCount: newCount,
+        updateCount: updateCount,
+        label: (newCount, updateCount) => context.l10n.sync.pendingSummary(
+          parts: [
+            if (newCount > 0) context.l10n.sync.pendingNew(count: newCount),
+            if (updateCount > 0)
+              context.l10n.sync.pendingUpdate(count: updateCount),
+          ].join(' · '),
+        ),
+      ),
+    );
+  }
+}
 
 class DiaryTileFrame extends StatelessWidget {
   final Widget child;

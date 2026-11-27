@@ -1336,6 +1336,20 @@
       "references": [
         0
       ],
+      "type": "index",
+      "data": {
+        "on": 0,
+        "name": "idx_diaries_show_cat_lastmod",
+        "sql": "CREATE INDEX idx_diaries_show_cat_lastmod\n  ON diaries (show, category_id, last_modified DESC, id DESC);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 23,
+      "references": [
+        0
+      ],
       "type": "table",
       "data": {
         "name": "diary_media",
@@ -1417,13 +1431,13 @@
       }
     },
     {
-      "id": 23,
+      "id": 24,
       "references": [
-        22
+        23
       ],
       "type": "index",
       "data": {
-        "on": 22,
+        "on": 23,
         "name": "idx_diary_media_kind",
         "sql": "CREATE INDEX idx_diary_media_kind ON diary_media (kind, diary_id);",
         "unique": false,
@@ -1431,13 +1445,13 @@
       }
     },
     {
-      "id": 24,
+      "id": 25,
       "references": [
-        22
+        23
       ],
       "type": "index",
       "data": {
-        "on": 22,
+        "on": 23,
         "name": "idx_diary_media_file",
         "sql": "CREATE INDEX idx_diary_media_file ON diary_media (file_name);",
         "unique": false,
@@ -1445,7 +1459,7 @@
       }
     },
     {
-      "id": 25,
+      "id": 26,
       "references": [],
       "type": "table",
       "data": {
@@ -1501,13 +1515,13 @@
       }
     },
     {
-      "id": 26,
+      "id": 27,
       "references": [
-        25
+        26
       ],
       "type": "index",
       "data": {
-        "on": 25,
+        "on": 26,
         "name": "idx_tags_name",
         "sql": "CREATE INDEX idx_tags_name ON tags (name);",
         "unique": false,
@@ -1515,7 +1529,7 @@
       }
     },
     {
-      "id": 27,
+      "id": 28,
       "references": [
         0
       ],
@@ -1579,13 +1593,13 @@
       }
     },
     {
-      "id": 28,
+      "id": 29,
       "references": [
-        27
+        28
       ],
       "type": "index",
       "data": {
-        "on": 27,
+        "on": 28,
         "name": "idx_diary_tags_tag",
         "sql": "CREATE INDEX idx_diary_tags_tag ON diary_tags (tag_id);",
         "unique": false,
@@ -1593,45 +1607,45 @@
       }
     },
     {
-      "id": 29,
+      "id": 30,
       "references": [
-        25,
+        26,
         0,
-        27
+        28
       ],
       "type": "trigger",
       "data": {
-        "on": 25,
+        "on": 26,
         "references_in_body": [
-          25,
+          26,
           0,
-          27
+          28
         ],
         "name": "tags_ai",
         "sql": "CREATE TRIGGER tags_ai AFTER INSERT ON tags BEGIN\n  UPDATE diaries SET tags_text = COALESCE((SELECT group_concat(name, ' ') FROM\n    (SELECT t.name FROM diary_tags dt JOIN tags t ON t.id = dt.tag_id\n     WHERE dt.diary_id = diaries.id AND t.deleted = 0 ORDER BY dt.seq)), '')\n  WHERE id IN (SELECT diary_id FROM diary_tags WHERE tag_id = new.id);\nEND;"
       }
     },
     {
-      "id": 30,
+      "id": 31,
       "references": [
-        25,
+        26,
         0,
-        27
+        28
       ],
       "type": "trigger",
       "data": {
-        "on": 25,
+        "on": 26,
         "references_in_body": [
-          25,
+          26,
           0,
-          27
+          28
         ],
         "name": "tags_au",
         "sql": "CREATE TRIGGER tags_au AFTER UPDATE OF name, deleted ON tags BEGIN\n  UPDATE diaries SET tags_text = COALESCE((SELECT group_concat(name, ' ') FROM\n    (SELECT t.name FROM diary_tags dt JOIN tags t ON t.id = dt.tag_id\n     WHERE dt.diary_id = diaries.id AND t.deleted = 0 ORDER BY dt.seq)), '')\n  WHERE id IN (SELECT diary_id FROM diary_tags WHERE tag_id = new.id);\nEND;"
       }
     },
     {
-      "id": 31,
+      "id": 32,
       "references": [
         1
       ],
@@ -1645,7 +1659,7 @@
       }
     },
     {
-      "id": 32,
+      "id": 33,
       "references": [
         0
       ],
@@ -1692,58 +1706,58 @@
       }
     },
     {
-      "id": 33,
+      "id": 34,
       "references": [
         0,
-        32
+        33
       ],
       "type": "trigger",
       "data": {
         "on": 0,
         "references_in_body": [
           0,
-          32
+          33
         ],
         "name": "diary_fts_ai",
         "sql": "CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN\n  INSERT INTO diary_fts (rowid, title, content_text, tags_text)\n    VALUES (new.rid, new.title, new.content_text, new.tags_text);\nEND;"
       }
     },
     {
-      "id": 34,
+      "id": 35,
       "references": [
         0,
-        32
+        33
       ],
       "type": "trigger",
       "data": {
         "on": 0,
         "references_in_body": [
           0,
-          32
+          33
         ],
         "name": "diary_fts_ad",
         "sql": "CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text, tags_text)\n    VALUES ('delete', old.rid, old.title, old.content_text, old.tags_text);\nEND;"
       }
     },
     {
-      "id": 35,
+      "id": 36,
       "references": [
         0,
-        32
+        33
       ],
       "type": "trigger",
       "data": {
         "on": 0,
         "references_in_body": [
           0,
-          32
+          33
         ],
         "name": "diary_fts_au",
         "sql": "CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text, tags_text ON diaries\nWHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text OR old.tags_text IS NOT new.tags_text\nBEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text, tags_text)\n    VALUES ('delete', old.rid, old.title, old.content_text, old.tags_text);\n  INSERT INTO diary_fts (rowid, title, content_text, tags_text)\n    VALUES (new.rid, new.title, new.content_text, new.tags_text);\nEND;"
       }
     },
     {
-      "id": 36,
+      "id": 37,
       "references": [
         0
       ],
@@ -1988,6 +2002,15 @@
         {
           "dialect": "sqlite",
           "sql": "CREATE INDEX idx_diaries_show_lastmod ON diaries (show, last_modified DESC, id DESC)"
+        }
+      ]
+    },
+    {
+      "name": "idx_diaries_show_cat_lastmod",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX idx_diaries_show_cat_lastmod ON diaries (show, category_id, last_modified DESC, id DESC)"
         }
       ]
     },

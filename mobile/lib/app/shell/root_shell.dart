@@ -92,7 +92,9 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
 
   @override
   Widget build(BuildContext context) {
-    final selecting = ref.watch(diarySelectionProvider).isNotEmpty;
+    final selecting = ref.watch(
+      diarySelectionProvider.select((selection) => selection.isNotEmpty),
+    );
     final enabled = ref.watch(kvValueProvider(MoodiaryKVs.assistantEnabled));
     final tabs = enabled
         ? _ShellTab.values

@@ -101,6 +101,8 @@ void main() {
     final provider = diaryControllerProvider();
     container.listen(provider, (_, _) {});
     final page = await container.read(provider.future);
+    final fullDiary = await repo.getDiaryByBusinessId(page.items.first.id);
+    expect(page.items.first, diarySummaryFromDiary(fullDiary!));
     final visible = page.items.map((diary) => diary.id).toSet();
     final outside = {for (var index = 0; index < 32; index++) 'entry-$index'}
         .difference(visible);

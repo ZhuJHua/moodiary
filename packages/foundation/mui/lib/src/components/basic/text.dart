@@ -70,17 +70,6 @@ class AdaptiveText extends StatelessWidget {
 
 extension StringExt on String {
   String removeLineBreaks() => replaceAll(RegExp(r'\s*[\r\n]+\s*'), ' ');
-
-  String preview({int maxRunes = 500, bool singleLine = false}) {
-    final truncated = length <= maxRunes
-        ? this
-        : String.fromCharCodes(runes.take(maxRunes));
-    final lines = truncated
-        .split(RegExp(r'\r?\n'))
-        .map((line) => line.trimRight())
-        .where((line) => line.trim().isNotEmpty);
-    return lines.join(singleLine ? ' ' : '\n').trim();
-  }
 }
 
 class AnimatedText extends StatelessWidget {

@@ -1973,6 +1973,7 @@ final class Schema4 extends i0.VersionedSchema {
     idxDiariesShowTime,
     idxDiariesShowCatTime,
     idxDiariesShowLastmod,
+    idxDiariesShowCatLastmod,
     diaryMedia,
     idxDiaryMediaKind,
     idxDiaryMediaFile,
@@ -2256,6 +2257,10 @@ final class Schema4 extends i0.VersionedSchema {
   final i1.Index idxDiariesShowLastmod = i1.Index(
     'idx_diaries_show_lastmod',
     'CREATE INDEX idx_diaries_show_lastmod ON diaries (show, last_modified DESC, id DESC)',
+  );
+  final i1.Index idxDiariesShowCatLastmod = i1.Index(
+    'idx_diaries_show_cat_lastmod',
+    'CREATE INDEX idx_diaries_show_cat_lastmod ON diaries (show, category_id, last_modified DESC, id DESC)',
   );
   late final Shape22 diaryMedia = Shape22(
     source: i0.VersionedTable(

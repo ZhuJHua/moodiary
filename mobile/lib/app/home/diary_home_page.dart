@@ -131,8 +131,9 @@ class _DiaryHomePageState extends ConsumerState<DiaryHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final selection = ref.watch(diarySelectionProvider);
-    final selecting = selection.isNotEmpty;
+    final selecting = ref.watch(
+      diarySelectionProvider.select((selection) => selection.isNotEmpty),
+    );
     final filter = ref.watch(homeDiaryFilterProvider);
     ref.listen(
       homeDiaryFilterProvider,
@@ -184,47 +185,20 @@ class _DiaryHomePageState extends ConsumerState<DiaryHomePage> {
       },
       child: Scaffold(
         appBar: selecting
-            ? _selectionAppBar(context, selection.length)
+            ? _SelectionAppBar(onDelete: _deleteSelected)
             : _normalAppBar(context, filter),
         body: body,
       ),
     );
   }
 
-  PreferredSizeWidget _selectionAppBar(BuildContext context, int count) {
-    return AppBar(
-      leading: IconButton(
-        tooltip: context.l10n.common.cancel,
-        icon: const Icon(LucideIcons.x),
-        onPressed: () => ref.read(diarySelectionProvider.notifier).clear(),
-      ),
-      title: Text(context.l10n.app.homeSelected(count: count)),
-      actions: [
-        IconButton(
-          tooltip: context.l10n.common.delete,
-          icon: const Icon(LucideIcons.trash2),
-          onPressed: count == 0 ? null : _deleteSelected,
-        ),
-      ],
-    );
-  }
-
   PreferredSizeWidget _normalAppBar(BuildContext context, DiaryFilter filter) {
-    final pending = ref.watch(syncPendingStateProvider);
     final viewModeType = ViewModeType.getType(
       ref.watch(kvValueProvider(MoodiaryKVs.homeViewMode)),
     );
     return AppBar(
       leadingWidth: 52,
-      leading: IconButton(
-        tooltip: context.l10n.diary.allCategories,
-        onPressed: widget.onOpenDrawer,
-        icon: Badge(
-          isLabelVisible: pending.newCategoryIds.isNotEmpty,
-          smallSize: 7,
-          child: const Icon(LucideIcons.menu),
-        ),
-      ),
+      leading: _DrawerMenuButton(onPressed: widget.onOpenDrawer),
       titleSpacing: 0,
       title: _FilterTitle(filter: filter),
       actions: [
@@ -283,6 +257,59 @@ class _DiaryHomePageState extends ConsumerState<DiaryHomePage> {
   }
 }
 
+class _SelectionAppBar extends ConsumerWidget implements PreferredSizeWidget {
+  static final _preferredSize = AppBar().preferredSize;
+
+  final VoidCallback onDelete;
+
+  const _SelectionAppBar({required this.onDelete});
+
+  @override
+  Size get preferredSize => _preferredSize;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(diarySelectionProvider.select((s) => s.length));
+    return AppBar(
+      leading: IconButton(
+        tooltip: context.l10n.common.cancel,
+        icon: const Icon(LucideIcons.x),
+        onPressed: () => ref.read(diarySelectionProvider.notifier).clear(),
+      ),
+      title: Text(context.l10n.app.homeSelected(count: count)),
+      actions: [
+        IconButton(
+          tooltip: context.l10n.common.delete,
+          icon: const Icon(LucideIcons.trash2),
+          onPressed: count == 0 ? null : onDelete,
+        ),
+      ],
+    );
+  }
+}
+
+class _DrawerMenuButton extends ConsumerWidget {
+  final VoidCallback? onPressed;
+
+  const _DrawerMenuButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasPending = ref.watch(
+      syncPendingStateProvider.select((p) => p.newCategoryIds.isNotEmpty),
+    );
+    return IconButton(
+      tooltip: context.l10n.diary.allCategories,
+      onPressed: onPressed,
+      icon: Badge(
+        isLabelVisible: hasPending,
+        smallSize: 7,
+        child: const Icon(LucideIcons.menu),
+      ),
+    );
+  }
+}
+
 class _FilterTitle extends ConsumerWidget {
   final DiaryFilter filter;
 
@@ -291,11 +318,6 @@ class _FilterTitle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.theme.colors;
-    final counts = ref.watch(categoryDiaryCountsProvider).value;
-    final category = filter.categoryId == null
-        ? null
-        : ref.watch(categoryByIdProvider(filter.categoryId));
-
     final (String label, Color? dot, int? count) = switch (filter) {
       _ when filter.isAll => (context.l10n.common.appName, null, null),
       DiaryFilter(tagName: final name?) => (
@@ -309,21 +331,9 @@ class _FilterTitle extends ConsumerWidget {
             .firstOrNull
             ?.count,
       ),
-      _ when filter.uncategorized => (
-        context.l10n.diary.categoryNoCategory,
-        null,
-        counts == null
-            ? null
-            : counts.total -
-                  counts.byCategory.values.fold<int>(0, (a, b) => a + b),
-      ),
-      _ => (
-        category?.categoryName ?? context.l10n.common.appName,
-        category == null
-            ? null
-            : categoryColorOf(colorValue: category.color, id: category.id),
-        counts?.byCategory[filter.categoryId],
-      ),
+      _ when filter.uncategorized => _uncategorizedTitle(context, ref),
+      DiaryFilter(categoryId: final id?) => _categoryTitle(context, ref, id),
+      _ => (context.l10n.common.appName, null, null),
     };
 
     return Row(
@@ -359,6 +369,37 @@ class _FilterTitle extends ConsumerWidget {
           ),
         ],
       ],
+    );
+  }
+
+  (String, Color?, int?) _uncategorizedTitle(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    final counts = ref.watch(categoryDiaryCountsProvider).value;
+    return (
+      context.l10n.diary.categoryNoCategory,
+      null,
+      counts == null
+          ? null
+          : counts.total -
+                counts.byCategory.values.fold<int>(0, (a, b) => a + b),
+    );
+  }
+
+  (String, Color?, int?) _categoryTitle(
+    BuildContext context,
+    WidgetRef ref,
+    String id,
+  ) {
+    final counts = ref.watch(categoryDiaryCountsProvider).value;
+    final category = ref.watch(categoryByIdProvider(id));
+    return (
+      category?.categoryName ?? context.l10n.common.appName,
+      category == null
+          ? null
+          : categoryColorOf(colorValue: category.color, id: category.id),
+      counts?.byCategory[id],
     );
   }
 }

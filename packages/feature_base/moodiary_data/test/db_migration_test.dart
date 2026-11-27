@@ -32,6 +32,14 @@ void main() {
     return row.data.values.first as int;
   }
 
+  Future<void> expectCategoryLastModifiedIndex(MoodiaryDatabase db) async {
+    final indexes = await db.customSelect("PRAGMA index_list('diaries')").get();
+    expect(
+      indexes.map((row) => row.read<String>('name')),
+      contains('idx_diaries_show_cat_lastmod'),
+    );
+  }
+
   v1.DiariesCompanion v1Diary(
     String id, {
     double? lat,
@@ -61,6 +69,7 @@ void main() {
     );
     await verifier.migrateAndValidate(db, 4);
     expect(await userVersion(db), 4);
+    await expectCategoryLastModifiedIndex(db);
     await db.close();
   });
 
@@ -531,6 +540,7 @@ void main() {
         final schema = await verifier.schemaAt(from);
         final db = MoodiaryDatabase.forTesting(schema.newConnection());
         await verifier.migrateAndValidate(db, to);
+        if (to == 4) await expectCategoryLastModifiedIndex(db);
         await db.close();
       });
     }

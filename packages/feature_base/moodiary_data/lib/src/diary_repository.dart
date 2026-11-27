@@ -20,6 +20,60 @@ enum IndexMode { inline, skip }
 
 typedef PlaceFootprint = ({int count, DateTime first, DateTime last});
 
+DiarySummary diarySummaryFromDiary(Diary diary) => _diarySummary(
+  id: diary.id,
+  title: diary.title,
+  contentPreview: MediaMarkup.preview(diary.contentText),
+  time: diary.time,
+  lastModified: diary.lastModified,
+  mood: diary.mood,
+  weatherIcon: diary.weather?.icon,
+  weatherTemp: diary.weather?.temp,
+  placeId: diary.placeId,
+  aspect: diary.aspect,
+  videos: diary.videoName,
+  images: diary.imageName,
+  audioCount: diary.audioName.length,
+  fileCount: diary.fileName.length,
+);
+
+DiarySummary _diarySummary({
+  required String id,
+  required String title,
+  required String contentPreview,
+  required DateTime time,
+  required DateTime lastModified,
+  required DiaryMood? mood,
+  required String? weatherIcon,
+  required String? weatherTemp,
+  required String? placeId,
+  required double? aspect,
+  required List<String> videos,
+  required List<String> images,
+  required int audioCount,
+  required int fileCount,
+}) => DiarySummary(
+  id: id,
+  title: title,
+  contentPreview: contentPreview,
+  time: time,
+  lastModified: lastModified,
+  mood: mood,
+  weatherIcon: weatherIcon,
+  weatherTemp: weatherTemp,
+  placeId: placeId,
+  aspect: aspect,
+  visualMedia: [
+    for (final name in videos.take(3))
+      DiaryVisualMedia(name: name, isVideo: true),
+    for (final name in images.take(3 - min(3, videos.length)))
+      DiaryVisualMedia(name: name, isVideo: false),
+  ],
+  moreVisualCount: max(0, videos.length + images.length - 3),
+  audioCount: audioCount,
+  fileCount: fileCount,
+);
+
 class DiaryRepository {
   DiaryRepository(this._db);
 
@@ -428,25 +482,19 @@ class DiaryRepository {
   SimpleSelectStatement<Diaries, DiaryRow> _visible() =>
       _db.select(_db.diaries)..where((d) => d.show.equals(1));
 
-  void _orderBy(SimpleSelectStatement<Diaries, DiaryRow> q, DiarySort sort) {
-    switch (sort) {
-      case .timeDesc:
-        q.orderBy([
-          (d) => OrderingTerm.desc(d.time),
-          (d) => OrderingTerm.desc(d.id),
-        ]);
-      case .timeAsc:
-        q.orderBy([
-          (d) => OrderingTerm.asc(d.time),
-          (d) => OrderingTerm.asc(d.id),
-        ]);
-      case .lastModifiedDesc:
-        q.orderBy([
-          (d) => OrderingTerm.desc(d.lastModified),
-          (d) => OrderingTerm.desc(d.id),
-        ]);
-    }
-  }
+  List<OrderClauseGenerator<Diaries>> _diaryOrdering(DiarySort sort) => [
+    (diary) => switch (sort) {
+      .timeDesc => OrderingTerm.desc(diary.time),
+      .timeAsc => OrderingTerm.asc(diary.time),
+      .lastModifiedDesc => OrderingTerm.desc(diary.lastModified),
+    },
+    (diary) => sort == .timeAsc
+        ? OrderingTerm.asc(diary.id)
+        : OrderingTerm.desc(diary.id),
+  ];
+
+  void _orderBy(SimpleSelectStatement<Diaries, DiaryRow> q, DiarySort sort) =>
+      q.orderBy(_diaryOrdering(sort));
 
   static const _uncategorized = CustomExpression<bool>(
     '(diaries.category_id IS NULL OR NOT EXISTS (SELECT 1 FROM categories c '
@@ -491,6 +539,83 @@ class DiaryRepository {
     _orderBy(q, sort);
     if (limit != null) q.limit(limit, offset: offset);
     return _assemble(await q.get());
+  }
+
+  Future<List<DiarySummary>> getDiarySummariesByCategory({
+    String? categoryId,
+    bool uncategorized = false,
+    String? tagName,
+    int? offset,
+    int? limit,
+    DiarySort sort = .timeDesc,
+  }) async {
+    final diary = _db.diaries;
+    final excerpt = diary.contentText.substr(1, MediaMarkup.previewRawLimit);
+    final hasMoreContent = diary.contentText
+        .substr(MediaMarkup.previewRawLimit + 1, 1)
+        .isNotValue('');
+    final query = _db.selectOnly(diary)
+      ..addColumns([
+        diary.id,
+        diary.title,
+        excerpt,
+        hasMoreContent,
+        diary.time,
+        diary.lastModified,
+        diary.moodLevel,
+        diary.aspect,
+        diary.placeId,
+        diary.weatherIcon,
+        diary.weatherTemp,
+      ])
+      ..where(diary.show.equals(1))
+      ..orderBy([for (final order in _diaryOrdering(sort)) order(diary)]);
+    final filter = _homeFilter(categoryId, uncategorized, tagName);
+    if (filter != null) query.where(filter);
+    if (limit != null) query.limit(limit, offset: offset);
+    final rows = await query.get();
+    if (rows.isEmpty) return const [];
+
+    final ids = [for (final row in rows) row.read(diary.id)!];
+    final media = _db.diaryMedia;
+    final mediaById = <String, Map<String, List<String>>>{};
+    for (var start = 0; start < ids.length; start += _inChunk) {
+      final chunk = ids.sublist(start, min(start + _inChunk, ids.length));
+      final mediaQuery = _db.selectOnly(media)
+        ..addColumns([media.diaryId, media.kind, media.fileName])
+        ..where(media.diaryId.isIn(chunk))
+        ..orderBy([OrderingTerm.asc(media.seq)]);
+      for (final row in await mediaQuery.get()) {
+        mediaById
+            .putIfAbsent(row.read(media.diaryId)!, () => {})
+            .putIfAbsent(row.read(media.kind)!, () => [])
+            .add(row.read(media.fileName)!);
+      }
+    }
+    return rows.map((row) {
+      final id = row.read(diary.id)!;
+      final media = mediaById[id];
+      final weatherIcon = row.read(diary.weatherIcon);
+      final previewInput = row.read(excerpt)!;
+      return _diarySummary(
+        id: id,
+        title: row.read(diary.title)!,
+        contentPreview: MediaMarkup.preview(
+          row.read(hasMoreContent)! ? '$previewInput ' : previewInput,
+        ),
+        time: dbToTime(row.read(diary.time)!),
+        lastModified: dbToTime(row.read(diary.lastModified)!),
+        mood: DiaryMood.fromScore(row.read(diary.moodLevel)),
+        weatherIcon: weatherIcon,
+        weatherTemp: weatherIcon == null ? null : row.read(diary.weatherTemp),
+        placeId: row.read(diary.placeId),
+        aspect: row.read(diary.aspect),
+        videos: media?['video'] ?? const [],
+        images: media?['image'] ?? const [],
+        audioCount: media?['audio']?.length ?? 0,
+        fileCount: media?['file']?.length ?? 0,
+      );
+    }).toList();
   }
 
   Future<Map<DateTime, int>> diaryCountByMonth({

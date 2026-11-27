@@ -2,20 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_diary/src/application/timeline_group.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-Diary diary(DateTime time, {DateTime? modified, String id = 'x'}) => Diary(
-  id: id,
-  title: '',
-  content: '',
-  contentText: '',
-  time: time,
-  lastModified: modified ?? time,
-  show: true,
-  mood: null,
-  imageName: const [],
-  audioName: const [],
-  videoName: const [],
-  type: DiaryType.tiptap.value,
-);
+DiarySummary diary(DateTime time, {DateTime? modified, String id = 'x'}) =>
+    DiarySummary(
+      id: id,
+      title: '',
+      contentPreview: '',
+      time: time,
+      lastModified: modified ?? time,
+      visualMedia: const [],
+      moreVisualCount: 0,
+      audioCount: 0,
+      fileCount: 0,
+    );
 
 void main() {
   test('empty input yields no months', () {

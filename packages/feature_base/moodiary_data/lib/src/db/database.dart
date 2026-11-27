@@ -177,6 +177,7 @@ END''');
               }
               await m.deleteTable('diary_fts');
               await m.addColumn(schema.diaries, schema.diaries.tagsText);
+              await m.create(schema.idxDiariesShowCatLastmod);
               await m.addColumn(schema.categories, schema.categories.deleted);
               await m.createTable(schema.tags);
               await m.create(schema.idxTagsName);

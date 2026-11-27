@@ -12,6 +12,7 @@ export 'src/diary_graph.dart';
 export 'src/diary_meta.dart';
 export 'src/diary_mood.dart';
 export 'src/diary_sort.dart';
+export 'src/diary_summary.dart';
 export 'src/diary_type.dart';
 export 'src/font.dart';
 export 'src/llm_model_preset.dart';

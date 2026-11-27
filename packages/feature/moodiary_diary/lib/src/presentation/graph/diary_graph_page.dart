@@ -304,7 +304,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
         .read(diaryRepositoryProvider)
         .getDiaryByBusinessId(n.id);
     if (diary == null || !mounted) return;
-    openDiaryDetail(context, diary);
+    openDiaryDetail(context, diary.id);
   }
 
   @override

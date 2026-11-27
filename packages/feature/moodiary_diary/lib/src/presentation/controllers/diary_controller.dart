@@ -13,24 +13,51 @@ List<Diary> applyDiaryEvent(
   required bool Function(Diary) belongs,
   Comparator<Diary>? compare,
   bool mayHaveMore = false,
+}) => _applyDiaryEvent(
+  list,
+  event,
+  belongs: belongs,
+  idOf: (diary) => diary.id,
+  project: (diary) => diary,
+  compare: compare ?? diarySortComparator(.timeDesc),
+  mayHaveMore: mayHaveMore,
+);
+
+List<T> _applyDiaryEvent<T>(
+  List<T> list,
+  DiaryEvent event, {
+  required bool Function(Diary) belongs,
+  required String Function(T) idOf,
+  required T Function(Diary) project,
+  required Comparator<T> compare,
+  required bool mayHaveMore,
 }) {
-  final cmp = compare ?? diarySortComparator(.timeDesc);
   switch (event) {
     case DiaryDeleted(:final id):
-      if (!list.any((d) => d.id == id)) return list;
-      return list.where((d) => d.id != id).toList();
+      if (!list.any((item) => idOf(item) == id)) return list;
+      return list.where((item) => idOf(item) != id).toList();
     case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
-      final without = list.where((d) => d.id != diary.id).toList();
-      final removed = without.length != list.length;
-      if (!belongs(diary)) return removed ? without : list;
-      if (mayHaveMore && without.isNotEmpty && cmp(diary, without.last) > 0) {
-        return removed ? without : list;
+      final index = list.indexWhere((item) => idOf(item) == diary.id);
+      List<T> removeExisting() =>
+          index == -1 ? list : (list.toList()..removeAt(index));
+      if (!belongs(diary)) return removeExisting();
+      final item = project(diary);
+      if (index != -1 && list[index] == item) return list;
+      final tail = index == list.length - 1 ? list.length - 2 : list.length - 1;
+      if (mayHaveMore && tail >= 0 && compare(item, list[tail]) > 0) {
+        return removeExisting();
       }
-      return [...without, diary]..sort(cmp);
+      final updated = list.toList();
+      if (index == -1) {
+        updated.add(item);
+      } else {
+        updated[index] = item;
+      }
+      return updated..sort(compare);
   }
 }
 
-class DiaryListState extends PagedList<Diary> {
+class DiaryListState extends PagedList<DiarySummary> {
   final DiarySort sort;
 
   DiaryListState({
@@ -43,7 +70,7 @@ class DiaryListState extends PagedList<Diary> {
 
   @override
   DiaryListState copyWith({
-    List<Diary>? items,
+    List<DiarySummary>? items,
     DiarySort? sort,
     bool? hasMore,
     bool? isLoadingMore,
@@ -62,7 +89,7 @@ class DiaryListState extends PagedList<Diary> {
 
 @riverpod
 class DiaryController extends _$DiaryController
-    with LoadMoreMixin<Diary, DiaryListState> {
+    with LoadMoreMixin<DiarySummary, DiaryListState> {
   late DiaryRepository _repository;
   Set<String> _activeCategories = {};
   Set<String> _tagIdsForName = {};
@@ -120,7 +147,7 @@ class DiaryController extends _$DiaryController
 
   @override
   DiaryListState buildPageState({
-    required List<Diary> items,
+    required List<DiarySummary> items,
     required bool hasMore,
     required bool isLoadingMore,
     Object? loadMoreError,
@@ -133,7 +160,7 @@ class DiaryController extends _$DiaryController
   );
 
   @override
-  Future<Iterable<Diary>?> load({
+  Future<Iterable<DiarySummary>?> load({
     required int limit,
     required int offset,
   }) async {
@@ -144,7 +171,7 @@ class DiaryController extends _$DiaryController
       if (!operationRef.mounted) return null;
       _membership = null;
     }
-    return _repository.getDiaryByCategory(
+    return _repository.getDiarySummariesByCategory(
       categoryId: categoryId,
       uncategorized: uncategorized,
       tagName: tagName,
@@ -165,7 +192,7 @@ class DiaryController extends _$DiaryController
       return;
     }
     markPrefixMutated();
-    final items = applyDiaryEvent(
+    final items = _applyDiaryEvent(
       page.items,
       event,
       belongs: (d) =>
@@ -175,21 +202,13 @@ class DiaryController extends _$DiaryController
               : uncategorized
               ? !_activeCategories.contains(d.categoryId)
               : categoryId == null || d.categoryId == categoryId),
-      compare: diarySortComparator(page.sort),
+      idOf: (diary) => diary.id,
+      project: diarySummaryFromDiary,
+      compare: diarySummarySortComparator(page.sort),
       mayHaveMore: page.hasMore,
     );
     if (!identical(items, page.items)) {
       state = .data(page.copyWith(items: items));
-    }
-  }
-
-  Future<bool> softDeleteDiary(Diary diary) async {
-    final operationRef = ref;
-    try {
-      await _repository.setVisibility(diary, show: false);
-      return operationRef.mounted;
-    } catch (_) {
-      return false;
     }
   }
 
@@ -236,7 +255,8 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
       _missedEvent = true;
       return;
     }
-    state = .data(applyDiaryEvent(list, event, belongs: (d) => !d.show));
+    final items = applyDiaryEvent(list, event, belongs: (d) => !d.show);
+    if (!identical(items, list)) state = .data(items);
   }
 
   Future<bool> restore(Diary diary) async {
