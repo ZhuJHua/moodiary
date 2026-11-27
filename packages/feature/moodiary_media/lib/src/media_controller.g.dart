@@ -13,7 +13,7 @@ part of 'media_controller.dart';
 final mediaItemsProvider = MediaItemsFamily._();
 
 final class MediaItemsProvider
-    extends $AsyncNotifierProvider<MediaItems, List<MediaItem>> {
+    extends $AsyncNotifierProvider<MediaItems, PagedList<MediaItem>> {
   MediaItemsProvider._({
     required MediaItemsFamily super.from,
     required MediaType super.argument,
@@ -50,15 +50,15 @@ final class MediaItemsProvider
   }
 }
 
-String _$mediaItemsHash() => r'70e77a8ffe3eaf574af20f8c891147b6a2f33b1e';
+String _$mediaItemsHash() => r'f0bc260ef36dc5055d23f918dec87c8af1c939a1';
 
 final class MediaItemsFamily extends $Family
     with
         $ClassFamilyOverride<
           MediaItems,
-          AsyncValue<List<MediaItem>>,
-          List<MediaItem>,
-          FutureOr<List<MediaItem>>,
+          AsyncValue<PagedList<MediaItem>>,
+          PagedList<MediaItem>,
+          FutureOr<PagedList<MediaItem>>,
           MediaType
         > {
   MediaItemsFamily._()
@@ -77,20 +77,25 @@ final class MediaItemsFamily extends $Family
   String toString() => r'mediaItemsProvider';
 }
 
-abstract class _$MediaItems extends $AsyncNotifier<List<MediaItem>> {
+abstract class _$MediaItems extends $AsyncNotifier<PagedList<MediaItem>> {
   late final _$args = ref.$arg as MediaType;
   MediaType get type => _$args;
 
-  FutureOr<List<MediaItem>> build({required MediaType type});
+  FutureOr<PagedList<MediaItem>> build({required MediaType type});
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<List<MediaItem>>, List<MediaItem>>;
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<PagedList<MediaItem>>, PagedList<MediaItem>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<MediaItem>>, List<MediaItem>>,
-              AsyncValue<List<MediaItem>>,
+              AnyNotifier<
+                AsyncValue<PagedList<MediaItem>>,
+                PagedList<MediaItem>
+              >,
+              AsyncValue<PagedList<MediaItem>>,
               Object?,
               Object?
             >;

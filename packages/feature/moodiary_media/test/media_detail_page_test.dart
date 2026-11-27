@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,18 +15,30 @@ final _date = DateTime(2026, 11, 20);
 
 class _Items extends MediaItems {
   int renameCalls = 0;
+  int loads = 0;
+  Object? refreshError;
+  Completer<void>? gate;
   @override
-  Future<List<MediaItem>> build({required MediaType type}) => init();
+  Future<PagedList<MediaItem>> build({required MediaType type}) => init();
 
   @override
   Future<List<MediaItem>> load({
     required int limit,
     required int offset,
-  }) async => [
-    _item('Other diary', diaryId: 'other'),
-    _item('Meeting'),
-    if (type == .file) _item(null, diaryId: 'unnamed'),
-  ];
+  }) async {
+    loads++;
+    final pending = gate;
+    if (pending != null) {
+      gate = null;
+      await pending.future;
+    }
+    if (refreshError case final error?) throw error;
+    return [
+      _item('Other diary', diaryId: 'other'),
+      _item('Meeting'),
+      if (type == .file) _item(null, diaryId: 'unnamed'),
+    ];
+  }
 
   MediaItem _item(String? label, {String diaryId = 'diary'}) => MediaItem(
     diaryId: diaryId,
@@ -36,7 +50,7 @@ class _Items extends MediaItems {
   @override
   Future<void> rename(String fileName, String name) async {
     renameCalls++;
-    state = .data([_item(name)]);
+    state = .data(state.requireValue.copyWith(items: [_item(name)]));
   }
 }
 
@@ -46,6 +60,7 @@ Future<void> _show(
   Size size = const Size(390, 844),
   double scale = 1,
   bool unnamed = false,
+  bool openDetail = true,
 }) async {
   await tester.binding.setSurfaceSize(size);
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -88,6 +103,7 @@ Future<void> _show(
     ),
   );
   await tester.pumpAndSettle();
+  if (!openDetail) return;
   final title = unnamed ? l10n.media.typeFile : 'Meeting';
   final row = find.descendant(
     of: find.byType(CustomScrollView),
@@ -100,6 +116,54 @@ Future<void> _show(
 
 void main() {
   setUpAll(setupPluralResolvers);
+
+  testWidgets('a failed media refresh keeps the list mounted and can retry', (
+    tester,
+  ) async {
+    await _show(tester, .file, openDetail: false);
+    final refresh = find.byType(MRefresh);
+    final refreshState = tester.state(refresh);
+    final container = ProviderScope.containerOf(tester.element(refresh));
+    final items =
+        container.read(mediaItemsProvider(type: .file).notifier) as _Items;
+    items.refreshError = StateError('First-page query failed');
+
+    Future<void> pull() async {
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, 180));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump();
+    }
+
+    await pull();
+    expect(items.loads, 2);
+    expect(tester.state(refresh), same(refreshState));
+    expect(find.text('Meeting'), findsOneWidget);
+    final error = find.descendant(
+      of: refresh,
+      matching: find.byIcon(LucideIcons.circleAlert),
+    );
+    expect(error, findsOneWidget);
+    final l10nMui = tester.element(refresh).muiL10n;
+    expect(find.text(l10nMui.toastError), findsOneWidget);
+    expect(find.text(l10nMui.refreshComplete), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pump(const Duration(milliseconds: 851));
+    await tester.pumpAndSettle();
+
+    final pending = Completer<void>();
+    items.gate = pending;
+    await pull();
+    expect(items.loads, 3);
+    items.markMissedEvent();
+    items.refreshError = null;
+    pending.completeError(StateError('First-page query failed'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 851));
+    await tester.pumpAndSettle();
+    expect(items.loads, 4);
+    expect(error, findsNothing);
+  });
 
   testWidgets(
     'unnamed references start with an empty prompt and unchanged input skips rename',

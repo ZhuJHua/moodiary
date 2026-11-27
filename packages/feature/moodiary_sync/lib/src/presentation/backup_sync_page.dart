@@ -9,6 +9,7 @@ import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_data_providers.dart';
+import 'package:moodiary_sync/src/presentation/manual_sync.dart';
 import 'package:moodiary_sync/src/presentation/widget/s3_form_sheet.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_labels.dart';
@@ -68,16 +69,37 @@ class _RemoteSection extends ConsumerStatefulWidget {
 
 class _RemoteSectionState extends ConsumerState<_RemoteSection> {
   Future<void> _unlockRemoteKey() async {
-    await ref
-        .read(syncOperationGuardProvider)
-        .tryWithOperation(
-          (operation) => ensureSyncKeyReady(
-            operation: operation,
-            context: context,
-            ref: ref,
-            backend: ref.read(activeSyncBackendProvider),
-          ),
-        );
+    try {
+      await ref
+          .read(syncOperationGuardProvider)
+          .tryWithOperation(
+            (operation) => ensureSyncKeyReady(
+              operation: operation,
+              context: context,
+              ref: ref,
+              backend: ref.read(activeSyncBackendProvider),
+            ),
+          );
+    } on SyncException catch (error) {
+      if (mounted) toast.error(message: error.message);
+    }
+  }
+
+  Future<void> _syncNow() async {
+    final result = await triggerManualSync(
+      context: context,
+      ref: ref,
+      canPrompt: () => mounted && (ModalRoute.of(context)?.isCurrent ?? false),
+    );
+    if (!mounted) return;
+    switch (result) {
+      case ManualSyncUnreachable():
+        toast.error(message: context.l10n.sync.pullUnreachable);
+      case ManualSyncFailed():
+        toast.error(message: context.l10n.sync.pullFailed);
+      default:
+        break;
+    }
   }
 
   Future<void> _testConnection() async {
@@ -222,18 +244,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                 : context.l10n.sync.neverSynced,
             leading: const Icon(LucideIcons.refreshCw),
             trailing: const Icon(LucideIcons.chevronRight),
-            onTap: configured && !busy
-                ? () => ref
-                      .read(syncControllerProvider.notifier)
-                      .sync(
-                        prepare: (operation, backend) => ensureSyncKeyReady(
-                          context: context,
-                          ref: ref,
-                          backend: backend,
-                          operation: operation,
-                        ),
-                      )
-                : null,
+            onTap: configured && !busy ? _syncNow : null,
           ),
         SettingListTile(
           title: context.l10n.sync.logEntry,

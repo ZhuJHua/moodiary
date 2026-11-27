@@ -1751,6 +1751,19 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String remoteCount({required Object count}) => 'remote ${count}';
 	@override String get logHealth => 'Connection';
 	@override String lastSuccess({required Object time}) => 'last success ${time}';
+	@override String get pullToSync => 'Pull to sync';
+	@override String get releaseToSync => 'Release to sync';
+	@override String get pullUpToDate => 'Up to date';
+	@override String get pullSynced => 'Synced';
+	@override String pullSyncedCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: 'Synced ${count} item',
+		other: 'Synced ${count} items',
+	);
+	@override String get pullPartial => 'Partially synced';
+	@override String get pullStopped => 'Sync stopped';
+	@override String get pullFailed => 'Sync failed';
+	@override String get pullUnreachable => 'Unable to connect';
+	@override String get pullBusy => 'Sync in progress';
 }
 
 // Path: ui

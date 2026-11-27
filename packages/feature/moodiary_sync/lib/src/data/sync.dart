@@ -190,6 +190,11 @@ enum SyncErrorKind {
   static String stripTag(String detail) =>
       detail.replaceFirst(_tagWithSpace, '').trim();
 
+  bool get isUnreachable => switch (this) {
+    .network || .server || .http => true,
+    _ => false,
+  };
+
   bool get affectsHealth => switch (this) {
     .network ||
     .auth ||

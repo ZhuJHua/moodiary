@@ -13,5 +13,9 @@
   "input": "输入",
   "save": "保存",
   "moveUp": "上移",
-  "moveDown": "下移"
+  "moveDown": "下移",
+  "refreshPull": "下拉刷新",
+  "refreshArmed": "松开刷新",
+  "refreshLoading": "正在刷新",
+  "refreshComplete": "已更新"
 }

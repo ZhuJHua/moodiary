@@ -54,7 +54,10 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   late final List<Widget> _pages = [
-    DiaryHomePage(onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+    DiaryHomePage(
+      isActiveTab: () => _tab == .diary,
+      onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+    ),
     const AssistantSessionListPage(),
     const MePage(),
   ];

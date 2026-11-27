@@ -7,23 +7,35 @@ import 'package:moodiary_diary/src/presentation/controllers/diary_controller.dar
 import 'package:moodiary_diary/src/presentation/controllers/diary_filter.dart';
 import 'package:moodiary_diary/src/presentation/controllers/diary_selection.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_page_scroll.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
-class DiaryTimelineView extends ConsumerWidget {
+class DiaryTimelineView extends ConsumerStatefulWidget {
   final DiaryFilter filter;
+  final MRefreshCallback? onRefresh;
+  final bool refreshEnabled;
+  final MRefreshLabels? refreshLabels;
 
-  const DiaryTimelineView({super.key, this.filter = const .all()});
+  const DiaryTimelineView({
+    super.key,
+    this.filter = const .all(),
+    this.onRefresh,
+    this.refreshEnabled = true,
+    this.refreshLabels,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final sort = DiarySort.getType(
-      ref.watch(kvValueProvider(MoodiaryKVs.homeSortMode)),
-    );
+  ConsumerState<DiaryTimelineView> createState() => _DiaryTimelineViewState();
+}
+
+class _DiaryTimelineViewState extends ConsumerState<DiaryTimelineView>
+    with DiaryPageScroll<DiaryTimelineView> {
+  @override
+  Widget build(BuildContext context) {
+    final filter = widget.filter;
     final pending = ref.watch(syncPendingStateProvider);
     final dirty = ref.watch(syncDirtyDiaryIdsProvider);
     final provider = diaryControllerProvider(
@@ -36,11 +48,19 @@ class DiaryTimelineView extends ConsumerWidget {
     final selecting = selection.isNotEmpty;
 
     return diaryAsync.buildLoading(
-      skipLoadingOnReload: false,
-      data: (diaries) {
-        Widget body;
-        if (diaries.isEmpty) {
-          body = Center(child: Text(context.l10n.diary.tabViewEmpty));
+      data: (page) {
+        final diaries = page.items;
+        if (!diaryAsync.isLoading) commitQuery(filter, page.sort);
+        final showFooter =
+            !diaryAsync.isLoading &&
+            (page.isLoadingMore || page.loadMoreError != null);
+        Future<bool> loadMore() => ref.read(provider.notifier).loadMore();
+        final Widget content;
+        if (diaries.isEmpty && !page.hasMore) {
+          content = SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: Text(context.l10n.diary.tabViewEmpty)),
+          );
         } else {
           final monthCounts = ref
               .watch(
@@ -48,11 +68,11 @@ class DiaryTimelineView extends ConsumerWidget {
                   categoryId: filter.categoryId,
                   uncategorized: filter.uncategorized,
                   tagName: filter.tagName,
-                  sort: sort,
+                  sort: page.sort,
                 ),
               )
               .value;
-          final months = buildTimeline(diaries, sort);
+          final months = buildTimeline(diaries, page.sort);
           final flat = [for (final m in months) ...m.entries];
           final selNotifier = ref.read(diarySelectionProvider.notifier);
           var offset = 0;
@@ -119,6 +139,15 @@ class DiaryTimelineView extends ConsumerWidget {
             );
             slivers.add(SliverMainAxisGroup(slivers: [header, list]));
           }
+          if (showFooter) {
+            slivers.add(
+              SliverToBoxAdapter(
+                child: PaginationFooter(
+                  onRetry: page.loadMoreError == null ? null : loadMore,
+                ),
+              ),
+            );
+          }
           slivers.add(
             SliverToBoxAdapter(
               child: SizedBox(
@@ -127,43 +156,49 @@ class DiaryTimelineView extends ConsumerWidget {
             ),
           );
 
-          body = MRefresh(
-            onLoadMore: () => ref.read(provider.notifier).loadMore(),
-            onRefresh: () => ref.read(provider.notifier).refresh(),
-            child: CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: const .symmetric(horizontal: 14),
-                  sliver: SliverMainAxisGroup(slivers: slivers),
-                ),
-              ],
-            ),
+          content = SliverPadding(
+            padding: const .symmetric(horizontal: 14),
+            sliver: SliverMainAxisGroup(slivers: slivers),
           );
         }
         final showSummary =
             filter.isAll &&
             (pending.newDiaryIds.isNotEmpty ||
                 pending.updateDiaryIds.isNotEmpty);
-        if (!showSummary) return body;
         return Column(
           children: [
-            Padding(
-              padding: const .fromLTRB(12, 12, 12, 0),
-              child: SyncPendingSummaryCard(
-                newCount: pending.newDiaryIds.length,
-                updateCount: pending.updateDiaryIds.length,
-                label: (newCount, updateCount) =>
-                    context.l10n.sync.pendingSummary(
-                      parts: [
-                        if (newCount > 0)
-                          context.l10n.sync.pendingNew(count: newCount),
-                        if (updateCount > 0)
-                          context.l10n.sync.pendingUpdate(count: updateCount),
-                      ].join(' · '),
-                    ),
+            if (showSummary)
+              Padding(
+                padding: const .fromLTRB(12, 12, 12, 0),
+                child: SyncPendingSummaryCard(
+                  newCount: pending.newDiaryIds.length,
+                  updateCount: pending.updateDiaryIds.length,
+                  label: (newCount, updateCount) =>
+                      context.l10n.sync.pendingSummary(
+                        parts: [
+                          if (newCount > 0)
+                            context.l10n.sync.pendingNew(count: newCount),
+                          if (updateCount > 0)
+                            context.l10n.sync.pendingUpdate(count: updateCount),
+                        ].join(' · '),
+                      ),
+                ),
+              ),
+            Expanded(
+              child: MRefresh(
+                paginationKey: (filter, page.sort),
+                onRefresh: widget.onRefresh,
+                refreshEnabled: widget.refreshEnabled,
+                refreshLabels: widget.refreshLabels,
+                onLoadMore: page.hasMore && !showFooter && !diaryAsync.isLoading
+                    ? loadMore
+                    : null,
+                child: CustomScrollView(
+                  controller: scrollController,
+                  slivers: [content],
+                ),
               ),
             ),
-            Expanded(child: body),
           ],
         );
       },

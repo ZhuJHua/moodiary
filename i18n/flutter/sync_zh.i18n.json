@@ -360,5 +360,17 @@
   "nextPollInSeconds": "{seconds} 秒后",
   "remoteCount": "远端 {count}",
   "logHealth": "连接",
-  "lastSuccess": "上次成功 {time}"
+  "lastSuccess": "上次成功 {time}",
+  "pullToSync": "下拉同步",
+  "releaseToSync": "松开同步",
+  "pullUpToDate": "已是最新",
+  "pullSynced": "同步完成",
+  "pullSyncedCount(plural, param=count)": {
+    "other": "已同步 {count} 项"
+  },
+  "pullPartial": "部分同步失败",
+  "pullStopped": "同步已停止",
+  "pullFailed": "同步失败",
+  "pullUnreachable": "无法连接",
+  "pullBusy": "同步进行中"
 }

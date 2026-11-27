@@ -19,6 +19,7 @@ export 'src/common/meta_tile.dart';
 export 'src/common/mood_delta_pill.dart';
 export 'src/common/mood_glyph.dart';
 export 'src/common/moodiary_logo.dart';
+export 'src/common/pagination_footer.dart';
 export 'src/common/video/video_fullscreen_page.dart';
 export 'src/common/video/video_providers.dart';
 export 'src/mood_colors.dart';

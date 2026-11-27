@@ -171,7 +171,7 @@ class _MediaDetailPageState extends ConsumerState<MediaDetailPage> {
         body: Center(child: Text(widget.name)),
       );
     }
-    final items = ref.watch(mediaItemsProvider(type: type)).value;
+    final items = ref.watch(mediaItemsProvider(type: type)).value?.items;
     final item = items
         ?.where(
           (entry) =>

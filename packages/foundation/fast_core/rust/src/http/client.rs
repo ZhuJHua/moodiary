@@ -15,6 +15,7 @@ pub fn shared() -> Result<reqwest::Client> {
         return Ok(client.clone());
     }
     let client = builder()?
+        .connect_timeout(std::time::Duration::from_secs(8))
         .build()
         .map_err(|e| anyhow::anyhow!("failed to build http client: {e}"))?;
     let _ = CLIENT.set(client.clone());

@@ -49,4 +49,8 @@ class MuiLocalizationsDataEn extends MuiLocalizationsData with BaseTranslations<
 	@override String get save => 'Save';
 	@override String get moveUp => 'Move up';
 	@override String get moveDown => 'Move down';
+	@override String get refreshPull => 'Pull to refresh';
+	@override String get refreshArmed => 'Release to refresh';
+	@override String get refreshLoading => 'Refreshing';
+	@override String get refreshComplete => 'Updated';
 }

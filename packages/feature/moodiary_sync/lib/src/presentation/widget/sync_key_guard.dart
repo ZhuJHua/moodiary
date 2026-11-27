@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,8 @@ Future<bool> ensureSyncKeyReady({
   required BuildContext context,
   required WidgetRef ref,
   required IRemoteSyncBackend backend,
+  bool Function()? canPrompt,
+  Duration? manifestTimeout,
 }) async {
   operation.checkActive();
   final configured = await ref.read(configuredCloudBackendIdsProvider.future);
@@ -28,7 +31,14 @@ Future<bool> ensureSyncKeyReady({
 
   Uint8List? manifestBytes;
   try {
-    manifestBytes = await backend.readObject(SyncKeys.manifestPath);
+    final read = backend.readObject(SyncKeys.manifestPath);
+    manifestBytes = await (manifestTimeout == null
+        ? read
+        : read.timeout(manifestTimeout));
+  } on TimeoutException catch (error) {
+    throw SyncException(error.toString(), kind: .network);
+  } on SyncException {
+    rethrow;
   } catch (_) {
     return true;
   }
@@ -42,8 +52,9 @@ Future<bool> ensureSyncKeyReady({
       return true;
     }
     if (decrypted) {
-      if (!context.mounted) return false;
+      if (!context.mounted || canPrompt?.call() == false) return false;
       return resolveDecryptedRemote(
+        canPrompt: canPrompt,
         operation: operation,
         context: context,
         ref: ref,
@@ -71,14 +82,13 @@ Future<bool> ensureSyncKeyReady({
   final SyncKeyfile? keyfile;
   try {
     keyfile = await SyncKeyManager.readRemoteKeyfile(backend);
-  } on SyncException catch (e) {
-    if (context.mounted) toast.error(message: e.message);
-    return false;
+  } on SyncException {
+    rethrow;
   } catch (_) {
     return true;
   }
   if (keyfile == null) {
-    if (!context.mounted) return false;
+    if (!context.mounted || canPrompt?.call() == false) return false;
     final reset = await MAlert.confirm(
       context,
       title: l10n.sync.keyMissingTitle,
@@ -87,8 +97,9 @@ Future<bool> ensureSyncKeyReady({
       isDestructive: true,
       confirmLabel: l10n.sync.keyResetAction,
     );
-    if (reset && context.mounted) {
+    if (reset && context.mounted && canPrompt?.call() != false) {
       await resetAndOfferNewKey(
+        canPrompt: canPrompt,
         operation: operation,
         context: context,
         ref: ref,
@@ -100,7 +111,7 @@ Future<bool> ensureSyncKeyReady({
 
   SyncKeyManager.markKeyConflict(backend.persistentBackendId);
 
-  if (!context.mounted) return false;
+  if (!context.mounted || canPrompt?.call() == false) return false;
   List<int>? unwrappedDek;
   var forgot = false;
   final entered = await MAlert.prompt(
@@ -148,8 +159,9 @@ Future<bool> ensureSyncKeyReady({
     },
   );
   if (forgot) {
-    if (context.mounted) {
+    if (context.mounted && canPrompt?.call() != false) {
       await resetAndOfferNewKey(
+        canPrompt: canPrompt,
         operation: operation,
         context: context,
         ref: ref,

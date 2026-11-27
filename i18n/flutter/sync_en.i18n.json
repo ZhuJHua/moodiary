@@ -363,5 +363,18 @@
   "nextPollInSeconds": "in {seconds} s",
   "remoteCount": "remote {count}",
   "logHealth": "Connection",
-  "lastSuccess": "last success {time}"
+  "lastSuccess": "last success {time}",
+  "pullToSync": "Pull to sync",
+  "releaseToSync": "Release to sync",
+  "pullUpToDate": "Up to date",
+  "pullSynced": "Synced",
+  "pullSyncedCount(plural, param=count)": {
+    "one": "Synced {count} item",
+    "other": "Synced {count} items"
+  },
+  "pullPartial": "Partially synced",
+  "pullStopped": "Sync stopped",
+  "pullFailed": "Sync failed",
+  "pullUnreachable": "Unable to connect",
+  "pullBusy": "Sync in progress"
 }
