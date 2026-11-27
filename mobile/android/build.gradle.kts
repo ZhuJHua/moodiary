@@ -15,6 +15,10 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+    // Pin mmkv_android's dynamic [2.4.3, 2.5) range for reproducible builds.
+    configurations.configureEach {
+        resolutionStrategy.force("com.tencent:mmkv:2.4.3")
+    }
 }
 
 subprojects {

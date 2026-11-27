@@ -1,6 +1,12 @@
 name: iOS TestFlight
 
 on:
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Commit SHA or tag to build'
+        required: false
+        type: string
   workflow_dispatch:
 
 permissions:
@@ -22,6 +28,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Prepare iOS signing
         run: |
@@ -51,7 +59,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: mobile
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Set Up Ruby
         uses: ruby/setup-ruby@v1

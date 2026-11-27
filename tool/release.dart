@@ -182,6 +182,8 @@ Future<void> main(List<String> argv) async {
     '--body-file',
     body.path,
   ]);
-  await _run('gh', ['workflow', 'run', 'build.yml', '--ref', branch]);
-  await _run('gh', ['workflow', 'run', 'ios-release.yml', '--ref', branch]);
+  stdout.writeln(
+    '\n已创建发版 PR。合并进 $_base 后会自动从 merge commit 构建 Android draft release 与 iOS TestFlight；'
+    '\n核对产物无误后在 GitHub Release 页面点发布，tag v$next 会落在同一个 merge commit 上。',
+  );
 }

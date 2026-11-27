@@ -117,4 +117,41 @@ void main() {
   test('other platforms need no extra environment', () {
     expect(rustCargoEnvironment(code(OS.linux)), isEmpty);
   });
+
+  test('remaps CARGO_HOME, RUSTUP_HOME and workspace root in rustflags', () {
+    final env = rustCargoEnvironment(
+      code(OS.android, architecture: Architecture.arm64),
+      processEnvironment: const {
+        'CARGO_HOME': '/home/runner/.cargo/',
+        'RUSTUP_HOME': '/home/runner/.rustup',
+      },
+      workspaceRoot: temp.uri,
+    );
+    final flags = env['CARGO_ENCODED_RUSTFLAGS']!.split('\x1f');
+    final rootPath = temp.path.replaceFirst(RegExp(r'[/\\]+$'), '');
+    expect(flags, [
+      '--remap-path-prefix=/home/runner/.cargo=/cargo',
+      '--remap-path-prefix=/home/runner/.rustup=/rustup',
+      '--remap-path-prefix=$rootPath=/workspace',
+      '-C',
+      'link-arg=-Wl,-z,max-page-size=16384',
+    ]);
+  });
+
+  test('falls back to HOME and preserves existing RUSTFLAGS', () {
+    final env = rustCargoEnvironment(
+      code(OS.android, architecture: Architecture.arm),
+      processEnvironment: const {
+        'HOME': '/home/vagrant',
+        'RUSTFLAGS': '-C target-feature=+neon',
+      },
+    );
+    final flags = env['CARGO_ENCODED_RUSTFLAGS']!.split('\x1f');
+    expect(flags, [
+      '-C',
+      'target-feature=+neon',
+      '--remap-path-prefix=/home/vagrant/.cargo=/cargo',
+      '--remap-path-prefix=/home/vagrant/.rustup=/rustup',
+    ]);
+  });
 }

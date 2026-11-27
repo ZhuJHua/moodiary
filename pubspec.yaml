@@ -89,6 +89,9 @@ hooks:
     fast_press: {build_assets: true}
     fast_tokenizer: {build_assets: true}
     fast_zip: {build_assets: true}
+    sqlite3:
+      source: source
+      path: third_party/sqlite3/sqlite3.c
 
 dev_dependencies:
   flutter_test:
