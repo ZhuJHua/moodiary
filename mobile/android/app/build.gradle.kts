@@ -1,4 +1,7 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import java.util.Properties
+import java.util.TreeMap
 
 plugins {
     id("com.android.application")
@@ -122,4 +125,25 @@ flutter {
 
 dependencies {
     implementation("com.google.android.material:material:1.14.0")
+}
+
+tasks.configureEach {
+    if (name.startsWith("copyFlutterAssets")) {
+        doLast {
+            fun canonicalizeJson(value: Any?): Any? = when (value) {
+                is Map<*, *> -> TreeMap<String, Any?>().apply {
+                    for ((k, v) in value) {
+                        put(k.toString(), canonicalizeJson(v))
+                    }
+                }
+                is List<*> -> value.map(::canonicalizeJson)
+                else -> value
+            }
+            val manifest = outputs.files.singleFile.resolve("flutter_assets/NativeAssetsManifest.json")
+            if (manifest.isFile) {
+                val parsed = JsonSlurper().parse(manifest)
+                manifest.writeText(JsonOutput.toJson(canonicalizeJson(parsed)), Charsets.UTF_8)
+            }
+        }
+    }
 }

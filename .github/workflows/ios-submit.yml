@@ -7,6 +7,10 @@ on:
         description: TestFlight build number to submit
         required: true
         type: string
+      ref:
+        description: 'Source branch, tag, or commit SHA (defaults to develop)'
+        required: false
+        type: string
       skip_metadata:
         description: Skip release notes (required for the first version)
         type: boolean
@@ -28,6 +32,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Prepare App Store submission
         run: |

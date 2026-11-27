@@ -151,7 +151,7 @@ Future<List<_Entry>> _rust(Uri rustDir) async {
     stderr.write(proc.stderr);
     throw StateError(
       '`cargo about generate` failed in ${rustDir.toFilePath()}. '
-      'Install it with `cargo install cargo-about --version 0.9.2 --locked`.',
+      'Install it with `cargo install cargo-about --version 0.9.2 --locked --features cli`.',
     );
   }
 

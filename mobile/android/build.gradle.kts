@@ -38,6 +38,12 @@ subprojects {
                 if (ext.namespace == null) {
                     ext.namespace = project.group.toString()
                 }
+                if (project.name == "jni") {
+                    ext.defaultConfig.externalNativeBuild.cmake {
+                        cFlags.add("-g0")
+                        arguments.add("-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--build-id=none")
+                    }
+                }
                 ({ ext.compileOptions.targetCompatibility.toString() })
             }
             else -> null

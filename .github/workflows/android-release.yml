@@ -7,23 +7,22 @@ on:
         description: 'Commit SHA or tag to build and release'
         required: false
         type: string
-  workflow_dispatch:
-    inputs:
       publish_draft:
-        description: 'Create/update draft GitHub release (keep false for dry-run APK build)'
+        description: 'Create/update draft GitHub release'
         required: false
         default: false
         type: boolean
+  workflow_dispatch:
   push:
     branches:
       - 'fdroid_inclusion_sqlite_build'
-    tags:
-      - 'v*.*.*'
 
 jobs:
   build-apk:
     runs-on: ubuntu-latest
     name: Build APK
+    outputs:
+      commit: ${{ steps.resolve_commit.outputs.sha }}
     env:
       # Match F-Droid's recipe (`export PUB_CACHE=$(pwd)/.pub-cache`) for reproducible native builds.
       PUB_CACHE: ${{ github.workspace }}/.pub-cache
@@ -33,6 +32,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
+
+      - name: Resolve Commit SHA
+        id: resolve_commit
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Set Up Java
         uses: actions/setup-java@v3
@@ -69,18 +72,6 @@ jobs:
         with:
           tool: cargo-about@0.9.2
 
-      - name: Check Tag Matches Pubspec
-        if: github.ref_type == 'tag'
-        run: |
-          set -euo pipefail
-          pubspec_version=$(sed -n 's/^version: \([0-9.]*\)+.*/\1/p' mobile/pubspec.yaml)
-          tag_version="${GITHUB_REF_NAME#v}"
-          echo "pubspec: $pubspec_version  tag: $tag_version"
-          if [ "$pubspec_version" != "$tag_version" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match mobile/pubspec.yaml version $pubspec_version"
-            exit 1
-          fi
-
       - name: Install Dependencies
         working-directory: mobile
         run: flutter pub get --enforce-lockfile
@@ -115,7 +106,7 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
           ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
           ANDROID_NDK: ${{ steps.ndk.outputs.ndk-path }}
-        run: flutter build apk --flavor production --release --target-platform android-arm64 --obfuscate --split-debug-info=splitMap
+        run: flutter build apk --flavor production --release --target-platform android-arm64
 
       - name: Verify APK Native Libraries & Signing Block
         run: |
@@ -150,7 +141,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Publish Release
     needs: [ build-apk ]
-    if: github.event_name == 'workflow_call' || (github.event_name == 'push' && github.ref_type == 'tag') || (github.event_name == 'workflow_dispatch' && inputs.publish_draft)
+    if: inputs.publish_draft == true
     permissions:
       contents: write
 
@@ -158,7 +149,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.build-apk.outputs.commit }}
 
       - name: Download APK Artifact
         uses: actions/download-artifact@v4
@@ -171,6 +162,10 @@ jobs:
           version=$(sed -n 's/^version: \([0-9.]*\)+.*/\1/p' mobile/pubspec.yaml)
           if [ -z "$version" ]; then
             echo "could not read version from mobile/pubspec.yaml" >&2
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v${version}" >/dev/null 2>&1; then
+            echo "::error::Tag v${version} already exists on origin; refusing to overwrite." >&2
             exit 1
           fi
           echo "Version detected: $version"
@@ -199,11 +194,13 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: renamed-artifacts/*
+          artifactErrorsFailBuild: true
           tag: v${{ env.VERSION }}
           name: v${{ env.VERSION }}
           bodyFile: release-notes.md
-          commit: ${{ inputs.ref || github.sha }}
+          commit: ${{ needs.build-apk.outputs.commit }}
           draft: true
           prerelease: false
           allowUpdates: true
+          updateOnlyUnreleased: true
           token: ${{ secrets.GITHUB_TOKEN }}

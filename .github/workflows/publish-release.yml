@@ -14,6 +14,7 @@ jobs:
     uses: ./.github/workflows/android-release.yml
     with:
       ref: ${{ github.event.pull_request.merge_commit_sha }}
+      publish_draft: true
     secrets: inherit
 
   build-ios:

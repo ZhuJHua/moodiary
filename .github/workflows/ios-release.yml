@@ -8,6 +8,11 @@ on:
         required: false
         type: string
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Source branch, tag, or commit SHA (defaults to develop)'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -16,6 +21,10 @@ jobs:
   beta:
     runs-on: xcode-27
     timeout-minutes: 90
+    concurrency:
+      group: ios-testflight
+      cancel-in-progress: false
+      queue: max
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
       LC_ALL: en_US.UTF-8
