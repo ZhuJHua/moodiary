@@ -1,9 +1,6 @@
-import 'package:fast_image/fast_image.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_card_parts.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
-import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
@@ -15,10 +12,8 @@ const double _kAxisCenter = _kDateWidth + _kGap + _kAxisWidth / 2;
 const double _kBreakPad = 14.0;
 const double _kTopPad = 4.0;
 const double _kBottomPad = 14.0;
-
-const double _kDotOffset = 9.0;
-
-const int _kMaxImages = 3;
+// 选中底色要包住文字：内容上下各留一点，日期列和圆点一起下移
+const double _kFramePadV = 6.0;
 
 class DiaryTimelineTile extends StatelessWidget {
   final Diary diary;
@@ -34,9 +29,7 @@ class DiaryTimelineTile extends StatelessWidget {
   final DiaryMood? moodBelow;
   final bool hasBelow;
 
-  final Category? category;
   final Place? place;
-  final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -53,9 +46,7 @@ class DiaryTimelineTile extends StatelessWidget {
     this.hasAbove = false,
     this.moodBelow,
     this.hasBelow = false,
-    this.category,
     this.place,
-    this.showCategoryLabel = true,
     this.syncState = .none,
     this.onTap,
     this.onLongPress,
@@ -68,6 +59,48 @@ class DiaryTimelineTile extends StatelessWidget {
     final colors = context.theme.colors;
     final topPad = _kTopPad + (breakBefore ? _kBreakPad : 0.0);
     final mood = diary.mood?.colorOf(context) ?? colors.outlineVariant;
+    final typography = context.theme.typography;
+    final title = diary.title.trim();
+    final body = diary.contentText.preview();
+    final bodyStyle = title.isEmpty
+        ? typography.bodyMedium.onSurface
+        : typography.bodyMedium.onSurfaceVariant;
+    final titleStyle = typography.titleMedium.emphasized.onSurface;
+    final cells = DiaryMediaCell.forDiary(
+      diary,
+      pending: syncState == .syncing,
+    );
+    final firstLineStyle = title.isNotEmpty
+        ? titleStyle
+        : body.isNotEmpty
+        ? bodyStyle
+        : typography.labelSmall.onSurfaceVariant;
+    final mediaFirst = title.isEmpty && body.isEmpty && cells.isNotEmpty;
+    final textRows = <Widget>[
+      if (title.isNotEmpty)
+        Text(title, maxLines: 1, overflow: .ellipsis, style: titleStyle),
+      if (body.isNotEmpty)
+        MediaMarkedText(
+          body,
+          maxLines: title.isNotEmpty ? 2 : 3,
+          overflow: .ellipsis,
+          style: bodyStyle,
+        ),
+      if (cells.isNotEmpty) _TimelineMedia(cells: cells, aspect: diary.aspect),
+      DiaryCardMeta(
+        diary: diary,
+        stamp: TimeFormat.clock(stamp),
+        place: place,
+        syncState: syncState,
+      ),
+    ];
+    if (selecting) {
+      final index = mediaFirst ? 1 : 0;
+      textRows[index] = Padding(
+        padding: const .only(right: 26),
+        child: textRows[index],
+      );
+    }
 
     return CustomPaint(
       painter: _AxisPainter(
@@ -81,7 +114,12 @@ class DiaryTimelineTile extends StatelessWidget {
         dashedAbove: breakBefore,
         dashedBelow: breakAfter,
         idle: colors.outlineVariant,
-        dotDy: topPad + _kDotOffset,
+        dotDy:
+            topPad +
+            _kFramePadV +
+            (mediaFirst
+                ? 12
+                : diaryScaledLineHeight(context, firstLineStyle) / 2),
         big: dayStart,
       ),
       child: Padding(
@@ -91,21 +129,26 @@ class DiaryTimelineTile extends StatelessWidget {
           children: [
             SizedBox(
               width: _kDateWidth,
-              child: dayStart ? _DateColumn(stamp: stamp) : null,
+              child: dayStart
+                  ? Padding(
+                      padding: const .only(top: _kFramePadV),
+                      child: _DateColumn(stamp: stamp),
+                    )
+                  : null,
             ),
             const SizedBox(width: _kGap + _kAxisWidth + _kGap),
             Expanded(
-              child: _Content(
-                diary: diary,
-                stamp: stamp,
-                category: category,
-                place: place,
-                showCategoryLabel: showCategoryLabel,
-                syncState: syncState,
+              child: DiaryTileFrame(
+                padding: const .fromLTRB(10, _kFramePadV, 10, _kFramePadV),
                 selecting: selecting,
                 selected: selected,
                 onTap: onTap,
                 onLongPress: onLongPress,
+                child: Column(
+                  crossAxisAlignment: .start,
+                  spacing: 6,
+                  children: textRows,
+                ),
               ),
             ),
           ],
@@ -144,408 +187,42 @@ class _DateColumn extends StatelessWidget {
   }
 }
 
-class _Content extends StatelessWidget {
-  final Diary diary;
-  final DateTime stamp;
-  final Category? category;
-  final Place? place;
-  final bool showCategoryLabel;
-  final DiaryCardSyncState syncState;
-  final bool selecting;
-  final bool selected;
-  final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
-
-  const _Content({
-    required this.diary,
-    required this.stamp,
-    required this.category,
-    required this.place,
-    required this.showCategoryLabel,
-    required this.syncState,
-    required this.selecting,
-    required this.selected,
-    required this.onTap,
-    required this.onLongPress,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final typo = context.theme.typography;
-    final hasTitle = diary.title.trim().isNotEmpty;
-    final body = diary.contentText.preview();
-
-    return DiaryTileFrame(
-      selecting: selecting,
-      selected: selected,
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: Column(
-        crossAxisAlignment: .start,
-        children: [
-          _MetaLine(
-            diary: diary,
-            stamp: stamp,
-            category: category,
-            place: place,
-            showCategoryLabel: showCategoryLabel && !selecting,
-            syncState: syncState,
-          ),
-          if (hasTitle) ...[
-            const SizedBox(height: 3),
-            Text(
-              diary.title.trim(),
-              maxLines: 1,
-              overflow: .ellipsis,
-              style: typo.titleMedium.onSurface,
-            ),
-          ],
-          if (body.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            MediaMarkedText(
-              body,
-              maxLines: hasTitle ? 2 : 3,
-              overflow: .ellipsis,
-              style: typo.bodyMedium.onSurfaceVariant,
-            ),
-          ],
-          if (diary.imageName.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _Images(
-              names: diary.imageName,
-              aspect: diary.aspect,
-              pending: syncState == .syncing,
-            ),
-          ],
-          _Footer(diary: diary, place: place),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetaLine extends StatelessWidget {
-  final Diary diary;
-  final DateTime stamp;
-  final Category? category;
-  final Place? place;
-  final bool showCategoryLabel;
-  final DiaryCardSyncState syncState;
-
-  const _MetaLine({
-    required this.diary,
-    required this.stamp,
-    required this.category,
-    required this.place,
-    required this.showCategoryLabel,
-    required this.syncState,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final onVariant = colors.onSurfaceVariant;
-    final style = context.theme.typography.labelSmall.onSurfaceVariant;
-    final weather = diary.weather;
-
-    return Row(
-      children: [
-        Expanded(
-          child: Row(
-            children: [
-              Text(TimeFormat.clock(stamp), style: style),
-              if (weather != null) ...[
-                const SizedBox(width: 8),
-                Icon(
-                  qweatherIcon(weather.icon) ?? LucideIcons.cloud,
-                  size: 12,
-                  color: onVariant,
-                ),
-                const SizedBox(width: 3),
-                Flexible(
-                  child: Text(
-                    weather.displayText,
-                    maxLines: 1,
-                    overflow: .ellipsis,
-                    style: style,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        if (syncState != .none) ...[
-          DiarySyncBadge(state: syncState),
-          const SizedBox(width: 8),
-        ],
-        if (showCategoryLabel && category != null)
-          _CategoryLabel(category: category!, style: style),
-      ],
-    );
-  }
-}
-
-class _CategoryLabel extends StatelessWidget {
-  final Category category;
-  final TextStyle? style;
-
-  const _CategoryLabel({required this.category, required this.style});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = categoryColorOf(colorValue: category.color, id: category.id);
-    return Row(
-      mainAxisSize: .min,
-      children: [
-        Container(
-          width: 7,
-          height: 7,
-          decoration: BoxDecoration(color: color, shape: .circle),
-        ),
-        const SizedBox(width: 4),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 84),
-          child: Text(
-            category.categoryName,
-            maxLines: 1,
-            overflow: .ellipsis,
-            style: style,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Images extends StatelessWidget {
-  final List<String> names;
+class _TimelineMedia extends StatelessWidget {
+  final List<DiaryMediaCell> cells;
   final double? aspect;
-  final bool pending;
 
-  const _Images({
-    required this.names,
-    required this.aspect,
-    required this.pending,
-  });
+  const _TimelineMedia({required this.cells, required this.aspect});
 
   @override
-  Widget build(BuildContext context) {
-    final dpr = MediaQuery.devicePixelRatioOf(context);
-    final show = names.length > _kMaxImages ? _kMaxImages : names.length;
-    final extra = names.length - show;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        if (width <= 0) return const SizedBox.shrink();
-
-        if (show == 1) {
-          final ratio = (aspect ?? 16 / 10).clamp(0.6, 2.0).toDouble();
-          final boxWidth = ratio < 1 ? width * 0.58 : width;
-          return SizedBox(
-            width: boxWidth,
-            height: boxWidth / ratio,
-            child: _Thumb(
-              name: names.first,
-              tier: FastImageTier.fit((boxWidth * dpr).round()),
-              radius: AppBorderRadius.mediumBorderRadius,
-              pending: pending,
-            ),
-          );
-        }
-
-        const gap = 4.0;
-        final cell = (width - gap * (show - 1)) / show;
-        return Row(
-          children: [
-            for (var i = 0; i < show; i++) ...[
-              if (i > 0) const SizedBox(width: gap),
-              SizedBox(
-                width: cell,
-                height: cell,
-                child: _Thumb(
-                  name: names[i],
-                  tier: .s,
-                  radius: AppBorderRadius.smallBorderRadius,
-                  moreCount: i == show - 1 && extra > 0 ? extra : 0,
-                  pending: pending,
-                ),
-              ),
-            ],
-          ],
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      if (width <= 0) return const SizedBox.shrink();
+      if (cells.length == 1) {
+        final ratio = cells.first.isVideo ? 1.6 : aspect ?? 1.6;
+        final portrait = ratio < 1;
+        final cellWidth = portrait ? width * 0.5 : width;
+        final cellRatio = portrait
+            ? ratio.clamp(0.75, 1.0)
+            : ratio.clamp(1.6, 2.2);
+        return SizedBox(
+          width: cellWidth,
+          height: cellWidth / cellRatio,
+          child: cells.first,
         );
-      },
-    );
-  }
-}
-
-class _Thumb extends StatelessWidget {
-  final String name;
-  final FastImageTier tier;
-  final BorderRadius radius;
-  final int moreCount;
-
-  final bool pending;
-
-  const _Thumb({
-    required this.name,
-    required this.tier,
-    required this.radius,
-    this.moreCount = 0,
-    this.pending = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    return ClipRRect(
-      borderRadius: radius,
-      child: Stack(
-        fit: .expand,
+      }
+      const gap = 4.0;
+      final size = (width - gap * 2) / 3;
+      if (size <= 0) return const SizedBox.shrink();
+      return Row(
+        spacing: gap,
         children: [
-          ColoredBox(color: colors.surfaceContainerHighest),
-          Image(
-            key: ValueKey('$name#$pending'),
-            image: FastImage(AppFiles.getRealPath('image', name), tier: tier),
-            fit: .cover,
-            gaplessPlayback: true,
-            errorBuilder: (context, _, _) => pending
-                ? const SizedBox.shrink()
-                : Icon(LucideIcons.imageOff, color: colors.onSurfaceVariant),
-          ),
-          if (moreCount > 0)
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.scrim.withValues(alpha: 0.45),
-              ),
-              child: Center(
-                child: Text(
-                  '+$moreCount',
-                  style:
-                      context.theme.typography.titleMedium.emphasized.onMedia,
-                ),
-              ),
-            ),
+          for (final cell in cells)
+            SizedBox.square(dimension: size, child: cell),
         ],
-      ),
-    );
-  }
-}
-
-class _Footer extends ConsumerWidget {
-  final Diary diary;
-  final Place? place;
-
-  const _Footer({required this.diary, required this.place});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tags = resolveTagNames(
-      diary.tagIds,
-      ref.watch(tagCatalogProvider).value?.byId ?? const {},
-    ).map((entry) => entry.name);
-    final colors = context.theme.colors;
-    final style = context.theme.typography.labelSmall.onSurfaceVariant;
-    final chips = <Widget>[];
-
-    if (diary.audioName.isNotEmpty) {
-      chips.add(
-        _MediaChip(
-          icon: LucideIcons.mic,
-          count: diary.audioName.length,
-          style: style,
-        ),
       );
-    }
-    if (diary.videoName.isNotEmpty) {
-      chips.add(
-        _MediaChip(
-          icon: LucideIcons.video,
-          count: diary.videoName.length,
-          style: style,
-        ),
-      );
-    }
-    if (diary.fileName.isNotEmpty) {
-      chips.add(
-        _MediaChip(
-          icon: LucideIcons.paperclip,
-          count: diary.fileName.length,
-          style: style,
-        ),
-      );
-    }
-    for (final tag in tags.take(2)) {
-      chips.add(
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 108),
-          child: Text('#$tag', maxLines: 1, overflow: .ellipsis, style: style),
-        ),
-      );
-    }
-    if (tags.length > 2) {
-      chips.add(Text('+${tags.length - 2}', style: style));
-    }
-    final placeName = place?.name.trim() ?? '';
-    if (placeName.isNotEmpty) {
-      chips.add(
-        Row(
-          mainAxisSize: .min,
-          children: [
-            Icon(LucideIcons.mapPin, size: 12, color: colors.onSurfaceVariant),
-            const SizedBox(width: 2),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 132),
-              child: Text(
-                placeName,
-                maxLines: 1,
-                overflow: .ellipsis,
-                style: style,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (chips.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const .only(top: 6),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 4,
-        crossAxisAlignment: .center,
-        children: chips,
-      ),
-    );
-  }
-}
-
-class _MediaChip extends StatelessWidget {
-  final IconData icon;
-  final int count;
-  final TextStyle? style;
-
-  const _MediaChip({
-    required this.icon,
-    required this.count,
-    required this.style,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: .min,
-      children: [
-        Icon(icon, size: 13, color: context.theme.colors.onSurfaceVariant),
-        if (count > 1) ...[
-          const SizedBox(width: 2),
-          Text('$count', style: style),
-        ],
-      ],
-    );
-  }
+    },
+  );
 }
 
 class _AxisPainter extends CustomPainter {
@@ -576,6 +253,9 @@ class _AxisPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // 圆头线帽会探出条目底边半个线宽；月份分组是倒序绘制的，
+    // 上个月最后一条的线帽会盖到下个月吸顶头上，看起来像一道缝
+    canvas.clipRect(Offset.zero & size);
     const x = _kAxisCenter;
     final radius = big ? 5.0 : 3.5;
     final clear = radius + 3.0;
