@@ -1,4 +1,7 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import java.util.Properties
+import java.util.TreeMap
 
 plugins {
     id("com.android.application")
@@ -12,7 +15,13 @@ if (localPropertiesFile.exists()) {
     localPropertiesFile.reader(Charsets.UTF_8).use { localProperties.load(it) }
 }
 
-val releaseKeystore = file("key.jks")
+val releaseKeystore = localProperties.getProperty("storeFile")
+    ?.takeIf { it.isNotBlank() }
+    ?.let { rootProject.file(it) }
+    ?: file("key.jks")
+val releaseKeyAlias = localProperties.getProperty("keyAlias")
+    ?.takeIf { it.isNotBlank() }
+    ?: "key0"
 val releaseStorePassword = localProperties.getProperty("storePassword")
 val releaseKeyPassword = localProperties.getProperty("keyPassword")
 val hasReleaseSigning = releaseKeystore.isFile &&
@@ -28,13 +37,19 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
+    // Omit Google Play's DependencyInfoBlock (0x504B4453) for F-Droid.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     signingConfigs {
         if (hasReleaseSigning) {
             create("config") {
                 storeFile = releaseKeystore
                 storePassword = releaseStorePassword
                 keyPassword = releaseKeyPassword
-                keyAlias = "key0"
+                keyAlias = releaseKeyAlias
                 enableV3Signing = true
             }
         }
@@ -110,4 +125,25 @@ flutter {
 
 dependencies {
     implementation("com.google.android.material:material:1.14.0")
+}
+
+tasks.configureEach {
+    if (name.startsWith("copyFlutterAssets")) {
+        doLast {
+            fun canonicalizeJson(value: Any?): Any? = when (value) {
+                is Map<*, *> -> TreeMap<String, Any?>().apply {
+                    for ((k, v) in value) {
+                        put(k.toString(), canonicalizeJson(v))
+                    }
+                }
+                is List<*> -> value.map(::canonicalizeJson)
+                else -> value
+            }
+            val manifest = outputs.files.singleFile.resolve("flutter_assets/NativeAssetsManifest.json")
+            if (manifest.isFile) {
+                val parsed = JsonSlurper().parse(manifest)
+                manifest.writeText(JsonOutput.toJson(canonicalizeJson(parsed)), Charsets.UTF_8)
+            }
+        }
+    }
 }

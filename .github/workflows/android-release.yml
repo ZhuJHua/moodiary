@@ -1,19 +1,38 @@
-name: Build & Release
+name: Android Release
 
 on:
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Commit SHA or tag to build and release'
+        required: false
+        type: string
+      publish_draft:
+        description: 'Create/update draft GitHub release'
+        required: false
+        default: false
+        type: boolean
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*.*.*'
 
 jobs:
   build-apk:
     runs-on: ubuntu-latest
     name: Build APK
+    outputs:
+      commit: ${{ steps.resolve_commit.outputs.sha }}
+    env:
+      # Match F-Droid's recipe (`export PUB_CACHE=$(pwd)/.pub-cache`) for reproducible native builds.
+      PUB_CACHE: ${{ github.workspace }}/.pub-cache
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Resolve Commit SHA
+        id: resolve_commit
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Set Up Java
         uses: actions/setup-java@v3
@@ -52,7 +71,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: mobile
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Set Up NDK
         id: ndk
@@ -71,28 +90,63 @@ jobs:
             echo "Android release signing secrets are required." >&2
             exit 1
           fi
-          printf '%s' "$ANDROID_KJS" | base64 --decode > mobile/android/app/key.jks
-          printf 'storePassword=%s\nkeyPassword=%s\n' "$ANDROID_STORE_PASSWORD" "$ANDROID_KEY_PASSWORD" > mobile/android/local.properties
+          umask 077
+          printf '%s' "$ANDROID_KJS" | base64 --decode > "$RUNNER_TEMP/moodiary-release.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/moodiary-release.jks" \
+            "$ANDROID_STORE_PASSWORD" \
+            "$ANDROID_KEY_PASSWORD" > mobile/android/local.properties
 
       - name: Build APK
         working-directory: mobile
         env:
           ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
-        run: flutter build apk --flavor production --release --target-platform android-arm64 --obfuscate --split-debug-info=splitMap
+          ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
+          ANDROID_NDK: ${{ steps.ndk.outputs.ndk-path }}
+        run: flutter build apk --flavor production --release --target-platform android-arm64
+
+      - name: Verify APK Native Libraries & Signing Block
+        run: |
+          dart tool/check_apk_ndk.dart \
+            --expect 28.2.13676358 \
+            --sqlite-header third_party/sqlite3/sqlite3.h \
+            mobile/build/app/outputs/flutter-apk/app-production-release.apk
+
+      - name: Report Signing Certificate
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          apksigner="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name apksigner 2>/dev/null | sort -V | tail -1)"
+          if [ -z "$apksigner" ]; then
+            echo '::warning::apksigner not found — skipping certificate report.'
+            exit 0
+          fi
+          {
+            echo '## Signing certificate'
+            echo '```'
+            "$apksigner" verify --print-certs mobile/build/app/outputs/flutter-apk/app-production-release.apk | grep -i 'SHA-256 digest' || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
           path: mobile/build/app/outputs/flutter-apk/app-production-release.apk
+
   release:
     runs-on: ubuntu-latest
     name: Publish Release
     needs: [ build-apk ]
+    if: inputs.publish_draft == true
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build-apk.outputs.commit }}
 
       - name: Download APK Artifact
         uses: actions/download-artifact@v4
@@ -107,13 +161,18 @@ jobs:
             echo "could not read version from mobile/pubspec.yaml" >&2
             exit 1
           fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v${version}" >/dev/null 2>&1; then
+            echo "::error::Tag v${version} already exists on origin; refusing to overwrite." >&2
+            exit 1
+          fi
           echo "Version detected: $version"
           echo "VERSION=$version" >> $GITHUB_ENV
 
-      - name: Rename Artifacts
+      - name: Rename Artifacts & Checksums
         run: |
           mkdir -p renamed-artifacts
-          mv artifacts/android/app-production-release.apk renamed-artifacts/moodiary-${{ env.VERSION }}-android-arm64.apk
+          mv artifacts/android/app-production-release.apk "renamed-artifacts/moodiary-${VERSION}-android-arm64.apk"
+          (cd renamed-artifacts && sha256sum "moodiary-${VERSION}-android-arm64.apk" > SHA256SUMS.txt)
 
       - name: Extract Release Notes From Changelog
         run: |
@@ -128,15 +187,17 @@ jobs:
           fi
           cat release-notes.md
 
-      - name: Create Release
+      - name: Create Draft Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: renamed-artifacts/*
+          artifactErrorsFailBuild: true
           tag: v${{ env.VERSION }}
           name: v${{ env.VERSION }}
           bodyFile: release-notes.md
-          commit: ${{ github.sha }}
+          commit: ${{ needs.build-apk.outputs.commit }}
           draft: true
           prerelease: false
           allowUpdates: true
+          updateOnlyUnreleased: true
           token: ${{ secrets.GITHUB_TOKEN }}

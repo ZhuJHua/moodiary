@@ -1,0 +1,15 @@
+Moodiary is an open source diary app that works offline.
+
+Capture
+· Rich text: headings, highlights, photos, audio and video
+· Timeline and calendar, with category filters
+· Mood insights: note how you feel and look back on your year
+
+AI assistant
+· Connect your own model provider and keep your own keys
+· Ask your diary questions, with tool calling and long-term memory
+· Local semantic search that works offline once the model is downloaded
+
+Sync and export
+· WebDAV, S3 and local network transfer, with end-to-end encryption
+· Export to Markdown, Word, PDF or images

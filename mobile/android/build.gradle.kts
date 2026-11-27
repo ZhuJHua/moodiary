@@ -15,6 +15,10 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+    // Pin mmkv_android's dynamic [2.4.3, 2.5) range for reproducible builds.
+    configurations.configureEach {
+        resolutionStrategy.force("com.tencent:mmkv:2.4.3")
+    }
 }
 
 subprojects {
@@ -33,6 +37,12 @@ subprojects {
                 ext.buildToolsVersion = "36.0.0"
                 if (ext.namespace == null) {
                     ext.namespace = project.group.toString()
+                }
+                if (project.name == "jni") {
+                    ext.defaultConfig.externalNativeBuild.cmake {
+                        cFlags.add("-g0")
+                        arguments.add("-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--build-id=none")
+                    }
                 }
                 ({ ext.compileOptions.targetCompatibility.toString() })
             }
