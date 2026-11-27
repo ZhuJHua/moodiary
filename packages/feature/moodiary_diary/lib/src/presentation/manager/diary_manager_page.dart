@@ -3,7 +3,6 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/presentation/controllers/diary_controller.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 class DiaryManagerPage extends ConsumerStatefulWidget {
@@ -35,7 +34,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
             IconButton(
               tooltip: context.l10n.diary.managerBatchRecycle,
               icon: const Icon(LucideIcons.trash2),
-              onPressed: () => _onBatchSoftDelete(provider, async),
+              onPressed: () => _onBatchSoftDelete(provider),
             ),
         ],
       ),
@@ -51,7 +50,8 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
           ),
           Expanded(
             child: async.buildLoading(
-              data: (diaries) {
+              data: (page) {
+                final diaries = page.items;
                 if (diaries.isEmpty) {
                   return Center(child: Text(context.l10n.diary.managerEmpty));
                 }
@@ -91,11 +91,8 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
     );
   }
 
-  Future<void> _onBatchSoftDelete(
-    DiaryControllerProvider provider,
-    AsyncValue<List<Diary>> async,
-  ) async {
-    final picked = _selected.toList();
+  Future<void> _onBatchSoftDelete(DiaryControllerProvider provider) async {
+    final picked = _selected.toSet();
     final confirmed = await MAlert.confirm(
       context,
       title: l10n.diary.managerRecycleTitle,
@@ -103,18 +100,8 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
       confirmLabel: l10n.diary.managerRecycleConfirm,
       isDestructive: true,
     );
-    if (!confirmed) return;
-    final list = async.value ?? const <Diary>[];
-    final notifier = ref.read(provider.notifier);
-    int ok = 0;
-    for (final id in picked) {
-      final d = list.firstWhere(
-        (e) => e.id == id,
-        orElse: () => Diary.empty(type: .richText),
-      );
-      if (d.id.isEmpty) continue;
-      if (await notifier.softDeleteDiary(d)) ok += 1;
-    }
+    if (!confirmed || !mounted) return;
+    final ok = await ref.read(provider.notifier).softDeleteByIds(picked);
     if (!mounted) return;
     setState(_selected.clear);
     toast.success(

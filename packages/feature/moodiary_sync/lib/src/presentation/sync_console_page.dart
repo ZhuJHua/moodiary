@@ -17,7 +17,7 @@ import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_data_providers.dart';
-import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
+import 'package:moodiary_sync/src/presentation/manual_sync.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_labels.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
@@ -129,16 +129,20 @@ class _SyncConsolePageState extends ConsumerState<SyncConsolePage> {
   }
 
   Future<void> _syncNow() async {
-    await ref
-        .read(syncControllerProvider.notifier)
-        .sync(
-          prepare: (operation, backend) => ensureSyncKeyReady(
-            context: context,
-            ref: ref,
-            operation: operation,
-            backend: backend,
-          ),
-        );
+    final result = await triggerManualSync(
+      context: context,
+      ref: ref,
+      canPrompt: () => mounted && (ModalRoute.of(context)?.isCurrent ?? false),
+    );
+    if (!mounted) return;
+    switch (result) {
+      case ManualSyncUnreachable():
+        toast.error(message: context.l10n.sync.pullUnreachable);
+      case ManualSyncFailed():
+        toast.error(message: context.l10n.sync.pullFailed);
+      default:
+        break;
+    }
   }
 
   @override

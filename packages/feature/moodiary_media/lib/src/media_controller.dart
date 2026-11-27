@@ -10,19 +10,33 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'media_controller.g.dart';
 
 @riverpod
-class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
+class MediaItems extends _$MediaItems
+    with LoadMoreMixin<MediaItem, PagedList<MediaItem>> {
   @override
   int get pageSize => 60;
 
   @override
-  FutureOr<List<MediaItem>> build({required MediaType type}) async {
+  FutureOr<PagedList<MediaItem>> build({required MediaType type}) {
     final sub = ref
         .watch(diaryRepositoryProvider)
         .diaryEvents
         .listen(_applyChange);
     ref.onDispose(sub.cancel);
-    return init(refreshFirst: true);
+    return init();
   }
+
+  @override
+  PagedList<MediaItem> buildPageState({
+    required List<MediaItem> items,
+    required bool hasMore,
+    required bool isLoadingMore,
+    Object? loadMoreError,
+  }) => PagedList(
+    items: items,
+    hasMore: hasMore,
+    isLoadingMore: isLoadingMore,
+    loadMoreError: loadMoreError,
+  );
 
   @override
   Future<Iterable<MediaItem>?> load({required int limit, required int offset}) {
@@ -49,21 +63,25 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
   }
 
   void _applyChange(DiaryEvent event) {
-    final list = state.value;
-    if (list == null) {
+    final page = state.value;
+    if (page == null || state.hasError || state.isReloading || isRefreshing) {
       markMissedEvent();
       return;
     }
+    final list = page.items;
+    markPrefixMutated();
+    void update(List<MediaItem> items) =>
+        state = .data(page.copyWith(items: items));
     switch (event) {
       case DiaryDeleted(:final id):
         final without = list.where((m) => m.diaryId != id).toList();
-        if (without.length != list.length) state = .data(without);
+        if (without.length != list.length) update(without);
       case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
         final without = list.where((m) => m.diaryId != diary.id).toList();
         final removed = without.length != list.length;
         final names = diary.show ? _namesOf(diary) : const <String>[];
         if (names.isEmpty) {
-          if (removed) state = .data(without);
+          if (removed) update(without);
           return;
         }
         final content = diary.type == DiaryType.tiptap.value
@@ -81,10 +99,10 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
               time: diary.time,
             ),
         ];
-        if (!noMore &&
+        if (page.hasMore &&
             without.isNotEmpty &&
             MediaItem.compare(fresh.first, without.last) > 0) {
-          if (removed) state = .data(without);
+          if (removed) update(without);
           return;
         }
         var at = without.length;
@@ -94,11 +112,7 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
             break;
           }
         }
-        state = .data([
-          ...without.sublist(0, at),
-          ...fresh,
-          ...without.sublist(at),
-        ]);
+        update([...without.sublist(0, at), ...fresh, ...without.sublist(at)]);
     }
   }
 }

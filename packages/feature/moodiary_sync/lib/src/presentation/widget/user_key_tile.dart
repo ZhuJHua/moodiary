@@ -77,19 +77,23 @@ Future<void> showUserKeySheet(
           return;
         }
         Navigator.of(ctx).pop();
-        final ran = await ref.read(syncOperationGuardProvider).tryWithOperation(
-          (operation) async {
-            await ensureSyncKeyReady(
-              operation: operation,
-              context: context,
-              ref: ref,
-              backend: backend,
-            );
-            return true;
-          },
-        );
-        if (ran == null && context.mounted) {
-          toast.info(message: l10n.sync.statusRunning);
+        try {
+          final ran = await ref
+              .read(syncOperationGuardProvider)
+              .tryWithOperation((operation) async {
+                await ensureSyncKeyReady(
+                  operation: operation,
+                  context: context,
+                  ref: ref,
+                  backend: backend,
+                );
+                return true;
+              });
+          if (ran == null && context.mounted) {
+            toast.info(message: l10n.sync.statusRunning);
+          }
+        } on SyncException catch (error) {
+          if (context.mounted) toast.error(message: error.message);
         }
       },
       onReset: () async {
@@ -119,12 +123,17 @@ Future<void> showUserKeySheet(
 }
 
 Future<void> resetAndOfferNewKey({
+  bool Function()? canPrompt,
   required SyncOperation operation,
   required BuildContext context,
   required WidgetRef ref,
   required IRemoteSyncBackend backend,
 }) async {
-  if (!await confirmRemoteReset(context) || !context.mounted) return;
+  if (!await confirmRemoteReset(context) ||
+      !context.mounted ||
+      canPrompt?.call() == false) {
+    return;
+  }
   final choice = await MSheet.show<String>(
     context,
     builder: (ctx) => _KeyManageSheet(
@@ -133,8 +142,9 @@ Future<void> resetAndOfferNewKey({
       onSubmit: (newKey) => Navigator.of(ctx).pop(newKey),
     ),
   );
-  if (choice == null || !context.mounted) return;
+  if (choice == null || !context.mounted || canPrompt?.call() == false) return;
   await resetRemote(
+    canPrompt: canPrompt,
     operation: operation,
     context: context,
     ref: ref,

@@ -30,8 +30,39 @@ List<Diary> applyDiaryEvent(
   }
 }
 
+class DiaryListState extends PagedList<Diary> {
+  final DiarySort sort;
+
+  DiaryListState({
+    required super.items,
+    required this.sort,
+    required super.hasMore,
+    super.isLoadingMore,
+    super.loadMoreError,
+  });
+
+  @override
+  DiaryListState copyWith({
+    List<Diary>? items,
+    DiarySort? sort,
+    bool? hasMore,
+    bool? isLoadingMore,
+    Object? loadMoreError,
+    bool clearLoadMoreError = false,
+  }) => DiaryListState(
+    items: items ?? this.items,
+    sort: sort ?? this.sort,
+    hasMore: hasMore ?? this.hasMore,
+    isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    loadMoreError: clearLoadMoreError
+        ? null
+        : loadMoreError ?? this.loadMoreError,
+  );
+}
+
 @riverpod
-class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
+class DiaryController extends _$DiaryController
+    with LoadMoreMixin<Diary, DiaryListState> {
   late DiaryRepository _repository;
   Set<String> _activeCategories = {};
   Set<String> _tagIdsForName = {};
@@ -40,7 +71,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   Future<void>? _membership;
 
   @override
-  FutureOr<List<Diary>> build({
+  FutureOr<DiaryListState> build({
     String? categoryId,
     bool uncategorized = false,
     String? tagName,
@@ -84,8 +115,22 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
       });
       ref.onDispose(tagSub.cancel);
     }
-    return init(refreshFirst: true);
+    return init();
   }
+
+  @override
+  DiaryListState buildPageState({
+    required List<Diary> items,
+    required bool hasMore,
+    required bool isLoadingMore,
+    Object? loadMoreError,
+  }) => DiaryListState(
+    items: items,
+    sort: _sort,
+    hasMore: hasMore,
+    isLoadingMore: isLoadingMore,
+    loadMoreError: loadMoreError,
+  );
 
   @override
   Future<Iterable<Diary>?> load({
@@ -110,26 +155,32 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   }
 
   void _applyChange(DiaryEvent event) {
-    final list = state.value;
-    if (list == null || _membership != null || state.isReloading) {
+    final page = state.value;
+    if (page == null ||
+        _membership != null ||
+        state.hasError ||
+        state.isReloading ||
+        isRefreshing) {
       markMissedEvent();
       return;
     }
-    state = .data(
-      applyDiaryEvent(
-        list,
-        event,
-        belongs: (d) =>
-            d.show &&
-            (tagName != null
-                ? d.tagIds.any(_tagIdsForName.contains)
-                : uncategorized
-                ? !_activeCategories.contains(d.categoryId)
-                : categoryId == null || d.categoryId == categoryId),
-        compare: diarySortComparator(_sort),
-        mayHaveMore: !noMore,
-      ),
+    markPrefixMutated();
+    final items = applyDiaryEvent(
+      page.items,
+      event,
+      belongs: (d) =>
+          d.show &&
+          (tagName != null
+              ? d.tagIds.any(_tagIdsForName.contains)
+              : uncategorized
+              ? !_activeCategories.contains(d.categoryId)
+              : categoryId == null || d.categoryId == categoryId),
+      compare: diarySortComparator(page.sort),
+      mayHaveMore: page.hasMore,
     );
+    if (!identical(items, page.items)) {
+      state = .data(page.copyWith(items: items));
+    }
   }
 
   Future<bool> softDeleteDiary(Diary diary) async {
@@ -143,17 +194,17 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   }
 
   Future<int> softDeleteByIds(Set<String> ids) async {
-    final operationRef = ref;
-    final list = state.value ?? const <Diary>[];
+    final repository = _repository;
     var count = 0;
-    for (final diary in list.where((d) => ids.contains(d.id)).toList()) {
+    for (final id in ids) {
       try {
-        await _repository.setVisibility(diary, show: false);
+        final diary = await repository.getDiaryByBusinessId(id);
+        if (diary == null || !diary.show) continue;
+        await repository.setVisibility(diary, show: false);
         count += 1;
       } catch (e, s) {
-        logger.e('soft delete failed: ${diary.id}', error: e, stackTrace: s);
+        logger.e('soft delete failed: $id', error: e, stackTrace: s);
       }
-      if (!operationRef.mounted) break;
     }
     return count;
   }

@@ -130,16 +130,24 @@ class _MediaBody extends ConsumerWidget {
     final provider = mediaItemsProvider(type: type);
     final async = ref.watch(provider);
     return async.buildLoading(
-      data: (items) {
-        final flat = MediaFlat.of(items);
-        if (flat.isEmpty) return _Empty(type: type);
+      data: (page) {
+        final flat = MediaFlat.of(page.items);
+        if (flat.isEmpty && !page.hasMore) return _Empty(type: type);
+        final showFooter =
+            !async.isLoading &&
+            (page.isLoadingMore || page.loadMoreError != null);
+        Future<bool> loadMore() => ref.read(provider.notifier).loadMore();
         // 音频和附件是一行一条的列表，媒体其余类型是网格。
         final list = type == .audio || type == .file;
         return MRefresh(
-          onLoadMore: () => ref.read(provider.notifier).loadMore(),
-          onRefresh: () {
+          paginationKey: type,
+          onLoadMore: page.hasMore && !showFooter && !async.isLoading
+              ? loadMore
+              : null,
+          onRefresh: () async {
             if (type == .file) ref.invalidate(attachmentSizeProvider);
-            return ref.read(provider.notifier).refresh();
+            await ref.read(provider.notifier).refresh();
+            return const MRefreshOutcome();
           },
           child: CustomScrollView(
             slivers: [
@@ -172,6 +180,12 @@ class _MediaBody extends ConsumerWidget {
                   ),
                 ),
               ),
+              if (showFooter)
+                SliverToBoxAdapter(
+                  child: PaginationFooter(
+                    onRetry: page.loadMoreError == null ? null : loadMore,
+                  ),
+                ),
               SliverToBoxAdapter(
                 child: SizedBox(
                   height: 24 + MediaQuery.paddingOf(context).bottom,

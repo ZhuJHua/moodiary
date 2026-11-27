@@ -41,7 +41,7 @@ final class SyncControllerProvider
   }
 }
 
-String _$syncControllerHash() => r'b533f65ef13ce620bad7187d420445453470dafa';
+String _$syncControllerHash() => r'c8c9dd84e6dad4df85a71f81e31858c1909f92be';
 
 abstract class _$SyncController extends $Notifier<SyncStatus> {
   SyncStatus build();

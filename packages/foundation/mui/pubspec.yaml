@@ -13,6 +13,7 @@ dependencies:
   cached_network_image_ce: 4.13.2 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   clock: 1.1.3 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
   cupertino_ui: 1.1.7 # Managed by Melos, change it in the bootstrap config of the root pubspec.yaml
+  custom_refresh_indicator: 4.0.2
   flutter:
     sdk: flutter
   flutter_smart_dialog: 5.3.2

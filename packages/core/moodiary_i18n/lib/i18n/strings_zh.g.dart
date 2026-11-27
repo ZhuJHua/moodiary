@@ -4773,6 +4773,38 @@ class Translations$sync$zh {
 
 	/// zh: '上次成功 {time}'
 	String lastSuccess({required Object time}) => '上次成功 ${time}';
+
+	/// zh: '下拉同步'
+	String get pullToSync => '下拉同步';
+
+	/// zh: '松开同步'
+	String get releaseToSync => '松开同步';
+
+	/// zh: '已是最新'
+	String get pullUpToDate => '已是最新';
+
+	/// zh: '同步完成'
+	String get pullSynced => '同步完成';
+
+	/// zh: '(other) {已同步 {count} 项}'
+	String pullSyncedCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '已同步 ${count} 项',
+	);
+
+	/// zh: '部分同步失败'
+	String get pullPartial => '部分同步失败';
+
+	/// zh: '同步已停止'
+	String get pullStopped => '同步已停止';
+
+	/// zh: '同步失败'
+	String get pullFailed => '同步失败';
+
+	/// zh: '无法连接'
+	String get pullUnreachable => '无法连接';
+
+	/// zh: '同步进行中'
+	String get pullBusy => '同步进行中';
 }
 
 // Path: ui

@@ -13,5 +13,9 @@
   "input": "Enter",
   "save": "Save",
   "moveUp": "Move up",
-  "moveDown": "Move down"
+  "moveDown": "Move down",
+  "refreshPull": "Pull to refresh",
+  "refreshArmed": "Release to refresh",
+  "refreshLoading": "Refreshing",
+  "refreshComplete": "Updated"
 }

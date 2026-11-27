@@ -13,7 +13,7 @@ part of 'diary_controller.dart';
 final diaryControllerProvider = DiaryControllerFamily._();
 
 final class DiaryControllerProvider
-    extends $AsyncNotifierProvider<DiaryController, List<Diary>> {
+    extends $AsyncNotifierProvider<DiaryController, DiaryListState> {
   DiaryControllerProvider._({
     required DiaryControllerFamily super.from,
     required ({String? categoryId, bool uncategorized, String? tagName})
@@ -51,15 +51,15 @@ final class DiaryControllerProvider
   }
 }
 
-String _$diaryControllerHash() => r'88dfba8ce2464147ebe16c40b949cd5dbc95b739';
+String _$diaryControllerHash() => r'a1d5dc4c047a19242a844d768fef2b7186c99e2e';
 
 final class DiaryControllerFamily extends $Family
     with
         $ClassFamilyOverride<
           DiaryController,
-          AsyncValue<List<Diary>>,
-          List<Diary>,
-          FutureOr<List<Diary>>,
+          AsyncValue<DiaryListState>,
+          DiaryListState,
+          FutureOr<DiaryListState>,
           ({String? categoryId, bool uncategorized, String? tagName})
         > {
   DiaryControllerFamily._()
@@ -88,14 +88,14 @@ final class DiaryControllerFamily extends $Family
   String toString() => r'diaryControllerProvider';
 }
 
-abstract class _$DiaryController extends $AsyncNotifier<List<Diary>> {
+abstract class _$DiaryController extends $AsyncNotifier<DiaryListState> {
   late final _$args =
       ref.$arg as ({String? categoryId, bool uncategorized, String? tagName});
   String? get categoryId => _$args.categoryId;
   bool get uncategorized => _$args.uncategorized;
   String? get tagName => _$args.tagName;
 
-  FutureOr<List<Diary>> build({
+  FutureOr<DiaryListState> build({
     String? categoryId,
     bool uncategorized = false,
     String? tagName,
@@ -103,12 +103,12 @@ abstract class _$DiaryController extends $AsyncNotifier<List<Diary>> {
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<List<Diary>>, List<Diary>>;
+    final ref = this.ref as $Ref<AsyncValue<DiaryListState>, DiaryListState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<Diary>>, List<Diary>>,
-              AsyncValue<List<Diary>>,
+              AnyNotifier<AsyncValue<DiaryListState>, DiaryListState>,
+              AsyncValue<DiaryListState>,
               Object?,
               Object?
             >;

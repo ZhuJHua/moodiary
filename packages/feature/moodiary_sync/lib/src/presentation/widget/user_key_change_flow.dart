@@ -239,32 +239,53 @@ Future<bool> _changeKey(
 }
 
 Future<bool> _encryptCloud(
-  BuildContext context,
+  BuildContext? context,
   SyncOperation operation,
   SyncLogger logger,
   IRemoteSyncBackend backend,
-  List<int> dek,
-) async {
-  final report = await _runWithProgress(
-    context,
-    operation,
-    logger,
-    backend: backend,
-    from: .plaintext,
-    to: .withKey(dek),
-  );
+  List<int> dek, {
+  bool Function()? canPrompt,
+}) async {
+  bool visible() => (context?.mounted ?? false) && (canPrompt?.call() ?? true);
+  final cipher = SyncCipher.withKey(dek);
+  final ReCipherReport? report;
+  if (context != null && visible()) {
+    report = await _runWithProgress(
+      context,
+      operation,
+      logger,
+      backend: backend,
+      from: .plaintext,
+      to: cipher,
+      finishIfDismissed: true,
+    );
+  } else {
+    try {
+      report = await CloudReCipher(
+        backend,
+        logger,
+      ).run(operation, from: .plaintext, to: cipher);
+    } catch (_) {
+      return false;
+    }
+  }
   if (report == null) return false;
   if (report.failed > 0) {
-    toast.error(message: l10n.sync.keyEncryptPartial(failed: report.failed));
+    if (visible()) {
+      toast.error(message: l10n.sync.keyEncryptPartial(failed: report.failed));
+    }
     return false;
   }
-  toast.success(message: l10n.sync.keyCloudEncrypted(report: report));
+  if (visible()) {
+    toast.success(message: l10n.sync.keyCloudEncrypted(report: report));
+  }
   return true;
 }
 
 enum _DecryptedChoice { turnOff, encrypt }
 
 Future<bool> resolveDecryptedRemote({
+  bool Function()? canPrompt,
   required SyncOperation operation,
   required BuildContext context,
   required WidgetRef ref,
@@ -274,7 +295,13 @@ Future<bool> resolveDecryptedRemote({
   final id = backend.persistentBackendId;
   final keyfile = SyncKeyManager.cachedKeyfile();
   final dek = await SyncKeyManager.loadDek();
-  if (!context.mounted) return false;
+  final remoteKeyfile = await SyncKeyManager.readRemoteKeyfile(backend);
+  final remoteClaimed =
+      remoteKeyfile != null &&
+      keyfile != null &&
+      keyfile.saltB64 == remoteKeyfile.saltB64 &&
+      keyfile.wrappedDekB64 == remoteKeyfile.wrappedDekB64;
+  if (!context.mounted || canPrompt?.call() == false) return false;
   final choice = await MAlert.show<_DecryptedChoice>(
     context,
     title: l10n.sync.keyRemoteDecryptedTitle,
@@ -288,12 +315,13 @@ Future<bool> resolveDecryptedRemote({
           value: .encrypt,
           isPrimary: true,
         ),
-      MAction(label: l10n.sync.keyRemoteDecryptedTurnOff, value: .turnOff),
+      if (!remoteClaimed)
+        MAction(label: l10n.sync.keyRemoteDecryptedTurnOff, value: .turnOff),
       MAction(label: l10n.sync.keyNotNow),
     ],
   );
   SyncKeyManager.markKeyConflict(id);
-  if (!context.mounted) return false;
+  if (!context.mounted || canPrompt?.call() == false) return false;
   switch (choice) {
     case null:
       return false;
@@ -324,21 +352,46 @@ Future<bool> resolveDecryptedRemote({
           }
         },
       );
-      if (entered == null || !context.mounted) return false;
-      try {
-        await RemoteLease.protect(backend, () async {
-          if (!await SyncKeyManager.claimRemoteKeyfile(backend, keyfile!)) {
-            throw SyncKeyConflictException(l10n.sync.errKeyConflict);
-          }
-        }, logger: logger);
-      } catch (e) {
-        toast.error(message: l10n.sync.keyWriteFailed(error: '$e'));
+      if (entered == null || !context.mounted || canPrompt?.call() == false) {
         return false;
       }
+      try {
+        final claimed = await RemoteLease.protect(backend, () async {
+          if (!context.mounted || canPrompt?.call() == false) return false;
+          if (remoteClaimed) {
+            final current = await SyncKeyManager.readRemoteKeyfile(backend);
+            if (current == null ||
+                current.saltB64 != keyfile.saltB64 ||
+                current.wrappedDekB64 != keyfile.wrappedDekB64) {
+              throw SyncKeyConflictException(l10n.sync.errKeyConflict);
+            }
+          } else if (!await SyncKeyManager.claimRemoteKeyfile(
+            backend,
+            keyfile!,
+          )) {
+            throw SyncKeyConflictException(l10n.sync.errKeyConflict);
+          }
+          return true;
+        }, logger: logger);
+        if (!claimed) return false;
+      } catch (e) {
+        if (context.mounted && canPrompt?.call() != false) {
+          toast.error(message: l10n.sync.keyWriteFailed(error: '$e'));
+        }
+        return false;
+      }
+      final converted = await _encryptCloud(
+        context.mounted ? context : null,
+        operation,
+        logger,
+        backend,
+        dek!,
+        canPrompt: canPrompt,
+      );
+      if (!converted) return false;
       if (id != null) await SyncKeyManager.clearPendingUpload(id);
       SyncKeyManager.clearKeyConflict(id);
-      if (!context.mounted) return false;
-      return _encryptCloud(context, operation, logger, backend, dek!);
+      return true;
   }
 }
 
@@ -418,6 +471,7 @@ Future<bool> confirmRemoteReset(BuildContext context) {
 }
 
 Future<bool> resetRemote({
+  bool Function()? canPrompt,
   required SyncOperation operation,
   required BuildContext context,
   required WidgetRef ref,
@@ -429,7 +483,7 @@ Future<bool> resetRemote({
   }
   final logger = ref.read(syncLoggerProvider);
   final configured = await ref.read(configuredCloudBackendIdsProvider.future);
-  if (!context.mounted) return false;
+  if (!context.mounted || canPrompt?.call() == false) return false;
   final result = await _showProgress<RemoteWipeReport>(
     context,
     title: l10n.sync.keyWiping,
@@ -471,10 +525,12 @@ Future<ReCipherReport?> _runWithProgress(
   required IRemoteSyncBackend backend,
   required SyncCipher from,
   required SyncCipher to,
+  bool finishIfDismissed = false,
 }) async {
   final result = await _showProgress<ReCipherReport?>(
     context,
     title: l10n.sync.keyProcessing,
+    finishIfDismissed: finishIfDismissed,
     start: (onProgress) => CloudReCipher(
       backend,
       logger,
@@ -500,6 +556,7 @@ Future<_ProgressResult<T>?> _showProgress<T>(
   BuildContext context, {
   required String title,
   required Future<T> Function(ReCipherProgress onProgress) start,
+  bool finishIfDismissed = false,
 }) async {
   Future<T>? work;
   final result = await showDialog<_ProgressResult<T>>(
@@ -511,9 +568,9 @@ Future<_ProgressResult<T>?> _showProgress<T>(
       start: (progress) => work ??= Future.sync(() => start(progress)),
     ),
   );
-  if (result != null || work == null) return result;
+  if (result != null || (work == null && !finishIfDismissed)) return result;
   try {
-    return _ProgressResult(value: await work!);
+    return _ProgressResult(value: await (work ?? start((_, _, _) {})));
   } catch (error) {
     return _ProgressResult(error: error.toString());
   }

@@ -25,6 +25,7 @@ export 'src/data/sync_data_providers.dart';
 export 'src/data/sync_exclusive.dart';
 export 'src/data/sync_logger.dart';
 export 'src/presentation/backup_sync_page.dart';
+export 'src/presentation/manual_sync.dart';
 export 'src/presentation/sync_console_page.dart';
 export 'src/presentation/widget/sync_status_button.dart';
 

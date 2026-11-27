@@ -39,12 +39,14 @@ void main() {
     );
     final provider = diaryControllerProvider(tagName: 'Trip');
     container.listen(provider, (_, _) {});
-    expect(await container.read(provider.future), isEmpty);
+    expect((await container.read(provider.future)).items, isEmpty);
 
     Future<List<String>> ids() async {
       await Future<void>.delayed(Duration.zero);
       await container.pump();
-      return (await container.read(provider.future)).map((d) => d.id).toList();
+      return (await container.read(provider.future)).items
+          .map((d) => d.id)
+          .toList();
     }
 
     await repo.updateADiary(newDiary: diary.copyWith(tagIds: [second.id]));
@@ -76,15 +78,41 @@ void main() {
     );
     final provider = diaryControllerProvider(tagName: trip.name);
     container.listen(provider, (_, _) {});
-    expect(await container.read(provider.future), hasLength(30));
+    expect((await container.read(provider.future)).items, hasLength(30));
     await container.read(provider.notifier).loadMore();
     final pages = await container.read(provider.future);
-    expect(pages, hasLength(31));
+    expect(pages.items, hasLength(31));
     await tags.insertATag(Tag.create('Unrelated'));
     await Future<void>.delayed(Duration.zero);
     await tags.getAllTags();
     await container.pump();
     expect(await container.read(provider.future), same(pages));
+  });
+
+  test('batch delete includes selected IDs beyond the visible page', () async {
+    await repo.insertDiaries([
+      for (var index = 0; index < 32; index++)
+        makeDiary('entry-$index', 'text'),
+    ]);
+    final container = ProviderContainer.test(
+      retry: (_, _) => null,
+      overrides: [diaryRepositoryProvider.overrideWithValue(repo)],
+    );
+    final provider = diaryControllerProvider();
+    container.listen(provider, (_, _) {});
+    final page = await container.read(provider.future);
+    final visible = page.items.map((diary) => diary.id).toSet();
+    final outside = {for (var index = 0; index < 32; index++) 'entry-$index'}
+        .difference(visible);
+    final selected = {visible.first, ...outside};
+    expect(
+      await container.read(provider.notifier).softDeleteByIds(selected),
+      3,
+    );
+    expect(
+      (await repo.getRecycleBinDiaries()).map((d) => d.id),
+      unorderedEquals(selected),
+    );
   });
 
   test(

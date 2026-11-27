@@ -75,4 +75,16 @@ class MuiLocalizationsData with BaseTranslations<MuiLocale, MuiLocalizationsData
 
 	/// zh: '下移'
 	String get moveDown => '下移';
+
+	/// zh: '下拉刷新'
+	String get refreshPull => '下拉刷新';
+
+	/// zh: '松开刷新'
+	String get refreshArmed => '松开刷新';
+
+	/// zh: '正在刷新'
+	String get refreshLoading => '正在刷新';
+
+	/// zh: '已更新'
+	String get refreshComplete => '已更新';
 }

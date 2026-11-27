@@ -27,25 +27,104 @@ String? resolveSelectedTagName(
   return null;
 }
 
-class _DiaryListView extends ConsumerStatefulWidget {
+class DiaryHomePage extends ConsumerStatefulWidget {
   final VoidCallback? onOpenDrawer;
+  final bool Function()? isActiveTab;
 
-  const _DiaryListView({this.onOpenDrawer});
+  const DiaryHomePage({super.key, this.onOpenDrawer, this.isActiveTab});
 
   @override
-  ConsumerState<_DiaryListView> createState() => _DiaryListViewState();
+  ConsumerState<DiaryHomePage> createState() => _DiaryHomePageState();
 }
 
-class _DiaryListViewState extends ConsumerState<_DiaryListView> {
+class _DiaryHomePageState extends ConsumerState<DiaryHomePage> {
   Map<String, Tag> _lastTags = const {};
+
+  Future<MRefreshOutcome?> _pullToSync() async {
+    final result = await triggerManualSync(
+      context: context,
+      ref: ref,
+      canPrompt: () =>
+          mounted &&
+          (widget.isActiveTab?.call() ?? true) &&
+          (ModalRoute.of(context)?.isCurrent ?? false),
+    );
+    return switch (result) {
+      ManualSyncCompleted(:final outcome) => switch (outcome.kind) {
+        .changed => MRefreshOutcome(
+          status: .success,
+          message: _changedMessage(outcome.report),
+        ),
+        .upToDate => MRefreshOutcome(message: l10n.sync.pullUpToDate),
+        .partial => MRefreshOutcome(
+          status: .warning,
+          message: l10n.sync.pullPartial,
+        ),
+        .stopped => MRefreshOutcome(message: l10n.sync.pullStopped),
+        .failed => MRefreshOutcome(
+          status: .error,
+          message: outcome.error?.kind.isUnreachable == true
+              ? l10n.sync.pullUnreachable
+              : l10n.sync.pullFailed,
+        ),
+      },
+      ManualSyncBusy() => MRefreshOutcome(message: l10n.sync.pullBusy),
+      ManualSyncCancelled() => null,
+      ManualSyncUnreachable() => MRefreshOutcome(
+        status: .error,
+        message: l10n.sync.pullUnreachable,
+      ),
+      ManualSyncFailed() => MRefreshOutcome(
+        status: .error,
+        message: l10n.sync.pullFailed,
+      ),
+    };
+  }
+
+  String _changedMessage(SyncReport? report) {
+    final changes = report == null
+        ? SyncCounts.zero
+        : report.pushed + report.pulled;
+    final count =
+        changes.diaries +
+        changes.categories +
+        changes.tags +
+        changes.places +
+        changes.mediaFiles;
+    return count == 0
+        ? l10n.sync.pullSynced
+        : l10n.sync.pullSyncedCount(count: count);
+  }
 
   Widget _buildDiaryView(DiaryFilter filter) {
     final mode = ref.watch(kvValueProvider(MoodiaryKVs.homeViewMode));
+    final ready = ref.watch(syncBackendReadyProvider);
+    final onRefresh = switch (ready) {
+      AsyncData(value: true, isLoading: false) => _pullToSync,
+      _ => null,
+    };
+    final enabled = !ref.watch(syncOperationBusyProvider);
+    final labels = MRefreshLabels(
+      pull: context.l10n.sync.pullToSync,
+      armed: context.l10n.sync.releaseToSync,
+      loading: context.l10n.sync.statusRunning,
+      complete: context.l10n.sync.pullUpToDate,
+    );
     return AnimatedSwitcher(
       duration: Durations.short3,
       child: switch (ViewModeType.getType(mode)) {
-        .timeline => DiaryTimelineView(filter: filter),
-        .feed => DiaryFeedView(filter: filter),
+        .timeline => DiaryTimelineView(
+          filter: filter,
+          onRefresh: onRefresh,
+          refreshEnabled: enabled,
+          refreshLabels: labels,
+        ),
+        .feed => DiaryFeedView(
+          filter: filter,
+          onRefresh: onRefresh,
+          refreshEnabled: enabled,
+          refreshLabels: labels,
+        ),
       },
     );
   }
@@ -55,6 +134,14 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
     final selection = ref.watch(diarySelectionProvider);
     final selecting = selection.isNotEmpty;
     final filter = ref.watch(homeDiaryFilterProvider);
+    ref.listen(
+      homeDiaryFilterProvider,
+      (_, _) => ref.read(diarySelectionProvider.notifier).clear(),
+    );
+    ref.listen(
+      kvValueProvider(MoodiaryKVs.homeSortMode),
+      (_, _) => ref.read(diarySelectionProvider.notifier).clear(),
+    );
 
     // Keep editor metadata warm while the home route remains mounted.
     ref.listen(orderedPlacesProvider, (_, _) {});
@@ -66,7 +153,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       if (id == null || categories == null) return;
       if (!categories.any((c) => c.id == id)) {
         ref.read(homeDiaryFilterProvider.notifier).reset();
-        ref.read(diarySelectionProvider.notifier).clear();
         toast.info(message: l10n.app.categoryDeletedReset);
       }
     });
@@ -81,12 +167,10 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           _lastTags = value.byId;
           if (resolved == name) return;
           if (resolved != null) {
-            ref.read(diarySelectionProvider.notifier).clear();
             ref.read(homeDiaryFilterProvider.notifier).select(.tag(resolved));
             return;
           }
           ref.read(homeDiaryFilterProvider.notifier).reset();
-          ref.read(diarySelectionProvider.notifier).clear();
           toast.info(message: l10n.app.tagFilterReset);
         }
       });
@@ -172,7 +256,11 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
-    if (!confirmed) return;
+    if (!confirmed ||
+        !mounted ||
+        !identical(ref.read(diarySelectionProvider), ids)) {
+      return;
+    }
     final filter = ref.read(homeDiaryFilterProvider);
     final n = await ref
         .read(
@@ -184,7 +272,9 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
         )
         .softDeleteByIds(ids);
     if (!mounted) return;
-    ref.read(diarySelectionProvider.notifier).clear();
+    if (identical(ref.read(diarySelectionProvider), ids)) {
+      ref.read(diarySelectionProvider.notifier).clear();
+    }
     if (n == 0) {
       toast.info(message: l10n.app.homeNothingToDelete);
     } else {
@@ -270,16 +360,5 @@ class _FilterTitle extends ConsumerWidget {
         ],
       ],
     );
-  }
-}
-
-class DiaryHomePage extends StatelessWidget {
-  final VoidCallback? onOpenDrawer;
-
-  const DiaryHomePage({super.key, this.onOpenDrawer});
-
-  @override
-  Widget build(BuildContext context) {
-    return _DiaryListView(onOpenDrawer: onOpenDrawer);
   }
 }

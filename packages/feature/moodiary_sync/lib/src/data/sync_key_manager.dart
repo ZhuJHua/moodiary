@@ -344,7 +344,13 @@ class SyncKeyManager {
       return false;
     }
     if (await loadDek() == null) return false;
-    return await readRemoteKeyfile(backend) == null;
+    final remote = await readRemoteKeyfile(backend);
+    if (remote == null) return true;
+    if (!hasKeyConflict(id)) return false;
+    final local = cachedKeyfile();
+    return local != null &&
+        local.saltB64 == remote.saltB64 &&
+        local.wrappedDekB64 == remote.wrappedDekB64;
   }
 
   static Future<RemoteKeyStatus> probeRemote(RemoteObjectStore backend) async {

@@ -7,22 +7,34 @@ import 'package:moodiary_diary/src/presentation/controllers/diary_controller.dar
 import 'package:moodiary_diary/src/presentation/controllers/diary_filter.dart';
 import 'package:moodiary_diary/src/presentation/controllers/diary_selection.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_page_scroll.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_storage/moodiary_storage.dart';
 
-class DiaryFeedView extends ConsumerWidget {
+class DiaryFeedView extends ConsumerStatefulWidget {
   final DiaryFilter filter;
+  final MRefreshCallback? onRefresh;
+  final bool refreshEnabled;
+  final MRefreshLabels? refreshLabels;
 
-  const DiaryFeedView({super.key, this.filter = const .all()});
+  const DiaryFeedView({
+    super.key,
+    this.filter = const .all(),
+    this.onRefresh,
+    this.refreshEnabled = true,
+    this.refreshLabels,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final sort = DiarySort.getType(
-      ref.watch(kvValueProvider(MoodiaryKVs.homeSortMode)),
-    );
+  ConsumerState<DiaryFeedView> createState() => _DiaryFeedViewState();
+}
+
+class _DiaryFeedViewState extends ConsumerState<DiaryFeedView>
+    with DiaryPageScroll<DiaryFeedView> {
+  @override
+  Widget build(BuildContext context) {
+    final filter = widget.filter;
     final pending = ref.watch(syncPendingStateProvider);
     final dirty = ref.watch(syncDirtyDiaryIdsProvider);
     final provider = diaryControllerProvider(
@@ -35,26 +47,37 @@ class DiaryFeedView extends ConsumerWidget {
     final selecting = selection.isNotEmpty;
 
     return diaryAsync.buildLoading(
-      skipLoadingOnReload: false,
-      data: (diaries) {
-        Widget body;
-        if (diaries.isEmpty) {
-          body = Center(child: Text(context.l10n.diary.tabViewEmpty));
+      data: (page) {
+        final diaries = page.items;
+        if (!diaryAsync.isLoading) commitQuery(filter, page.sort);
+        final showFooter =
+            !diaryAsync.isLoading &&
+            (page.isLoadingMore || page.loadMoreError != null);
+        Future<bool> loadMore() => ref.read(provider.notifier).loadMore();
+        final Widget content;
+        if (diaries.isEmpty && !page.hasMore) {
+          content = SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: Text(context.l10n.diary.tabViewEmpty)),
+          );
         } else {
           final selNotifier = ref.read(diarySelectionProvider.notifier);
-          body = MRefresh(
-            onLoadMore: () => ref.read(provider.notifier).loadMore(),
-            onRefresh: () => ref.read(provider.notifier).refresh(),
-            child: ListView.separated(
-              padding: .fromLTRB(
-                0,
-                8,
-                0,
-                12 + MediaQuery.paddingOf(context).bottom,
-              ),
-              itemCount: diaries.length,
+          content = SliverPadding(
+            padding: .fromLTRB(
+              0,
+              8,
+              0,
+              12 + MediaQuery.paddingOf(context).bottom,
+            ),
+            sliver: SliverList.separated(
+              itemCount: diaries.length + (showFooter ? 1 : 0),
               separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
+                if (index == diaries.length) {
+                  return PaginationFooter(
+                    onRetry: page.loadMoreError == null ? null : loadMore,
+                  );
+                }
                 final diary = diaries[index];
                 final syncState =
                     (pending.updateDiaryIds.contains(diary.id) ||
@@ -72,7 +95,7 @@ class DiaryFeedView extends ConsumerWidget {
                     return DiaryFeedTile(
                       key: ValueKey(diary.id),
                       diary: diary,
-                      sort: sort,
+                      sort: page.sort,
                       category: category,
                       place: place,
                       showCategoryLabel: filter.isAll,
@@ -96,26 +119,40 @@ class DiaryFeedView extends ConsumerWidget {
             filter.isAll &&
             (pending.newDiaryIds.isNotEmpty ||
                 pending.updateDiaryIds.isNotEmpty);
-        if (!showSummary) return body;
         return Column(
           children: [
-            Padding(
-              padding: const .fromLTRB(12, 12, 12, 0),
-              child: SyncPendingSummaryCard(
-                newCount: pending.newDiaryIds.length,
-                updateCount: pending.updateDiaryIds.length,
-                label: (newCount, updateCount) =>
-                    context.l10n.sync.pendingSummary(
-                      parts: [
-                        if (newCount > 0)
-                          context.l10n.sync.pendingNew(count: newCount),
-                        if (updateCount > 0)
-                          context.l10n.sync.pendingUpdate(count: updateCount),
-                      ].join(' · '),
-                    ),
+            if (showSummary)
+              Padding(
+                padding: const .fromLTRB(12, 12, 12, 0),
+                child: SyncPendingSummaryCard(
+                  newCount: pending.newDiaryIds.length,
+                  updateCount: pending.updateDiaryIds.length,
+                  label: (newCount, updateCount) =>
+                      context.l10n.sync.pendingSummary(
+                        parts: [
+                          if (newCount > 0)
+                            context.l10n.sync.pendingNew(count: newCount),
+                          if (updateCount > 0)
+                            context.l10n.sync.pendingUpdate(count: updateCount),
+                        ].join(' · '),
+                      ),
+                ),
+              ),
+            Expanded(
+              child: MRefresh(
+                paginationKey: (filter, page.sort),
+                onRefresh: widget.onRefresh,
+                refreshEnabled: widget.refreshEnabled,
+                refreshLabels: widget.refreshLabels,
+                onLoadMore: page.hasMore && !showFooter && !diaryAsync.isLoading
+                    ? loadMore
+                    : null,
+                child: CustomScrollView(
+                  controller: scrollController,
+                  slivers: [content],
+                ),
               ),
             ),
-            Expanded(child: body),
           ],
         );
       },

@@ -49,7 +49,12 @@ class SyncController extends _$SyncController {
     operation,
   ) async {
     final backend = ref.read(activeSyncBackendProvider);
-    if (prepare != null && !await prepare(operation, backend)) return null;
+    try {
+      if (prepare != null && !await prepare(operation, backend)) return null;
+    } on SyncException catch (error) {
+      if (error.kind.affectsHealth) _applyFailure(error.kind, error.message);
+      rethrow;
+    }
     return run(operation, backend, direction, .manual);
   });
 
@@ -137,6 +142,10 @@ class SyncController extends _$SyncController {
     healthSince: DateTime.now(),
     clearHealthDetail: true,
   );
+
+  void markUnreachable() {
+    if (state.health != .unreachable) _setHealth(.unreachable);
+  }
 
   void _applyFailure(SyncErrorKind kind, String detail, {bool force = false}) {
     final health = switch (kind) {
