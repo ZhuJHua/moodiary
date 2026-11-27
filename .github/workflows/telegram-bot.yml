@@ -27,7 +27,7 @@ jobs:
           fi
           RELEASE_TAG=$(printf '%s' "$payload" | jq -er '.tag_name')
           RELEASE_URL=$(printf '%s' "$payload" | jq -er '.html_url')
-          RELEASE_NOTES=$(printf '%s' "$payload" | jq -r '.body // ""' | head -c 3500)
+          RELEASE_NOTES=$(printf '%s' "$payload" | jq -r '(.body // "")[0:3500]')
           {
             echo "RELEASE_TAG=$RELEASE_TAG"
             echo "RELEASE_URL=$RELEASE_URL"

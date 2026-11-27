@@ -435,6 +435,11 @@ Future<void> _runPrepare(PrepareCommand cmd) async {
   final pubspecFile = File(_pubspecPath);
   final source = pubspecFile.readAsStringSync();
   final parsed = parsePubspecVersion(source);
+  if ((await _capture('git', ['tag', '--list', 'v${parsed.version}'])).isEmpty) {
+    _fail(
+      '当前 $_base 上的版本 ${parsed.version} 尚未发布（缺少 tag v${parsed.version}），请先完成发布后再准备新版本',
+    );
+  }
   final next = computeNextVersion(
     parsed.version,
     explicit: cmd.explicitVersion,
