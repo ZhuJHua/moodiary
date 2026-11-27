@@ -44,7 +44,6 @@ class DiaryFeedView extends ConsumerWidget {
           final selNotifier = ref.read(diarySelectionProvider.notifier);
           body = MRefresh(
             onLoadMore: () => ref.read(provider.notifier).loadMore(),
-            onRefresh: () => ref.read(provider.notifier).refresh(),
             child: ListView.separated(
               padding: .fromLTRB(
                 0,
@@ -65,17 +64,12 @@ class DiaryFeedView extends ConsumerWidget {
                     : DiaryCardSyncState.none;
                 return Consumer(
                   builder: (context, ref, _) {
-                    final category = ref.watch(
-                      categoryByIdProvider(diary.categoryId),
-                    );
                     final place = ref.watch(placeByIdProvider(diary.placeId));
                     return DiaryFeedTile(
                       key: ValueKey(diary.id),
                       diary: diary,
                       sort: sort,
-                      category: category,
                       place: place,
-                      showCategoryLabel: filter.isAll,
                       syncState: syncState,
                       selecting: selecting,
                       selected: selection.contains(diary.id),
