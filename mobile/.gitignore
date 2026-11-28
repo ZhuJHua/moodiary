@@ -19,3 +19,8 @@ ios/Flutter/.last_build_id
 app.*.symbols
 app.*.map.json
 /splitMap/
+
+# Fastlane outputs
+/fastlane/report.xml
+/fastlane/README.md
+/fastlane/test_output/
