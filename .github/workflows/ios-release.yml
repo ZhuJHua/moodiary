@@ -73,11 +73,11 @@ jobs:
       - name: Set Up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          working-directory: mobile/ios
+          working-directory: mobile
           bundler-cache: true
 
       - name: Build and Upload to TestFlight
-        working-directory: mobile/ios
+        working-directory: mobile
         run: bundle exec fastlane beta
 
       - name: Upload Debug Symbols

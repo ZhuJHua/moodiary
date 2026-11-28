@@ -47,11 +47,11 @@ jobs:
       - name: Set Up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          working-directory: mobile/ios
+          working-directory: mobile
           bundler-cache: true
 
       - name: Submit for Review
-        working-directory: mobile/ios
+        working-directory: mobile
         env:
           BUILD_NUMBER: ${{ inputs.build_number }}
           SKIP_METADATA: ${{ inputs.skip_metadata }}

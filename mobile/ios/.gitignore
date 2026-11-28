@@ -32,9 +32,6 @@ Runner/GeneratedPluginRegistrant.*
 !default.pbxuser
 !default.perspectivev3
 
-/fastlane/report.xml
-/fastlane/README.md
-/fastlane/test_output/
 *.ipa
 *.mobileprovision
 *.p12

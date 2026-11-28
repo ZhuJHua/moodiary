@@ -1,8 +1,9 @@
 require "base64"
 require "tmpdir"
 
-IOS_DIR = File.expand_path("..", __dir__)
-MOBILE_DIR = File.expand_path("..", IOS_DIR)
+FASTLANE_DIR = File.expand_path(__dir__)
+MOBILE_DIR = File.expand_path("..", FASTLANE_DIR)
+IOS_DIR = File.join(MOBILE_DIR, "ios")
 REPO_DIR = File.expand_path("..", MOBILE_DIR)
 APP_IDENTIFIER = "cn.yooss.moodiary"
 TEAM_ID = "3XA29H789G"
@@ -129,14 +130,14 @@ platform :ios do
     build_number = options[:build_number].to_s
     UI.user_error!("build_number is required and must be a positive integer") unless build_number.match?(/\A[1-9]\d*\z/)
     skip_metadata = options[:skip_metadata] == true || options[:skip_metadata] == "true"
-    metadata_path = File.join(IOS_DIR, "fastlane", "metadata")
+    metadata_path = File.join(FASTLANE_DIR, "metadata", "ios")
     unless skip_metadata
       ["zh-Hans", "en-US"].each do |locale|
         path = File.join(metadata_path, locale, "release_notes.txt")
         UI.user_error!("Fill in #{path} before submitting") unless File.file?(path) && !File.read(path, encoding: "UTF-8").strip.empty?
       end
     end
-    screenshots_path = File.join(IOS_DIR, "fastlane", "screenshots")
+    screenshots_path = File.join(FASTLANE_DIR, "screenshots", "ios")
     screenshots = Dir.glob(File.join(screenshots_path, "**", "*")).any? do |path|
       File.file?(path) && path.match?(/\.(png|jpe?g)\z/i)
     end
