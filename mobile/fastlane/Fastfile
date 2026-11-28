@@ -1,7 +1,7 @@
 require "base64"
 require "tmpdir"
 
-FASTLANE_DIR = __dir__
+FASTLANE_DIR = File.expand_path(__dir__)
 MOBILE_DIR = File.expand_path("..", FASTLANE_DIR)
 IOS_DIR = File.join(MOBILE_DIR, "ios")
 REPO_DIR = File.expand_path("..", MOBILE_DIR)
